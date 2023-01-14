@@ -1,0 +1,71 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_room_room_user,room.room.user,model_team_room_room,base.group_user,1,0,0,0
+access_floor_shape_user,floor.shape.user,model_team_floor_shape,base.group_user,1,0,0,0
+access_floor_level_user,floor.level.user,model_team_floor_level,base.group_user,1,0,0,0
+access_product_template_user,product.template.user,product.model_product_template,base.group_user,1,0,0,0
+access_room_transition_user,room.transition.user,model_team_room_transition,base.group_user,1,0,0,0
+access_payment_plan_user,payment.plan.user,model_team_payment_plan,base.group_user,1,0,0,0
+access_quote_question_user,quote.question.user,model_team_quote_question,base.group_user,1,0,0,0
+access_quote_label_user,quote.label.user,model_team_quote_label,base.group_user,1,0,0,0
+access_quote_count_cost_user,quote.count.cost.user,model_team_quote_count_cost,base.group_user,1,0,0,0
+access_labor_cost_user,labor.cost.user,model_labor_cost,base.group_user,1,0,0,0
+access_contract_transition_line_user,contract.transition.line.user,model_team_contract_transition_line,base.group_user,1,0,0,0
+access_contract_room_measurement_user,team.contract.room.measurement.line.user,model_team_contract_room_measurement_line,base.group_user,1,0,0,0
+
+access_team_customer_appointment_user,team.customer.appointment.user,model_team_customer_appointment,base.group_user,1,0,0,0
+access_team_customer_appointment_manager,team.customer.appointment.user,model_team_customer_appointment,sales_team.group_sale_salesman,1,1,1,1
+access_contract_question_line_user,team.contract.question.line.user,model_team_contract_question_line,base.group_user,1,0,0,0
+access_contract_question_line_user,team.contract.question.line.user,model_team_contract_question_line,base.group_user,1,0,0,0
+access_contract_answer_line_user,team.contract.answer.line.user,model_team_contract_answer_line,base.group_user,1,0,0,0
+
+
+access_room_room_manager,room.room.manager,model_team_room_room,sales_team.group_sale_manager,1,1,1,1
+access_floor_shape_manager,floor.shape.manager,model_team_floor_shape,sales_team.group_sale_manager,1,1,1,1
+access_floor_level_manager,floor.level.manager,model_team_floor_level,sales_team.group_sale_manager,1,1,1,1
+access_product_template_manager,product.template.manager,product.model_product_template,sales_team.group_sale_manager,1,1,1,1
+access_room_transition_manager,room.transition.manager,model_team_room_transition,sales_team.group_sale_manager,1,1,1,1
+access_payment_plan_manager,payment.plan.manager,model_team_payment_plan,sales_team.group_sale_manager,1,1,1,1
+access_quote_question_manager,quote.question.manager,model_team_quote_question,sales_team.group_sale_manager,1,1,1,1
+access_quote_label_manager,quote.label.manager,model_team_quote_label,sales_team.group_sale_manager,1,1,1,1
+access_quote_count_cost_manager,quote.count.cost.manager,model_team_quote_count_cost,sales_team.group_sale_manager,1,1,1,1
+access_labor_cost_manager,labor.cost.manager,model_labor_cost,sales_team.group_sale_manager,1,1,1,1
+
+access_contract_transition_line_manager,contract.transition.line.manager,model_team_contract_transition_line,sales_team.group_sale_salesman,1,1,1,1
+access_contract_question_line_manager,team.contract.question.line.manager,model_team_contract_question_line,sales_team.group_sale_salesman,1,1,1,1
+access_contract_room_measurement_manager,team.contract.room.measurement.line.manager,model_team_contract_room_measurement_line,sales_team.group_sale_salesman,1,1,1,1
+access_contract_answer_line_manager,team.contract.answer.line.manager,model_team_contract_answer_line,sales_team.group_sale_salesman,1,1,1,1
+
+access_contract_downpayment_option,team.downpayment.option.manager,model_team_downpayment_option,sales_team.group_sale_salesman,1,1,1,1
+access_contract_downpayment_method,team.downpayment.method.manager,model_team_downpayment_method,sales_team.group_sale_salesman,1,1,1,1
+access_contract_payment_percentage,team.payment.percentage.manager,model_team_payment_percentage,sales_team.group_sale_salesman,1,1,1,1
+access_contract_team_payment_transaction_line,team.payment.transaction.line.manager,model_team_payment_transaction_line,sales_team.group_sale_salesman,1,1,1,1
+
+access_contract_team_credit_application,team.credit.application.manager,model_team_credit_application,sales_team.group_sale_salesman,1,1,1,1
+access_contract_team_floor_color,team.floor.color.manager,model_floor_color,sales_team.group_sale_salesman,1,1,1,1
+access_contract_team_monthly_promo,team.monthly.promo.manager,model_team_monthly_promo,sales_team.group_sale_salesman,1,1,1,1
+access_contract_team_appointment_result,team.appointment.result.manager,model_appointment_result,sales_team.group_sale_salesman,1,1,1,1
+access_contract_team_floor_molding,team.floor_molding.manager,model_team_floor_molding,sales_team.group_sale_salesman,1,1,1,1
+
+access_contract_team_otl_document_sign.request,team.otl_document_sign.request.manager,otl_document_sign.model_otl_document_sign_request,sales_team.group_sale_salesman,1,1,1,1
+access_contract_team_otl_document_sign.request.item,team.otl_document_sign.request.item.manager,otl_document_sign.model_otl_document_sign_request_item,sales_team.group_sale_salesman,1,1,1,1
+access_contract_team_otl_document_sign.log,team.otl_document_sign.log.manager,otl_document_sign.model_otl_document_sign_log,sales_team.group_sale_salesman,1,1,1,1
+access_contract_team_otl_document_sign.request.item.value,team.otl_document_sign.request.item.value.manager,otl_document_sign.model_otl_document_sign_request_item_value,sales_team.group_sale_salesman,1,1,1,1
+access_sign_template_group_sale_user,sign_template group_sale_user,otl_document_sign.model_otl_document_sign_template,sales_team.group_sale_salesman,1,0,0,0
+
+access_card_transaction_log_user,team.appointment.result.user,model_otl_card_transaction_log,base.group_user, 1,0,0,0
+access_card_transaction_log_manager,team.appointment.result.manager,model_otl_card_transaction_log,sales_team.group_sale_salesman,1,1,1,1
+
+access_appointment_sync_log_user,appointment.sync.log.user,model_otl_appointment_sync_log,base.group_user, 1,0,0,0
+access_appointment_sync_log_manager,appointment.sync.log.manager,model_otl_appointment_sync_log,sales_team.group_sale_salesman,1,1,1,1
+
+access_app_appointment_sync_log_user,app.appointment.sync.log.user,model_otl_app_appointment_sync_log,base.group_user, 1,0,0,0
+access_app_appointment_sync_log_manager,app.appointment.sync.log.manager,model_otl_app_appointment_sync_log,sales_team.group_sale_salesman,1,1,1,1
+
+access_api_sync_log_user,api.sync.log.user,model_otl_api_sync_log,base.group_user, 1,0,0,0
+access_api_sync_log_manager,api.sync.log.manager,model_otl_api_sync_log,sales_team.group_sale_salesman,1,1,1,1
+
+access_discount_history_line_user,discount.history.line.user,model_otl_discount_history_line,base.group_user, 1,0,0,0
+access_discount_history_line_manager,discount.history.line.manager,model_otl_discount_history_line,sales_team.group_sale_salesman,1,1,1,1
+
+access_app_screen_log_user,otl.app.screen.log.user,model_otl_app_screen_log,base.group_user, 1,0,0,0
+access_app_screen_log_manager,otl.app.screen.log.manager,model_otl_app_screen_log,sales_team.group_sale_salesman,1,1,1,1

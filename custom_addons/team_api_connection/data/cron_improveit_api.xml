@@ -1,0 +1,191 @@
+<?xml version="1.0" ?>
+<odoo>
+
+    <data noupdate="0">
+
+        <record forcecreate="True" id="ir_cron_improveit_appointment_sync" model="ir.cron">
+            <field name="name">Appointment Sync</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
+            <field name="state">code</field>
+            <field name="code">
+                model.get_sales_appointment_api()
+            </field>
+        </record>
+        <record forcecreate="True" id="ir_cron_improveit_user_sync" model="ir.cron">
+            <field name="name">User Sync</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
+            <field name="state">code</field>
+            <field name="code">model.sync_sale_person_data()</field>
+        </record>
+
+            <record forcecreate="True" id="ir_cron_improveit_product_sync" model="ir.cron">
+            <field name="name">Product Sync</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
+            <field name="state">code</field>
+            <field name="code">model.get_products_api()</field>
+        </record>
+
+         <record forcecreate="True" id="ir_cron_improveit_question_sync" model="ir.cron">
+            <field name="name">Question Sync</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
+            <field name="state">code</field>
+            <field name="code">model.get_question_data_api()</field>
+        </record>
+
+        <record forcecreate="True" id="ir_cron_improveit_room_sync" model="ir.cron">
+            <field name="name">Room Sync</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
+            <field name="state">code</field>
+            <field name="code">model.get_rooms_api()</field>
+        </record>
+
+        <record forcecreate="True" id="ir_cron_improveit_floor_color_sync" model="ir.cron">
+            <field name="name">Floor Color Sync</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
+            <field name="state">code</field>
+            <field name="code">model.get_floor_color_api()</field>
+        </record>
+
+
+        <record forcecreate="True" id="ir_cron_improveit_payment_options_sync" model="ir.cron">
+            <field name="name">Payment Options Sync</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
+            <field name="state">code</field>
+            <field name="code">model.get_payment_options()</field>
+        </record>
+
+        <record forcecreate="True" id="ir_cron_improveit_discount_coupons_sync" model="ir.cron">
+            <field name="name">Discount Coupon Sync</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
+            <field name="state">code</field>
+            <field name="code">model.get_discount_coupons()</field>
+        </record>
+
+        <record forcecreate="True" id="ir_cron_improveit_appointment_result_sync" model="ir.cron">
+            <field name="name">Appointment Result Sync</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
+            <field name="state">code</field>
+            <field name="code">model.get_appointment_result()</field>
+        </record>
+
+        <record forcecreate="True" id="ir_cron_improveit_molding_type_sync" model="ir.cron">
+            <field name="name">Molding Type Sync</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
+            <field name="state">code</field>
+            <field name="code">model.get_molding_types()</field>
+        </record>
+
+        <record forcecreate="True" id="ir_cron_improveit_get_recisision_date_sync" model="ir.cron">
+            <field name="name">Resision Date Sync</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
+            <field name="state">code</field>
+            <field name="code">model.get_resision_date()</field>
+        </record>
+
+        <record forcecreate="True" id="ir_cron_action_do_file_upload" model="ir.cron">
+            <field name="name">Document Upload to i360</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">10</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_action_do_file_upload()</field>
+        </record>
+
+<!--        <record forcecreate="True" id="ir_get_sales_appointment_api_sync" model="ir.cron">-->
+<!--            <field name="name">Sales Appointment</field>-->
+<!--            <field eval="True" name="active"/>-->
+<!--            <field name="user_id" ref="base.user_root"/>-->
+<!--            <field name="interval_number">1</field>-->
+<!--            <field name="interval_type">days</field>-->
+<!--            <field name="numbercall">-1</field>-->
+<!--            <field eval="False" name="doall"/>-->
+<!--            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>-->
+<!--            <field name="state">code</field>-->
+<!--            <field name="code">model.get_sales_appointment_api()</field>-->
+<!--        </record>-->
+
+<!--        <record forcecreate="True" id="ir_get_products_api_sync" model="ir.cron">-->
+<!--            <field name="name">Get Products</field>-->
+<!--            <field eval="True" name="active"/>-->
+<!--            <field name="user_id" ref="base.user_root"/>-->
+<!--            <field name="interval_number">1</field>-->
+<!--            <field name="interval_type">days</field>-->
+<!--            <field name="numbercall">-1</field>-->
+<!--            <field eval="False" name="doall"/>-->
+<!--            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>-->
+<!--            <field name="state">code</field>-->
+<!--            <field name="code">model.get_products_api()</field>-->
+<!--        </record>-->
+
+    </data>
+</odoo>

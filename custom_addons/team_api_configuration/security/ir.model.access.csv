@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dashboard_icons_user,dashboard.icons,model_dashboard_icons,base.group_user,1,0,0,0
+access_dashboard_icons_manager,dashboard.icons,model_dashboard_icons,team_api_configuration.dashboard_access_config,1,1,1,1
+
+access_app_version_user,app.version,model_app_version,base.group_user,1,0,0,0
+access_app_version_manager,app.version,model_app_version,team_api_configuration.dashboard_access_config,1,1,1,1
+
+access_push_configuration_user,push.configuration,model_push_configuration,base.group_user,1,0,0,0
+access_push_configuration_manager,push.configuration,model_push_configuration,team_api_configuration.dashboard_access_config,1,1,1,1
+
+access_mobile.notifications_access_line_user,mobile.notifications,model_mobile_notifications,base.group_user,1,1,1,1

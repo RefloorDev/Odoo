@@ -1,0 +1,8 @@
+
+<odoo>
+    <template id="website_frontend" name="Refloor assets" inherit_id="web.assets_backend" active="True">
+        <xpath expr=".">
+            <link rel="stylesheet" href="/odoo-debrand/static/src/css/style.css"/>
+        </xpath>
+    </template>
+</odoo>

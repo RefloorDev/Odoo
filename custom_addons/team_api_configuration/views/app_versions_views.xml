@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+	<!-- API App Version form view -->
+    <record id="view_app_version_form" model="ir.ui.view">
+        <field name="name">app.version.form</field>
+        <field name="model">app.version</field>
+        <field name="arch" type="xml">
+            <form string="App Version">
+                <sheet>
+                	<form>
+                		<group col="4">
+                			<field name="name" required="1" />
+                            <field name="date" required="1" /> 
+                            <field name="version_type" required="1"/>
+                            <field name="version" required="1" />
+                            <field name="active" />
+                		</group>
+                	</form>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- API App Version tree view -->
+    <record id="view_app_version_tree" model="ir.ui.view">
+        <field name="name">app.version.tree</field>
+        <field name="model">app.version</field>
+        <field name="arch" type="xml">
+            <tree string="App Version">
+                <field name="date"/>
+    			<field name="name" />
+                <field name="version_type"/>
+                <field name="version"/>
+            </tree>
+        </field>
+    </record>
+
+
+    <!-- API App Version Action view -->
+    <record id="action_app_version" model="ir.actions.act_window">
+        <field name="name">App Versions</field>
+        <field name="res_model">app.version</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to create a new App Version.
+            </p>
+        </field>
+    </record>
+
+
+
+    <menuitem id="menu_app_versions"
+              name="App Versions"
+              parent="team_api_configuration.menu_api_configuration_root"
+              sequence="45" groups="team_api_configuration.dashboard_access_config" action="action_app_version" />
+
+</odoo>

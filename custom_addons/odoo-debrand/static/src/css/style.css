@@ -1,0 +1,9 @@
+
+.o_menu_systray .o_no_notification
+     {
+        display:none;
+    }
+.o_mail_systray_item
+    {
+        display :none!important;
+    }

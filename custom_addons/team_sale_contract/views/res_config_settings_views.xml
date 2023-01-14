@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.sale</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="10"/>
+        <field name="inherit_id" ref="sale.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='sale_config_online_confirmation_sign']"
+                   position="before">
+
+                <div class="col-12 col-lg-6 o_setting_box" id="sale_contract_tmpl_id_setting"
+                     groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Document Template</span>
+                        <div class="text-muted">
+                            select document template here
+                        </div>
+                        <div class="row mt16">
+                            <label for="sale_contract_tmpl_id" string="Document Template"
+                                   class="col-lg-4 o_light_label"/>
+                            <field name="sale_contract_tmpl_id" class="oe_inline" options="{'no_create_edit': True}"/>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <div class="col-12 col-lg-6 o_setting_box" id="sale_contract_tmpl_id_ncp_setting"
+                     groups="base.group_no_one">
+
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Document Template Without Co-Applicant</span>
+                        <div class="text-muted">
+                            select document template without Co-Applicant here
+                        </div>
+                        <div class="row mt16">
+                            <label for="sale_contract_tmpl_id_ncp" string="Document Template Without Co-Applicant"
+                                   class="col-lg-4 o_light_label"/>
+                            <field name="sale_contract_tmpl_id_ncp" class="oe_inline"
+                                   options="{'no_create_edit': True}"/>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="col-12 col-lg-6 o_setting_box" id="credit_application_tmpl_id_setting"
+                     groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Document Template</span>
+                        <div class="text-muted">
+                            select credit application document template here
+                        </div>
+                        <div class="row mt16">
+                            <label for="credit_application_tmpl_id" string="Document Template"
+                                   class="col-lg-4 o_light_label"/>
+                            <field name="credit_application_tmpl_id" class="oe_inline"
+                                   options="{'no_create_edit': True}"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6 o_setting_box" id="credit_application_tmpl_id_ncp_setting"
+                     groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Document Template Without Co-Applicant</span>
+                        <div class="text-muted">
+                            select credit application document template Without Co-Applicant here
+                        </div>
+                        <div class="row mt16">
+                            <label for="credit_application_tmpl_id_ncp" string="Document Template"
+                                   class="col-lg-4 o_light_label"/>
+                            <field name="credit_application_tmpl_id_ncp" class="oe_inline"
+                                   options="{'no_create_edit': True}"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6 o_setting_box" id="admin_fee_setting" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Admin Fee</span>
+                        <div class="text-muted">
+                            Enter Admin fee here
+                        </div>
+                        <div class="row mt16">
+                            <label for="admin_fee" string="Admin Fee" class="col-lg-4 o_light_label"/>
+                            <field name="admin_fee" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6 o_setting_box" id="min_sale_price_setting" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Minimum Sale Price</span>
+                        <div class="text-muted">
+                            Minimum required sale/quote price for an order.
+                        </div>
+                        <div class="row mt16">
+                            <label for="min_sale_price" string="Minimum Sale Price" class="col-lg-4 o_light_label"/>
+                            <field name="min_sale_price" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6 o_setting_box" id="max_no_transitions_setting" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Transition Limit</span>
+                        <div class="text-muted">
+                            Maximum number of transitions allowed for a room.
+                        </div>
+                        <div class="row mt16">
+                            <label for="max_no_transitions" string="Transition Limit" class="col-lg-4 o_light_label"/>
+                            <field name="max_no_transitions" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6 o_setting_box" id="document_status_setting" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Document Not Filled Message</span>
+                        <div class="text-muted">
+                            Enter Message to Display while contract document not filled completely Here!
+                        </div>
+                        <div class="row mt16">
+                            <label for="doc_status_message" string="Error Message" class="col-lg-4 o_light_label"/>
+                            <field name="doc_status_message" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6 o_setting_box" id="document_status_setting2" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Document Completion Message</span>
+                        <div class="text-muted">
+                            Enter Message to Display while contract document is filled completely Here!
+                        </div>
+                        <div class="row mt16">
+                            <label for="doc_completion_message" string="Completion Message"
+                                   class="col-lg-4 o_light_label"/>
+                            <field name="doc_completion_message" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6 o_setting_box" id="credit_application_tmpl_id_ncp_setting"
+                     groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Default Payment Plan</span>
+                        <div class="text-muted">
+                            if no payment plan selected, this plan will send to i360
+                        </div>
+                        <div class="row mt16">
+                            <label for="payment_plan_id" string="Default Payment Plan" class="col-lg-4 o_light_label"/>
+                            <field name="payment_plan_id" class="oe_inline" options="{'no_create_edit': True}"/>
+                        </div>
+                    </div>
+                </div>
+
+
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_otl_document_config_settings" model="ir.actions.act_window">
+        <field name="name">Document Settings</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_id" ref="res_config_settings_view_form"/>
+        <field name="view_mode">form</field>
+        <field name="domain">[]</field>
+        <field name="target">inline</field>
+    </record>
+
+
+</odoo>

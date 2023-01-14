@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_api_team_improveit_configuration_add_form" model="ir.ui.view">
+            <field name="name">team.improveit.configuration.form</field>
+            <field name="model">team.improveit.configuration</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group col="4">
+                            <field name="name"/>
+                            <field name="client_id"/>
+                            <field name="api_type" required="1"/>
+                            <field name="section"/>
+                            <field name="test_appointment_id"/>
+                            <field name="mode" required="1"/>
+                            <field name="client_secret"/>
+                            <field name="username"/>
+                            <field name="password"/>
+                            <field name="grant_type"/>
+                            <field name="token_url"/>
+                            <field name="update_existing_record"/>
+                            <field name="enable_ssl"/>
+                            <field name="active" invisible="1"/>
+                            <field name="client_token" attrs="{'invisible': [('api_type', '!=', 'boomi')]}"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_api_team_improveit_configuration_tree" model="ir.ui.view">
+            <field name="name">team.improveit.configuration.tree</field>
+            <field name="model">team.improveit.configuration</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="client_id"/>
+                     <field name="username"/>
+                    <field name="grant_type"/>
+                </tree>
+            </field>
+        </record>
+
+
+
+        <record id="action_api_team_improveit_configuration" model="ir.actions.act_window">
+            <field name="name">API Improveit Configuration</field>
+            <field name="res_model">team.improveit.configuration</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create Api Configuration.
+                </p>
+            </field>
+        </record>
+
+        <menuitem name="API Configuration" parent="sale.menu_sale_config" id="improveit_api_configuration" action="action_api_team_improveit_configuration" groups="base.user_admin"/>
+
+    </data>
+</odoo>

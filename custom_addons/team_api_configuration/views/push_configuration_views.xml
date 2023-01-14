@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+	<!-- API Push Configuration form view -->
+    <record id="view_push_configuration_form" model="ir.ui.view">
+        <field name="name">push.configuration.form</field>
+        <field name="model">push.configuration</field>
+        <field name="arch" type="xml">
+            <form string="Push Configuration">
+                <sheet>
+                	<form>
+                		<group col="4">
+                			<field name="name" required="1" />
+                            <field name="active" />
+                        </group>
+                        <group col="4" attrs="{'invisible':[('name','!=','crm')]}">
+                            <field name="is_activity" />
+                            <field name="is_won" />
+                		</group>
+                        <group col="4" attrs="{'invisible':[('name','!=','leave')]}">
+                            <field name="leave_approve" />
+                            <field name="leave_reject" />
+                        </group>
+                	</form>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- API Push Configuration tree view -->
+    <record id="view_push_configuration_tree" model="ir.ui.view">
+        <field name="name">push.configuration.tree</field>
+        <field name="model">push.configuration</field>
+        <field name="arch" type="xml">
+            <tree string="Push Configuration">
+    			<field name="name" />
+            </tree>
+        </field>
+    </record>
+
+
+    <!-- API Push Configuration Action view -->
+    <record id="action_push_config" model="ir.actions.act_window">
+        <field name="name">Push Notification</field>
+        <field name="res_model">push.configuration</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to create a new Push Configuration.
+            </p>
+        </field>
+    </record>
+
+
+
+    <menuitem id="menu_push_notification"
+              name="Push Notification"
+              parent="team_api_configuration.menu_api_configuration_root"
+              sequence="50" groups="team_api_configuration.dashboard_access_config" action="action_push_config" />
+
+</odoo>

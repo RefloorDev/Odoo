@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <record id="group_hidden_menu" model="res.groups">
+            <field name="name">Hidden Menus</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+            <field name="comment">The user will gain access to the menu which are hidden from normal users.</field>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        </record>
+
+        <record id="team_room_room_comp_rule" model="ir.rule">
+            <field name="name">Rooms</field>
+            <field name="model_id" ref="model_team_room_room"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="team_floor_level_comp_rule" model="ir.rule">
+            <field name="name">Floor Levels</field>
+            <field name="model_id" ref="model_team_floor_level"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="team_floor_shape_comp_rule" model="ir.rule">
+            <field name="name">Floor Shapes</field>
+            <field name="model_id" ref="model_team_floor_shape"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="team_room_transition_comp_rule" model="ir.rule">
+            <field name="name">Transitions</field>
+            <field name="model_id" ref="model_team_room_transition"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="team_labor_cost_comp_rule" model="ir.rule">
+            <field name="name">Labor Cost</field>
+            <field name="model_id" ref="model_labor_cost"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
+
+
+        <record id="team_payment_plan_comp_rule" model="ir.rule">
+            <field name="name">Payment Plans</field>
+            <field name="model_id" ref="model_team_payment_plan"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
+
+<!--        <record id="team_material_list_comp_rule" model="ir.rule">-->
+<!--            <field name="name">Material Lists</field>-->
+<!--            <field name="model_id" ref="model_team_material_list"/>-->
+<!--            <field name="global" eval="True"/>-->
+<!--            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>-->
+<!--        </record>-->
+
+        <record id="quote_question_comp_rule" model="ir.rule">
+            <field name="name">Quote Questions</field>
+            <field name="model_id" ref="model_team_quote_question"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
+        
+        <record id="rule_customer_appointmnet" model="ir.rule">
+            <field name="name">Customer Appointment</field>
+            <field ref="model_team_customer_appointment" name="model_id"/>
+            <field name="domain_force">['|',('user_id','=',user.id),('user_id','=',False)]</field>
+            <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+        </record>
+
+        <record id="customer_appointmnet_company_rule" model="ir.rule">
+            <field name="name">Appointment Multi-Company</field>
+            <field name="model_id" ref="model_team_customer_appointment"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]
+            </field>
+            <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman_all_leads'))]"/>
+        </record>
+
+        <record id="floor_molding_company_rule" model="ir.rule">
+            <field name="name">Appointment Multi-Company</field>
+            <field name="model_id" ref="model_team_floor_molding"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]
+            </field>
+            <field name="global" eval="True"/>
+        </record>
+
+
+    </data>
+</odoo>

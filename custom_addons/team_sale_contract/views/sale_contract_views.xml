@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+   <!-- Transition Add -->
+        <record id="view_transition_line_add_form" model="ir.ui.view">
+            <field name="name">team.contract.transition.line.form</field>
+            <field name="model">team.contract.transition.line</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+
+                        <group col="4">
+                            <field name="name"/>
+                            <field name="transition_width"/>
+                            <field name="room_id"/>
+                             <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                            <field name="attachment_ids" widget="many2many_kanban"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_transition_line_add_tree" model="ir.ui.view">
+            <field name="name">team.contract.transition.line.tree</field>
+            <field name="model">team.contract.transition.line</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                     <field name="room_id"/>
+                     <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+
+        <record id="action_transition_line_add" model="ir.actions.act_window">
+            <field name="name">Transition Add</field>
+            <field name="res_model">team.contract.transition.line</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new Transition.
+                </p>
+            </field>
+        </record>
+
+<!--        <menuitem name="Transition Add" parent="measurement_conf_root" id="menu_transition_add" action="action_transition_line_add" />-->
+
+
+           <!-- Downpayment status -->
+          <record id="view_payment_status_form_id" model="ir.ui.view">
+            <field name="name">team.payment.transaction.form</field>
+            <field name="model">team.payment.transaction.line</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group col="4">
+                            <field name="payment_plan" options="{'no_create': True}"/>
+                             <field name="payment_option" options="{'no_create': True}"/>
+                             <field name="downpayment_percentage" options="{'no_create': True}"/>
+                             <field name="payment_method" options="{'no_create': True}"/>
+                             <field name="total_price" />
+                             <field name="downpayment"/>
+                             <field name="balance"/>
+                             <field name="payment_success"/>
+                            <field name="order_id" options="{'no_create': True}"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_payment_status_list_tree" model="ir.ui.view">
+            <field name="name">team.payment.transaction.line.tree</field>
+            <field name="model">team.payment.transaction.line</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="payment_plan"/>
+                    <field name="payment_option"/>
+                    <field name="downpayment_percentage"/>
+                    <field name="payment_method"/>
+                </tree>
+            </field>
+        </record>
+
+            <record id="action_view_payment_status" model="ir.actions.act_window">
+            <field name="name">Down payment Status</field>
+            <field name="res_model">team.payment.transaction.line</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new Payment OPtion.
+                </p>
+            </field>
+            </record>
+
+<!--            <menuitem name="Payment Status" parent="measurement_conf_root" id="menu_payment_status_id" action="action_view_payment_status" />-->
+
+
+    </data>
+</odoo>

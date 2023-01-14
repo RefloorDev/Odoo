@@ -1,0 +1,335 @@
+<odoo>
+    <record id="team_customer_appointment_form_view" model="ir.ui.view">
+        <field name="name">team.customer.appointment.form</field>
+        <field name="model">team.customer.appointment</field>
+        <field name="arch" type="xml">
+            <form string="Customer Appointment">
+                <header>
+                    <button name="button_scheduled"
+                            states="draft"
+                            string="Schedule"
+                            type="object"
+                            class="oe_highlight"/>
+                    <button name="button_done"
+                            states="scheduled"
+                            string="Done"
+                            type="object"
+                            class="oe_highlight"/>
+                    <button name="button_draft"
+                            states="scheduled"
+                            string="Reset"
+                            type="object"/>
+                    <button name="button_cancel"
+                            states="scheduled"
+                            string="Cancel"
+                            type="object"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,scheduled,done"
+                           statusbar_colors='{"done":"blue"}'/>
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object"
+                        name="action_view_sale_quotation" icon="fa-pencil-square-o" attrs="{'invisible': [('sale_order_exists', '!=', True)]}">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">View</span>
+                                <span class="o_stat_text">Sale Orders</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Applicant Details">
+                            <field name="partner_id" widget="res_partner_many2one" context="{'res_partner_search_mode': 'customer'}" options='{"always_reload": True}' invisible="1"/>
+                            <field name="customer_name" invisible="1"/>
+                            <field name="sale_order_exists" invisible="1"/>
+                            <field name="applicant_first_name"/>
+                            <field name="applicant_middle_name"/>
+                            <field name="applicant_last_name"/>
+                            <label for="" name="address_name">
+                                <b>Address</b>
+                            </label>
+                            <div class="o_address_format">
+                                <field name="street" placeholder="Street..." class="o_address_street" required="1"/>
+                                <field name="street2" placeholder="Street 2..." class="o_address_street"/>
+                                <field name="city" placeholder="City" class="o_address_city"/>
+                                <field name="state_id" class="o_address_state" placeholder="State"
+                                       options='{"no_open": True}'/>
+                                <field name="zip" placeholder="ZIP" class="o_address_zip"/>
+                                <field name="country_id" placeholder="Country" class="o_address_country"
+                                       options='{"no_open": True, "no_create": True}'/>
+                            </div>
+                            <field name="state_code" placeholder="State Code" attrs="{'invisible': [('state_code', '=', False)]}"/>
+                            <field name="phone" placeholder="Phone number" />
+                            <field name="mobile" placeholder="Secondary Phone number"/>
+                            <field name="email" placeholder="Email id"/>
+                        </group>
+                        <group string="Co-Applicant Details">
+                            <field name="co_applicant" invisible="1"/>
+                            <field name="co_applicant_first_name"/>
+                            <field name="co_applicant_middle_name"/>
+                            <field name="co_applicant_last_name"/>
+                            <label for="" name="co_applicant_address_name">
+                                <b>Address</b>
+                            </label>
+                            <div class="o_address_format">
+                                <field name="co_applicant_address" placeholder="Street..." class="o_address_street"/>
+                                <field name="co_applicant_city" placeholder="City" class="o_address_city"/>
+                                <field name="co_applicant_state" class="o_address_state" placeholder="State"
+                                       options='{"no_open": True}'/>
+                                <field name="co_applicant_zip" placeholder="ZIP" class="o_address_zip"/>
+                                <field name="co_applicant_country_id" placeholder="Country" class="o_address_country"
+                                       options='{"no_open": True, "no_create": True}'/>
+                            </div>
+                            <field name="co_applicant_state_code" placeholder="State Code" attrs="{'invisible': [('co_applicant_state_code', '=', False)]}"/>
+                            <field name="co_applicant_phone" placeholder="Phone number"/>
+                            <field name="co_applicant_secondary_phone" placeholder="Secondary Phone number"/>
+                            <field name="co_applicant_email" placeholder="Email"/>
+                        </group>
+                    </group>
+                    <group string="Appointment Details" col="4">
+                        <field name="appointment_date" required="1"/>
+                        <field name="user_id" options="{'no_open':True,'no_create': True}"/>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                        <field name="measurement_exist" invisible="1"/>
+                        <field name="send_physical_document" readonly="1"/>
+                        <field name="credit_application_url" widget="url" readonly="1" invisible="1"/>
+                    </group>
+                    <group col="4" string="Additional Comments" attrs="{'invisible': [('additional_comments', '=', False)]}">
+                        <field name="additional_comments" readonly="1" nolabel="1" placeholder="Additional Comments...."/>
+                    </group>
+                    <group>
+                        <group colspan="2" col="2">
+                            <separator string="Geolocation" colspan="2"/>
+                            <button
+                                string="Geolocate"
+                                name="geo_localize"
+                                colspan="2"
+                                icon="fa-check"
+                                type="object"/>
+                            <div>
+                                <span class="oe_inline">( On</span>
+                                <field name="date_localization" nolabel="1" class="oe_inline"/>
+                                <span>: Lat :</span>
+                                <field name="partner_latitude" nolabel="1" class="oe_inline"/>
+                                <span>; Long:</span>
+                                <field name="partner_longitude" nolabel="1" class="oe_inline"/>
+                                <span>)</span>
+                            </div>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Snapshots"  attrs="{'invisible':[('attachment_ids', '=', False)]}">
+                            <group>
+                                <field name="attachment_ids" readonly="1" nolabel="1">
+                                    <kanban>
+                                        <field name="mimetype"/>
+                                        <field name="type"/>
+                                        <field name="url"/>
+                                        <field name="type"/>
+                                        <field name="name"/>
+                                        <field name="id"/>
+                                        <templates>
+                                            <t t-name="kanban-box">
+                                                <div class="oe_kanban_global_area oe_kanban_global_click o_kanban_attachment">
+                                                    <div class="o_kanban_image">
+                                                        <div class="o_kanban_image_wrapper">
+                                                            <t t-set="webimage" t-value="new RegExp('image.*(gif|jpeg|jpg|png)').test(record.mimetype.value)"/>
+                                                            <div t-if="record.type.raw_value == 'url'" class="o_url_image fa fa-link fa-3x text-muted"/>
+                                                            <img t-elif="webimage" t-attf-src="/web/image/#{record.id.raw_value}" width="100" height="100" alt="Document" class="o_attachment_image"/>
+                                                            <div t-else="!webimage" class="o_image o_image_thumbnail" t-att-data-mimetype="record.mimetype.value"/>
+                                                        </div>
+                                                    </div>
+                                                    <div class="o_kanban_details">
+                                                        <div class="o_kanban_details_wrapper">
+                                                            <div t-att-title="record.name.raw_value" class="o_kanban_record_title">
+                                                                <field name="name" class="o_text_overflow"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </templates>
+                                    </kanban>
+                                </field>
+                            </group>
+                        </page>
+                        <page string="i360 Sync Log" attrs="{'invisible':[('sync_log_line', '=', False)]}">
+                            <field name="sync_log_line" readonly="1">
+                                <tree editable="bottom">
+                                    <field name="name"/>
+                                    <field name="created_date"/>
+                                    <field name="user_id" options="{'no_open':True,'no_create': True}"/>
+                                    <field name="state"/>
+                                </tree>
+                                <form string="Sync Log">
+                                    <group>
+                                        <group>
+                                            <field name="name"/>
+                                            <field name="user_id" options="{'no_open':True,'no_create': True}"/>
+                                        </group>
+                                        <group>
+                                            <field name="created_date"/>
+                                            <field name="state"/>
+                                        </group>
+                                    </group>
+                                    <group>
+                                        <field name="response"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="API Logs" attrs="{'invisible':[('api_sync_log_line', '=', False)]}">
+                            <field name="api_sync_log_line" readonly="1">
+                                <tree editable="bottom">
+                                    <field name="name"/>
+                                    <field name="created_date"/>
+                                    <field name="user_id" options="{'no_open':True,'no_create': True}"/>
+                                    <field name="state"/>
+                                </tree>
+                                <form string="Sync Log">
+                                    <group>
+                                        <group>
+                                            <field name="name"/>
+                                            <field name="user_id" options="{'no_open':True,'no_create': True}"/>
+                                        </group>
+                                        <group>
+                                            <field name="created_date"/>
+                                            <field name="state"/>
+                                        </group>
+                                    </group>
+                                    <group>
+                                        <field name="response"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Sales App Sync Log" attrs="{'invisible':[('app_sync_log_line', '=', False)]}">
+                            <field name="app_sync_log_line" readonly="1">
+                                <tree editable="bottom">
+                                    <field name="name"/>
+                                    <field name="sync_date"/>
+                                </tree>
+                                <form string="Sync Log">
+                                    <group>
+                                        <group>
+                                            <field name="name"/>
+                                        </group>
+                                        <group>
+                                            <field name="sync_date"/>
+                                        </group>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Sales App Screen Log" attrs="{'invisible':[('app_screen_log_line', '=', False)]}">
+                            <field name="app_screen_log_line" readonly="1">
+                                <tree editable="bottom">
+                                    <field name="name"/>
+                                    <field name="completion_date"/>
+                                </tree>
+                                <form string="Sync Log">
+                                    <group>
+                                        <group>
+                                            <field name="name"/>
+                                        </group>
+                                        <group>
+                                            <field name="completion_date"/>
+                                        </group>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread" options="{'post_refresh': 'recipients'}"/>
+                </div>
+            </form>
+        </field>
+    </record>
+    <record id="team_customer_appointment_tree_view" model="ir.ui.view">
+        <field name="name">team.customer.appointment.tree</field>
+        <field name="model">team.customer.appointment</field>
+        <field name="arch" type="xml">
+            <tree string="Customer Appointments">
+
+                <field name="name"/>
+                <field name="customer_name"/>
+                <field name="co_applicant"/>
+                <field name="appointment_date"/>
+                <field name="partner_id" invisible="1"/>
+                <field name="street" placeholder="Street..." invisible="1"/>
+                <field name="street2" placeholder="Street 2..." invisible="1"/>
+                <field name="city" placeholder="City" invisible="1"/>
+                <field name="state_id" placeholder="state" invisible="1"/>
+                <field name="zip" placeholder="zip" invisible="1"/>
+                <field name="country_id" placeholder="Country" invisible="1"/>
+                <field name="phone"/>
+                <field name="mobile"/>
+                <field name="email"/>
+                <field name="user_id"/>
+                <field name="state"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="partner_latitude" invisible="1"/>
+                <field name="partner_longitude" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+      <record model="ir.ui.view" id="team_customer_appointment_search">
+        <field name="name">Search view for Customer Appointment</field>
+        <field name="model">team.customer.appointment</field>
+        <field name="arch" type="xml">
+            <search string="Search Appointment">
+                     <field name="name"/>
+                     <field name="partner_id"/>
+                     <field name="customer_name"/>
+                     <field name="appointment_date"/>
+                <filter name="date_filter" string="Today" domain="[('appointment_date', '&gt;=', datetime.datetime.now().strftime('%Y-%m-%d 00:00:00')),('appointment_date', '&lt;=',datetime.datetime.now().strftime('%Y-%m-%d 23:23:59'))]"/>
+                <separator/>
+                <filter string="New" name="draft" domain="[('state','=','draft')]" />
+                <filter string="Scheduled" name="scheduled" domain="[('state','=','scheduled')]" />
+                <filter string="Done" name="done" domain="[('state','=','done')]" />
+                <filter string="Cancelled" name="cancelled" domain="[('state','=','cancelled')]" />
+                <separator/>
+                <filter string="Sales Person" name="user_id" domain="[('user_id', '=', uid)]"/>
+                <separator/>
+                <group expand="1" string="Group By">
+                    <filter string="Status" name="status" domain="[]" context="{'group_by': 'state'}"/>
+                    <filter string="Appointment Date" name="appointment_date" domain="[]" context="{'group_by': 'appointment_date'}"/>
+                    <filter string="Salesperson" name="salesperson" domain="[]" context="{'group_by': 'user_id'}"/>
+                    <filter string="Customer" name="customer" domain="[]" context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_team_customer_appointment" model="ir.actions.act_window">
+        <field name="name">Appointments</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">team.customer.appointment</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="team_customer_appointment_tree_view"/>
+    </record>
+    <menuitem name="Appointments"
+              id="menu_team_customers_appointment_act"
+              sequence="0"
+              parent="sale.sale_order_menu"
+              action="action_team_customer_appointment"/>
+    <menuitem
+        id="mail.menu_root_discuss"
+        name="Discuss"
+        action="mail.action_discuss"
+        web_icon="mail,static/description/icon.png"
+        groups="base.group_erp_manager,base.group_system"
+        sequence="1"
+    />
+</odoo>

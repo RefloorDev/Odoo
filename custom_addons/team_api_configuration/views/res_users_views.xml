@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+	<!-- Inherited Res Users Form View -->
+    <record id="view_res_users_forms_inherit1122" model="ir.ui.view">
+        <field name="name">res.users.form.inherit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="before">
+                <group>
+                    <field name="token_name" invisible="1" />
+                    <field name="device_reg_id" invisible="1" />
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,754 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="res_company_default_image_view_form" model="ir.ui.view">
+        <field name="name">res.company.view.form.inherit</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="defaul_image" string="Default Images">
+                    <group name="default_image_settings">
+                        <field name="default_image" widget="image" class="oe_avatar" invisible="1"/>
+                        <field name="material_image_attachment_id"/>
+                        <field name="material_image" widget="image" class="oe_avatar"/>
+                        <field name="sales_app_attachment_id"/>
+                        <field name="sales_app_logo" widget="image" class="oe_avatar"/>
+                        <field name="contract_logo_attachment_id"/>
+                        <field name="contract_logo" widget="image" class="oe_avatar"/>
+                        <field name="login_logo_attachment_id"/>
+                        <field name="login_logo" widget="image" class="oe_avatar"/>
+                        <field name="promo_image_attachment_id"/>
+                        <field name="promo_image" widget="image" class="oe_avatar"/>
+                    </group>
+                </page>
+            </xpath>
+            <field name="favicon" position="after">
+                <field name="recision_date"/>
+            </field>
+        </field>
+    </record>
+
+        <!--        Measurement Root Menu-->
+        <menuitem name="Measurements" parent="sale.menu_sale_config" id="measurement_conf_root"/>
+
+        <!-- Rooms -->
+        <record id="view_room_room_form" model="ir.ui.view">
+            <field name="name">team.room.room.form</field>
+            <field name="model">team.room.room</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="image" widget='image' class="oe_avatar"/>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group name="left">
+                                <field name="note" placeholder="Internal notes..."/>
+                                <field name="is_custom"/>
+                                <field name="company_id" options="{'no_create': True}"
+                                       groups="base.group_multi_company"/>
+                            </group>
+                            <group name="right">
+                                <field name="sequence"/>
+                                <field name="product_category_id" options="{'no_create': True}"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_room_room_tree" model="ir.ui.view">
+            <field name="name">team.room.room.tree</field>
+            <field name="model">team.room.room</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="sequence"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_room_room" model="ir.actions.act_window">
+            <field name="name">Rooms</field>
+            <field name="res_model">team.room.room</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new room.
+                </p>
+            </field>
+        </record>
+
+        <menuitem name="Rooms" parent="measurement_conf_root" id="menu_room" action="action_room_room"/>
+
+
+        <!-- Floor Shapes -->
+        <record id="view_floor_shape_form" model="ir.ui.view">
+            <field name="name">team.floor.shape.form</field>
+            <field name="model">team.floor.shape</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="shape" widget='image' class="oe_avatar"/>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group name="left">
+                                <field name="note" placeholder="Internal notes..."/>
+                                <field name="company_id" options="{'no_create': True}"
+                                       groups="base.group_multi_company"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                            <group name="right">
+                                <field name="sequence"/>
+                            </group>
+
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_floor_shape_tree" model="ir.ui.view">
+            <field name="name">team.floor.shape.tree</field>
+            <field name="model">team.floor.shape</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="sequence"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_floor_shape" model="ir.actions.act_window">
+            <field name="name">Room Shapes</field>
+            <field name="res_model">team.floor.shape</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new floor shape.
+                </p>
+            </field>
+        </record>
+
+        <!--        <menuitem name="Room Shapes" parent="measurement_conf_root" id="menu_floor_shape" action="action_floor_shape" />-->
+
+        <!-- Floor Levels -->
+        <record id="view_floor_level_form" model="ir.ui.view">
+            <field name="name">team.floor.level.form</field>
+            <field name="model">team.floor.level</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="image" widget='image' class="oe_avatar"/>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group name="left">
+                                <field name="prefix"/>
+                                <field name="superscript_symbol" attrs="{'required': [('prefix', '!=', '')]}"/>
+                                <field name="note" placeholder="Internal notes..."/>
+                                <field name="company_id" options="{'no_create': True}"
+                                       groups="base.group_multi_company"/>
+                            </group>
+                            <group name="right">
+                                <field name="sequence"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_floor_level_tree" model="ir.ui.view">
+            <field name="name">team.floor.level.tree</field>
+            <field name="model">team.floor.level</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="complete_name"/>
+                    <field name="sequence"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_floor_level" model="ir.actions.act_window">
+            <field name="name">Floor Levels</field>
+            <field name="res_model">team.floor.level</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new floor level.
+                </p>
+            </field>
+        </record>
+
+        <menuitem name="Floor Levels" parent="measurement_conf_root" id="menu_floor_level" action="action_floor_level"/>
+
+
+        <!-- Transitions -->
+        <record id="view_room_transition_form" model="ir.ui.view">
+            <field name="name">team.room.transition.form</field>
+            <field name="model">team.room.transition</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group col="4">
+                            <field name="sequence"/>
+                            <field name="description" placeholder="Internal Notes..."/>
+                            <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_room_transition_tree" model="ir.ui.view">
+            <field name="name">team.room.transition.tree</field>
+            <field name="model">team.room.transition</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="sequence"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_room_transition" model="ir.actions.act_window">
+            <field name="name">Transitions</field>
+            <field name="res_model">team.room.transition</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new transition.
+                </p>
+            </field>
+        </record>
+
+        <menuitem name="Transitions" parent="measurement_conf_root" id="menu_room_transition"
+                  action="action_room_transition"/>
+
+        <record id="product_template_forms" model="ir.ui.view">
+            <field name="name">product.template.form</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[1]" position="after">
+                    <page string="Payment Configuration" name="contract_questions">
+                        <group col="4">
+                            <field name="payment_plan" required="True"/>
+                            <field name="sequence"/>
+                            <field name="description" placeholder="Internal Notes..."/>
+                            <field name="warranty"/>
+                            <field name="active" invisible="1"/>
+                            <field name="msrp"/>
+                            <field name="unit_of_measure"/>
+                            <field name="warranty_info"/>
+
+                        </group>
+                        <separator string="Calculation"/>
+                        <group col="4">
+                            <!--                           <label for="room_area"/>-->
+                            <!--                           <div class="o_row" name="room_area">-->
+                            <!--                               <field name="room_area" string="Room Area"/>-->
+                            <!--                               sq.ft-->
+                            <!--                           </div>-->
+                            <label for="labor_cost"/>
+                            <div class="o_row" name="labor_cost">
+                                <field name="labor_cost" string="Labor Charge"/>
+                                $/hr
+                            </div>
+                            <label for="labor_factor"/>
+                            <div class="o_row" name="labor_factor">
+                                <field name="labor_factor" string="Labor Factor"/>
+                            </div>
+                            <label for="labor_cost_with_factor"/>
+                            <div class="o_row" name="labor_cost_with_factor">
+                                <field name="labor_cost_with_factor" string="Labor Cost With Factor"/>
+                                sqft
+                            </div>
+                            <label for="installation_assumption"/>
+                            <div class="o_row" name="installation_assumption">
+                                <field name="installation_assumption" string="Installation Assumption"/>
+                                sq.ft/hr
+                            </div>
+                            <label for="cost_per_sqft"/>
+                            <div class="o_row" name="cost_per_sqft">
+                                <field name="cost_per_sqft" string="Labor Cost With Factor per sq.ft"/>
+                            </div>
+                            <label for="flooring_cost"/>
+                            <div class="o_row" name="flooring_cost">
+                                <field name="flooring_cost" string="Flooring Cost"/>
+                                $/sq.ft
+                            </div>
+                        </group>
+                        <separator string="Discount"/>
+                        <group col="4">
+                            <label for="monthly_promo"/>
+                            <div class="o_row" name="monthly_promo">
+                                <field name="monthly_promo" string="Monthly Promo"/>
+                                $
+                            </div>
+                            <label for="discount"/>
+                            <div class="o_row" name="discount">
+                                <field name="discount" string="Default Discount"/>
+                                %
+                            </div>
+                            <label for="discount_minimum"/>
+                            <div class="o_row" name="discount_minimum">
+                                <field name="discount_minimum" string="Minimum Discount  Allowed"/>
+                                %
+                            </div>
+                            <label for="discount_maximum"/>
+                            <div class="o_row" name="discount_maximum">
+                                <field name="discount_maximum" string="Maximum Discount Allowed"/>
+                                %
+                            </div>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+
+        <record id="view_labor_cost_form" model="ir.ui.view">
+            <field name="name">labor.cost.form</field>
+            <field name="model">labor.cost</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group name="left">
+                                <field name='name'/>
+                                <field name="from_date"/>
+                                <field name="company_id" options="{'no_create': True}"/>
+                            </group>
+                            <group name="right">
+                                <field name="to_date"/>
+                                <field name="labor_cost"/>
+                                <field name="note" placeholder="Internal notes..."/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_labor_cost_tree" model="ir.ui.view">
+            <field name="name">labor.cost.tree</field>
+            <field name="model">labor.cost</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name='name'/>
+                    <field name="from_date"/>
+                    <field name="company_id" options="{'no_create': True}"/>
+                    <field name="to_date"/>
+                    <field name="labor_cost"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_labor_cost" model="ir.actions.act_window">
+            <field name="name">labor cost</field>
+            <field name="res_model">labor.cost</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new labor cost.
+                </p>
+            </field>
+        </record>
+        <menuitem name="Labor Cost" parent="measurement_conf_root" id="menu_labor_cost" action="action_labor_cost"/>
+
+
+        <!-- Payment Plan -->
+        <record id="view_payment_plan_form" model="ir.ui.view">
+            <field name="name">team.payment.plan.form</field>
+            <field name="model">team.payment.plan</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group col="4">
+                            <field name="sequence"/>
+                            <field name="description" placeholder="Internal Notes..."/>
+                            <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_payment_plan_tree" model="ir.ui.view">
+            <field name="name">team.payment.plan.tree</field>
+            <field name="model">team.payment.plan</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="sequence"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_payment_plan" model="ir.actions.act_window">
+            <field name="name">Payment Plan</field>
+            <field name="res_model">team.payment.plan</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new payment Plan.
+                </p>
+            </field>
+        </record>
+
+        <!--        <menuitem name="Payment Plan" parent="measurement_conf_root" id="menu_payment_plan" action="action_payment_plan" />-->
+
+        <record model="ir.ui.view" id="view_product_product_form">
+            <field name="name">product.product.form</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view"/>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <field name="categ_id" position="after">
+                    <field name="is_material"/>
+                    <field name="color"/>
+                    <field name="color_up_charge_price"/>
+                </field>
+            </field>
+        </record>
+
+
+        <record id="action_material_list_view" model="ir.actions.act_window">
+            <field name="name">Materials</field>
+            <field name="res_model">product.product</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('is_material', '=', True)]</field>
+            <field name="context">{'default_type': 'product', 'default_is_material': True}</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new material.
+                </p>
+            </field>
+        </record>
+
+        <!--        <menuitem name="Materials" parent="measurement_conf_root" id="menu_material_list_id" action="action_material_list_view" />-->
+
+
+        <!-- Material List -->
+        <record id="view_material_list_form" model="ir.ui.view">
+            <field name="name">team.material.list.form</field>
+            <field name="model">team.material.list</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="image" widget='image' class="oe_avatar"/>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group col="4">
+                            <field name="sequence"/>
+                            <field name="material_type"/>
+                            <field name="cost"/>
+                            <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_material_list_tree" model="ir.ui.view">
+            <field name="name">team.material.list.tree</field>
+            <field name="model">team.material.list</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="sequence"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <!-- Downpayment option -->
+        <record id="view_downpayment_option_form" model="ir.ui.view">
+            <field name="name">team.downpayment.option.form</field>
+            <field name="model">team.downpayment.option</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group col="4">
+                            <field name="description"/>
+                            <field name="interest_rate" digits="[12,4]"/>
+                            <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_downpayment_option_list_tree" model="ir.ui.view">
+            <field name="name">team.downpayment.option.tree</field>
+            <field name="model">team.downpayment.option</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="description"/>
+                    <field name="interest_rate" digits="[12,4]"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_downpayment_option" model="ir.actions.act_window">
+            <field name="name">Down payment Option</field>
+            <field name="res_model">team.downpayment.option</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{}</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new Payment OPtion.
+                </p>
+            </field>
+        </record>
+
+        <menuitem name="Payment Option" parent="measurement_conf_root" id="menu_payment_option_id"
+                  action="action_downpayment_option"/>
+
+
+        <!-- Downpayment Method -->
+        <record id="view_downpayment_method_form" model="ir.ui.view">
+            <field name="name">team.downpayment.method.form</field>
+            <field name="model">team.downpayment.method</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group col="4">
+                            <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_downpayment_method_list_tree" model="ir.ui.view">
+            <field name="name">team.downpayment.method.tree</field>
+            <field name="model">team.downpayment.method</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_downpayment_method" model="ir.actions.act_window">
+            <field name="name">Down payment Method</field>
+            <field name="res_model">team.downpayment.method</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{}</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new Payment Method.
+                </p>
+            </field>
+        </record>
+
+        <!--        <menuitem name="Payment Method" parent="measurement_conf_root" id="menu_payment_method_id" action="action_downpayment_method" />-->
+
+
+        <record id="view_downpayment_percentage_form" model="ir.ui.view">
+            <field name="name">team.downpayment.percentage.form</field>
+            <field name="model">team.payment.percentage</field>
+            <field name="arch" type="xml">
+                <form>
+                    <field name="name"/>
+                    <field name="percentage"/>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_downpayment_percentage_list_tree" model="ir.ui.view">
+            <field name="name">team.downpayment.percentage.tree</field>
+            <field name="model">team.payment.percentage</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="percentage"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_downpayment_percentage" model="ir.actions.act_window">
+            <field name="name">Down payment Percentage</field>
+            <field name="res_model">team.payment.percentage</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{}</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new Payment Method.
+                </p>
+            </field>
+        </record>
+
+        <!--        <menuitem name="Downpayment Percentage" parent="measurement_conf_root" id="menu_downpayment_percentage_id" action="action_downpayment_percentage" />-->
+
+        <record id="stock_product_search_form_view" model="ir.ui.view">
+            <field name="name">product.product.search.stock.form</field>
+            <field name="model">product.product</field>
+            <field name="mode">primary</field>
+            <field name="inherit_id" ref="product.product_search_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='inactive']" position="after">
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="Product Template" name="product_template" domain="[]"
+                                context="{'group_by':'product_tmpl_id'}"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="stock.stock_product_normal_action" model="ir.actions.act_window">
+            <field name="name">Product Variants</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">product.product</field>
+            <field name="view_mode">kanban,tree,form</field>
+            <field name="search_view_id" ref="team_sale_contract.stock_product_search_form_view"/>
+            <field name="domain">[('type', 'in', ('product', 'consu'))]</field>
+            <field name="context">{'search_default_product_template': 1}</field>
+        </record>
+
+
+        <!-- Promo codes -->
+        <record id="view_monthly_promo_form" model="ir.ui.view">
+            <field name="name">team.monthly.promo.form</field>
+            <field name="model">team.monthly.promo</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="image" widget='image' class="oe_avatar"/>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group name="left">
+                                <field name="type"/>
+                                <field name="attachment_id"/>
+                                <field name="company_id" options="{'no_create': True}"
+                                       groups="base.group_multi_company"/>
+                            </group>
+                            <group name="right">
+                                <field name="code" required="True"/>
+                                <field name="amount"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_monthly_promo_tree" model="ir.ui.view">
+            <field name="name">team.monthly.promo.tree</field>
+            <field name="model">team.monthly.promo</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="type"/>
+                    <field name="amount"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_monthly_promo" model="ir.actions.act_window">
+            <field name="name">Promo Codes</field>
+            <field name="res_model">team.monthly.promo</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new promo codes.
+                </p>
+            </field>
+        </record>
+
+        <menuitem name="Promo Codes" parent="measurement_conf_root" id="menu_monthly_promo" action="action_monthly_promo"/>
+
+    </data>
+</odoo>

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+
+    <!-- QUESTIONS -->
+    <record model="ir.ui.view" id="quote_question_form">
+        <field name="name">Form view for quote question</field>
+        <field name="model">team.quote.question</field>
+        <field name="arch" type="xml">
+            <form string="Quote Question">
+                <field name="sequence" invisible="1"/>
+                <sheet>
+                    <div class="oe_title" style="width: 100%;">
+                        <label for="name" string="Question"/>
+                        <separator />
+                        <field name="name" colspan="4"/>
+                        <separator />
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="question_type" widget="radio"/>
+                        </group>
+                        <group>
+                            <div class="col-lg-6 offset-lg-3 o_preview_questions">
+                                <!-- Multiple Lines Text Zone -->
+<!--                                <div attrs="{'invisible': [('question_type', '!=', 'free_text')]}">-->
+<!--                                        <i class="fa fa-align-justify fa-4x" role="img" aria-label="Multiple lines" title="Multiple Lines"/>-->
+<!--                                </div>-->
+                                <!-- Single Line Text Zone -->
+                                <div attrs="{'invisible': [('question_type', '!=', 'textbox')]}">
+                                    <i class="fa fa-minus fa-4x" role="img" aria-label="Single Line" title="Single Line"/>
+                                </div>
+                                <!-- Numerical Value -->
+                                <div attrs="{'invisible': [('question_type', '!=', 'numerical_box')]}">
+                                    <i class="fa fa-2x" role="img" aria-label="Numeric" title="Numeric">123..</i>
+                                </div>
+                                <!-- Date -->
+<!--                                <div attrs="{'invisible': [('question_type', '!=', 'date')]}">-->
+<!--                                    <p class="o_datetime">YYYY-MM-DD-->
+<!--                                        <i class="fa fa-calendar fa-2x" role="img" aria-label="Calendar" title="Calendar"/>-->
+<!--                                    </p>-->
+<!--                                </div>-->
+                                <!-- Date and Time -->
+<!--                                <div attrs="{'invisible': [('question_type', '!=', 'datetime')]}">-->
+<!--                                    <p class="o_datetime">YYYY-MM-DD hh:mm:ss-->
+<!--                                        <i class="fa fa-calendar fa-2x" role="img" aria-label="Calendar" title="Calendar"/>-->
+<!--                                    </p>-->
+<!--                                </div>-->
+                                <!-- Multiple choice: only one answer -->
+                                <div attrs="{'invisible': [('question_type', '!=', 'simple_choice')]}" role="img" aria-label="Multiple choice with one answer" title="Multiple choice with one answer">
+                                    <div class="row"><i class="fa fa-circle-o  fa-lg"/> answer</div>
+                                    <div class="row"><i class="fa fa-dot-circle-o fa-lg"/> answer</div>
+                                    <div class="row"><i class="fa fa-circle-o  fa-lg"/> answer</div>
+                                </div>
+                                <!-- Multiple choice: multiple answers allowed -->
+                                <div attrs="{'invisible': [('question_type', '!=', 'multiple_choice')]}" role="img" aria-label="Multiple choice with multiple answers" title="Multiple choice with multiple answers">
+                                    <div class="row"><i class="fa fa-square-o fa-lg"/> answer</div>
+                                    <div class="row"><i class="fa fa-check-square-o fa-lg"/> answer</div>
+                                    <div class="row"><i class="fa fa-square-o fa-lg"/> answer</div>
+                                </div>
+                            </div>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="show_in_measurement"/>
+                            <field name="show_in_contract"/>
+                            <field name="room_ids" widget="many2many_tags" options="{'no_create_edit': True}" required="1"/>
+                            <field name="product_category_ids" widget="many2many_tags" options="{'no_create_edit': True}" required="1"/>
+                            <field name="default_answer"/>
+                            <field name="amount_included"/>
+                        </group>
+                        <group>
+                            <field name="reflect_cost"/>
+                            <field name="exclude_from_discount"/>
+                            <field name="calculation_type" attrs="{'invisible': [('reflect_cost', '!=', True)], 'required': [('reflect_cost', '=', True)]}"/>
+                            <field name="multiply_with_area" attrs="{'invisible': [('reflect_cost', '!=', True), ('calculation_type', '!=', 'sqft')]}"/>
+                            <field name="differ_cost_based_on_count" attrs="{'invisible': ['|', ('reflect_cost', '!=', True), ('calculation_type', '!=', 'unit')]}"/>
+                            <field name="amount" attrs="{'invisible': [('differ_cost_based_on_count', '=', True), ('calculation_type', '=', 'unit')]}"/>
+                            <field name="count_cost_line" attrs="{'invisible': [('differ_cost_based_on_count', '!=', True)]}">
+                                <tree editable="bottom">
+                                    <field name="count" required="1"/>
+                                    <field name="amount" required="1"/>
+                                </tree>
+                                <form>
+                                    <group col="4">
+                                        <field name="count" required="1"/>
+                                        <field name="amount" required="1"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+
+
+                    </group>
+                    <notebook>
+                        <page string="Answers">
+                            <field name="validation_email" attrs="{'invisible': [('question_type', '!=', 'textbox')]}"/>
+                            <label for="validation_email" attrs="{'invisible': [('question_type', '!=', 'textbox')]}"/>
+                            <separator />
+                            <field name="labels_ids" string="Type of answers" context="{'default_question_id': active_id}" attrs="{'invisible': [('question_type', 'not in', ['simple_choice', 'multiple_choice', 'matrix'])]}">
+                                <tree editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="value" string="Choices"/>
+                                    <field name="is_correct"/>
+                                    <field name="answer_score"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Options">
+                            <group string="Constraints">
+                                <group colspan="2" col="4">
+                                    <field name="constr_mandatory" string="Mandatory Answer"/>
+                                    <field name="constr_error_msg" attrs="{'invisible': [('constr_mandatory', '=', False)]}"/>
+                                </group>
+                                <div colspan="2" attrs="{'invisible': [('question_type', 'not in', ['textbox', 'numerical_box'])]}">
+                                    <group>
+                                        <field name="validation_required" attrs="{'invisible': [('validation_email', '=', True), ('question_type', '=', 'textbox')]}"/>
+                                    </group>
+                                    <group col="4" attrs="{'invisible': [('validation_required', '=', False)]}">
+                                        <field name="validation_length_min" attrs="{'invisible': [('question_type', '!=', 'textbox')]}"/>
+                                        <field name="validation_length_max" attrs="{'invisible': [('question_type', '!=', 'textbox')]}"/>
+                                        <field name="validation_min_float_value" attrs="{'invisible': [('question_type', '!=', 'numerical_box')]}"/>
+                                        <field name="validation_max_float_value" attrs="{'invisible': [('question_type', '!=', 'numerical_box')]}"/>
+<!--                                        <field name="validation_min_date" attrs="{'invisible': [('question_type', '!=', 'date')]}"/>-->
+<!--                                        <field name="validation_max_date" attrs="{'invisible': [('question_type', '!=', 'date')]}"/>-->
+<!--                                        <field name="validation_min_datetime" widget="datetime" attrs="{'invisible': [('question_type', '!=', 'datetime')]}"/>-->
+<!--                                        <field name="validation_max_datetime" widget="datetime" attrs="{'invisible': [('question_type', '!=', 'datetime')]}"/>-->
+                                        <field name="validation_error_msg" colspan="4"/>
+                                    </group>
+                                </div>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="quote_question_tree">
+        <field name="name">Tree view for quote question</field>
+        <field name="model">team.quote.question</field>
+        <field name="arch" type="xml">
+            <tree string="Quote Question">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code" invisible="1"/>
+                <field name="show_in_measurement"/>
+                <field name="show_in_contract"/>
+                <field name="question_type"/>
+            </tree>
+        </field>
+    </record>
+    <record model="ir.ui.view" id="quote_question_search">
+        <field name="name">Search view for quote question</field>
+        <field name="model">team.quote.question</field>
+        <field name="arch" type="xml">
+            <search string="Search Question">
+                <field name="name" string="Question"/>
+                <field name="question_type" string="Type"/>
+                <group expand="1" string="Group By">
+                    <filter name="group_by_type" string="Type" domain="[]"  context="{'group_by':'question_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_quote_question_form">
+        <field name="name">Questions</field>
+        <field name="res_model">team.quote.question</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="quote_question_search"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+          <p class="o_view_nocontent_empty_folder">
+            No questions found
+          </p>
+        </field>
+    </record>
+
+    <menuitem name="Questions"
+        id="menu_quote_question_form1"
+        action="action_quote_question_form"
+        parent="measurement_conf_root"
+        sequence="50"/>
+
+    </data>
+</odoo>

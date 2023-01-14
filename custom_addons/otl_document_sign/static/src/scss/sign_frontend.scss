@@ -1,0 +1,49 @@
+
+.o_sign_document {
+    height: 100%;
+
+    > header {
+        flex: 0 0 auto;
+        height: $nav-link-height;
+        background-color: $o-brand-lightsecondary;
+        > div {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            a {
+                flex: 0 0 auto;
+                > img {
+                    height: $nav-link-height;
+                }
+            }
+
+            .o_sign_header_instruction {
+                font-size: 1.2em;
+                text-align: center;
+            }
+            .o_logo {
+                text-align: left;
+            }
+            .o_odoo {
+                text-align: right;
+            }
+        }
+    }
+}
+.btn-primary {
+    background-color: #FF5F5B;
+    border-color:  #FF5F5B;
+}
+.o_validate_button {
+    padding: 5px 30px 5px 30px;
+    font-weight: 600;
+    font-size: 22px;
+}
+.btn-primary:hover {
+    background-color: #FC0002;
+}
+.btn-primary.disabled, .btn-primary:disabled{
+    color: #FFFFFF;
+    background-color: #FF5F5B;
+    border-color: #FF5F5B;
+}

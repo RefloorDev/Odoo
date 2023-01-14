@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="create_set_otl_document_type_wizard_form" model="ir.ui.view">
+            <field name="name">Sign template model</field>
+            <field name="model">otl.document.otl_document_sign.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Sign template model">
+                    <group>
+                        <group>
+                            <field name="model_id" required="1" options="{'no_create_edit': True, 'no_open':True,'no_create': True}"/>
+                            <field name="upload_data" filename="file_name" required="1"/>
+                            <field name="file_name" invisible="1"/>
+                        </group>
+                        <group></group>
+                    </group>
+                    <span>Please Upload only PDF files.</span>
+                    <footer>
+                        <button name="upload_template" string="Proceed" type="object" class="oe_highlight"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_sign_set_default_otl_document_model" model="ir.actions.act_window">
+            <field name="name">Upload Template</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">otl.document.otl_document_sign.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="create_set_otl_document_type_wizard_form"/>
+            <field name="target">new</field>
+        </record>
+
+        <!--add default document model wizard menu -->
+        <menuitem id="otl_document_select_model_menu" name="Upload Template" parent="otl_document_sign.menu_document"
+                  action="otl_document_sign.action_sign_set_default_otl_document_model"
+                  groups="otl_document_sign.group_sign_manager"/>
+
+
+    </data>
+</odoo>

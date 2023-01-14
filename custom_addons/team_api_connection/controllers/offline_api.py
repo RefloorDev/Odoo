@@ -1,0 +1,1634 @@
+from odoo import fields,http, _
+from odoo.http import content_disposition, dispatch_rpc, request, \
+    serialize_exception as _serialize_exception, Response
+from odoo.exceptions import AccessError, UserError
+import json
+from json import loads
+import requests
+from odoo.tools import ustr, consteq, frozendict, pycompat, unique, date_utils
+from odoo.http import route
+import ast
+import base64
+import werkzeug
+from PIL import Image
+from datetime import datetime, timedelta
+from odoo.addons.team_api_configuration.jwt.api_jws import encode as JWT_ENCODE
+from odoo.addons.team_api_configuration.jwt.api_jws import decode as JWT_DECODE
+
+JWT_SECRET = 'secret'
+JWT_ALGORITHM = 'HS256'
+
+try:
+    from xmlrpc import client as xmlrpclib
+except ImportError:
+    import xmlrpclib
+
+try:
+    from secrets import token_hex
+except ImportError:
+    from os import urandom
+
+
+    def token_hex(nbytes=None):
+        return urandom(nbytes).hex()
+
+from odoo.addons.team_api_configuration.controllers.configurations import URL, DB, API_USER_ID, API_USER_PASSWORD
+from odoo.addons.team_api_connection.controllers.main import API_Homes
+
+common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(URL))
+models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+
+import logging
+
+_logger = logging.getLogger(__name__)
+
+
+class APIHomes(API_Homes):
+
+    # def reverse(self, string):
+    #     return "".join(reversed(string))
+    #
+    # def token_extract(self, token):
+    #     values = {}
+    #     token = (self.reverse(token)).encode("utf-8")
+    #     try:
+    #         token_decode = JWT_DECODE(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    #         token_decode = token_decode.decode("utf-8")
+    #         values = ast.literal_eval(token_decode)
+    #     except:
+    #         token_decode = ''
+    #     return values
+    #
+    # def get_credentials(self, token):
+    #     user_id = False
+    #     password = False
+    #
+    #     values = self.token_extract(token)
+    #     if values == {}:
+    #         return False, False
+    #     user_id = values.get('user_id', False)
+    #     password = values.get('password', False)
+    #     if user_id:
+    #         user_id = int(user_id)
+    #     return user_id, password
+
+    @route('/api/logout_from_device', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True)
+    def logout_from_device(self, **kwargs):
+        params = request.params.copy()
+        token = params.get('token', False)
+        if not token:
+            _logger.info("------------Token Missing in main logout_from_device api------------------")
+            return json.dumps({'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in main logout_from_device api-------------------")
+            return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in main logout_from_device api-------------------")
+            return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            result = models.execute_kw(DB, int(uid), password, 'res.users', 'action_logout_from_device', [int(uid)])
+        else:
+            result = message
+        return json.dumps(result)
+
+    @route('/api/get_master_data', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True)
+    def get_master_data(self, **kwargs):
+        """
+            Get Master Data
+            @api {POST}/api/get_master_data Get Master Data Contents
+            @apiVersion 1.0.0
+            @apiName Get Master Data
+            @apiGroup Salesman
+            @apiDescription Get Master Data Contents
+
+            @apiParam {String} token Token.
+            @apiParamExample {form-data} Request-Example:
+            token:cQQ4u07DsUKBjCzJdG1DZy7RDnvPeEVnnfidHob_EQw.9JCUQFEdzVGdiojIkJ3b3N3chBnIsUTNxojIkl2XyV2c1Jye.9JiN1IzUIJiOicGbhJCLiQ1VKJiOiAXe0Jye
+
+            @apiSuccessExample {json} Success-Response:
+             HTTP/1.1 200 OK
+            {
+                "result": "Success",
+                "message": "Master Data retrieved successfully.",
+                "rooms": [
+                    {
+                        "id": 24,
+                        "name": "CLOSET 2",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 25,
+                        "name": "STAIRS 3",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Stairs"
+                    },
+                    {
+                        "id": 26,
+                        "name": "STAIRS 2",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Stairs"
+                    },
+                    {
+                        "id": 27,
+                        "name": "LANDING 3",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 28,
+                        "name": "LANDING 2",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 29,
+                        "name": "HALLWAY 2",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 30,
+                        "name": "NOOK",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 31,
+                        "name": "HALLWAY 3",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 19,
+                        "name": "LIVING ROOM",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 11,
+                        "name": "DEN",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 20,
+                        "name": "OFFICE",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 4,
+                        "name": "BATHROOM 2",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 18,
+                        "name": "LAUNDRY ROOM",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 22,
+                        "name": "STUDY",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 1,
+                        "name": "BAR",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 8,
+                        "name": "BEDROOM 3",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 9,
+                        "name": "BEDROOM 4",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 13,
+                        "name": "FAMILY ROOM",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 32,
+                        "name": "HALLWAY 1",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 14,
+                        "name": "FOYER",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 23,
+                        "name": "SUNROOM",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 5,
+                        "name": "BATHROOM 3",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 33,
+                        "name": "CLOSET 1",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 16,
+                        "name": "KITCHEN",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 2,
+                        "name": "BASEMENT",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 21,
+                        "name": "STAIRS",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Stairs"
+                    },
+                    {
+                        "id": 3,
+                        "name": "BATHROOM 1",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 7,
+                        "name": "BEDROOM 2",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 12,
+                        "name": "DINING ROOM",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 34,
+                        "name": "LANDING 1",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 6,
+                        "name": "BEDROOM 1",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 35,
+                        "name": "CLOSET 3",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    },
+                    {
+                        "id": 36,
+                        "name": "CLOSET 4",
+                        "note": "",
+                        "company_id": 1,
+                        "image": "",
+                        "room_category": "Vinyl Flooring"
+                    }
+                ],
+                "questionnaires": [
+                    {
+                        "id": 1,
+                        "name": "Current Surface",
+                        "code": "CurrentCoveringType",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "simple_choice",
+                        "Refelct_in_cost": true,
+                        "calculation_type": "sqft",
+                        "amount": 0,
+                        "amount_included": 0,
+                        "sequence": 0,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 1,
+                                "sequence": 10,
+                                "value": "Carpet",
+                                "is_correct": false,
+                                "answer_score": ""
+                            },
+                            {
+                                "question_id": 1,
+                                "sequence": 10,
+                                "value": "Ceramic Tile (backerboard)",
+                                "is_correct": false,
+                                "answer_score": 5.5
+                            },
+                            {
+                                "question_id": 1,
+                                "sequence": 10,
+                                "value": "Ceramic Tile (mud bed)",
+                                "is_correct": false,
+                                "answer_score": 10.0
+                            },
+                            {
+                                "question_id": 1,
+                                "sequence": 10,
+                                "value": "Concrete / Cement",
+                                "is_correct": false,
+                                "answer_score": ""
+                            },
+                            {
+                                "question_id": 1,
+                                "sequence": 10,
+                                "value": "Hardwood",
+                                "is_correct": false,
+                                "answer_score": 2.0
+                            },
+                            {
+                                "question_id": 1,
+                                "sequence": 10,
+                                "value": "Laminate",
+                                "is_correct": false,
+                                "answer_score": ""
+                            },
+                            {
+                                "question_id": 1,
+                                "sequence": 10,
+                                "value": "Linoleum",
+                                "is_correct": false,
+                                "answer_score": ""
+                            },
+                            {
+                                "question_id": 1,
+                                "sequence": 10,
+                                "value": "Sticky Tile",
+                                "is_correct": false,
+                                "answer_score": ""
+                            },
+                            {
+                                "question_id": 1,
+                                "sequence": 10,
+                                "value": "Other",
+                                "is_correct": false,
+                                "answer_score": ""
+                            },
+                            {
+                                "question_id": 1,
+                                "sequence": 10,
+                                "value": "Sheet Vinyl",
+                                "is_correct": false,
+                                "answer_score": 1.75
+                            }
+                        ]
+                    },
+                    {
+                        "id": 2,
+                        "name": "Remove Existing Surface",
+                        "code": "RemoveCurrentCovering",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "simple_choice",
+                        "Refelct_in_cost": false,
+                        "calculation_type": "unit",
+                        "amount": 0,
+                        "amount_included": 0,
+                        "sequence": 1,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 2,
+                                "sequence": 10,
+                                "value": "Yes",
+                                "is_correct": false,
+                                "answer_score": ""
+                            },
+                            {
+                                "question_id": 2,
+                                "sequence": 10,
+                                "value": "No",
+                                "is_correct": false,
+                                "answer_score": ""
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3,
+                        "name": "Appliances to be Moved",
+                        "code": "Appliances",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "numerical_box",
+                        "Refelct_in_cost": false,
+                        "calculation_type": "unit",
+                        "amount": 0,
+                        "amount_included": 0,
+                        "sequence": 2,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 3,
+                                "value": ""
+                            }
+                        ]
+                    },
+                    {
+                        "id": 18,
+                        "name": "Stair Count",
+                        "code": "StairCount",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "numerical_box",
+                        "Refelct_in_cost": true,
+                        "calculation_type": "unit",
+                        "amount": 210.0,
+                        "amount_included": 0,
+                        "sequence": 2,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": []
+                    },
+                    {
+                        "id": 14,
+                        "name": "Stair Width",
+                        "code": "StairWidth",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "numerical_box",
+                        "Refelct_in_cost": false,
+                        "calculation_type": "unit",
+                        "amount": 0,
+                        "amount_included": 0,
+                        "sequence": 3,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": []
+                    },
+                    {
+                        "id": 4,
+                        "name": "Standard Furniture to be Moved",
+                        "code": "FurnitureNormal",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "simple_choice",
+                        "Refelct_in_cost": false,
+                        "calculation_type": "fixed",
+                        "amount": 0,
+                        "amount_included": 0,
+                        "sequence": 3,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 4,
+                                "value": ""
+                            },
+                            {
+                                "question_id": 4,
+                                "sequence": 10,
+                                "value": "Yes",
+                                "is_correct": false,
+                                "answer_score": ""
+                            },
+                            {
+                                "question_id": 4,
+                                "sequence": 10,
+                                "value": "No",
+                                "is_correct": false,
+                                "answer_score": ""
+                            }
+                        ]
+                    },
+                    {
+                        "id": 19,
+                        "name": "Cover Risers",
+                        "code": "StairCoverRisers",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "simple_choice",
+                        "Refelct_in_cost": false,
+                        "calculation_type": "unit",
+                        "amount": 0,
+                        "amount_included": 0,
+                        "sequence": 4,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 19,
+                                "sequence": 10,
+                                "value": "Yes",
+                                "is_correct": false,
+                                "answer_score": ""
+                            },
+                            {
+                                "question_id": 19,
+                                "sequence": 10,
+                                "value": "No",
+                                "is_correct": false,
+                                "answer_score": ""
+                            }
+                        ]
+                    },
+                    {
+                        "id": 5,
+                        "name": "Heavy Furniture to be Moved",
+                        "code": "FurnitureHeavy",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "numerical_box",
+                        "Refelct_in_cost": true,
+                        "calculation_type": "fixed",
+                        "amount": 120.0,
+                        "amount_included": 0,
+                        "sequence": 4,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 5,
+                                "value": ""
+                            }
+                        ]
+                    },
+                    {
+                        "id": 6,
+                        "name": "Piano or Pool Table",
+                        "code": "MovePianoPoolTable",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "simple_choice",
+                        "Refelct_in_cost": true,
+                        "calculation_type": "fixed",
+                        "amount": 0,
+                        "amount_included": 0,
+                        "sequence": 5,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 6,
+                                "value": ""
+                            },
+                            {
+                                "question_id": 6,
+                                "sequence": 10,
+                                "value": "Piano",
+                                "is_correct": false,
+                                "answer_score": 250.0
+                            },
+                            {
+                                "question_id": 6,
+                                "sequence": 10,
+                                "value": "Pool Table",
+                                "is_correct": false,
+                                "answer_score": 330.0
+                            }
+                        ]
+                    },
+                    {
+                        "id": 16,
+                        "name": "Pedestal Sink R/R",
+                        "code": "PedestalSink",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "simple_choice",
+                        "Refelct_in_cost": true,
+                        "calculation_type": "unit",
+                        "amount": 100.0,
+                        "amount_included": 0,
+                        "sequence": 6,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 16,
+                                "value": ""
+                            },
+                            {
+                                "question_id": 16,
+                                "sequence": 10,
+                                "value": "Yes",
+                                "is_correct": false,
+                                "answer_score": ""
+                            },
+                            {
+                                "question_id": 16,
+                                "sequence": 10,
+                                "value": "No",
+                                "is_correct": false,
+                                "answer_score": ""
+                            }
+                        ]
+                    },
+                    {
+                        "id": 8,
+                        "name": "Fireplace Scribe/Seal ft",
+                        "code": "FireplaceScribeSealFt",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "numerical_box",
+                        "Refelct_in_cost": true,
+                        "calculation_type": "sqft",
+                        "amount": 5.0,
+                        "amount_included": 0,
+                        "sequence": 7,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 8,
+                                "value": ""
+                            }
+                        ]
+                    },
+                    {
+                        "id": 20,
+                        "name": "Undercut Fireplace",
+                        "code": "FireplaceUndercut",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "numerical_box",
+                        "Refelct_in_cost": true,
+                        "calculation_type": "unit",
+                        "amount": 10.0,
+                        "amount_included": 0,
+                        "sequence": 8,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 20,
+                                "value": ""
+                            }
+                        ]
+                    },
+                    {
+                        "id": 10,
+                        "name": "Toilet R/R",
+                        "code": "Toilet",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "simple_choice",
+                        "Refelct_in_cost": true,
+                        "calculation_type": "unit",
+                        "amount": 85.0,
+                        "amount_included": 0,
+                        "sequence": 9,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 10,
+                                "value": ""
+                            },
+                            {
+                                "question_id": 10,
+                                "sequence": 10,
+                                "value": "Yes",
+                                "is_correct": false,
+                                "answer_score": ""
+                            },
+                            {
+                                "question_id": 10,
+                                "sequence": 10,
+                                "value": "No",
+                                "is_correct": false,
+                                "answer_score": ""
+                            }
+                        ]
+                    },
+                    {
+                        "id": 11,
+                        "name": "1/4 Plywood Sheets Required",
+                        "code": "QuarterInchPlywood",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "numerical_box",
+                        "Refelct_in_cost": true,
+                        "calculation_type": "unit",
+                        "amount": 95.0,
+                        "amount_included": 0,
+                        "sequence": 10,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 11,
+                                "value": ""
+                            }
+                        ]
+                    },
+                    {
+                        "id": 12,
+                        "name": "3/4 Plywood Sheets Required",
+                        "code": "ThreeQuarterInchPlywood",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "numerical_box",
+                        "Refelct_in_cost": true,
+                        "calculation_type": "unit",
+                        "amount": 95.0,
+                        "amount_included": 0,
+                        "sequence": 11,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 12,
+                                "value": ""
+                            }
+                        ]
+                    },
+                    {
+                        "id": 13,
+                        "name": "Sqft of Leveling Required",
+                        "code": "LevelingSolutionSqft",
+                        "company_id": 1,
+                        "description": "",
+                        "question_type": "numerical_box",
+                        "Refelct_in_cost": true,
+                        "calculation_type": "sqft",
+                        "amount": 2.0,
+                        "amount_included": 0,
+                        "sequence": 12,
+                        "default_answer": "",
+                        "exclude_from_discount": false,
+                        "quote_label": [
+                            {
+                                "question_id": 13,
+                                "value": ""
+                            }
+                        ]
+                    }
+                ],
+                "flooring_colors": [
+                    {
+                        "material_id": 25110,
+                        "name": "Stairs - Econoline",
+                        "color": "Artisan Plank Country Natural",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/CountryNatural.png"
+                    },
+                    {
+                        "material_id": 25111,
+                        "name": "Stairs - Econoline",
+                        "color": "Artisan Plank Finnish Pine",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/FinnishPine.jpg"
+                    },
+                    {
+                        "material_id": 25079,
+                        "name": "Stairs - Econoline",
+                        "color": "Artisan Plank Frontier",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Frontier.png"
+                    },
+                    {
+                        "material_id": 25062,
+                        "name": "Stairs - Econoline",
+                        "color": "Artisan Plank Highland Grey",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/HighlandGrey.png"
+                    },
+                    {
+                        "material_id": 25063,
+                        "name": "Stairs - Econoline",
+                        "color": "Artisan Plank Platinum Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/PlatinumOak.jpg"
+                    },
+                    {
+                        "material_id": 25014,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Belmont Hickory",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Belmont_Hickory.jpg"
+                    },
+                    {
+                        "material_id": 25015,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Biscayne Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Biscayne_Oak.jpg"
+                    },
+                    {
+                        "material_id": 25016,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Chandler Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Chandler_Oak.jpg"
+                    },
+                    {
+                        "material_id": 25017,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Chesapeake Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Chesapeake_Oak.jpg"
+                    },
+                    {
+                        "material_id": 25018,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Copano Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Copano_Oak.jpg"
+                    },
+                    {
+                        "material_id": 25019,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Duxbury Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Duxbury_Oak.jpg"
+                    },
+                    {
+                        "material_id": 25024,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Enhanced Aldergrove Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Aldergrove_Oak.jpg"
+                    },
+                    {
+                        "material_id": 25025,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Enhanced Elster Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Elster_Oak.jpg"
+                    },
+                    {
+                        "material_id": 25026,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Enhanced Nicola Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Nicola_Oak.jpg"
+                    },
+                    {
+                        "material_id": 25027,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Enhanced Shoreline Maple",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Shoreline_Maple.jpg"
+                    },
+                    {
+                        "material_id": 25020,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Galveston Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Galveston_Oak.jpg"
+                    },
+                    {
+                        "material_id": 25028,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Hd Cheshire Elm",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Cheshire_Elm.jpg"
+                    },
+                    {
+                        "material_id": 25021,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Hobbs Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Hobbs_Oak.jpg"
+                    },
+                    {
+                        "material_id": 25022,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Monterey Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Monterey_Oak.jpg"
+                    },
+                    {
+                        "material_id": 25023,
+                        "name": "Stairs - Econoline",
+                        "color": "Coretec Pro Plus Quincy Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Quincy_Oak.jpg"
+                    },
+                    {
+                        "material_id": 24948,
+                        "name": "Vinyl Flooring - Smart Choice",
+                        "color": "Delacy",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Delacy.png"
+                    },
+                    {
+                        "material_id": 25108,
+                        "name": "Stairs - Econoline",
+                        "color": "Encore Cordova Cherry",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Encore_Cordova_Cherry.png"
+                    },
+                    {
+                        "material_id": 25109,
+                        "name": "Stairs - Econoline",
+                        "color": "Encore Tavern Hickory",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Encore_Tavern_Hickory.png"
+                    },
+                    {
+                        "material_id": 25114,
+                        "name": "Stairs - Econoline",
+                        "color": "Encore Teak Harbor",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Encore_Teak_Harbor.png"
+                    },
+                    {
+                        "material_id": 24942,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Aged Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_Aged_Oak.jpg"
+                    },
+                    {
+                        "material_id": 24934,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Barnwood",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_Barnwood.jpg"
+                    },
+                    {
+                        "material_id": 24941,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Bold Wood",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_Bold_Wood.jpg"
+                    },
+                    {
+                        "material_id": 24933,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Brushed Hickory",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_Brushed_Hickory.jpg"
+                    },
+                    {
+                        "material_id": 24936,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Canyon Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_Canyon_Oak.jpg"
+                    },
+                    {
+                        "material_id": 24939,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Distinct Wood",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_Distinct_Wood.jpg"
+                    },
+                    {
+                        "material_id": 24935,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting English Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_English_Oak.jpg"
+                    },
+                    {
+                        "material_id": 24945,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Heritage Wood",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_Heritage_Wood.jpg"
+                    },
+                    {
+                        "material_id": 24940,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Laurel Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_Laurel_Oak.jpg"
+                    },
+                    {
+                        "material_id": 24938,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Monticello (Multi-width)",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_Monticello.jpg"
+                    },
+                    {
+                        "material_id": 24937,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Reclaimed",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_Reclaimed.jpg"
+                    },
+                    {
+                        "material_id": 24944,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Umber",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_Umber.jpg"
+                    },
+                    {
+                        "material_id": 24943,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Vintage Oak (Multi-width)",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_XL_Vintage_Oak.jpg"
+                    },
+                    {
+                        "material_id": 24932,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting Weathered",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_Weathered.jpg"
+                    },
+                    {
+                        "material_id": 24929,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting XL Appalachian Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_XL_Appalachian_Oak.jpg"
+                    },
+                    {
+                        "material_id": 24930,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting XL Driftwood Grey Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_XL_Driftwood_Grey Oak.jpg"
+                    },
+                    {
+                        "material_id": 24926,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting XL Greystone Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_XL_Greystone_Oak.jpg"
+                    },
+                    {
+                        "material_id": 25029,
+                        "name": "Stairs - Premium",
+                        "color": "Everlasting XL Kentucky Bourbon Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_XL_Kentucky_Bourbon_Oak.jpg"
+                    },
+                    {
+                        "material_id": 24931,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting XL New England Maple",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_XL_New_England_Maple.jpg"
+                    },
+                    {
+                        "material_id": 24927,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting XL Smokehouse Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Everlasting_XL_Smokehouse_Oak.jpg"
+                    },
+                    {
+                        "material_id": 24928,
+                        "name": "Stairs - Econoline",
+                        "color": "Everlasting XL Whiskey Barrel Oak",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/WhiskeyBarrelOak600_600.jpg"
+                    },
+                    {
+                        "material_id": 25051,
+                        "name": "Stairs - Econoline",
+                        "color": "Heatherstone",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Heatherstone.jpg"
+                    },
+                    {
+                        "material_id": 24919,
+                        "name": "Stairs - Econoline",
+                        "color": "Pure Tile Newcastle Dove",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Pure_Tile_Newcastle_Dove.jpg"
+                    },
+                    {
+                        "material_id": 24923,
+                        "name": "Stairs - Econoline",
+                        "color": "Pure Tile Newcastle Shadow",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Pure_Tile_Newcastle_Shadow.jpg"
+                    },
+                    {
+                        "material_id": 24925,
+                        "name": "Stairs - Econoline",
+                        "color": "Pure Tile Newcastle Shell",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Pure_Tile_Newcastle_Shell.jpg"
+                    },
+                    {
+                        "material_id": 24924,
+                        "name": "Stairs - Econoline",
+                        "color": "Pure Tile Newcastle Smoke",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Pure_Tile_Newcastle_Smoke.jpg"
+                    },
+                    {
+                        "material_id": 24921,
+                        "name": "Stairs - Econoline",
+                        "color": "Pure Tile Zinc Stone",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Pure_Tile_Zinc_Stone.jpg"
+                    },
+                    {
+                        "material_id": 24922,
+                        "name": "Stairs - Econoline",
+                        "color": "Pure Tile Zinc Umber",
+                        "material_image_url": "https://refloormichigan.com/FlooringThumbs/Pure_Tile_Zinc_Umber.jpg"
+                    }
+                ],
+                "molding_types": [
+                    {
+                        "molding_id": 5,
+                        "name": "NO MOLDING"
+                    },
+                    {
+                        "molding_id": 2,
+                        "name": "Vinyl White"
+                    },
+                    {
+                        "molding_id": 3,
+                        "name": "Unfinished"
+                    }
+                ],
+                "discount_coupons": [
+                    {
+                        "Code": "BIGOFF",
+                        "Amount": "1000",
+                        "Type": "Dollars"
+                    },
+                    {
+                        "Code": "SAVE500",
+                        "Amount": "500",
+                        "Type": "Dollars"
+                    },
+                    {
+                        "Code": "MAGIC5",
+                        "Amount": "5",
+                        "Type": "Percent"
+                    }
+                ],
+                "product_plans": [
+                    {
+                        "id": 79,
+                        "plan_title": "Vinyl Flooring - Economy",
+                        "plan_subtitle": "Pressboard",
+                        "description": "Recommendation - If you are flipping your house",
+                        "material_cost": 10.56,
+                        "warranty": "",
+                        "sequence": 1,
+                        "company_id": 0,
+                        "cost_per_sqft": 13.56,
+                        "monthly_promo": 0,
+                        "warranty_info": "1 year warranty",
+                        "eligible_for_discounts": "false",
+                        "unit_of_measure": "each",
+                        "grade": "Econoline",
+                        "stair_cost": 132.3
+                    },
+                    {
+                        "id": 311,
+                        "plan_title": "Vinyl Flooring - Standard",
+                        "plan_subtitle": "Vinyl Plank",
+                        "description": "Recommendation - if you are moving in the next 5 years",
+                        "material_cost": 14.61,
+                        "warranty": "",
+                        "sequence": 2,
+                        "company_id": 0,
+                        "cost_per_sqft": 17.61,
+                        "monthly_promo": 0,
+                        "warranty_info": "4 year warranty",
+                        "eligible_for_discounts": "false",
+                        "unit_of_measure": "each",
+                        "grade": "Standard",
+                        "stair_cost": 189.0
+                    },
+                    {
+                        "id": 312,
+                        "plan_title": "Vinyl Flooring - Smart Choice",
+                        "plan_subtitle": "",
+                        "description": "Recommendation - If you are planning to stay in your home for 5 years or more",
+                        "material_cost": 16.24,
+                        "warranty": "",
+                        "sequence": 3,
+                        "company_id": 0,
+                        "cost_per_sqft": 19.24,
+                        "monthly_promo": 0,
+                        "warranty_info": "Lifetime Guarantee",
+                        "eligible_for_discounts": "true",
+                        "unit_of_measure": "each",
+                        "grade": "Smart Choice",
+                        "stair_cost": 210.0
+                    },
+                    {
+                        "id": 313,
+                        "plan_title": "Vinyl Flooring - Premium",
+                        "plan_subtitle": "Hardwood",
+                        "description": "Recommendation - If you are planning to use high end",
+                        "material_cost": 19.49,
+                        "warranty": "",
+                        "sequence": 4,
+                        "company_id": 0,
+                        "cost_per_sqft": 22.49,
+                        "monthly_promo": 0,
+                        "warranty_info": "10 Year Warranty",
+                        "eligible_for_discounts": "false",
+                        "unit_of_measure": "each",
+                        "grade": "Premium",
+                        "stair_cost": 252.0
+                    }
+                ]
+            }
+
+            @apiErrorExample {json} Error-Response:
+            HTTP/1.1 200 OK
+            {
+                "result": "AuthFailed",
+                "message": "You have been logged into another device using the same account. Please login again.",
+                "token": 1
+            }
+            {
+                "result": "Failed",
+                "message": "Something went wrong while fetching master data.",
+                "token": 1
+            }
+
+            @apiError (Error Code) {Number} 500 Internal Server Error.
+
+            @apiSampleRequest off
+        """
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.params.copy()
+        token = params.get('token', False)
+        if not token:
+            _logger.info("------------Token Missing in main get_master_data api------------------")
+            return json.dumps({'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in main get_master_data api-------------------")
+            return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in main get_master_data api-------------------")
+            return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            result = models.execute_kw(DB, int(uid), password, 'res.users', 'get_master_data_contents', [{}])
+        else:
+            result = message
+        return json.dumps(result)
+
+    @route('/api/get_appointments', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True)
+    def get_appointments(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.params.copy()
+        token = params.get('token', False)
+        if not token:
+            _logger.info("------------Token Missing in main get_appointments api------------------")
+            return json.dumps({'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in main get_appointments api-------------------")
+            return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in main get_appointments api-------------------")
+            return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            appointment_data = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                                 'action_get_appointment_data', [int(uid)])
+
+            result = {
+                'result': 'Success',
+                'appointments': appointment_data,
+                'message': '',
+            }
+        else:
+            result = message
+        return json.dumps(result)
+
+    @route('/api/update_customer_and_room_information', type='json', auth="none", methods=['POST'], csrf=False)
+    def update_customer_and_room_information(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.jsonrequest.copy()
+        token = params.get('token', False)
+        data = params.get('data', False)
+        _logger.info("------------update_customer_and_room_information params: %s------------------" % (params))
+        if not token:
+            _logger.info("------------Token Missing in main update_customer_and_room_information api------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in main update_customer_and_room_information api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in main update_customer_and_room_information api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            appointment_data = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                                 'action_update_customer_and_room_information', [data])
+
+            result = appointment_data
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/update_customer_and_room_information', data, uid, result)
+        result.update({'override_json_result': 1})
+        return json.dumps(result)
+
+    @route('/api/update_contract_information', type='json', auth="none", methods=['POST'], csrf=False)
+    def update_contract_information(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.jsonrequest.copy()
+        token = params.get('token', False)
+        data = params.get('data', False)
+        _logger.info("------------update_contract_information params: %s------------------" % (params))
+        if not token:
+            _logger.info("------------Token Missing in main update_contract_information api------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in main update_contract_information api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in main update_contract_information api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                                 'action_update_contract_information', [data])
+
+            result = payment_data_result
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/update_contract_information', data, uid,
+                                                              result)
+        result.update({'override_json_result': 1})
+        return json.dumps(result)
+
+    @route('/api/upload_images', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
+    def upload_images(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.params.copy()
+        token = params.get('token', '')
+        appointment_id = params.get('appointment_id', 0) and int(params.get('appointment_id', 0)) or 0
+        room_id = params.get('room_id', 0) and int(params.get('room_id', 0)) or 0
+        image_type = params.get('image_type', '')
+        image_name = params.get('image_name', '')
+        data_completed = params.get('data_completed', 0)
+        file = params.get('file', False)
+        _logger.info("------------add_screenshots params: %s------------------" % (params))
+        data = []
+        result = {}
+        file_data = {}
+        image_id = 0
+        image_already_existing = True
+        if not token:
+            _logger.info("------------Token Missing in add_screenshots------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in add_screenshots-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in add_screenshots-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            if not file:
+                return json.dumps({'result': 'Failed', 'message': 'Empty attachment in values.'})
+
+            if type(file) == werkzeug.datastructures.FileStorage:
+                image_binary = (file.read())
+                file_data.update({
+                    'uid': int(uid),
+                    'image': base64.encodestring(image_binary),
+                    'file_name': image_name or file.filename,
+                    'appointment_id': appointment_id,
+                    'image_type': image_type,
+                })
+                data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment', 'action_upload_images',
+                                         [file_data])
+            if data:
+                image_id = data[0].get('attachment_id', False)
+                image_already_existing = data[0].get('image_already_existing', False)
+                if image_already_existing:
+                    result = {
+                        'message': 'File is already existing',
+                        'result': 'Success',
+                        'image_name': image_name
+                    }
+                else:
+                    if image_id:
+                        image_vals = {
+                            'appointment_id': appointment_id,
+                            'attachment_id': image_id,
+                            'image_type': image_type,
+                            'image_name': image_name,
+                            'room_id': room_id,
+                            'data_completed': data_completed,
+                        }
+                        result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment', 'action_link_uploaded_image',
+                                                   [image_vals])
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/upload_images', {'appointment_id': appointment_id}, uid,
+                                                              result)
+        result.update({'override_json_result': 1})
+        return json.dumps(result)
+
+    @route('/api/generate_contract_document', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
+    def generate_contract_document(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.params.copy()
+        token = params.get('token', '')
+        contract_plumbing_option_1 = params.get('contract_plumbing_option_1', 0) and int(params.get('contract_plumbing_option_1', 0)) or 0
+        contract_plumbing_option_2 = params.get('contract_plumbing_option_2', 0) and int(params.get('contract_plumbing_option_2', 0)) or 0
+        if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
+                (not contract_plumbing_option_1 and not contract_plumbing_option_2):
+            return json.dumps({
+                'override_json_result': 1,
+                'result': 'Failed',
+                'message': 'Plumbing option should select either one option'
+            })
+        appointment_id = params.get('appointment_id', 0) and int(params.get('appointment_id', 0)) or 0
+        _logger.info("------------generate_contract_document params: %s------------------" % (params))
+        result = {}
+        if not token:
+            _logger.info("------------Token Missing in generate_contract_document------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in generate_contract_document-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in generate_contract_document-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            data = {
+                'appointment_id': appointment_id,
+                'contract_plumbing_option_1': contract_plumbing_option_1,
+                'contract_plumbing_option_2': contract_plumbing_option_2,
+            }
+            result = models.execute_kw(DB, int(uid), password, 'sale.order', 'action_generate_contract_document',
+                                         [data])
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/generate_contract_document', data, uid,
+                                                              result)
+        result.update({'override_json_result': 1})
+        return json.dumps(result)
+
+    @route('/api/initiate_sync_to_i360', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
+    def initiate_sync_to_i360(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.params.copy()
+        token = params.get('token', '')
+        appointment_id = params.get('appointment_id', 0) and int(params.get('appointment_id', 0)) or 0
+        sync_delay = params.get('sync_delay', 1) and int(params.get('sync_delay', 1)) or 1
+        result = {}
+        if not token:
+            _logger.info("------------Token Missing in generate_contract_document------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in generate_contract_document-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in generate_contract_document-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            data = {
+                'appointment_id': appointment_id,
+                'sync_delay': sync_delay,
+            }
+            result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                       'action_initiate_sync_to_i360',
+                                       [data])
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/initiate_sync_to_i360', data, uid,
+                                                              result)
+        result.update({'override_json_result': 1})
+        return json.dumps(result)
+
+    @route('/api/initiate_sync_to_i360_json', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True, )
+    def initiate_sync_to_i360_json(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.jsonrequest.copy()
+        token = params.get('token', '')
+        data = params.get('data', [])
+        result = {}
+        if not token:
+            _logger.info("------------Token Missing in generate_contract_document------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in generate_contract_document-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in generate_contract_document-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                       'action_initiate_sync_to_i360',
+                                       [data])
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/initiate_sync_to_i360_json', data, uid,
+                                                              result)
+        result.update({'override_json_result': 1})
+        return json.dumps(result)
+
+    @route('/api/update_sync_log', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True, )
+    def update_sync_log(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.jsonrequest.copy()
+        token = params.get('token', '')
+        data = params.get('data', [])
+        if not token:
+            _logger.info("------------Token Missing in generate_contract_document------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in generate_contract_document-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in generate_contract_document-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                       'action_update_sync_log',
+                                       [data])
+        else:
+            result = message
+        result.update({'override_json_result': 1})
+        return json.dumps(result)
+
+    @route('/api/create_order_and_update_measurements', type='json', auth="none", methods=['POST'], csrf=False)
+    def create_order_and_update_measurements(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.jsonrequest.copy()
+        token = params.get('token', False)
+        data = params.get('data', False)
+        _logger.info("------------create_order_and_update_measurements params: %s------------------" % (params))
+        if not token:
+            _logger.info("------------Token Missing in main update_contract_information api------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in main create_order_and_update_measurements api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in main create_order_and_update_measurements api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                                 'action_create_order_and_update_measurements', [data])
+
+            result = payment_data_result
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements', data, uid,
+                                                              result)
+        result.update({'override_json_result': 1})
+        return json.dumps(result)
