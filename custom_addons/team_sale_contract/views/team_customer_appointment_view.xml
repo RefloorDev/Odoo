@@ -99,6 +99,9 @@
                         <field name="measurement_exist" invisible="1"/>
                         <field name="send_physical_document" readonly="1"/>
                         <field name="credit_application_url" widget="url" readonly="1" invisible="1"/>
+                        <field name="office_location_id" readonly="1"/>
+                        <field name="market_segment" readonly="1"/>
+                        <field name="app_version_id" readonly="1"/>
                     </group>
                     <group col="4" string="Additional Comments" attrs="{'invisible': [('additional_comments', '=', False)]}">
                         <field name="additional_comments" readonly="1" nolabel="1" placeholder="Additional Comments...."/>
@@ -244,6 +247,19 @@
                                     </group>
                                 </form>
                             </field>
+                        </page>
+                        <page string="Card Transaction History" attrs="{'invisible': [('transaction_log_exists', '!=', True)]}">
+                            <field name="transaction_log_exists" invisible="1"/>
+                            <group>
+                                    <field name="card_transaction_log_line" nolabel="1" readonly="1">
+                                        <tree string="Transaction Log">
+                                            <field name="name"/>
+                                            <field name="state"/>
+                                            <field name="message"/>
+                                            <field name="error_code"/>
+                                        </tree>
+                                    </field>
+                                </group>
                         </page>
                     </notebook>
                 </sheet>

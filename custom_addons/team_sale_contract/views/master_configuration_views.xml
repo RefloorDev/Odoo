@@ -750,5 +750,152 @@
 
         <menuitem name="Promo Codes" parent="measurement_conf_root" id="menu_monthly_promo" action="action_monthly_promo"/>
 
+
+        <!-- Office Locations -->
+        <record id="view_office_location_form" model="ir.ui.view">
+            <field name="name">otl.office.location.form</field>
+            <field name="model">otl.office.location</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group name="left">
+                                <field name="company_id" options="{'no_create': True}"
+                                       groups="base.group_multi_company"/>
+                            </group>
+                            <group name="right">
+                                <field name="active" invisible="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Special Pricing">
+                                <field name="special_price_line">
+                                    <tree editable="bottom">
+                                        <field name="product_tmpl_id" options="{'no_open':True,'no_create': True}"/>
+                                        <field name="start_date" required="1"/>
+                                        <field name="end_date" required="1"/>
+                                        <field name="list_price"/>
+                                        <field name="msrp"/>
+                                        <field name="max_discount"/>
+                                    </tree>
+                                    <form>
+                                        <group>
+                                            <group>
+                                                <field name="product_tmpl_id" options="{'no_open':True,'no_create': True}"/>
+                                                <field name="list_price"/>
+                                                <field name="msrp"/>
+                                                <field name="max_discount"/>
+                                            </group>
+                                            <group>
+                                                <field name="start_date" required="1"/>
+                                                <field name="end_date" required="1"/>
+                                            </group>
+                                        </group>
+                                    </form>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_office_location_tree" model="ir.ui.view">
+            <field name="name">otl.office.location.tree</field>
+            <field name="model">otl.office.location</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_office_location" model="ir.actions.act_window">
+            <field name="name">Office Locations</field>
+            <field name="res_model">otl.office.location</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new office location.
+                </p>
+            </field>
+        </record>
+
+        <menuitem name="Office Locations" parent="measurement_conf_root" id="menu_office_location" action="action_office_location"/>
+
+        <!-- Sales App Versions -->
+        <record id="view_sales_app_version_form" model="ir.ui.view">
+            <field name="name">otl.sales.app.version.form</field>
+            <field name="model">otl.sales.app.version</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group name="left">
+                                <field name="date"/>
+                                <field name="description"/>
+                            </group>
+                            <group name="right">
+                                <field name="company_id" options="{'no_create': True}"
+                                       groups="base.group_multi_company"/>
+                            </group>
+                        </group>
+                        <group string="Document Templates">
+                            <group>
+                                <field name="sale_contract_tmpl_id" required="1" options="{'no_create': True}"/>
+                                <field name="credit_application_tmpl_id" required="1" options="{'no_create': True}"/>
+                            </group>
+                            <group>
+                                <field name="sale_contract_tmpl_id_ncp" required="1" options="{'no_create': True}"/>
+                                <field name="credit_application_tmpl_id_ncp" required="1" options="{'no_create': True}"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_sales_app_version_tree" model="ir.ui.view">
+            <field name="name">otl.sales.app.version.tree</field>
+            <field name="model">otl.sales.app.version</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="date"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_sales_app_version" model="ir.actions.act_window">
+            <field name="name">Sales App Versions</field>
+            <field name="res_model">otl.sales.app.version</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new app version.
+                </p>
+            </field>
+        </record>
+
+        <menuitem name="Sales App Versions" parent="measurement_conf_root" id="menu_sales_app_version" action="action_sales_app_version"/>
+
     </data>
 </odoo>

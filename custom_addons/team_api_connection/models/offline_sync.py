@@ -4,6 +4,7 @@
 from xml.etree.ElementTree import fromstring, ElementTree
 from odoo import models, fields, api, _
 import json
+import ast
 from odoo.exceptions import UserError
 
 from odoo.addons.team_api_configuration.controllers.configurations import URL, DB, API_USER_ID, API_USER_PASSWORD
@@ -89,6 +90,23 @@ class ResUsers(models.Model):
             }
         return result
 
+    def get_special_pricing(self):
+        special_price_list = []
+        special_prices = self.env['otl.product.special.price'].search([])
+        for special_price in special_prices:
+            special_price_list.append({
+                'special_price_id': special_price.id,
+                'office_location_id': special_price.office_location_id.id,
+                'product_tmpl_id': special_price.product_tmpl_id.id,
+                'start_date': '%s 00:00:00'%(special_price.start_date),
+                'end_date': '%s 23:59:59'%(special_price.end_date),
+                'name': special_price.name,
+                'list_price': special_price.list_price,
+                'msrp': special_price.msrp,
+                'max_discount': special_price.max_discount,
+            })
+        return special_price_list
+
 
     @api.model
     def get_master_data_contents(self, data={}):
@@ -106,6 +124,7 @@ class ResUsers(models.Model):
         products_list = self.env['product.template'].get_all_products()
         appointment_list = self.env['team.customer.appointment'].action_get_appointment_data(self.env.user.id)
         appointment_result_list = self.env['appointment.result'].get_appointment_results()
+        special_price_list = self.get_special_pricing()
         result.update({
             'rooms': room_list,
             'questionnaires': questionnaire_list,
@@ -116,6 +135,7 @@ class ResUsers(models.Model):
             'product_plans': products_list,
             'appointments': appointment_list,
             'appointment_results': appointment_result_list,
+            'special_prices': special_price_list,
             'min_sale_price': float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0,
             'max_no_transitions': int(self.env['ir.config_parameter'].sudo().get_param('max_no_transitions')) or 0,
             'recision_date': self.env.user.company_id.recision_date and self.env.user.company_id.recision_date.strftime(DEFAULT_SERVER_DATE_FORMAT) or ''
@@ -186,6 +206,10 @@ class ResUsers(models.Model):
                                     appointments = False
 
                             _logger.info('Existing Appointment: %s'%(appointments))
+                            market_segment = appointment.get('MarketSegment', '')
+                            office_location_id = False
+                            if market_segment:
+                                office_location_id = self.env['otl.office.location'].search([('name', '=', market_segment)], limit=1)
                             if not appointments:
                                 appointment_values = {
                                     'improveit_appointment_id': appointment['AppointmentID'],
@@ -204,9 +228,13 @@ class ResUsers(models.Model):
                                     'applicant_first_name': applicant_name_split['first_name'] or False,
                                     'applicant_middle_name': applicant_name_split['middle_name'] or False,
                                     'applicant_last_name': applicant_name_split['last_name'] or False,
+                                    'market_segment': market_segment,
+                                    'office_location_id': office_location_id and office_location_id.id or False,
 
                                 }
                                 appointment_obj = self.env['team.customer.appointment'].create(appointment_values)
+                                if market_segment and not office_location_id:
+                                    appointment_obj.message_post(body='Office Location is not found for Market Segment %s'%(market_segment))
                             elif appointments and update_existing_record:
                                 appointment_values = {
                                     'improveit_appointment_id': appointment['AppointmentID'],
@@ -225,9 +253,13 @@ class ResUsers(models.Model):
                                     'applicant_first_name': applicant_name_split['first_name'] or False,
                                     'applicant_middle_name': applicant_name_split['middle_name'] or False,
                                     'applicant_last_name': applicant_name_split['last_name'] or False,
+                                    'market_segment': market_segment,
+                                    'office_location_id': office_location_id and office_location_id.id or False,
                                     # 'attachment_ids': [(6, 0, [])],
                                 }
                                 appointments.write(appointment_values)
+                                if market_segment and not office_location_id:
+                                    appointments.message_post(body='Office Location is not found for Market Segment %s'%(market_segment))
                     # if improveit_appointment_ids:
                     appointments = self.env['team.customer.appointment'].search([
                         ('improveit_appointment_id', 'not in', improveit_appointment_ids),
@@ -457,7 +489,8 @@ class ProductTemplate(models.Model):
                 'eligible_for_discounts': product.eligible_for_discounts or '',
                 'unit_of_measure': product.unit_of_measure or '',
                 'grade': product.grade or '',
-                'stair_cost': stair_product and stair_product.list_price or 0
+                'stair_cost': stair_product and stair_product.list_price or 0,
+                'stair_product_id': stair_product and stair_product.id or 0
 
             })
         return product_list
@@ -545,6 +578,7 @@ class TeamCustomerAppointment(models.Model):
                     'street2': data.street2 or '',
                     'city': data.city or '',
                     'state_id': data.state_id.id or 0,
+                    'office_location_id': data.office_location_id and data.office_location_id.id or 0,
                     'state_code': data.state_id.code or '',
                     'state': data.state_id.name or '',
                     'country_id': data.country_id.id or 0,
@@ -586,7 +620,7 @@ class TeamCustomerAppointment(models.Model):
             return updated_time
         return datetime_obj
 
-    def action_update_appointment(self, data):
+    def action_update_appointment(self, data, app_version=''):
         result = {}
         for appointment in self:
             partner_vals = {}
@@ -598,12 +632,16 @@ class TeamCustomerAppointment(models.Model):
             send_physical_document = False
             if data.get('send_physical_document', 0) == 1:
                 send_physical_document = True
+            app_version_id = False
+            if app_version:
+                app_version_id = self.env['otl.sales.app.version'].search([('name', '=', app_version)], limit=1)
             vals = {
                 'what_happened_notes': data.get('what_happened_notes', ''),
                 'whats_next_notes': data.get('whats_next_notes', ''),
                 'additional_comments': data.get('additional_comments', ''),
                 'send_physical_document':  send_physical_document,
-                'timezone': data.get('timezone', '')
+                'timezone': data.get('timezone', ''),
+                'app_version_id':  app_version_id,
             }
             if completed_date_utc:
                 vals.update({'completed_date': completed_date_utc})
@@ -731,6 +769,7 @@ class TeamCustomerAppointment(models.Model):
     def action_update_room_measurements(self, room_list, sale_order=False):
         result = {}
         room_measure_obj = self.env['team.contract.room.measurement.line']
+        _logger.info('--------------Inside action_update_room_measurements------------')
         room_measure = room_measure_obj.search([('appointment_id', '=', self.id)])
         if room_measure:
             room_measure.unlink()
@@ -809,6 +848,7 @@ class TeamCustomerAppointment(models.Model):
             else:
                 _logger.info("------ Room_id Empty-------------")
                 result = {'message': 'Room_id Empty', 'result': 'Failed'}
+        _logger.info('--------------Completed: action_update_room_measurements: %s------------'%(result))
         return result
 
     def action_update_questionnaires(self, questionnaire_list, sale_order=False):
@@ -816,6 +856,7 @@ class TeamCustomerAppointment(models.Model):
         room_measure_obj = self.env['team.contract.room.measurement.line']
         room_question_obj = self.env['team.contract.question.line']
         answer_obj = self.env['team.contract.answer.line']
+        _logger.info('--------------Inside action_update_questionnaires------------')
         room_questions = room_question_obj.search([('appointment_id', '=', self.id)])
         if room_questions:
             for question in room_questions:
@@ -873,6 +914,7 @@ class TeamCustomerAppointment(models.Model):
             else:
                 _logger.info("------ Room_id Empty-------------")
                 result = {'message': 'Room_id Empty', 'result': 'Failed'}
+        _logger.info('--------------Completed: action_update_questionnaires: %s------------' % (result))
         return result
 
     @api.model
@@ -958,6 +1000,8 @@ class TeamCustomerAppointment(models.Model):
             final_payment = float(data.get('final_payment', 0))
             finance_amount = float(data.get('finance_amount', 0))
             finance_option_id = int(data.get('finance_option_id', 0))
+            special_price_id = int(data.get('special_price_id', 0))
+            stair_special_price_id = int(data.get('stair_special_price_id', 0))
             loan_payment = float(data.get('loan_payment', 0))
             sale_order_obj = self.env['sale.order']
             res_partner_obj = self.env['res.partner']
@@ -982,6 +1026,20 @@ class TeamCustomerAppointment(models.Model):
                     'result': 'Failed'
                 }
                 return status
+            if special_price_id and not self.env['otl.product.special.price'].browse(int(special_price_id)).exists():
+                _logger.info("------ Special Price Not Exist-------------")
+                status = {
+                    'message': 'Special Price Not Exist',
+                    'result': 'Failed'
+                }
+                return status
+            if stair_special_price_id and not self.env['otl.product.special.price'].browse(int(stair_special_price_id)).exists():
+                _logger.info("------ Stair Special Price Not Exist-------------")
+                status = {
+                    'message': 'Stair Special Price Not Exist',
+                    'result': 'Failed'
+                }
+                return status
             if not appointment_id:
                 _logger.info("------Appointment ID Empty------------")
                 status = {
@@ -997,9 +1055,9 @@ class TeamCustomerAppointment(models.Model):
                 }
             plan = self.env['product.template'].search([('id', '=', selected_package_id)], limit=1)
             if not plan:
-                _logger.info("------Floor Plan Not Exist------------")
+                _logger.info("------Payment Package Not Exist------------")
                 status = {
-                    'message': 'Floor Plan is Not Exists',
+                    'message': 'Payment Package is Not Exists',
                     'result': 'Failed',
                 }
                 return status
@@ -1074,6 +1132,8 @@ class TeamCustomerAppointment(models.Model):
                 'discount': discount,
                 'additional_cost': additional_cost,
                 'finance_option_id': finance_option_id or False,
+                'special_price_id': special_price_id or False,
+                'stair_special_price_id': stair_special_price_id or False,
                 'balance_payment_method': payment_method,
                 'adjustment': adjustment,
                 'loan_payment': loan_payment,
@@ -1456,7 +1516,7 @@ class TeamCustomerAppointment(models.Model):
                                 })
                         _logger.info('-------i360 AddSaleItem Response: %s' % (response_result))
                     if sale_order.appointment_result == 'Sold':
-                        if sale_order.card_transaction_log_line.filtered(
+                        if appointment.card_transaction_log_line.filtered(
                                 lambda x: x.state == 'failed' and not x.synced):
                             response_result = sale_order.add_card_decline_note_api()
                             _logger.info('-------i360 CreateChargeDeclineNotice Response: %s' % (response_result))
@@ -1735,6 +1795,68 @@ class TeamCustomerAppointment(models.Model):
         return result
 
     @api.model
+    def action_generate_contract_document_manually(self):
+        """
+        Script for generating contract document manually from API data
+        :return:
+        """
+        for record in self:
+            order = record.sale_order_ids[0]
+            contract_document_creation_log = self.env['otl.api.sync.log'].search(
+                [('name', '=', '/api/generate_contract_document'), ('appointment_id', '=', record.id)], limit=1)
+            if contract_document_creation_log and contract_document_creation_log.data:
+                data = eval(contract_document_creation_log.data)
+                order.action_generate_contract_document(data)
+        return True
+
+    @api.model
+    def action_room_questionnaire_manual_update(self, api_name):
+        """
+        Script for updating sale order manually from API data
+        :param api_name:
+        :return:
+        """
+        for record in self:
+            order = record.sale_order_ids[0]
+            order_creation_log = self.env['otl.api.sync.log'].search([('name', '=', api_name), ('appointment_id', '=', record.id)], limit=1)
+            if order_creation_log and order_creation_log.data:
+                data = eval(order_creation_log.data)
+                room_list = data.get('rooms', [])
+                if room_list:
+                    record.action_update_room_measurements(room_list, order)
+                answer_list = data.get('answer', [])
+                if answer_list:
+                    record.action_update_questionnaires(answer_list, order)
+                if order.state != 'draft':
+                    order.write({'state': 'draft'})
+                order.add_payment_line(order.discount, order.adjustment, order.additional_cost, 0, 0)
+                for room_data in room_list:
+                    room_id = room_data.get('room_id', False)
+                    room_measurement_line = order.room_measurement_line.filtered(
+                        lambda x: x.room_id.id == int(room_id))
+                    if room_measurement_line:
+                        measurement_image = self.env['ir.attachment'].search(
+                            [('appointment_id', '=', record.id),
+                             ('name', '=', room_data.get('room_area_image', ''))])
+                        if measurement_image and not room_measurement_line.shape_image_id:
+                            room_measurement_line.write({'shape_image_id': measurement_image.id})
+                        room_images = self.env['ir.attachment'].search(
+                            [('appointment_id', '=', record.id),
+                             ('name', 'in', room_data.get('room_image_names', []))])
+                        if room_images and not room_measurement_line.attachment_ids:
+                            room_measurement_line.write({'attachment_ids': [(6, 0, room_images.ids)]})
+                if order.down_payment_amount and not order.payment_method:
+                    if data.get('paymentmethod', {}):
+                        payment_result = order.action_update_payment_data(data.get('paymentmethod', {}))
+                if data.get('applicationInfo', {}):
+                    credit_application = self.env['team.credit.application'].search(
+                        [('appointment_id', '=', record.id)], limit=1)
+                    if not credit_application:
+                        credit_application_result = order.action_create_credit_application(
+                            data.get('applicationInfo', {}))
+        return True
+
+    @api.model
     def action_create_order_and_update_measurements(self, data={}):
         result = {
             'message': 'No Data found to update',
@@ -1747,6 +1869,7 @@ class TeamCustomerAppointment(models.Model):
         sale_order_obj = self.env['sale.order']
         # accepted values - online, offline
         operation_mode = data.get('operation_mode', 'offline')
+        app_version = data.get('app_version', '')
         try:
             appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
             if appointment_id:
@@ -1756,6 +1879,9 @@ class TeamCustomerAppointment(models.Model):
                     if order:
                         payment_method_dict = data.get('paymentmethod', {})
                         paymentdetails_dict = data.get('paymentdetails', {})
+                        credit_application_dict = data.get('applicationInfo', {})
+                        rooms_list = data.get('rooms', [])
+                        answer_list = data.get('answer', [])
                         retry_order_creation = False
                         if payment_method_dict and paymentdetails_dict:
                             payment_method = payment_method_dict.get('payment_method', '')
@@ -1771,6 +1897,94 @@ class TeamCustomerAppointment(models.Model):
                             order.action_draft()
                             order.write({'active': False})
                         else:
+                            if credit_application_dict and not retry_order_creation:
+                                credit_application = self.env['team.credit.application'].search([('appointment_id', '=', appointment_id)],
+                                                                                     limit=1)
+                                if not credit_application:
+                                    credit_application_result = order.action_create_credit_application(credit_application_dict)
+                                    if credit_application_result.get('result', '') == 'Failed':
+                                        credit_application_result.update({
+                                            'payment_status': payment_status,
+                                            'payment_message': payment_message,
+                                        })
+                                        return credit_application_result
+                                if order.state != 'draft':
+                                    order.write({'state': 'draft'})
+                                if rooms_list and not order.room_measurement_line:
+                                    room_measure_result = appointment.action_update_room_measurements(rooms_list, order)
+                                    if room_measure_result.get('result', False) == 'Failed':
+                                        room_measure_result.update({
+                                            'payment_status': payment_status,
+                                            'payment_message': payment_message,
+                                        })
+                                        return room_measure_result
+                                if answer_list and not order.contract_question_line:
+                                    room_quesionnaire_result = appointment.action_update_questionnaires(answer_list, order)
+                                    if room_quesionnaire_result.get('result', False) == 'Failed':
+                                        room_quesionnaire_result.update({
+                                            'payment_status': payment_status,
+                                            'payment_message': payment_message,
+                                        })
+                                        return room_quesionnaire_result
+                                if order.floor_type:
+                                    monthly_promo = order.floor_type and order.floor_type.monthly_promo or 0
+                                    order.add_payment_line(order.discount, order.adjustment, order.additional_cost,
+                                                       monthly_promo, 0)
+                                if order.down_payment_amount and data.get('paymentmethod', {}) and not order.payment_method:
+                                    payment_result = order.action_update_payment_data(data.get('paymentmethod', {}))
+                                    payment_status = payment_result.get('result', '')
+                                    if payment_result.get('result', '') != 'Success':
+                                        payment_message = payment_result.get('message', '')
+                                        if operation_mode == 'online':
+                                            payment_result.update({
+                                                'payment_status': payment_status,
+                                                'payment_message': payment_message,
+                                            })
+                                            return payment_result
+                                        else:
+                                            company = order.company_id
+                                            if company.push_api_key_id:
+                                                MobileNotificationObj = self.env['mobile.notifications']
+                                                description = payment_result.get('message', '')
+                                                if description:
+                                                    user_id = appointment.user_id
+                                                    notification = MobileNotificationObj.sudo().create({
+                                                        'title': "Payment Failed - %s %s" % (
+                                                        appointment.applicant_first_name,
+                                                        appointment.applicant_last_name),
+                                                        'name': description,
+                                                        'user_id': user_id.id,
+                                                        'res_id': appointment.id,
+                                                        'res_model': appointment._name,
+                                                        'active': True
+                                                    })
+                                                    if notification:
+                                                        if user_id and user_id.device_reg_id:
+                                                            device_id = user_id.device_reg_id
+                                                            device_type = 'ios'
+                                                            message_body = description
+                                                            message_title = "Payment Failed - %s %s" % (
+                                                            appointment.applicant_first_name,
+                                                            appointment.applicant_last_name)
+                                                            extra_data = {'type': notification.res_model,
+                                                                          'id': notification.id,
+                                                                          'name': notification.res_id}
+                                                            notification_result = notification.push_pyfcm_single(
+                                                                company, device_id,
+                                                                message_title,
+                                                                message_body,
+                                                                extra_data=extra_data,
+                                                                device_type=device_type)
+                                                            if notification_result and notification_result.get(
+                                                                    'success', False):
+                                                                notification.status = 'sent'
+                                                            else:
+                                                                notification.status = 'failed'
+                                                        else:
+                                                            notification.status = 'failed'
+                                    else:
+                                        payment_message = 'Payment Processed Successfully'
+
                             return {
                                 'message': 'Sale order is already existing',
                                 'result': 'Success',
@@ -1778,7 +1992,7 @@ class TeamCustomerAppointment(models.Model):
                                 'payment_message': payment_message,
                             }
                     if data.get('customer', {}):
-                        appointment_result = appointment.action_update_appointment(data.get('customer', {}))
+                        appointment_result = appointment.action_update_appointment(data.get('customer', {}), app_version)
                         if appointment_result.get('result', False) == 'Failed':
                             appointment_result.update({
                                 'payment_status': payment_status,
@@ -1818,8 +2032,9 @@ class TeamCustomerAppointment(models.Model):
                                         'payment_message': payment_message,
                                     })
                                     return room_quesionnaire_result
-                            monthly_promo = order.floor_type and order.floor_type.monthly_promo or 0
-                            order.add_payment_line(order.discount, order.adjustment, order.additional_cost, monthly_promo, 0)
+                            if order.floor_type:
+                                monthly_promo = order.floor_type and order.floor_type.monthly_promo or 0
+                                order.add_payment_line(order.discount, order.adjustment, order.additional_cost, monthly_promo, 0)
                         if order.down_payment_amount:
                             if data.get('paymentmethod', {}):
                                 payment_result = order.action_update_payment_data(data.get('paymentmethod', {}))
@@ -2151,7 +2366,10 @@ class SaleOrder(models.Model):
                     }
                     return status
                 if card_expiry:
-                    month, year = card_expiry.split('/')
+                    if '/' in card_expiry:
+                        month, year = card_expiry.split('/')
+                    elif '-' in card_expiry:
+                        month, year = card_expiry.split('-')
                     if len(year) == 4:
                         year = year[2:]
                         card_expiry = '%s/%s' % (month, year)
@@ -2181,6 +2399,13 @@ class SaleOrder(models.Model):
                 'result': 'Success'
             }
         return status
+
+    def action_format_date(self, date):
+        try:
+            date_formated = datetime.strptime(date, '%m/%d/%Y').strftime(DEFAULT_SERVER_DATE_FORMAT)
+        except:
+            date_formated = date
+        return date_formated
 
     def action_create_credit_application(self, data):
         status = {
@@ -2264,15 +2489,16 @@ class SaleOrder(models.Model):
                 vals.update({'drivers_license': drivers_license})
             drivers_license_exp_date = data.get('drivers_license_exp_date', "")
             if drivers_license_exp_date:
-                vals.update({'drivers_license_exp_date': datetime.strptime(drivers_license_exp_date, '%m/%d/%Y').strftime(
-                    '%Y-%m-%d')})
+                drivers_license_exp_date = self.action_format_date(drivers_license_exp_date)
+                vals.update({'drivers_license_exp_date': drivers_license_exp_date})
             drivers_license_issue_date = data.get('drivers_license_issue_date', "")
             if drivers_license_issue_date:
-                vals.update({'drivers_license_issue_date': datetime.strptime(drivers_license_issue_date,
-                                                                             '%m/%d/%Y').strftime('%Y-%m-%d')})
+                drivers_license_issue_date = self.action_format_date(drivers_license_issue_date)
+                vals.update({'drivers_license_issue_date': drivers_license_issue_date})
             date_of_birth = data.get('date_of_birth', "")
             if date_of_birth:
-                vals.update({'date_of_birth': datetime.strptime(date_of_birth, '%m/%d/%Y').strftime('%Y-%m-%d')})
+                date_of_birth = self.action_format_date(date_of_birth)
+                vals.update({'date_of_birth': date_of_birth})
             social_security_number = data.get('social_security_number', "")
             if social_security_number:
                 vals.update({'social_security_number': social_security_number})
@@ -2417,16 +2643,16 @@ class SaleOrder(models.Model):
                 vals.update({'co_applicant_drivers_license': co_applicant_drivers_license})
             co_applicant_drivers_license_exp_date = data.get('co_applicant_drivers_license_exp_date', "")
             if co_applicant_drivers_license_exp_date:
-                vals.update({'co_applicant_drivers_license_exp_date': datetime.strptime(
-                    co_applicant_drivers_license_exp_date, '%m/%d/%Y').strftime('%Y-%m-%d')})
+                co_applicant_drivers_license_exp_date = self.action_format_date(co_applicant_drivers_license_exp_date)
+                vals.update({'co_applicant_drivers_license_exp_date': co_applicant_drivers_license_exp_date})
             co_applicant_drivers_license_issue_date = data.get('co_applicant_drivers_license_issue_date', "")
             if co_applicant_drivers_license_issue_date:
-                vals.update({'co_applicant_drivers_license_issue_date': datetime.strptime(
-                    co_applicant_drivers_license_issue_date, '%m/%d/%Y').strftime('%Y-%m-%d')})
+                co_applicant_drivers_license_issue_date = self.action_format_date(co_applicant_drivers_license_issue_date)
+                vals.update({'co_applicant_drivers_license_issue_date': co_applicant_drivers_license_issue_date})
             co_applicant_date_of_birth = data.get('co_applicant_date_of_birth', "")
             if co_applicant_date_of_birth:
-                vals.update({'co_applicant_date_of_birth': datetime.strptime(co_applicant_date_of_birth,
-                                                                             '%m/%d/%Y').strftime('%Y-%m-%d')})
+                co_applicant_date_of_birth = self.action_format_date(co_applicant_date_of_birth)
+                vals.update({'co_applicant_date_of_birth': co_applicant_date_of_birth})
             co_applicant_social_security_number = data.get('co_applicant_social_security_number', "")
             if co_applicant_social_security_number:
                 vals.update({'co_applicant_social_security_number': co_applicant_social_security_number})
@@ -2618,7 +2844,8 @@ class SaleOrder(models.Model):
                 vals.update({'monthly_mortage_payment': monthly_mortage_payment})
             date_aquired = data.get('date_aquired', "")
             if date_aquired:
-                vals.update({'date_aquired': datetime.strptime(date_aquired, '%m/%d/%Y').strftime('%Y-%m-%d')})
+                date_aquired = self.action_format_date(date_aquired)
+                vals.update({'date_aquired': date_aquired})
             present_balance = data.get('present_balance', "")
             if present_balance:
                 vals.update({'present_balance': present_balance})
@@ -2671,6 +2898,7 @@ class SaleOrder(models.Model):
             if coverage:
                 vals.update({'coverage': coverage})
             race = data.get('race', "")
+            race = race.replace("\\", "")
             if race:
                 if race not in ['I do not wish to furnish this information', 'American Indian or Alaskan Native',
                                 'White/Caucasian (non Hispanic)', 'Hispanic', 'Asian or Pacific Islander',
@@ -2722,6 +2950,7 @@ class SaleOrder(models.Model):
                 if marital_status == 'Separated':
                     vals.update({'marital_status_separated': True})
             co_applicant_race = data.get('co_applicant_race', "")
+            co_applicant_race = co_applicant_race.replace("\\", "")
             if co_applicant_race and co_applicant_race != 'Select':
                 if co_applicant_race not in ['I do not wish to furnish this information',
                                              'American Indian or Alaskan Native',
@@ -2793,12 +3022,12 @@ class SaleOrder(models.Model):
                 vals.update({'joint_credit_initials': joint_credit_initials})
             applicant_signature_date = data.get('applicant_signature_date', "")
             if applicant_signature_date:
-                vals.update({'applicant_signature_date': datetime.strptime(applicant_signature_date, '%m/%d/%Y').strftime(
-                    '%Y-%m-%d')})
+                applicant_signature_date = self.action_format_date(applicant_signature_date)
+                vals.update({'applicant_signature_date': applicant_signature_date})
             co_applicant_signature_date = data.get('co_applicant_signature_date', "")
             if co_applicant_signature_date:
-                vals.update({'co_applicant_signature_date': datetime.strptime(co_applicant_signature_date,
-                                                                              '%m/%d/%Y').strftime('%Y-%m-%d')})
+                co_applicant_signature_date = self.action_format_date(co_applicant_signature_date)
+                vals.update({'co_applicant_signature_date': co_applicant_signature_date})
             hunter_message_status = False
             if data.get('hunterMessageStatus', 'No') == 'Yes':
                 hunter_message_status = True
@@ -2887,12 +3116,20 @@ class SaleOrder(models.Model):
                         if sign_logs:
                             sign_logs.sudo().with_context(delete_log=True).unlink()
                         sign_requests.sudo().unlink()
-                    if order.coapplicant_skip or not order.appointment_id.co_applicant:
-                        document_template_id = self.env['ir.config_parameter'].sudo().get_param(
-                            'sale_contract_tmpl_id_ncp') or False
+                    if data.get('recision_date', False):
+                        order.write({'recision_date': data.get('recision_date', False)})
+                    if appointment.app_version_id:
+                        if order.coapplicant_skip or not order.appointment_id.co_applicant:
+                            document_template_id = appointment.app_version_id.sale_contract_tmpl_id_ncp.id or False
+                        else:
+                            document_template_id = appointment.app_version_id.sale_contract_tmpl_id.id or False
                     else:
-                        document_template_id = self.env['ir.config_parameter'].sudo().get_param(
-                            'sale_contract_tmpl_id') or False
+                        if order.coapplicant_skip or not order.appointment_id.co_applicant:
+                            document_template_id = self.env['ir.config_parameter'].sudo().get_param(
+                                'sale_contract_tmpl_id_ncp') or False
+                        else:
+                            document_template_id = self.env['ir.config_parameter'].sudo().get_param(
+                                'sale_contract_tmpl_id') or False
                     if document_template_id:
                         template = self.env['otl_document_sign.template'].sudo().browse(int(document_template_id))
                         vals = {

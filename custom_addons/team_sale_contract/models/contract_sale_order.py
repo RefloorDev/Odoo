@@ -278,6 +278,8 @@ class SaleOrder(models.Model):
     card_transaction_log_line = fields.One2many('otl.card.transaction.log', 'sale_order_id', string='Card Transaction Log Line')
     discount_history_line = fields.One2many('otl.discount.history.line', 'order_id', string='Progressive Discount')
     active = fields.Boolean('Active', default=True, copy=False)
+    special_price_id = fields.Many2one('otl.product.special.price', 'Special Price')
+    stair_special_price_id = fields.Many2one('otl.product.special.price', 'Stair Special Price')
 
     def write(self, vals):
         _logger.info('inside sale order-%s write: values -  %s'%(self and self[0].name or '', vals))
@@ -425,10 +427,16 @@ class SaleOrder(models.Model):
         sign_req_obj = self.env['otl_document_sign.request']
         sign_req_item_obj = self.env['otl_document_sign.request.item']
         for order in self:
-            if order.coapplicant_skip or not order.appointment_id.co_applicant:
-                document_template_id = self.env['ir.config_parameter'].sudo().get_param('sale_contract_tmpl_id_ncp') or False
+            if order.appointment_id.app_version_id:
+                if order.coapplicant_skip:
+                    document_template_id = order.appointment_id.app_version_id.sale_contract_tmpl_id_ncp.id or False
+                else:
+                    document_template_id = order.appointment_id.app_version_id.sale_contract_tmpl_id.id or False
             else:
-                document_template_id = self.env['ir.config_parameter'].sudo().get_param('sale_contract_tmpl_id') or False
+                if order.coapplicant_skip or not order.appointment_id.co_applicant:
+                    document_template_id = self.env['ir.config_parameter'].sudo().get_param('sale_contract_tmpl_id_ncp') or False
+                else:
+                    document_template_id = self.env['ir.config_parameter'].sudo().get_param('sale_contract_tmpl_id') or False
             if document_template_id:
                 template = self.env['otl_document_sign.template'].sudo().browse(int(document_template_id))
                 vals = {
@@ -621,7 +629,10 @@ class SaleOrder(models.Model):
                 promo_product = self.env.ref('team_sale_contract.monthly_promo')
                 admin_fee_product = self.env.ref('team_sale_contract.admin_fee')
                 quote_round_off_product = self.env.ref('team_sale_contract.quote_round_off')
-                measurement_price = record.total_area * record.floor_type.list_price
+                list_price = record.floor_type.list_price or 0
+                if record.special_price_id and record.special_price_id.list_price:
+                    list_price = record.special_price_id.list_price or 0
+                measurement_price = record.total_area * list_price
                 stair_count = 0
                 stair_product = False
 
@@ -640,8 +651,12 @@ class SaleOrder(models.Model):
                         ('grade', '=', record.floor_type.grade)
                     ], order='sequence asc', limit=1)
                 stair_price = 0
+                stair_unit_price = 0
                 if stair_count and stair_product:
-                    stair_price = stair_product.list_price * stair_count
+                    stair_unit_price = stair_product.list_price or 0
+                    if record.stair_special_price_id and record.stair_special_price_id.list_price:
+                        stair_unit_price = record.stair_special_price_id.list_price or 0
+                    stair_price = stair_unit_price * stair_count
                 round_off_mismatched_amount = round(measurement_price+additional_cost+stair_price) - (measurement_price+additional_cost+stair_price)
                 # round_off_mismatched_amount += round(adjustment) - adjustment
                 round_off_mismatched_amount += round(monthly_promo) - monthly_promo
@@ -708,7 +723,7 @@ class SaleOrder(models.Model):
                             'product_uom_qty': record.total_area,
                             'name': product.name,
                             'order_id': record.id,
-                            'price_unit': record.floor_type.list_price,
+                            'price_unit': list_price,
                             'discount': discount or 0
                         }
                         obj.create(vals)
@@ -718,7 +733,7 @@ class SaleOrder(models.Model):
                                 'product_uom_qty': stair_count,
                                 'name': product.name,
                                 'order_id': record.id,
-                                'price_unit': stair_product.list_price,
+                                'price_unit': stair_unit_price,
                             }
                             obj.create(vals)
         return True
@@ -1051,7 +1066,8 @@ class SaleOrder(models.Model):
         }
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')],limit=1)
         for sale_order in self:
-            transaction_logs = sale_order.card_transaction_log_line.filtered(lambda x: x.state == 'failed' and not x.synced)
+            appointment = sale_order.appointment_id
+            transaction_logs = appointment.card_transaction_log_line.filtered(lambda x: x.state == 'failed' and not x.synced)
             if transaction_logs and sale_order.quote_id:
                 headers = {
                     'Content-type': 'application/json',
@@ -2591,6 +2607,7 @@ class CardTransactionLog(models.Model):
 
     name = fields.Char('Transaction ID')
     sale_order_id = fields.Many2one('sale.order', 'Sale Order Ref', required=True, ondelete='cascade')
+    appointment_id = fields.Many2one('team.customer.appointment', string='Appointment', related='sale_order_id.appointment_id', store=True)
     state = fields.Selection([('success', 'Success'), ('failed', 'Failed')],
                              string='Status', default='success', required=True)
     message = fields.Text('Message')

@@ -157,6 +157,8 @@
                         <field name="link_to_share" widget="url" readonly="1" attrs="{'invisible': [('link_to_share', '=', False)]}"/>
                         <field name="appointment_id" readonly="1" attrs="{'invisible': [('appointment_id', '=', False)]}"/>
                         <field name="quote_id" readonly="1" attrs="{'invisible': [('quote_id', '=', False)]}"/>
+                        <field name="special_price_id" readonly="1" attrs="{'invisible': [('special_price_id', '=', False)]}"/>
+                        <field name="stair_special_price_id" readonly="1" attrs="{'invisible': [('stair_special_price_id', '=', False)]}"/>
                     </xpath>
                     <page name="optional_products" position="attributes">
                         <attribute name="invisible">1</attribute>

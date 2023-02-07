@@ -138,6 +138,11 @@ class ResUsers(models.Model):
                                 if appointments.sale_order_ids.filtered(lambda x: x.state in ['sale', 'done']):
                                     appointments = False
                             _logger.info('Existing Appointment: %s'%(appointments))
+                            market_segment = appointment.get('MarketSegment', '')
+                            office_location_id = False
+                            if market_segment:
+                                office_location_id = self.env['otl.office.location'].search(
+                                    [('name', '=', market_segment)], limit=1)
                             if not appointments:
                                 appointment_values = {
                                     'improveit_appointment_id': appointment['AppointmentID'],
@@ -156,9 +161,13 @@ class ResUsers(models.Model):
                                     'applicant_first_name': applicant_name_split['first_name'] or False,
                                     'applicant_middle_name': applicant_name_split['middle_name'] or False,
                                     'applicant_last_name': applicant_name_split['last_name'] or False,
+                                    'market_segment': market_segment,
+                                    'office_location_id': office_location_id and office_location_id.id or False,
 
                                 }
                                 appointment_obj = self.env['team.customer.appointment'].create(appointment_values)
+                                if market_segment and not office_location_id:
+                                    appointment_obj.message_post(body='Office Location is not found for Market Segment %s'%(market_segment))
                             elif appointments and update_existing_record:
                                 appointment_values = {
                                     'improveit_appointment_id': appointment['AppointmentID'],
@@ -177,9 +186,13 @@ class ResUsers(models.Model):
                                     'applicant_first_name': applicant_name_split['first_name'] or False,
                                     'applicant_middle_name': applicant_name_split['middle_name'] or False,
                                     'applicant_last_name': applicant_name_split['last_name'] or False,
-                                    'attachment_ids': [(6, 0, [])],
+                                    'market_segment': market_segment,
+                                    'office_location_id': office_location_id and office_location_id.id or False,
+                                    # 'attachment_ids': [(6, 0, [])],
                                 }
                                 appointments.write(appointment_values)
+                                if market_segment and not office_location_id:
+                                    appointments.message_post(body='Office Location is not found for Market Segment %s'%(market_segment))
                     # if improveit_appointment_ids:
                     appointments = self.env['team.customer.appointment'].search([
                         ('improveit_appointment_id', 'not in', improveit_appointment_ids),
@@ -4749,7 +4762,7 @@ class SaleOrder(models.Model):
                 response_result = sale_order.add_quote_items_sales_app()
             _logger.info('-------i360 AddSaleItem Response: %s'%(response_result))
             if sale_order.appointment_result == 'Sold':
-                if sale_order.card_transaction_log_line.filtered(lambda x: x.state == 'failed' and not x.synced):
+                if sale_order.appointment_id.card_transaction_log_line.filtered(lambda x: x.state == 'failed' and not x.synced):
                     response_result = sale_order.add_card_decline_note_api()
                     _logger.info('-------i360 CreateChargeDeclineNotice Response: %s' % (response_result))
                 contract_doc_attachment = sale_order.contract_doc_attachment_id or False
@@ -4918,7 +4931,7 @@ class SaleOrder(models.Model):
                                 })
                         _logger.info('-------i360 AddSaleItem Response: %s' % (response_result))
                     if sale_order.appointment_result == 'Sold':
-                        if sale_order.card_transaction_log_line.filtered(lambda x: x.state == 'failed' and not x.synced):
+                        if appointment.card_transaction_log_line.filtered(lambda x: x.state == 'failed' and not x.synced):
                             response_result = sale_order.add_card_decline_note_api()
                             _logger.info('-------i360 CreateChargeDeclineNotice Response: %s' % (response_result))
                             if response_result.get('success', '') == 'true':

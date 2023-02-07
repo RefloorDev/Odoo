@@ -88,6 +88,14 @@ class TeamCustomerAppointment(models.Model):
                 sale_order_exists = True
             record.sale_order_exists = sale_order_exists
 
+    @api.depends('card_transaction_log_line')
+    def _compute_transaction_log_exists(self):
+        for record in self:
+            transaction_log_exists = False
+            if record.card_transaction_log_line:
+                transaction_log_exists = True
+            record.transaction_log_exists = transaction_log_exists
+
     name = fields.Char('Reference', required=True, copy=False, default='/')
     customer_name = fields.Char('Customer Name', required=False, readonly=False)
     phone = fields.Char('Phone Number',  readonly=True, states={'draft': [('readonly', False)]})
@@ -158,6 +166,12 @@ class TeamCustomerAppointment(models.Model):
     co_applicant_state_code = fields.Char('Co-Applicant State Code')
     additional_comments = fields.Char('Additional Comments', copy=False)
     send_physical_document = fields.Boolean('Send Physical Document', default=False, copy=False)
+    card_transaction_log_line = fields.One2many('otl.card.transaction.log', 'appointment_id',
+                                                string='Card Transaction Log Line')
+    transaction_log_exists = fields.Boolean('Exist Transaction Logs', compute='_compute_transaction_log_exists')
+    office_location_id = fields.Many2one('otl.office.location', 'Office Location', readonly=True, states={'draft': [('readonly', False)]})
+    market_segment = fields.Char('Market Segment')
+    app_version_id = fields.Many2one('otl.sales.app.version', 'App Version')
 
     @api.onchange('country_id')
     def _onchange_country_id(self):

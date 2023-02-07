@@ -69,3 +69,13 @@ access_discount_history_line_manager,discount.history.line.manager,model_otl_dis
 
 access_app_screen_log_user,otl.app.screen.log.user,model_otl_app_screen_log,base.group_user, 1,0,0,0
 access_app_screen_log_manager,otl.app.screen.log.manager,model_otl_app_screen_log,sales_team.group_sale_salesman,1,1,1,1
+
+access_office_location_user,otl.office.location.user,model_otl_office_location,base.group_user, 1,0,0,0
+access_office_location_manager,otl.office.location.manager,model_otl_office_location,sales_team.group_sale_manager,1,1,1,1
+
+access_product_special_price_user,otl.product.special.price.user,model_otl_product_special_price,base.group_user, 1,0,0,0
+access_product_special_price_manager,otl.product.special.price.manager,model_otl_product_special_price,sales_team.group_sale_manager,1,1,1,1
+
+access_sales_app_version_user,otl.sales.app.version.user,model_otl_sales_app_version,base.group_user, 1,0,0,0
+access_sales_app_version_manager,otl.sales.app.version.manager,model_otl_sales_app_version,sales_team.group_sale_manager,1,1,1,1
+

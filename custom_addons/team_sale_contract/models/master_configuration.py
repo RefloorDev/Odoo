@@ -346,3 +346,54 @@ class IRAttachment(models.Model):
 	_inherit = 'ir.attachment'
 
 	improveit_id = fields.Char('Improveit Reference ID')
+
+
+class OfficeLocation(models.Model):
+	_name = 'otl.office.location'
+	_description = 'Office Locations'
+
+	name = fields.Char('Location', required=True)
+	improveit_id = fields.Char(string='i360 ReferenceID')
+	active = fields.Boolean('Active', default=True)
+	company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
+	special_price_line = fields.One2many('otl.product.special.price', 'office_location_id', 'Special Price')
+
+	_sql_constraints = [
+		('name_company_uniq', 'unique (name,company_id)', 'The name of materials must be unique per company!')
+	]
+
+
+class ProductSpecialPrice(models.Model):
+	_name = 'otl.product.special.price'
+	_description = "Product Special Pricing"
+
+	name = fields.Char('Name')
+	office_location_id = fields.Many2one('otl.office.location', 'Office Location')
+	product_tmpl_id = fields.Many2one('product.template', 'Product Template')
+	start_date = fields.Date('Start Date')
+	end_date = fields.Date('End Date')
+	list_price = fields.Float('Sale Price')
+	msrp = fields.Float('MSRP')
+	max_discount = fields.Float('Maximum Discount %')
+	active = fields.Boolean('Active', default=True)
+
+
+class SalesAppVersion(models.Model):
+	_name = 'otl.sales.app.version'
+	_description = "Sales App Versions"
+	_order = 'date desc'
+
+	name = fields.Char('App Version', required=True)
+	date = fields.Date('Release Date', required=True, default=fields.Date.context_today)
+	description = fields.Char('Description')
+	company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
+	sale_contract_tmpl_id = fields.Many2one('otl_document_sign.template', string='Sign Template')
+	sale_contract_tmpl_id_ncp = fields.Many2one('otl_document_sign.template',
+												string='Sign Template Without Co-Applicant')
+	credit_application_tmpl_id = fields.Many2one('otl_document_sign.template', string='Credit Application Template')
+	credit_application_tmpl_id_ncp = fields.Many2one('otl_document_sign.template',
+													 string='Credit Application Template Without Co-Applicant')
+
+	_sql_constraints = [
+		('name_company_uniq', 'unique (name,company_id)', 'App Version must be unique!')
+	]

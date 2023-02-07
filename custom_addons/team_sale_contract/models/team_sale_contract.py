@@ -653,12 +653,18 @@ class TeamCreditApplication(models.Model):
         sign_req_obj = self.env['otl_document_sign.request']
         sign_req_item_obj = self.env['otl_document_sign.request.item']
         for order in self:
-            if order.co_applicant_skip:
-                document_template_id = self.env['ir.config_parameter'].sudo().get_param(
-                    'credit_application_tmpl_id_ncp') or False
+            if order.appointment_id.app_version_id:
+                if order.co_applicant_skip:
+                    document_template_id = order.appointment_id.app_version_id.credit_application_tmpl_id_ncp.id or False
+                else:
+                    document_template_id = order.appointment_id.app_version_id.credit_application_tmpl_id.id or False
             else:
-                document_template_id = self.env['ir.config_parameter'].sudo().get_param(
-                    'credit_application_tmpl_id') or False
+                if order.co_applicant_skip:
+                    document_template_id = self.env['ir.config_parameter'].sudo().get_param(
+                        'credit_application_tmpl_id_ncp') or False
+                else:
+                    document_template_id = self.env['ir.config_parameter'].sudo().get_param(
+                        'credit_application_tmpl_id') or False
             if document_template_id:
                 template = self.env['otl_document_sign.template'].sudo().browse(int(document_template_id))
                 vals = {

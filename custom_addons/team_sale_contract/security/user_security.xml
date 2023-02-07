@@ -89,6 +89,20 @@
             <field name="global" eval="True"/>
         </record>
 
+        <record id="otl_office_location_comp_rule" model="ir.rule">
+            <field name="name">Office Locations- Company Rule</field>
+            <field name="model_id" ref="model_otl_office_location"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="otl_sales_app_version_comp_rule" model="ir.rule">
+            <field name="name">Sales App Versions- Company Rule</field>
+            <field name="model_id" ref="model_otl_sales_app_version"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
+
 
     </data>
 </odoo>

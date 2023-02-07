@@ -1470,6 +1470,7 @@ class APIHomes(API_Homes):
         token = params.get('token', '')
         contract_plumbing_option_1 = params.get('contract_plumbing_option_1', 0) and int(params.get('contract_plumbing_option_1', 0)) or 0
         contract_plumbing_option_2 = params.get('contract_plumbing_option_2', 0) and int(params.get('contract_plumbing_option_2', 0)) or 0
+        recision_date = params.get('recision_date', False)
         if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
                 (not contract_plumbing_option_1 and not contract_plumbing_option_2):
             return json.dumps({
@@ -1498,6 +1499,7 @@ class APIHomes(API_Homes):
                 'appointment_id': appointment_id,
                 'contract_plumbing_option_1': contract_plumbing_option_1,
                 'contract_plumbing_option_2': contract_plumbing_option_2,
+                'recision_date': recision_date
             }
             result = models.execute_kw(DB, int(uid), password, 'sale.order', 'action_generate_contract_document',
                                          [data])
@@ -1629,6 +1631,107 @@ class APIHomes(API_Homes):
         else:
             result = message
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements', data, uid,
+                                                              result)
+        result.update({'override_json_result': 1})
+        return json.dumps(result)
+
+    def action_extract_jwt_token(self, auth_token , jwt_token, decode_options):
+        """
+        Function to decode the data passed in the API
+        :param auth_token:
+        :param jwt_token:
+        :param decode_options:
+        :return:
+        """
+        values = {}
+        try:
+            token_decode = JWT_DECODE(jwt_token, auth_token, algorithms=[JWT_ALGORITHM], options=decode_options)
+            token_decode = token_decode.decode("utf-8")
+            values = ast.literal_eval(token_decode)
+        except:
+            token_decode = ''
+        return values
+
+    @route('/api/create_order_and_update_measurements_encoded', type='json', auth="none", methods=['POST'], csrf=False)
+    def create_order_and_update_measurements_encoded(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.jsonrequest.copy()
+        token = params.get('token', False)
+        data = params.get('data', False)
+        decode_options = ast.literal_eval(str(params.get('decode_options', {'verify_signature': True})))
+        decoded_data = {}
+        _logger.info("------------create_order_and_update_measurements_encoded params: %s------------------" % (params))
+        if not token:
+            _logger.info("------------Token Missing in main create_order_and_update_measurements_encoded api------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in main create_order_and_update_measurements_encoded api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in main create_order_and_update_measurements_encoded api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            try:
+                decoded_data = self.action_extract_jwt_token(token, data, decode_options)
+            except:
+                return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Something went wrong while decoding the data token'})
+            if decoded_data:
+                payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                                     'action_create_order_and_update_measurements', [decoded_data])
+            else:
+                return json.dumps({'override_json_result': 1, 'result': 'Failed',
+                                   'message': 'Empty values in decoded data'})
+
+            result = payment_data_result
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements_encoded', decoded_data, uid,
+                                                              result)
+        result.update({'override_json_result': 1})
+        return json.dumps(result)
+
+    @route('/api/create_order_and_update_measurements_encoded_v2', type='json', auth="none", methods=['POST'], csrf=False)
+    def create_order_and_update_measurements_encoded_v2(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.jsonrequest.copy()
+        token = params.get('token', False)
+        data = params.get('data', False)
+        native_data = params.get('native_data', False)
+        decode_options = ast.literal_eval(str(params.get('decode_options', {'verify_signature': True})))
+        decoded_data = {}
+        _logger.info("------------create_order_and_update_measurements_encoded_v2 params: %s------------------" % (params))
+        if not token:
+            _logger.info("------------Token Missing in main create_order_and_update_measurements_encoded_v2 api------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in main create_order_and_update_measurements_encoded_v2 api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in main create_order_and_update_measurements_encoded_v2 api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            if data:
+                try:
+                    decoded_data = self.action_extract_jwt_token(token, data, decode_options)
+                except:
+                    return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Something went wrong while decoding the data token'})
+            else:
+                decoded_data = json.loads(native_data)
+            if decoded_data:
+                payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                                     'action_create_order_and_update_measurements', [decoded_data])
+            else:
+                return json.dumps({'override_json_result': 1, 'result': 'Failed',
+                                   'message': 'Empty values in decoded data'})
+
+            result = payment_data_result
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements_encoded_v2', decoded_data, uid,
                                                               result)
         result.update({'override_json_result': 1})
         return json.dumps(result)

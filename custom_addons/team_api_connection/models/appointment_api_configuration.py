@@ -21,6 +21,7 @@ _logger = logging.getLogger(__name__)
 
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
 
 
 class TeamImproveitConfiguration(models.Model):
@@ -639,6 +640,11 @@ class TeamImproveitConfiguration(models.Model):
                                 state = self.env['res.country.state'].search(
                                     [('country_id', '=', 233), ('code', '=', appointment.get('ProspectState', ''))],
                                     limit=1)
+                                market_segment = appointment.get('MarketSegment', '')
+                                office_location_id = False
+                                if market_segment:
+                                    office_location_id = self.env['otl.office.location'].search(
+                                        [('name', '=', market_segment)], limit=1)
                                 if not appointments:
                                     appointment_values = {
                                         'improveit_appointment_id': appointment['AppointmentID'],
@@ -657,9 +663,15 @@ class TeamImproveitConfiguration(models.Model):
                                         'applicant_first_name': applicant_name_split['first_name'] or False,
                                         'applicant_middle_name': applicant_name_split['middle_name'] or False,
                                         'applicant_last_name': applicant_name_split['last_name'] or False,
+                                        'market_segment': market_segment,
+                                        'office_location_id': office_location_id and office_location_id.id or False,
 
                                     }
                                     appointment_obj = self.env['team.customer.appointment'].create(appointment_values)
+                                    if market_segment and not office_location_id:
+                                        appointment_obj.message_post(
+                                            body='Office Location is not found for Market Segment %s' % (
+                                                market_segment))
                                 elif appointments and update_existing_record:
                                     appointment_values = {
                                         'improveit_appointment_id': appointment['AppointmentID'],
@@ -678,9 +690,15 @@ class TeamImproveitConfiguration(models.Model):
                                         'applicant_first_name': applicant_name_split['first_name'] or False,
                                         'applicant_middle_name': applicant_name_split['middle_name'] or False,
                                         'applicant_last_name': applicant_name_split['last_name'] or False,
+                                        'market_segment': market_segment,
+                                        'office_location_id': office_location_id and office_location_id.id or False,
 
                                     }
                                     appointments.write(appointment_values)
+                                    if market_segment and not office_location_id:
+                                        appointments.message_post(
+                                            body='Office Location is not found for Market Segment %s' % (
+                                                market_segment))
 
                         except IOError:
                             error_msg = _("Something went wrong during token generation.")
@@ -1293,6 +1311,72 @@ class TeamImproveitConfiguration(models.Model):
                     error_msg = _("Something went wrong during token generation.")
                     raise self.env['res.config.settings'].get_config_warning(error_msg)
 
+    def get_special_pricing_api(self):
+        configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
+        if configurations:
+            end_point_url = configurations.token_url
+            client_token = configurations.client_token
+            if end_point_url and client_token:
+                url = end_point_url + 'GetSpecialPricing' + client_token
+                headers = {"Content-type": "application/json"}
+                data = {}
+                try:
+                    req = requests.get(url, data=data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    special_price_list = []
+                    for special_price in content:
+                        office_location_improveit_id = special_price.get('OfficeId', '')
+                        office_location_name = special_price.get('Office', '')
+                        improveit_product_id = special_price.get('ProductId', '')
+                        start_date = special_price.get('Start_Date', '')
+                        end_date = special_price.get('End_Date', '')
+                        name = special_price.get('Name', '')
+                        price = special_price.get('Price', 0)
+                        msrp = special_price.get('MSRP', 0)
+                        max_discount = special_price.get('MaxDiscount', 0)
+                        office_location = self.env['otl.office.location'].with_context(active_test=False).search([('improveit_id', '=', office_location_improveit_id)], limit=1)
+                        if not office_location:
+                            office_location = self.env['otl.office.location'].create({
+                                'name': office_location_name,
+                                'improveit_id': office_location_improveit_id
+                            })
+                        if not office_location.active:
+                            office_location.write({'active': True})
+                        product_tmpl = self.env['product.template'].search([('improveit_product_id', '=', improveit_product_id)], limit=1)
+                        if product_tmpl:
+                            special_price = self.env['otl.product.special.price'].search([
+                                ('office_location_id.improveit_id', '=', office_location.id),
+                                ('product_tmpl_id.improveit_product_id', '=', improveit_product_id),
+                                ('start_date', '=', start_date),
+                                ('end_date', '=', end_date),
+                            ])
+                            vals = {
+                                'product_tmpl_id': product_tmpl.id,
+                                'start_date': datetime.strptime(start_date, '%m/%d/%Y').strftime(DEFAULT_SERVER_DATE_FORMAT),
+                                'end_date': datetime.strptime(end_date, '%m/%d/%Y').strftime(DEFAULT_SERVER_DATE_FORMAT),
+                                'name': name,
+                                'list_price': price,
+                                'msrp': msrp,
+                                'max_discount': max_discount,
+                            }
+                            if special_price:
+                                self.env['otl.product.special.price'].write(vals)
+                            else:
+                                vals.update({
+                                    'office_location_id': office_location.id,
+                                })
+                                special_price = self.env['otl.product.special.price'].create(vals)
+                            if special_price.id not in special_price_list:
+                                special_price_list.append(special_price.id)
+                    inactive_special_price = self.env['otl.product.special.price'].search([('id', 'not in', special_price_list)])
+                    if inactive_special_price:
+                        inactive_special_price.write({'active': False})
+
+                except IOError:
+                    error_msg = _("Something went wrong during token generation.")
+                    raise self.env['res.config.settings'].get_config_warning(error_msg)
+
     def action_sync_master_data(self, data={}):
         _logger.info('-------Starting: action_sync_master_data')
         for record in self.sudo().search([('api_type', '=', 'boomi')]):
@@ -1325,8 +1409,10 @@ class TeamImproveitConfiguration(models.Model):
             record.sudo().get_appointment_result()
             _logger.info('-------Starting: get_molding_types')
             record.sudo().get_molding_types()
-            # _logger.info('-------Starting: get_resision_date')
-            # record.sudo().get_resision_date()
+            _logger.info('-------Starting: get_resision_date')
+            record.sudo().get_resision_date()
+            _logger.info('-------Starting: get_special_pricing_api')
+            record.sudo().get_special_pricing_api()
             record.sudo().write({'sync_master_data_in_progress': False})
             # record.env.cr.commit()
         _logger.info('-------Completed: action_sync_master_data')
