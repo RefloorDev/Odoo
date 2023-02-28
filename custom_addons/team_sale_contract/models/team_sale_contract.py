@@ -8,6 +8,19 @@ from datetime import datetime,date
 from odoo.osv import expression
 from odoo.exceptions import ValidationError,UserError
 from odoo.addons.team_api_configuration.controllers.configurations import URL, DB, API_USER_ID, API_USER_PASSWORD
+from odoo.addons.team_api_configuration.jwt.api_jws import encode as JWT_ENCODE
+from odoo.addons.team_api_configuration.jwt.api_jws import decode as JWT_DECODE
+import ast
+
+JWT_SECRET = 'secretXXXY'
+JWT_ALGORITHM = 'HS256'
+FIELDS_TO_ENCRYPT = ['drivers_license',
+                     'date_of_birth',
+                     'social_security_number',
+                     'co_applicant_drivers_license',
+                     'co_applicant_date_of_birth',
+                     'co_applicant_social_security_number'
+                     ]
 
 
 class TeamTransitionLine(models.Model):
@@ -296,6 +309,9 @@ class TeamCreditApplication(models.Model):
     drivers_license_exp_date = fields.Date('Drivers License Exp.Date')
     date_of_birth = fields.Date('Date of Birth')
     social_security_number = fields.Char('Social Security Number')
+    encrypted_social_security_number = fields.Char('Encrypted Social Security Number')
+    encrypted_drivers_license = fields.Char('Encrypted Drivers License or state ID')
+    encrypted_date_of_birth = fields.Char('Encrypted Date of Birth')
     address_of_applicant = fields.Char('Address')
     address_of_applicant_street = fields.Char('Street1')
     address_of_applicant_street2 = fields.Char('Street2')
@@ -348,9 +364,13 @@ class TeamCreditApplication(models.Model):
     co_applicant_drivers_license = fields.Char('Co-Applicant Drivers License or State ID')
     co_applicant_drivers_license_issue_date = fields.Date('Co-Applicant Drivers License Issue Date')
     co_applicant_drivers_license_exp_date = fields.Date('Co-Applicant Drivers License Exp Date')
-    co_applicant_date_of_birth = fields.Date('Date of Birht')
-    co_applicant_social_security_number = fields.Char('Social Security Number')
+    co_applicant_date_of_birth = fields.Date('Co-Applicant Date of Birth')
+    co_applicant_social_security_number = fields.Char('Co-Applicant SSN')
     co_applicant_address_of_applicant = fields.Char('Address')
+
+    encrypted_co_applicant_drivers_license = fields.Char('Encrypted Co-Applicant Drivers License')
+    encrypted_co_applicant_date_of_birth = fields.Char('Encrypted Co-Applicant Date of Birth')
+    encrypted_co_applicant_social_security_number = fields.Char('Encrypted Co-Applicant SSN')
 
     co_applicant_street = fields.Char('Street1')
     co_applicant_street2 = fields.Char('Street2')
@@ -622,6 +642,53 @@ class TeamCreditApplication(models.Model):
     additional_monthly_income = fields.Float('Applicant Monthly Earnings')
     applicant_mortgage_company = fields.Char('Applicant Mortgage Company')
 
+    def reverse(self, string):
+        return "".join(reversed(string))
+
+    def action_encrypt_field(self, field_name, value):
+        token = ''
+        payload = {
+            field_name: value
+        }
+        token = JWT_ENCODE(payload, JWT_SECRET, JWT_ALGORITHM)
+        token = self.reverse(token.decode("utf-8"))
+        return token
+
+    def action_decrypt_field(self, field_name):
+        token = self['encrypted_%s' % (field_name)]
+        token = (self.reverse(token)).encode("utf-8")
+        try:
+            token_decode = JWT_DECODE(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            token_decode = token_decode.decode("utf-8")
+            values = ast.literal_eval(token_decode)
+        except:
+            values = ''
+        field_value = values.get(field_name, '')
+        if field_name in ['date_of_birth', 'co_applicant_date_of_birth']:
+            field_value = datetime.strptime(field_value, '%Y-%m-%d').date()
+        return field_value
+
+    def action_update_field_values(self, vals):
+        for field_name in FIELDS_TO_ENCRYPT:
+            value = vals.get(field_name, False)
+            if value:
+                field_name_value= ''
+                if field_name in ['date_of_birth', 'co_applicant_date_of_birth']:
+                    field_name_value = False
+                vals.update({
+                    field_name:  field_name_value,
+                    'encrypted_%s' % (field_name): self.action_encrypt_field(field_name, value)
+                })
+        return vals
+
+    @api.model
+    def create(self, vals):
+        vals = self.action_update_field_values(vals)
+        return super(TeamCreditApplication, self).create(vals)
+
+    def write(self, vals):
+        vals = self.action_update_field_values(vals)
+        return super(TeamCreditApplication, self).write(vals)
 
     @api.depends('hunter_message_status')
     def _compute_hunter_message_status(self):
@@ -699,7 +766,10 @@ class TeamCreditApplication(models.Model):
                                     auto_field = selected_record if selected_record else current_request_item.partner_id
                                     for field in fields:
                                         if auto_field and field in auto_field:
-                                            auto_field = auto_field[field]
+                                            if field in FIELDS_TO_ENCRYPT:
+                                                auto_field = auto_field.action_decrypt_field(field)
+                                            else:
+                                                auto_field = auto_field[field]
                                         else:
                                             auto_field = ""
                                             break

@@ -224,6 +224,17 @@ class TeamCustomerAppointment(models.Model):
             action['res_id'] = quotations.id
         return action
 
+    def action_view_attachments(self):
+        action = self.env.ref('base.action_attachment').read()[0]
+        action['context'] = {
+            'create': False,
+            'edit': False,
+            'delete': False,
+            'search_default_image_type': 1
+        }
+        action['domain'] = [('appointment_id', '=', self.id)]
+        return action
+
     @api.model
     def _geo_localize(self, street='', zip='', city='', state='', country=''):
         geo_obj = self.env['base.geocoder']
@@ -303,6 +314,23 @@ class APISyncLog(models.Model):
                 'state': state,
             })
         return True
+
+    def store_database_raw_data(self, url, data, uid, appointment_id):
+        result = {'result': 'Failed', 'message': 'Something went wrong while storing data'}
+        state = 'success'
+        if uid and appointment_id and self.env['team.customer.appointment'].browse(int(appointment_id)).exists():
+            result = {'result': 'Success', 'message': 'Data stored successfully'}
+            self.create({
+                'name': url,
+                'appointment_id': int(appointment_id),
+                'user_id': uid,
+                'data': data,
+                'response': result,
+                'state': state,
+            })
+        else:
+            result = {'result': 'Failed', 'message': 'Appointment is not existing'}
+        return result
 
 
 class AppScreenLog(models.Model):

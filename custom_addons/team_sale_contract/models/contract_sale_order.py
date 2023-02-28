@@ -2449,6 +2449,26 @@ class SaleOrder(models.Model):
                     if applicant_state:
                         applicant_state_name = applicant_state.name
 
+                date_of_birth = ''
+                if credit_application.encrypted_date_of_birth:
+                    date_of_birth = credit_application.action_decrypt_field('date_of_birth')
+                social_security_number = ''
+                if credit_application.encrypted_social_security_number:
+                    social_security_number = credit_application.action_decrypt_field('social_security_number')
+                drivers_license = ''
+                if credit_application.encrypted_drivers_license:
+                    drivers_license = credit_application.action_decrypt_field('drivers_license')
+
+                co_applicant_date_of_birth = ''
+                if credit_application.encrypted_co_applicant_date_of_birth:
+                    co_applicant_date_of_birth = credit_application.action_decrypt_field('co_applicant_date_of_birth')
+                co_applicant_social_security_number = ''
+                if credit_application.encrypted_co_applicant_social_security_number:
+                    co_applicant_social_security_number = credit_application.action_decrypt_field('co_applicant_social_security_number')
+                co_applicant_drivers_license = ''
+                if credit_application.encrypted_co_applicant_drivers_license:
+                    co_applicant_drivers_license = credit_application.action_decrypt_field('co_applicant_drivers_license')
+
                 data = {
                     "AppointmentID": credit_application.appointment_id.improveit_appointment_id or '',
                     "SaleTotalPrice": credit_application.total_price or 0,
@@ -2458,9 +2478,9 @@ class SaleOrder(models.Model):
                     "ApplicantName": (credit_application.applicant_last_name and '%s, ' % (
                         credit_application.applicant_last_name) or '') + (
                                                  credit_application.applicant_first_name or ''),
-                    "ApplicantDateofBirth": credit_application.date_of_birth.strftime(
-                        "%Y%m%d 000000.000") if credit_application.date_of_birth else '',
-                    "ApplicantSSN": credit_application.social_security_number or '',
+                    "ApplicantDateofBirth": date_of_birth.strftime(
+                        "%Y%m%d 000000.000") if date_of_birth else '',
+                    "ApplicantSSN": social_security_number or '',
                     "ApplicantHomePhone": credit_application.home_phone or '',
                     "ApplicantStreetAddress": credit_application.address_of_applicant or '',
                     "ApplicantCity": credit_application.address_of_applicant_city or '',
@@ -2471,7 +2491,7 @@ class SaleOrder(models.Model):
                     "ApplicantState": applicant_state_name or '',
                     "ApplicantZIPCode": credit_application.address_of_applicant_zip or '',
                     "ApplicantYearsAtCurrentAddress": credit_application.how_long or '',
-                    "ApplicantDriversLicense/StateID": credit_application.drivers_license or '',
+                    "ApplicantDriversLicense/StateID": drivers_license or '',
                     "ApplicantDriversLicenseIssueDate": credit_application.drivers_license_issue_date.strftime(
                         "%Y%m%d 000000.000") if credit_application.drivers_license_issue_date else '',
                     "ApplicantDriversLicenseExpirationDat": credit_application.drivers_license_exp_date.strftime(
@@ -2493,11 +2513,10 @@ class SaleOrder(models.Model):
                     "PermissionToText": credit_application.hunter_message_status and True or False,
                     "CoappName": (credit_application.co_applicant_last_name or credit_application.co_applicant_first_name) and '%s, %s' % (
                                  credit_application.co_applicant_last_name or '',credit_application.co_applicant_first_name or '') or '',
-                    "CoappDateofBirth": credit_application.co_applicant_date_of_birth.strftime(
-                        "%Y%m%d 000000.000") if credit_application.co_applicant_date_of_birth else '',
-                    "CoappSSN": credit_application.co_applicant_social_security_number or '',
+                    "CoappDateofBirth": co_applicant_date_of_birth.strftime("%Y%m%d 000000.000") if co_applicant_date_of_birth else '',
+                    "CoappSSN": co_applicant_social_security_number or '',
                     "CoappPhone": credit_application.co_applicant_phone or '',
-                    "CoappDriversLicenseorStateID": credit_application.co_applicant_drivers_license or '',
+                    "CoappDriversLicenseorStateID": co_applicant_drivers_license or '',
                     "CoapplicantDriversLicenseIssueDate": credit_application.co_applicant_drivers_license_issue_date.strftime(
                         "%Y%m%d 000000.000") if credit_application.co_applicant_drivers_license_issue_date else '',
                     "CoappDriversLicenseExpiration": credit_application.co_applicant_drivers_license_exp_date.strftime(

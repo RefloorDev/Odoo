@@ -1380,7 +1380,7 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         if status:
             payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
-                                                 'action_update_contract_information', [data])
+                                                    'action_update_contract_information', [data])
 
             result = payment_data_result
         else:
@@ -1470,7 +1470,9 @@ class APIHomes(API_Homes):
         token = params.get('token', '')
         contract_plumbing_option_1 = params.get('contract_plumbing_option_1', 0) and int(params.get('contract_plumbing_option_1', 0)) or 0
         contract_plumbing_option_2 = params.get('contract_plumbing_option_2', 0) and int(params.get('contract_plumbing_option_2', 0)) or 0
+        send_physical_document = params.get('send_physical_document', 0) and int(params.get('send_physical_document', 0)) or 0
         recision_date = params.get('recision_date', False)
+        additional_comments = params.get('additional_comments', '')
         if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
                 (not contract_plumbing_option_1 and not contract_plumbing_option_2):
             return json.dumps({
@@ -1499,10 +1501,12 @@ class APIHomes(API_Homes):
                 'appointment_id': appointment_id,
                 'contract_plumbing_option_1': contract_plumbing_option_1,
                 'contract_plumbing_option_2': contract_plumbing_option_2,
+                'send_physical_document': send_physical_document,
+                'additional_comments': additional_comments,
                 'recision_date': recision_date
             }
             result = models.execute_kw(DB, int(uid), password, 'sale.order', 'action_generate_contract_document',
-                                         [data])
+                                       [data])
         else:
             result = message
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/generate_contract_document', data, uid,
@@ -1625,7 +1629,7 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         if status:
             payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
-                                                 'action_create_order_and_update_measurements', [data])
+                                                    'action_create_order_and_update_measurements', [data])
 
             result = payment_data_result
         else:
@@ -1659,7 +1663,7 @@ class APIHomes(API_Homes):
         token = params.get('token', False)
         data = params.get('data', False)
         decode_options = ast.literal_eval(str(params.get('decode_options', {'verify_signature': True})))
-        decoded_data = {}
+        decoded_data = data
         _logger.info("------------create_order_and_update_measurements_encoded params: %s------------------" % (params))
         if not token:
             _logger.info("------------Token Missing in main create_order_and_update_measurements_encoded api------------------")
@@ -1673,10 +1677,34 @@ class APIHomes(API_Homes):
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         if status:
+            payment_method_secret = data.get('payment_method_secret', '')
+            credit_application_secret = data.get('application_info_secret', '')
             try:
-                decoded_data = self.action_extract_jwt_token(token, data, decode_options)
+                if payment_method_secret:
+                    payment_method_dict = self.action_extract_jwt_token(token, payment_method_secret, decode_options)
+                    if payment_method_dict:
+                        decoded_data.update({
+                            'paymentmethod': payment_method_dict
+                        })
             except:
-                return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Something went wrong while decoding the data token'})
+                result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Something went wrong while decoding the payment token'}
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/create_order_and_update_measurements_encoded', data, uid,
+                    result)
+                return json.dumps(result)
+            try:
+                if credit_application_secret:
+                    credit_application_dict = self.action_extract_jwt_token(token, credit_application_secret, decode_options)
+                    if credit_application_dict:
+                        decoded_data.update({
+                            'applicationInfo': credit_application_dict
+                        })
+            except:
+                result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Something went wrong while decoding the credit application token'}
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/create_order_and_update_measurements_encoded', data, uid,
+                    result)
+                return json.dumps(result)
             if decoded_data:
                 payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
                                                      'action_create_order_and_update_measurements', [decoded_data])
@@ -1687,7 +1715,7 @@ class APIHomes(API_Homes):
             result = payment_data_result
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements_encoded', decoded_data, uid,
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements_encoded', data, uid,
                                                               result)
         result.update({'override_json_result': 1})
         return json.dumps(result)
@@ -1734,4 +1762,35 @@ class APIHomes(API_Homes):
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements_encoded_v2', decoded_data, uid,
                                                               result)
         result.update({'override_json_result': 1})
+        return json.dumps(result)
+
+    @route('/api/fetch_database_raw_data', type='json', auth="none", methods=['POST'], csrf=False)
+    def action_fetch_database_raw_data(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.jsonrequest.copy()
+        token = params.get('token', False)
+        data = params.get('data', False)
+        appointment_id = int(params.get('appointment_id', 0))
+        _logger.info(
+            "------------fetch_database_raw_data params: %s------------------" % (params))
+        if not token:
+            _logger.info("------------Token Missing in main fetch_database_raw_data api------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in main fetch_database_raw_data api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in main fetch_database_raw_data api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            if data and appointment_id:
+                result = request.env['otl.api.sync.log'].sudo().store_database_raw_data('/api/fetch_database_raw_data', data, uid, appointment_id)
+            else:
+                result = {'result': 'Failed', 'message': 'Data or Appointment ID is missing'}
+        else:
+            result = message
+        result.update({'override_json_result': 1})
+        _logger.info("fetch_database_raw_data Response: %s"%(result))
         return json.dumps(result)

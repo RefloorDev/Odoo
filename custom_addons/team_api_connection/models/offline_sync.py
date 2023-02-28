@@ -1829,7 +1829,8 @@ class TeamCustomerAppointment(models.Model):
                     record.action_update_questionnaires(answer_list, order)
                 if order.state != 'draft':
                     order.write({'state': 'draft'})
-                order.add_payment_line(order.discount, order.adjustment, order.additional_cost, 0, 0)
+                if order.floor_type:
+                    order.add_payment_line(order.discount, order.adjustment, order.additional_cost, 0, 0)
                 for room_data in room_list:
                     room_id = room_data.get('room_id', False)
                     room_measurement_line = order.room_measurement_line.filtered(
@@ -1897,17 +1898,18 @@ class TeamCustomerAppointment(models.Model):
                             order.action_draft()
                             order.write({'active': False})
                         else:
-                            if credit_application_dict and not retry_order_creation:
-                                credit_application = self.env['team.credit.application'].search([('appointment_id', '=', appointment_id)],
+                            if not retry_order_creation:
+                                if credit_application_dict:
+                                    credit_application = self.env['team.credit.application'].search([('appointment_id', '=', appointment_id)],
                                                                                      limit=1)
-                                if not credit_application:
-                                    credit_application_result = order.action_create_credit_application(credit_application_dict)
-                                    if credit_application_result.get('result', '') == 'Failed':
-                                        credit_application_result.update({
-                                            'payment_status': payment_status,
-                                            'payment_message': payment_message,
-                                        })
-                                        return credit_application_result
+                                    if not credit_application:
+                                        credit_application_result = order.action_create_credit_application(credit_application_dict)
+                                        if credit_application_result.get('result', '') == 'Failed':
+                                            credit_application_result.update({
+                                                'payment_status': payment_status,
+                                                'payment_message': payment_message,
+                                            })
+                                            return credit_application_result
                                 if order.state != 'draft':
                                     order.write({'state': 'draft'})
                                 if rooms_list and not order.room_measurement_line:
@@ -2401,6 +2403,7 @@ class SaleOrder(models.Model):
         return status
 
     def action_format_date(self, date):
+        date = date.replace('\\', '')
         try:
             date_formated = datetime.strptime(date, '%m/%d/%Y').strftime(DEFAULT_SERVER_DATE_FORMAT)
         except:
@@ -3083,9 +3086,16 @@ class SaleOrder(models.Model):
             appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
             contract_plumbing_option_1 = data.get('contract_plumbing_option_1', 0)
             contract_plumbing_option_2 = data.get('contract_plumbing_option_2', 0)
+            send_physical_document = False
+            if data.get('send_physical_document', 0) == 1:
+                send_physical_document = True
             if appointment_id:
                 appointment = self.env['team.customer.appointment'].browse(appointment_id)
                 if appointment.exists():
+                    appointment.write({
+                        'additional_comments': data.get('additional_comments', ''),
+                        'send_physical_document':  send_physical_document,
+                    })
                     order = self.search([('appointment_id', '=', appointment_id)], limit=1)
                     if not order:
                         return {

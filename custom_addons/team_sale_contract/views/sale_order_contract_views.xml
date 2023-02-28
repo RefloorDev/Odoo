@@ -397,9 +397,9 @@
                                     <field name="one_year_price" readonly="1"/>
                                     <field name="savings_amount" readonly="1"/>
                                     <field name="payment_method" readonly="1"/>
-                                    <field name="check_number" attrs="{'invisible': [('payment_method', '!=', 'check')]}" readonly="1"/>
-                                    <field name="check_account_number" attrs="{'invisible': [('payment_method', '!=', 'check')]}" readonly="1"/>
-                                    <field name="check_routing_number" attrs="{'invisible': [('payment_method', '!=', 'check')]}" readonly="1"/>
+                                    <field name="check_number" password="True" attrs="{'invisible': [('payment_method', '!=', 'check')]}" readonly="1"/>
+                                    <field name="check_account_number" password="True" attrs="{'invisible': [('payment_method', '!=', 'check')]}" readonly="1"/>
+                                    <field name="check_routing_number" password="True" attrs="{'invisible': [('payment_method', '!=', 'check')]}" readonly="1"/>
                                     <field name="down_payment_amount" readonly="1" />
                                 </group>
                                 <group string="Balance Due">

@@ -37,6 +37,13 @@
                                 <span class="o_stat_text">Sale Orders</span>
                             </div>
                         </button>
+                        <button class="oe_stat_button" type="object"
+                        name="action_view_attachments" icon="fa-file-image-o">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">View</span>
+                                <span class="o_stat_text">Uploaded Images</span>
+                            </div>
+                        </button>
                     </div>
                     <div class="oe_title">
                         <h1>
@@ -99,6 +106,8 @@
                         <field name="measurement_exist" invisible="1"/>
                         <field name="send_physical_document" readonly="1"/>
                         <field name="credit_application_url" widget="url" readonly="1" invisible="1"/>
+                        <field name="what_happened_notes" readonly="1"/>
+                        <field name="whats_next_notes" readonly="1"/>
                         <field name="office_location_id" readonly="1"/>
                         <field name="market_segment" readonly="1"/>
                         <field name="app_version_id" readonly="1"/>
@@ -348,4 +357,15 @@
         groups="base.group_erp_manager,base.group_system"
         sequence="1"
     />
+
+    <record id="view_attachment_search" model="ir.ui.view">
+        <field name="name">ir.attachment.search</field>
+        <field name="model">ir.attachment</field>
+        <field name="inherit_id" ref="base.view_attachment_search"/>
+        <field name="arch" type="xml">
+            <filter name="creation_month" position="after">
+                <filter string="Image Type" name="image_type" domain="[]" context="{'group_by':'image_type'}"/>
+            </filter>
+        </field>
+    </record>
 </odoo>
