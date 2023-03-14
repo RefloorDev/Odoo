@@ -21,6 +21,7 @@ from datetime import datetime, date
 
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT
 from odoo.addons.team_api_connection.models.model import AuthorizeAPICustom
+from odoo.addons.resource.models.resource import float_to_time
 import threading
 import time
 
@@ -107,6 +108,30 @@ class ResUsers(models.Model):
             })
         return special_price_list
 
+    def get_promotion_codes(self):
+        promotion_code_list = []
+        promotion_codes  = self.env['otl.promotion.code'].search([])
+        for code in promotion_codes:
+            promotion_code_list.append({
+                'promotion_code_id': code.id,
+                'name': code.name,
+                'discount': code.discount or 0,
+                'start_date': code.start_date,
+                'end_date': code.end_date,
+            })
+        return promotion_code_list
+
+    def get_transition_heights(self):
+        transition_height_list = []
+        transition_heights  = self.env['otl.transition.height'].search([])
+        for height in transition_heights:
+            transition_height_list.append({
+                'transition_height_id': height.id,
+                'name': height.name,
+                'sequence': height.sequence or 0
+            })
+        return transition_height_list
+
 
     @api.model
     def get_master_data_contents(self, data={}):
@@ -122,9 +147,16 @@ class ResUsers(models.Model):
         payment_option_list = self.env['team.downpayment.option'].get_all_payment_options()
         discount_coupon_list = self.env['team.monthly.promo'].get_all_discount_coupons()
         products_list = self.env['product.template'].get_all_products()
-        appointment_list = self.env['team.customer.appointment'].action_get_appointment_data(self.env.user.id)
+        appointment_data = self.env['team.customer.appointment'].action_get_appointment_data(self.env.user.id)
+        appointment_list = appointment_data.get('data', [])
         appointment_result_list = self.env['appointment.result'].get_appointment_results()
         special_price_list = self.get_special_pricing()
+        promotion_code_list = self.get_promotion_codes()
+        transition_height_list = self.get_transition_heights()
+        auto_logout_time = ''
+        if self.env.user.company_id.enable_auto_logout:
+            logout_time = self.env.user.company_id.auto_logout_time or 0
+            auto_logout_time = str(float_to_time(logout_time))
         result.update({
             'rooms': room_list,
             'questionnaires': questionnaire_list,
@@ -136,9 +168,12 @@ class ResUsers(models.Model):
             'appointments': appointment_list,
             'appointment_results': appointment_result_list,
             'special_prices': special_price_list,
+            'promotion_codes': promotion_code_list,
+            'transition_heights': transition_height_list,
             'min_sale_price': float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0,
             'max_no_transitions': int(self.env['ir.config_parameter'].sudo().get_param('max_no_transitions')) or 0,
-            'recision_date': self.env.user.company_id.recision_date and self.env.user.company_id.recision_date.strftime(DEFAULT_SERVER_DATE_FORMAT) or ''
+            'recision_date': self.env.user.company_id.recision_date and self.env.user.company_id.recision_date.strftime(DEFAULT_SERVER_DATE_FORMAT) or '',
+            'auto_logout_time': auto_logout_time,
         })
         # except:
         #     result = {
@@ -149,6 +184,10 @@ class ResUsers(models.Model):
 
     def get_sales_appointment_api_offline(self,user_id):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
+        result = {
+            'result': 'Success',
+            'message': 'Appointment synced successfully'
+        }
         for record in configurations:
             end_point_url = record.token_url
             client_token = record.client_token
@@ -181,6 +220,11 @@ class ResUsers(models.Model):
                                 [('name', '=', appointment.get('ProspectName','')), ('email', '=', appointment.get('ProspectEmail', ''))], limit=1)
                             applicant_name_split = self.split_name(appointment['ProspectName'])
                             str1 = appointment.get('AppointmentTime', '0:00 AM')
+                            if str1 is None:
+                                return {
+                                    'result': 'Failed',
+                                    'message': 'Appointment time is missing in the appointment for customer %s'%(appointment.get('ProspectName', ''))
+                                }
                             str1_list = str1.split(' ')
                             time = str1_list[0]
                             am_pm = str1_list[1]
@@ -270,8 +314,22 @@ class ResUsers(models.Model):
                     if appointments:
                         for appointment in appointments:
                             appointment.write({'state': 'canceled'})
-        return True
+        return result
 
+    @api.model
+    def action_check_auto_logout(self, data =None):
+        auto_logout_time = ''
+        enable_auto_logout = 0
+        if self.env.user.company_id.enable_auto_logout:
+            enable_auto_logout = 1
+            logout_time = self.env.user.company_id.auto_logout_time or 0
+            auto_logout_time = str(float_to_time(logout_time))
+        result = {
+            'result': 'Success',
+            'enable_auto_logout': enable_auto_logout,
+            'auto_logout_time': auto_logout_time,
+        }
+        return result
 
 class TeamQuoteQuestion(models.Model):
     _inherit = 'team.quote.question'
@@ -297,6 +355,13 @@ class TeamQuoteQuestion(models.Model):
             amount = 0
             if question.code != 'StairCount':
                 amount = question.amount or 0
+            applicable_rooms_list = []
+            if question.applicable_rooms:
+                for room in question.applicable_rooms:
+                    applicable_rooms_list.append({
+                        'room_id': room.id,
+                        'room_name': room.name and room.name.upper() or '',
+                    })
             questionnaire_list.append({
                 'id': question.id,
                 'name': question.name or '',
@@ -317,8 +382,11 @@ class TeamQuoteQuestion(models.Model):
                 'default_answer': question.default_answer or '',
                 'exclude_from_discount': question.exclude_from_discount or False,
                 'multiply_with_area': question.multiply_with_area or False,
+                'set_default_answer': question.set_default_answer or False,
+                'applicable_current_surface': question.applicable_current_surface or '',
                 'quote_label': quote_label,
-                'applicable_to': applicable_to
+                'applicable_to': applicable_to,
+                'applicable_rooms': applicable_rooms_list
             })
         return questionnaire_list
 
@@ -528,7 +596,9 @@ class TeamCustomerAppointment(models.Model):
         if user_id:
             user = self.env['res.users'].browse(int(user_id))
             if user and user.improveit_user_id:
-                self.env['res.users'].get_sales_appointment_api_offline(user.improveit_user_id)
+                result = self.env['res.users'].get_sales_appointment_api_offline(user.improveit_user_id)
+                if result.get('result', '') == 'Failed':
+                    return result
         tz = user.tz or self._context.get('tz') or 'UTC'
         first_start_date_utc, first_end_date_utc = get_week_date(0, tz)
         appointment_data = self.env['team.customer.appointment'].search(
@@ -597,7 +667,10 @@ class TeamCustomerAppointment(models.Model):
                 }
                 list.append(vals)
 
-        return list
+        return {
+            'result': 'Success',
+            'data': list
+        }
 
     def get_timezone_based_time(self, date, timezone):
         datetime_obj = datetime.strptime(date, DEFAULT_SERVER_DATETIME_FORMAT)
@@ -632,6 +705,9 @@ class TeamCustomerAppointment(models.Model):
             send_physical_document = False
             if data.get('send_physical_document', 0) == 1:
                 send_physical_document = True
+            flexible_installation = False
+            if data.get('flexible_installation', 0) == 1:
+                flexible_installation = True
             app_version_id = False
             if app_version:
                 app_version_id = self.env['otl.sales.app.version'].search([('name', '=', app_version)], limit=1)
@@ -640,6 +716,7 @@ class TeamCustomerAppointment(models.Model):
                 'whats_next_notes': data.get('whats_next_notes', ''),
                 'additional_comments': data.get('additional_comments', ''),
                 'send_physical_document':  send_physical_document,
+                'flexible_installation':  flexible_installation,
                 'timezone': data.get('timezone', ''),
                 'app_version_id':  app_version_id,
             }
@@ -833,6 +910,8 @@ class TeamCustomerAppointment(models.Model):
                                 self.env['team.contract.transition.line'].create({
                                     'name': transition_data.get('name', ''),
                                     'transition_width': float(transition_data.get('width', 0)),
+                                    'transition_height': transition_data.get('height', ''),
+                                    'transition_height_id': transition_data.get('transition_height_id', False),
                                     'room_measurement_id': room_measure.id,
                                     'room_id': room_id,
                                     'appointment_id': self.id,
@@ -847,7 +926,7 @@ class TeamCustomerAppointment(models.Model):
                     result = {'message': 'Wrong Room Value', 'result': 'Failed'}
             else:
                 _logger.info("------ Room_id Empty-------------")
-                result = {'message': 'Room_id Empty', 'result': 'Failed'}
+                result = {'message': 'Room ID Empty', 'result': 'Failed'}
         _logger.info('--------------Completed: action_update_room_measurements: %s------------'%(result))
         return result
 
@@ -1002,7 +1081,13 @@ class TeamCustomerAppointment(models.Model):
             finance_option_id = int(data.get('finance_option_id', 0))
             special_price_id = int(data.get('special_price_id', 0))
             stair_special_price_id = int(data.get('stair_special_price_id', 0))
+            promotion_code_id = int(data.get('promotion_code_id', 0))
             loan_payment = float(data.get('loan_payment', 0))
+            calc_based_on = data.get('calc_based_on', 'list_price')
+            if calc_based_on not in ['list_price', 'msrp']:
+                _logger.info("------ Wrong value for Calculation Based On-------------")
+                status = {'message': 'Wrong value for Calculation Based On', 'result': 'Failed'}
+                return status
             sale_order_obj = self.env['sale.order']
             res_partner_obj = self.env['res.partner']
             if not selected_package_id:
@@ -1037,6 +1122,13 @@ class TeamCustomerAppointment(models.Model):
                 _logger.info("------ Stair Special Price Not Exist-------------")
                 status = {
                     'message': 'Stair Special Price Not Exist',
+                    'result': 'Failed'
+                }
+                return status
+            if promotion_code_id and not self.env['otl.promotion.code'].browse(int(promotion_code_id)).exists():
+                _logger.info("------ Promotion Code is Not Exists-------------")
+                status = {
+                    'message': 'Promotion Code is Not Exists',
                     'result': 'Failed'
                 }
                 return status
@@ -1134,6 +1226,8 @@ class TeamCustomerAppointment(models.Model):
                 'finance_option_id': finance_option_id or False,
                 'special_price_id': special_price_id or False,
                 'stair_special_price_id': stair_special_price_id or False,
+                'promotion_code_id': promotion_code_id or False,
+                'calc_based_on': calc_based_on,
                 'balance_payment_method': payment_method,
                 'adjustment': adjustment,
                 'loan_payment': loan_payment,
@@ -1888,6 +1982,8 @@ class TeamCustomerAppointment(models.Model):
                             payment_method = payment_method_dict.get('payment_method', '')
                             down_payment_amount = float(paymentdetails_dict.get('down_payment_amount', 0))
                             if order.payment_method in ['credit_card', 'debit_card'] and down_payment_amount and not order.card_transaction_log_line.filtered(lambda x: x.state == 'success'):
+                                retry_order_creation = True
+                            elif order.payment_method in ['credit_card', 'debit_card'] and down_payment_amount and order.card_transaction_log_line.filtered(lambda x: x.state == 'success') and order.payment_method != payment_method:
                                 retry_order_creation = True
                         if operation_mode == 'online' or retry_order_creation:
                             if order.authorize_transaction_id:
@@ -3089,12 +3185,16 @@ class SaleOrder(models.Model):
             send_physical_document = False
             if data.get('send_physical_document', 0) == 1:
                 send_physical_document = True
+            flexible_installation = False
+            if data.get('flexible_installation', 0) == 1:
+                flexible_installation = True
             if appointment_id:
                 appointment = self.env['team.customer.appointment'].browse(appointment_id)
                 if appointment.exists():
                     appointment.write({
                         'additional_comments': data.get('additional_comments', ''),
                         'send_physical_document':  send_physical_document,
+                        'flexible_installation':  flexible_installation,
                     })
                     order = self.search([('appointment_id', '=', appointment_id)], limit=1)
                     if not order:

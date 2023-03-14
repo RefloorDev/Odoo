@@ -23,6 +23,16 @@
                         <field name="promo_image" widget="image" class="oe_avatar"/>
                     </group>
                 </page>
+                <page string="Auto Logout">
+                    <group>
+                        <group>
+                            <field name="enable_auto_logout"/>
+                        </group>
+                        <group>
+                            <field name="auto_logout_time" attrs="{'invisible':[('enable_auto_logout', '=', False)], 'required':[('enable_auto_logout', '=', True)]}" widget="float_time"/>
+                        </group>
+                    </group>
+                </page>
             </xpath>
             <field name="favicon" position="after">
                 <field name="recision_date"/>
@@ -688,7 +698,7 @@
         </record>
 
 
-        <!-- Promo codes -->
+        <!-- Discount codes -->
         <record id="view_monthly_promo_form" model="ir.ui.view">
             <field name="name">team.monthly.promo.form</field>
             <field name="model">team.monthly.promo</field>
@@ -738,17 +748,17 @@
 
 
         <record id="action_monthly_promo" model="ir.actions.act_window">
-            <field name="name">Promo Codes</field>
+            <field name="name">Discount Codes</field>
             <field name="res_model">team.monthly.promo</field>
             <field name="view_mode">tree,form</field>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">
-                    Click here to create a new promo codes.
+                    Click here to create a new discount codes.
                 </p>
             </field>
         </record>
 
-        <menuitem name="Promo Codes" parent="measurement_conf_root" id="menu_monthly_promo" action="action_monthly_promo"/>
+        <menuitem name="Discount Codes" parent="measurement_conf_root" id="menu_monthly_promo" action="action_monthly_promo"/>
 
 
         <!-- Office Locations -->
@@ -896,6 +906,134 @@
         </record>
 
         <menuitem name="Sales App Versions" parent="measurement_conf_root" id="menu_sales_app_version" action="action_sales_app_version"/>
+
+        <!-- Promotion Codes -->
+        <record id="view_promotion_code_form" model="ir.ui.view">
+            <field name="name">otl.promotion.code.form</field>
+            <field name="model">otl.promotion.code</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group name="left">
+                                <field name="start_date" required="1"/>
+                                <field name="discount" required="1"/>
+                            </group>
+                            <group name="right">
+                                <field name="end_date" required="1"/>
+                                <field name="company_id" options="{'no_create': True}"
+                                       groups="base.group_multi_company"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Description">
+                                <field name="description"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_promotion_code_tree" model="ir.ui.view">
+            <field name="name">otl.promotion.code.tree</field>
+            <field name="model">otl.promotion.code</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="discount"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_promotion_code" model="ir.actions.act_window">
+            <field name="name">Promotion Codes</field>
+            <field name="res_model">otl.promotion.code</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new promotion code.
+                </p>
+            </field>
+        </record>
+
+        <menuitem name="Promotion Codes" parent="measurement_conf_root" id="menu_promotion_code" action="action_promotion_code"/>
+
+
+        <!-- Transition Height Ranges -->
+        <record id="view_transition_height_form" model="ir.ui.view">
+            <field name="name">otl.transition.height.form</field>
+            <field name="model">otl.transition.height</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group name="left">
+                                <field name="sequence" required="1"/>
+                            </group>
+                            <group name="right">
+                                <field name="company_id" options="{'no_create': True}"
+                                       groups="base.group_multi_company"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Description">
+                                <field name="description"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_transition_height_tree" model="ir.ui.view">
+            <field name="name">otl.transition.height.tree</field>
+            <field name="model">otl.transition.height</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="sequence"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_transition_height" model="ir.actions.act_window">
+            <field name="name">Transition Height Ranges</field>
+            <field name="res_model">otl.transition.height</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click here to create a new transition height.
+                </p>
+            </field>
+        </record>
+
+        <menuitem name="Transition Height Ranges" parent="measurement_conf_root" id="menu_transition_height" action="action_transition_height"/>
+
 
     </data>
 </odoo>

@@ -1322,11 +1322,14 @@ class APIHomes(API_Homes):
             appointment_data = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
                                                  'action_get_appointment_data', [int(uid)])
 
-            result = {
-                'result': 'Success',
-                'appointments': appointment_data,
-                'message': '',
-            }
+            if appointment_data.get('result', '') == 'Failed':
+                result = appointment_data
+            else:
+                result = {
+                    'result': 'Success',
+                    'appointments': appointment_data.get('data', []),
+                    'message': '',
+                }
         else:
             result = message
         return json.dumps(result)
@@ -1471,6 +1474,7 @@ class APIHomes(API_Homes):
         contract_plumbing_option_1 = params.get('contract_plumbing_option_1', 0) and int(params.get('contract_plumbing_option_1', 0)) or 0
         contract_plumbing_option_2 = params.get('contract_plumbing_option_2', 0) and int(params.get('contract_plumbing_option_2', 0)) or 0
         send_physical_document = params.get('send_physical_document', 0) and int(params.get('send_physical_document', 0)) or 0
+        flexible_installation = params.get('flexible_installation', 0) and int(params.get('flexible_installation', 0)) or 0
         recision_date = params.get('recision_date', False)
         additional_comments = params.get('additional_comments', '')
         if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
@@ -1502,6 +1506,7 @@ class APIHomes(API_Homes):
                 'contract_plumbing_option_1': contract_plumbing_option_1,
                 'contract_plumbing_option_2': contract_plumbing_option_2,
                 'send_physical_document': send_physical_document,
+                'flexible_installation': flexible_installation,
                 'additional_comments': additional_comments,
                 'recision_date': recision_date
             }
@@ -1793,4 +1798,30 @@ class APIHomes(API_Homes):
             result = message
         result.update({'override_json_result': 1})
         _logger.info("fetch_database_raw_data Response: %s"%(result))
+        return json.dumps(result)
+
+    @route('/api/check_auto_logout', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
+    def check_auto_logout(self, **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.params.copy()
+        token = params.get('token', '')
+        _logger.info(
+            "------------check_auto_logout params: %s------------------" % (params))
+        if not token:
+            _logger.info("------------Token Missing in main check_auto_logout api------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in main check_auto_logout api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in main check_auto_logout api-------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            result = models.execute_kw(DB, int(uid), password, 'res.users', 'action_check_auto_logout', [])
+        else:
+            result = message
+        result.update({'override_json_result': 1})
+        _logger.info("check_auto_logout Response: %s"%(result))
         return json.dumps(result)

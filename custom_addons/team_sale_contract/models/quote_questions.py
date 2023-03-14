@@ -87,6 +87,9 @@ class TeamQuoteQuestion(models.Model):
     amount_included = fields.Float('Included Amount', help='It denotes the amount which already included in the quote')
     exclude_from_discount = fields.Boolean('Exclude From Discount', default=False)
     multiply_with_area = fields.Boolean('Multiply with Room Area', default=False)
+    set_default_answer = fields.Boolean('Set Default Answer', default=False)
+    applicable_rooms = fields.Many2many('team.room.room', 'applicable_question_room_rel', 'question_id', 'room_id', string="Applicable Rooms")
+    applicable_current_surface = fields.Char('Applicable Current Surface')
 
     _sql_constraints = [
         ('positive_len_min', 'CHECK (validation_length_min >= 0)', 'A length must be positive!'),

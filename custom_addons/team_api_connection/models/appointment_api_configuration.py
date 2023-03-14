@@ -1345,7 +1345,7 @@ class TeamImproveitConfiguration(models.Model):
                             office_location.write({'active': True})
                         product_tmpl = self.env['product.template'].search([('improveit_product_id', '=', improveit_product_id)], limit=1)
                         if product_tmpl:
-                            special_price = self.env['otl.product.special.price'].search([
+                            special_price_obj = self.env['otl.product.special.price'].search([
                                 ('office_location_id.improveit_id', '=', office_location.id),
                                 ('product_tmpl_id.improveit_product_id', '=', improveit_product_id),
                                 ('start_date', '=', start_date),
@@ -1360,18 +1360,64 @@ class TeamImproveitConfiguration(models.Model):
                                 'msrp': msrp,
                                 'max_discount': max_discount,
                             }
-                            if special_price:
+                            if special_price_obj:
                                 self.env['otl.product.special.price'].write(vals)
                             else:
                                 vals.update({
                                     'office_location_id': office_location.id,
                                 })
-                                special_price = self.env['otl.product.special.price'].create(vals)
-                            if special_price.id not in special_price_list:
-                                special_price_list.append(special_price.id)
+                                special_price_obj = self.env['otl.product.special.price'].create(vals)
+                            if special_price_obj.id not in special_price_list:
+                                special_price_list.append(special_price_obj.id)
                     inactive_special_price = self.env['otl.product.special.price'].search([('id', 'not in', special_price_list)])
                     if inactive_special_price:
                         inactive_special_price.write({'active': False})
+
+                except IOError:
+                    error_msg = _("Something went wrong during token generation.")
+                    raise self.env['res.config.settings'].get_config_warning(error_msg)
+
+    def get_promocode_api(self):
+        configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
+        if configurations:
+            end_point_url = configurations.token_url
+            client_token = configurations.client_token
+            if end_point_url and client_token:
+                url = end_point_url + 'GetPromotions' + client_token
+                headers = {"Content-type": "application/json"}
+                data = {}
+                try:
+                    req = requests.get(url, data=data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    promocode_list = []
+                    promocode_obj = self.env['otl.promotion.code']
+                    user = self.env.user
+                    tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+                    for data in content:
+                        start_date_str = data.get('BeginDate', '')
+                        end_date_str = data.get('EndDate', '')
+                        name = data.get('Promotion', '')
+                        price = data.get('Discount', 0)
+                        promocode = promocode_obj.search([('name', '=', name)], limit=1)
+                        start_date_obj = datetime.strptime(start_date_str, '%Y-%m-%dT%H:%M:%S')
+                        end_date_obj = datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S')
+                        start_date = tz.localize(start_date_obj).astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
+                        end_date = tz.localize(end_date_obj).astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
+                        vals= {
+                            'start_date': start_date,
+                            'end_date': end_date,
+                            'name': name,
+                            'discount': price,
+                        }
+                        if promocode:
+                            promocode.write(vals)
+                        else:
+                            promocode = promocode_obj.create(vals)
+                        promocode_list.append(promocode.id)
+                    inactive_promocode = promocode_obj.search([('id', 'not in', promocode_list)])
+                    if inactive_promocode:
+                        inactive_promocode.write({'active': False})
 
                 except IOError:
                     error_msg = _("Something went wrong during token generation.")
@@ -1413,6 +1459,8 @@ class TeamImproveitConfiguration(models.Model):
             record.sudo().get_resision_date()
             _logger.info('-------Starting: get_special_pricing_api')
             record.sudo().get_special_pricing_api()
+            _logger.info('-------Starting: get_promocode_api')
+            record.sudo().get_promocode_api()
             record.sudo().write({'sync_master_data_in_progress': False})
             # record.env.cr.commit()
         _logger.info('-------Completed: action_sync_master_data')

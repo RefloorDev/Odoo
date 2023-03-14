@@ -27,8 +27,10 @@ class TeamTransitionLine(models.Model):
     _name = 'team.contract.transition.line'
     _description = "Contract Transition Line"
 
-    name = fields.Text('Description',required=True)
-    transition_width = fields.Float('Transition Width',required=True)
+    name = fields.Text('Description', required=True)
+    transition_width = fields.Float('Transition Width', required=True)
+    transition_height = fields.Char('Transition Height', default='')
+    transition_height_id = fields.Many2one('otl.transition.height', string='Transition Height Ref')
     floor_id = fields.Many2one('team.floor.level', string='Floor Level',required=False)
     room_id = fields.Many2one('team.room.room', string='Room',required=True, ondelete='restrict')
     appointment_id = fields.Many2one('team.customer.appointment', 'Appointment')

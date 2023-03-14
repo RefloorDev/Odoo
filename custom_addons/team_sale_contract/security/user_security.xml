@@ -103,6 +103,19 @@
             <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
         </record>
 
+        <record id="otl_promotion_code_comp_rule" model="ir.rule">
+            <field name="name">Promotion Codes- Company Rule</field>
+            <field name="model_id" ref="model_otl_promotion_code"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="otl_transition_height_comp_rule" model="ir.rule">
+            <field name="name">Transition Height- Company Rule</field>
+            <field name="model_id" ref="model_otl_transition_height"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
 
     </data>
 </odoo>

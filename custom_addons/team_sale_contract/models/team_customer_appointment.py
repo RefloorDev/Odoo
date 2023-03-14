@@ -166,6 +166,7 @@ class TeamCustomerAppointment(models.Model):
     co_applicant_state_code = fields.Char('Co-Applicant State Code')
     additional_comments = fields.Char('Additional Comments', copy=False)
     send_physical_document = fields.Boolean('Send Physical Document', default=False, copy=False)
+    flexible_installation = fields.Boolean('Flexible Installation', default=False, copy=False)
     card_transaction_log_line = fields.One2many('otl.card.transaction.log', 'appointment_id',
                                                 string='Card Transaction Log Line')
     transaction_log_exists = fields.Boolean('Exist Transaction Logs', compute='_compute_transaction_log_exists')

@@ -280,6 +280,9 @@ class SaleOrder(models.Model):
     active = fields.Boolean('Active', default=True, copy=False)
     special_price_id = fields.Many2one('otl.product.special.price', 'Special Price')
     stair_special_price_id = fields.Many2one('otl.product.special.price', 'Stair Special Price')
+    promotion_code_id = fields.Many2one('otl.promotion.code', 'Promotion Code')
+    calc_based_on = fields.Selection([('list_price', 'Sale Price'), ('msrp', 'MSRP')], string='Calculation Based On',
+                                     default='list_price')
 
     def write(self, vals):
         _logger.info('inside sale order-%s write: values -  %s'%(self and self[0].name or '', vals))
@@ -629,9 +632,18 @@ class SaleOrder(models.Model):
                 promo_product = self.env.ref('team_sale_contract.monthly_promo')
                 admin_fee_product = self.env.ref('team_sale_contract.admin_fee')
                 quote_round_off_product = self.env.ref('team_sale_contract.quote_round_off')
-                list_price = record.floor_type.list_price or 0
-                if record.special_price_id and record.special_price_id.list_price:
-                    list_price = record.special_price_id.list_price or 0
+                if record.calc_based_on == 'list_price':
+                    list_price = record.floor_type.list_price or 0
+                    if record.special_price_id and record.special_price_id.list_price:
+                        list_price = record.special_price_id.list_price or 0
+                else:
+                    promotion_amount = 0
+                    if record.promotion_code_id:
+                        promotion_amount = record.promotion_code_id.discount or 0
+                    list_price = record.floor_type.msrp or 0
+                    if record.special_price_id and record.special_price_id.msrp:
+                        list_price = record.special_price_id.msrp or 0
+                    list_price -= promotion_amount
                 measurement_price = record.total_area * list_price
                 stair_count = 0
                 stair_product = False
@@ -1003,7 +1015,9 @@ class SaleOrder(models.Model):
                         "SalesTaxRate": sale_tax_rate,
                         "AuthorizationCode": sale_order.authorize_transaction_id or "",
                         "AdditionalComments": sale_order.appointment_id.additional_comments or "",
-                        "SendPhysicalDocument": sale_order.appointment_id.send_physical_document and "true" or "false"
+                        "SendPhysicalDocument": sale_order.appointment_id.send_physical_document and "true" or "false",
+                        "FlexibleInstall": sale_order.appointment_id.flexible_installation and "true" or "false",
+                        "FinanceOptionSelected": sale_order.finance_option_id and sale_order.finance_option_id.name or ""
                     }
                     headers = {
                         'Content-type': 'application/json',
@@ -1656,7 +1670,12 @@ class SaleOrder(models.Model):
                         payment_plan_id = self.env['ir.config_parameter'].sudo().get_param(
                             'payment_plan_id') or False
                         if payment_plan_id:
-                            floor_type = self.env['product.template'].browse(int(payment_plan_id))
+                            old_floor_type = self.env['product.template'].browse(int(payment_plan_id))
+                            if old_floor_type and old_floor_type.exists() and not old_floor_type.active:
+                                floor_type = self.env['product.template'].search([('name', '=', old_floor_type.name)], limit=1)
+                            else:
+                                floor_type = old_floor_type
+
                     product_name = floor_type and floor_type.name or ''
                     improveit_product_id = floor_type and floor_type.improveit_product_id or ''
                     category_name = floor_type and floor_type.categ_id and floor_type.categ_id.name or ''
@@ -1760,10 +1779,16 @@ class SaleOrder(models.Model):
                         for transition in transitions:
                             transitions_key1 = 'Transition' + str(count)
                             transitions_value_1 = transition.name
-                            data.update({transitions_key1: transitions_value_1})
                             transitions_key2 = 'TransitionLength' + str(count)
                             transitions_value_2 = transition.transition_width
-                            data.update({transitions_key2: transitions_value_2})
+                            transitions_key3 = 'TransitionHeight' + str(count)
+                            transitions_value_3 = transition.transition_height or ''
+                            data.update({
+                                transitions_key1: transitions_value_1,
+                                transitions_key2: transitions_value_2,
+                                transitions_key3: transitions_value_3,
+
+                            })
                             count = count + 1
                         _logger.error('Add Quote Items API Adding Room Transitions')
                         contract_questions = self.env['team.contract.question.line'].search(
@@ -1942,10 +1967,16 @@ class SaleOrder(models.Model):
                         for transition in transitions:
                             transitions_key1 = 'Transition' + str(count)
                             transitions_value_1 = transition.name
-                            data.update({transitions_key1: transitions_value_1})
                             transitions_key2 = 'TransitionLength' + str(count)
                             transitions_value_2 = transition.transition_width
-                            data.update({transitions_key2: transitions_value_2})
+                            transitions_key3 = 'TransitionHeight' + str(count)
+                            transitions_value_3 = transition.transition_height or ''
+                            data.update({
+                                transitions_key1: transitions_value_1,
+                                transitions_key2: transitions_value_2,
+                                transitions_key3: transitions_value_3,
+
+                            })
                             count = count + 1
                         _logger.error('Add Sale Items API Adding Room Transitions')
                         contract_questions = self.env['team.contract.question.line'].search(

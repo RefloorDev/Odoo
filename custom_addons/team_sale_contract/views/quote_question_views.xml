@@ -71,6 +71,8 @@
                             <field name="product_category_ids" widget="many2many_tags" options="{'no_create_edit': True}" required="1"/>
                             <field name="default_answer"/>
                             <field name="amount_included"/>
+                            <field name="set_default_answer"/>
+
                         </group>
                         <group>
                             <field name="reflect_cost"/>
@@ -91,6 +93,8 @@
                                     </group>
                                 </form>
                             </field>
+                            <field name="applicable_rooms" widget="many2many_tags" options="{'no_create_edit': True}" attrs="{'invisible': [('set_default_answer', '!=', True)], 'required': [('set_default_answer', '=', True)]}"/>
+                            <field name="applicable_current_surface" attrs="{'invisible': [('set_default_answer', '!=', True)], 'required': [('set_default_answer', '=', True)]}"/>
                         </group>
 
 

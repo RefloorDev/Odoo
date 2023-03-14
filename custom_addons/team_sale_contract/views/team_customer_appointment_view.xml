@@ -105,6 +105,7 @@
                         <field name="company_id" groups="base.group_multi_company"/>
                         <field name="measurement_exist" invisible="1"/>
                         <field name="send_physical_document" readonly="1"/>
+                        <field name="flexible_installation" readonly="1"/>
                         <field name="credit_application_url" widget="url" readonly="1" invisible="1"/>
                         <field name="what_happened_notes" readonly="1"/>
                         <field name="whats_next_notes" readonly="1"/>
