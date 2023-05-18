@@ -922,6 +922,7 @@ class TeamImproveitConfiguration(models.Model):
                                     'down_payment':payment_option.get('Down_Payment__c', False),
                                     'final_payment':payment_option.get('Final_Payment__c', False),
                                     'payment_factor':payment_option.get('Payment_Factor__c', False),
+                                    'secondary_payment_factor':payment_option.get('Secondary_Payment_Factor__c', '0'),
                                     'balance_due':payment_option.get('Balance_Due__c', False),
                                     'sequence': payment_option.get('Display_Order__c', False),
                                     'payment_info': payment_option.get('Payment_Info__c', '')
@@ -934,6 +935,7 @@ class TeamImproveitConfiguration(models.Model):
                                 'down_payment': payment_option.get('Down_Payment__c', False),
                                 'final_payment': payment_option.get('Final_Payment__c', False),
                                 'payment_factor': payment_option.get('Payment_Factor__c', False),
+                                'secondary_payment_factor': payment_option.get('Secondary_Payment_Factor__c', '0'),
                                 'balance_due': payment_option.get('Balance_Due__c', False),
                                 'payment_info': payment_option.get('Payment_Info__c', ''),
                                 'sequence': payment_option.get('Display_Order__c', False)
@@ -947,6 +949,7 @@ class TeamImproveitConfiguration(models.Model):
                                 'down_payment': payment_option.get('Down_Payment__c', False),
                                 'final_payment': payment_option.get('Final_Payment__c', False),
                                 'payment_factor': payment_option.get('Payment_Factor__c', False),
+                                'secondary_payment_factor': payment_option.get('Secondary_Payment_Factor__c', '0'),
                                 'balance_due': payment_option.get('Balance_Due__c', False),
                                 'sequence': payment_option.get('Display_Order__c', False)
                             }
@@ -989,6 +992,7 @@ class TeamImproveitConfiguration(models.Model):
                             'code': discount_code,
                             'amount': discount_coupon.get('Amount', False),
                             'type': discount_coupon.get('Type', False),
+                            'active': True
                         }
                         if image_binary:
                             attachment = self.env['ir.attachment'].sudo().create({

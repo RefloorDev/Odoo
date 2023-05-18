@@ -359,17 +359,17 @@ class SignRequest(models.Model):
             if not signer.signer_email:
                 raise UserError(_("Please configure the signer's email address"))
 
-            self.env['otl_document_sign.request']._message_send_mail(
-                body, 'mail.mail_notification_light',
-                {'record_name': self.reference},
-                {'model_description': 'signature', 'company': self.create_uid.company_id},
-                {'email_from': formataddr((self.create_uid.name, self.create_uid.email)),
-                 'author_id': self.create_uid.partner_id.id,
-                 'email_to': formataddr((signer.partner_id.name, signer.signer_email)),
-                 'subject': _('%s has been signed') % self.reference,
-                 'attachment_ids': [(4, attachment.id), (4, attachment_log.id)]},
-                force_send=True
-            )
+            # self.env['otl_document_sign.request']._message_send_mail(
+            #     body, 'mail.mail_notification_light',
+            #     {'record_name': self.reference},
+            #     {'model_description': 'signature', 'company': self.create_uid.company_id},
+            #     {'email_from': formataddr((self.create_uid.name, self.create_uid.email)),
+            #      'author_id': self.create_uid.partner_id.id,
+            #      'email_to': formataddr((signer.partner_id.name, signer.signer_email)),
+            #      'subject': _('%s has been signed') % self.reference,
+            #      'attachment_ids': [(4, attachment.id), (4, attachment_log.id)]},
+            #     force_send=True
+            # )
 
         tpl = self.env.ref('otl_document_sign.sign_template_mail_completed')
         body = tpl.render({
@@ -384,15 +384,15 @@ class SignRequest(models.Model):
                 continue
             if not self.create_uid.email:
                 raise UserError(_("Please configure the sender's email address"))
-            self.env['otl_document_sign.request']._message_send_mail(
-                body, 'mail.mail_notification_light',
-                {'record_name': self.reference},
-                {'model_description': 'signature', 'company': self.create_uid.company_id},
-                {'email_from': formataddr((self.create_uid.name, self.create_uid.email)),
-                 'author_id': self.create_uid.partner_id.id,
-                 'email_to': formataddr((follower.name, follower.email)),
-                 'subject': _('%s has been signed') % self.reference}
-            )
+            # self.env['otl_document_sign.request']._message_send_mail(
+            #     body, 'mail.mail_notification_light',
+            #     {'record_name': self.reference},
+            #     {'model_description': 'signature', 'company': self.create_uid.company_id},
+            #     {'email_from': formataddr((self.create_uid.name, self.create_uid.email)),
+            #      'author_id': self.create_uid.partner_id.id,
+            #      'email_to': formataddr((follower.name, follower.email)),
+            #      'subject': _('%s has been signed') % self.reference}
+            # )
 
         return True
 
@@ -759,16 +759,16 @@ class SignRequestItem(models.Model):
 
             if not signer.signer_email:
                 raise UserError(_("Please configure the signer's email address"))
-            self.env['otl_document_sign.request']._message_send_mail(
-                body, 'mail.mail_notification_light',
-                {'record_name': signer.sign_request_id.reference},
-                {'model_description': 'signature', 'company': signer.create_uid.company_id},
-                {'email_from': formataddr((signer.create_uid.name, signer.create_uid.email)),
-                 'author_id': signer.create_uid.partner_id.id,
-                 'email_to': formataddr((signer.partner_id.name, signer.partner_id.email)),
-                 'subject': subject},
-                force_send=True
-            )
+            # self.env['otl_document_sign.request']._message_send_mail(
+            #     body, 'mail.mail_notification_light',
+            #     {'record_name': signer.sign_request_id.reference},
+            #     {'model_description': 'signature', 'company': signer.create_uid.company_id},
+            #     {'email_from': formataddr((signer.create_uid.name, signer.create_uid.email)),
+            #      'author_id': signer.create_uid.partner_id.id,
+            #      'email_to': formataddr((signer.partner_id.name, signer.partner_id.email)),
+            #      'subject': subject},
+            #     force_send=True
+            # )
 
     def sign(self, signature):
         self.ensure_one()

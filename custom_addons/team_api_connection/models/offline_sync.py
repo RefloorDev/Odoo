@@ -118,6 +118,7 @@ class ResUsers(models.Model):
                 'discount': code.discount or 0,
                 'start_date': code.start_date,
                 'end_date': code.end_date,
+                'calculation_type': code.calculation_type or ''
             })
         return promotion_code_list
 
@@ -157,6 +158,14 @@ class ResUsers(models.Model):
         if self.env.user.company_id.enable_auto_logout:
             logout_time = self.env.user.company_id.auto_logout_time or 0
             auto_logout_time = str(float_to_time(logout_time))
+            # user = self.env.user
+            # tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+            # current_time = fields.Datetime.now().replace(tzinfo=pytz.utc)
+            # hour, minute, seconds = auto_logout_time.split(':')
+            # auto_logout_date = current_time.replace(hour=int(hour), minute=int(minute), second=int(seconds), tzinfo=None)
+            # auto_logout_date_local = tz.localize(auto_logout_date).astimezone(pytz.utc)
+            # if current_time >  auto_logout_date_local:
+            #     auto_logout_date_local = auto_logout_date_local + relativedelta(days=1)
         result.update({
             'rooms': room_list,
             'questionnaires': questionnaire_list,
@@ -173,7 +182,7 @@ class ResUsers(models.Model):
             'min_sale_price': float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0,
             'max_no_transitions': int(self.env['ir.config_parameter'].sudo().get_param('max_no_transitions')) or 0,
             'recision_date': self.env.user.company_id.recision_date and self.env.user.company_id.recision_date.strftime(DEFAULT_SERVER_DATE_FORMAT) or '',
-            'auto_logout_time': auto_logout_time,
+            'auto_logout_time': auto_logout_time  or '',
         })
         # except:
         #     result = {
@@ -324,12 +333,34 @@ class ResUsers(models.Model):
             enable_auto_logout = 1
             logout_time = self.env.user.company_id.auto_logout_time or 0
             auto_logout_time = str(float_to_time(logout_time))
+            # user = self.env.user
+            # tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+            # current_time = fields.Datetime.now().replace(tzinfo=pytz.utc)
+            # hour, minute, seconds = auto_logout_time.split(':')
+            # auto_logout_date = current_time.replace(hour=int(hour), minute=int(minute), second=int(seconds),
+            #                                         tzinfo=None)
+            # auto_logout_date_local = tz.localize(auto_logout_date).astimezone(pytz.utc)
+            # if current_time > auto_logout_date_local:
+            #     auto_logout_date_local = auto_logout_date_local + relativedelta(days=1)
         result = {
             'result': 'Success',
             'enable_auto_logout': enable_auto_logout,
-            'auto_logout_time': auto_logout_time,
+            'auto_logout_time': auto_logout_time or '',
         }
         return result
+
+    @api.model
+    def action_log_user_authentication(self, uid, action, token):
+        vals = {
+            'user_id': int(uid),
+            'action': action,
+            'token': token,
+        }
+        log = self.env['otl.user.authentication.log'].sudo().create(vals)
+        _logger.info("Authentication log created successfully----. Vals: %s, Record: %s"%(vals, log.id))
+        return True
+
+
 
 class TeamQuoteQuestion(models.Model):
     _inherit = 'team.quote.question'
@@ -482,6 +513,7 @@ class DownPaymentOption(models.Model):
                 'Down_Payment__c': payment_options.down_payment or '',
                 'Final_Payment__c': payment_options.final_payment or '',
                 'Payment_Factor__c': payment_options.payment_factor or '',
+                'Secondary_Payment_Factor__c': payment_options.secondary_payment_factor or '0',
                 'Balance_Due__c': payment_options.balance_due or '',
                 'Payment_Info__c': payment_options.payment_info or '',
                 'sequence': payment_options.sequence or 0,
@@ -2392,6 +2424,14 @@ class SaleOrder(models.Model):
                     'result': 'Failed',
                 }
                 return status
+            if not order.balance_finance:
+                if payment_method:
+                    if payment_method in ['credit_card', 'debit_card']:
+                        values.update({'cards': True, 'cash': False, 'check': False})
+                    if payment_method == 'cash':
+                        values.update({'cash': True, 'cards': False, 'check': False})
+                    if payment_method == 'check':
+                        values.update({'check': True, 'cards': False, 'cash': False})
             if payment_method == 'check':
                 if data.get('check_number', ''):
                     check_number = data.get('check_number', "")
@@ -3345,7 +3385,7 @@ class IRAttachment(models.Model):
     appointment_id = fields.Many2one('team.customer.appointment', 'Appointment')
     image_type = fields.Selection([
         ('measurement_image', 'Measurement Image'),
-        ('protrusion_image', 'Protrusion Image'),
+        ('protrusion_image', 'Anomaly Image'),
         ('room_photo', 'Room Images'),
         ('applicant_signature', 'Applicant Sign'),
         ('applicant_initial', 'Applicant Initial'),

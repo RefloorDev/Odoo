@@ -288,6 +288,13 @@ class SaleOrder(models.Model):
         _logger.info('inside sale order-%s write: values -  %s'%(self and self[0].name or '', vals))
         return super(SaleOrder, self).write(vals)
 
+    def _send_order_confirmation_mail(self):
+        """
+        Function overrided to prevent sending of emails
+        :return:
+        """
+        return True
+
     def split_name(self,name):
         name = name.split(',')
         if len(name) == 2:
@@ -632,19 +639,31 @@ class SaleOrder(models.Model):
                 promo_product = self.env.ref('team_sale_contract.monthly_promo')
                 admin_fee_product = self.env.ref('team_sale_contract.admin_fee')
                 quote_round_off_product = self.env.ref('team_sale_contract.quote_round_off')
+                measurement_price = 0
                 if record.calc_based_on == 'list_price':
                     list_price = record.floor_type.list_price or 0
                     if record.special_price_id and record.special_price_id.list_price:
                         list_price = record.special_price_id.list_price or 0
+                    measurement_price = record.total_area * list_price
                 else:
                     promotion_amount = 0
-                    if record.promotion_code_id:
-                        promotion_amount = record.promotion_code_id.discount or 0
                     list_price = record.floor_type.msrp or 0
                     if record.special_price_id and record.special_price_id.msrp:
                         list_price = record.special_price_id.msrp or 0
-                    list_price -= promotion_amount
-                measurement_price = record.total_area * list_price
+                    if record.promotion_code_id and record.promotion_code_id.discount:
+                        if record.promotion_code_id.calculation_type == 'sqft':
+                            promotion_amount = record.promotion_code_id.discount or 0
+                            list_price -= promotion_amount
+                            measurement_price = record.total_area * list_price
+                        elif record.promotion_code_id.calculation_type == 'percentage':
+                            promotion_amount = (record.total_area * list_price)*record.promotion_code_id.discount/100.0
+                            measurement_price = (record.total_area * list_price) - promotion_amount
+                        else:
+                            promotion_amount = record.promotion_code_id.discount or 0
+                            measurement_price = record.total_area * list_price - promotion_amount
+                    else:
+                        measurement_price = record.total_area * list_price
+
                 stair_count = 0
                 stair_product = False
 
@@ -1312,12 +1331,12 @@ class SaleOrder(models.Model):
                         if room_lines.protrusion_image_ids:
                             count = 0
                             for attachment in room_lines.protrusion_image_ids:
-                                _logger.error('Attaching Room Protrusion  Images')
+                                _logger.error('Attaching Room Anomaly Images')
                                 if attachment.store_fname and not attachment.improveit_id:
                                     count += 1
                                     full_path = attachment._full_path(attachment.store_fname)
                                     extension = attachment.name.split(".")[-1]
-                                    file_name = '%s_Protrusion_%s.%s' % (room_lines.room_id.name, count, extension)
+                                    file_name = '%s_Anomaly_%s.%s' % (room_lines.room_id.name, count, extension)
                                     multi_part_data = MultipartEncoder(
                                         fields={
                                             "QuoteID": quote_id or '',
@@ -1327,7 +1346,7 @@ class SaleOrder(models.Model):
                                     headers = {
                                         'Content-type': multi_part_data.content_type,
                                     }
-                                    _logger.info('Room Protrusion images Upload---------')
+                                    _logger.info('Room Anomaly images Upload---------')
                                     _logger.info(multi_part_data)
                                     req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                         timeout=TIMEOUT, verify=configurations.enable_ssl)
@@ -1338,9 +1357,9 @@ class SaleOrder(models.Model):
                                         attachment.sudo().write({'improveit_id': content['id'] or ''})
                                     if content.get('success', '') == "false":
                                         _logger.error(
-                                            "******--------Error in Room Protrusion Image- %s Upload---------********"%(file_name))
+                                            "******--------Error in Room Anomaly Image- %s Upload---------********"%(file_name))
                                         result.update({"success": "false"})
-                            _logger.error('%s room protrusion images upload completed' % room_lines.room_id.name)
+                            _logger.error('%s room anomaly images upload completed' % room_lines.room_id.name)
                         _logger.error('Attaching Room line Data Finished %s' % room_lines.room_id.name)
                     if sale_order.appointment_id and sale_order.appointment_id.attachment_ids:
                         attachment_ids = sale_order.appointment_id.attachment_ids
@@ -1571,12 +1590,12 @@ class SaleOrder(models.Model):
                         if room_lines.protrusion_image_ids:
                             count = 0
                             for attachment in room_lines.protrusion_image_ids:
-                                _logger.error('Attaching Room Protrusion  Images')
+                                _logger.error('Attaching Room Anomaly Images')
                                 if attachment.store_fname and not attachment.improveit_id:
                                     count += 1
                                     full_path = attachment._full_path(attachment.store_fname)
                                     extension = attachment.name.split(".")[-1]
-                                    file_name = '%s_Protrusion_%s.%s' % (room_lines.room_id.name, count, extension)
+                                    file_name = '%s_Anomaly_%s.%s' % (room_lines.room_id.name, count, extension)
                                     multi_part_data = MultipartEncoder(
                                         fields={
                                             "SaleID": quote_id or '',
@@ -1586,7 +1605,7 @@ class SaleOrder(models.Model):
                                     headers = {
                                         'Content-type': multi_part_data.content_type,
                                     }
-                                    _logger.info('Room Protrusion images Upload---------')
+                                    _logger.info('Room Anomaly images Upload---------')
                                     _logger.info(multi_part_data)
                                     req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                         timeout=TIMEOUT, verify=configurations.enable_ssl)
@@ -1597,9 +1616,9 @@ class SaleOrder(models.Model):
                                         attachment.sudo().write({'improveit_id': content['id'] or ''})
                                     if content.get('success', '') == "false":
                                         _logger.error(
-                                            "******--------Error in Room Protrusion Image- %s Upload---------********"%(file_name))
+                                            "******--------Error in Room Anomaly  Image- %s Upload---------********"%(file_name))
                                         result.update({"success": "false"})
-                            _logger.error('%s room protrusion images upload completed' % room_lines.room_id.name)
+                            _logger.error('%s room anomaly images upload completed' % room_lines.room_id.name)
                         _logger.error('Attaching Room line Data Finished %s' % room_lines.room_id.name)
                     if sale_order.appointment_id and sale_order.appointment_id.attachment_ids:
                         attachment_ids = sale_order.appointment_id.attachment_ids

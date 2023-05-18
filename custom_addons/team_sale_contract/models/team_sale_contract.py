@@ -182,7 +182,7 @@ class TeamContractRoomMeasurement(models.Model):
     comments = fields.Char(string = "Comments")
     exclude_from_calculation = fields.Boolean(string = "Excluded from Calculation",default=False)
     attachment_ids = fields.Many2many('ir.attachment', string="Room Images")
-    protrusion_image_ids = fields.Many2many('ir.attachment', 'protrusion_image_room_rel', 'room_id', 'attachment_id', string="Protrusion Images")
+    protrusion_image_ids = fields.Many2many('ir.attachment', 'protrusion_image_room_rel', 'room_id', 'attachment_id', string="Anomaly Images")
     material_id = fields.Many2one('product.product', string="Color")
     shape_image_id = fields.Many2one('ir.attachment',string="Room Shape Drawing")
     material_comments = fields.Char(string="Comments for Color")
@@ -658,15 +658,17 @@ class TeamCreditApplication(models.Model):
 
     def action_decrypt_field(self, field_name):
         token = self['encrypted_%s' % (field_name)]
-        token = (self.reverse(token)).encode("utf-8")
-        try:
-            token_decode = JWT_DECODE(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-            token_decode = token_decode.decode("utf-8")
-            values = ast.literal_eval(token_decode)
-        except:
-            values = ''
+        values = {}
+        if token:
+            token = (self.reverse(token)).encode("utf-8")
+            try:
+                token_decode = JWT_DECODE(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+                token_decode = token_decode.decode("utf-8")
+                values = ast.literal_eval(token_decode)
+            except:
+                values = {}
         field_value = values.get(field_name, '')
-        if field_name in ['date_of_birth', 'co_applicant_date_of_birth']:
+        if field_value and field_name in ['date_of_birth', 'co_applicant_date_of_birth']:
             field_value = datetime.strptime(field_value, '%Y-%m-%d').date()
         return field_value
 

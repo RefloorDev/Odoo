@@ -146,6 +146,7 @@ class API_Homes(http.Controller):
                     'user_id': uid,
                     'token': token,
                 })
+                request.env['res.users'].action_log_user_authentication(uid, 'login', token)
                 result.update({
                     'result': 'Success',
                     'values': [user_details],
@@ -192,6 +193,8 @@ class API_Homes(http.Controller):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         result_duplicate = {'result': 'AuthFailed',
                             'message': 'You have been logged into another device using the same account. Please login again.', 'token': 1}
+        result_auth_failed = {'result': 'AuthFailed',
+                            'message': 'Session expired. Please login again.', 'token': 1}
         result_inactive = {'result': 'AuthFailed', 'message': 'Account disabled. Please contact admin.', 'token': 1}
         if uid and token:
             _logger.info('Token...........:' + str(token))
@@ -205,13 +208,17 @@ class API_Homes(http.Controller):
             _logger.info("------------before values---------------")
             if values != {}:
                 _logger.info("------------Entered---------------")
-                user_id = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'verify_api_token',
+                user_result = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'verify_api_token',
                                             [values])
-                _logger.info("User Id(after function).......:" + str(user_id))
-                if user_id:
+                _logger.info("User Id(after function).......:" + str(user_result))
+                token_status = user_result.get('token_status', 'different')
+                if user_result.get('user_exists', False) and token_status == 'empty':
+                    return False, result_auth_failed
+                elif user_result.get('user_exists', False) and token_status == 'same':
                     _logger.info("------------Token Verified---------------")
                     return True, True
         user = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'is_active_user', [int(uid)])
+
         if user:
             return False, result_inactive
         else:

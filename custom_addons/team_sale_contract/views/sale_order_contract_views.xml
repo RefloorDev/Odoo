@@ -80,7 +80,7 @@
                                 </kanban>
                             </field>
                         </group>
-                        <group string="Protrusion Images" attrs="{'invisible': [('protrusion_image_ids', '=', False)]}">
+                        <group string="Anomaly Images" attrs="{'invisible': [('protrusion_image_ids', '=', False)]}">
                             <field nolabel="1" name="protrusion_image_ids">
                                 <kanban>
                                     <field name="mimetype"/>

@@ -89,6 +89,7 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         if status:
             result = models.execute_kw(DB, int(uid), password, 'res.users', 'action_logout_from_device', [int(uid)])
+            request.env['res.users'].action_log_user_authentication(uid, 'logout', token)
         else:
             result = message
         return json.dumps(result)

@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<odoo>
+
+    <!-- Mail template are declared in a NOUPDATE block
+         so users can freely customize/delete them -->
+    <data noupdate="1">
+        <!--Email template -->
+        <record id="email_template_pending_users_logout" model="mail.template">
+            <field name="name">Users Pending to Logout</field>
+            <field name="model_id" ref="base.model_res_company"/>
+            <field name="email_from">${(object.email) |safe}</field>
+            <field name="email_to">${object.get_logged_in_notify_user_ids()}</field>
+            <field name="subject">${object.name} Pending Logout Users List</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Hi, <br/><br/>
+        Following users are pending to logout from the system due to incomplete appointments.
+        <br /><br />
+
+        <table  border="1" width="90%">
+            <thead>
+                <tr align="center">
+                    <th>User Name</th>
+                    <th>Login</th>
+                    <th>Pending Appointments</th>
+                </tr>
+            </thead>
+            <tbody>
+                % for data in object.get_pending_logout_users_list():
+                    <tr>
+                        <td><p style="padding-left: 10px;">${data.get('name', '')}</p></td>
+                        <td><p style="padding-left: 10px;">${data.get('login', '')}</p></td>
+                        <td>
+                            % for appointment in data.get('appointments', []):
+                                <p style="padding-left: 10px;">${appointment}</p>
+                            % endfor
+                        </td>
+
+                    </tr>
+                % endfor
+            </tbody>
+        </table>
+
+        <br /><br />
+
+    </p>
+</div>
+            </field>
+            <field name="user_signature" eval="False"/>
+            <field name="auto_delete" eval="False"/>
+        </record>
+    </data>
+</odoo>

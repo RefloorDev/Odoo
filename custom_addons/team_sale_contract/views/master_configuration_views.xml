@@ -27,9 +27,10 @@
                     <group>
                         <group>
                             <field name="enable_auto_logout"/>
+                            <field name="logged_in_notify_user_ids" attrs="{'invisible':[('enable_auto_logout', '=', False)], 'required':[('enable_auto_logout', '=', True)]}" widget="many2many_tags" options="{'no_create_edit': True}" />
                         </group>
                         <group>
-                            <field name="auto_logout_time" attrs="{'invisible':[('enable_auto_logout', '=', False)], 'required':[('enable_auto_logout', '=', True)]}" widget="float_time"/>
+                            <field name="auto_logout_time" attrs="{'invisible':[('enable_auto_logout', '=', False)], 'required':[('enable_auto_logout', '=', True)]}" widget="float_time" placeholder="HH:MM"/>
                         </group>
                     </group>
                 </page>
@@ -925,10 +926,11 @@
                         <group>
                             <group name="left">
                                 <field name="start_date" required="1"/>
-                                <field name="discount" required="1"/>
+                                <field name="calculation_type" required="1"/>
                             </group>
                             <group name="right">
                                 <field name="end_date" required="1"/>
+                                <field name="discount" required="1"/>
                                 <field name="company_id" options="{'no_create': True}"
                                        groups="base.group_multi_company"/>
                                 <field name="active" invisible="1"/>
@@ -952,6 +954,7 @@
                     <field name="name"/>
                     <field name="start_date"/>
                     <field name="end_date"/>
+                    <field name="calculation_type"/>
                     <field name="discount"/>
                     <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
                 </tree>
@@ -1033,6 +1036,85 @@
         </record>
 
         <menuitem name="Transition Height Ranges" parent="measurement_conf_root" id="menu_transition_height" action="action_transition_height"/>
+
+        <!-- User Authentication Logs -->
+
+        <record model="ir.ui.view" id="user_authentication_log_search">
+            <field name="name">user.authentication.log.search</field>
+            <field name="model">otl.user.authentication.log</field>
+            <field name="arch" type="xml">
+                <search string="Search Authentication Logs">
+                     <field name="user_id"/>
+                     <field name="date"/>
+                     <field name="action_done"/>
+                    <filter name="date_filter" string="Today's Logs" domain="[('date', '&gt;=', datetime.datetime.now().strftime('%Y-%m-%d 00:00:00')),('date', '&lt;=',datetime.datetime.now().strftime('%Y-%m-%d 23:23:59'))]"/>
+                    <separator/>
+                    <filter string="Login" name="login" domain="[('action','=','login')]" />
+                    <filter string="Logout" name="logout" domain="[('action','=','logout')]" />
+                    <separator/>
+                    <group expand="1" string="Group By">
+                        <filter string="Action Type" name="action" domain="[]" context="{'group_by': 'action'}"/>
+                        <filter string="Action Done By" name="action_done" domain="[]" context="{'group_by': 'action_done'}"/>
+                        <filter string="Date" name="date" domain="[]" context="{'group_by': 'date'}"/>
+                        <filter string="Salesperson" name="salesperson" domain="[]" context="{'group_by': 'user_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_user_authentication_log_form" model="ir.ui.view">
+            <field name="name">otl.user.authentication.log.form</field>
+            <field name="model">otl.user.authentication.log</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group name="left">
+                                <field name="user_id"/>
+                                <field name="action"/>
+                            </group>
+                            <group name="right">
+                                <field name="date"/>
+                                <field name="action_done"/>
+                                <field name="company_id" options="{'no_create': True}"
+                                       groups="base.group_multi_company"/>
+                            </group>
+                        </group>
+                        <group groups="base.group_no_one">
+                            <field name="token"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_user_authentication_log_tree" model="ir.ui.view">
+            <field name="name">otl.user.authentication.log.tree</field>
+            <field name="model">otl.user.authentication.log</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="user_id"/>
+                    <field name="date"/>
+                    <field name="action"/>
+                    <field name="action_done"/>
+                    <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_user_authentication_log" model="ir.actions.act_window">
+            <field name="name">User Authentication Logs</field>
+            <field name="res_model">otl.user.authentication.log</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Users SalesApp login &amp; logout timing logs will be listed here.
+                </p>
+            </field>
+        </record>
+
+        <menuitem name="User Authentication Logs" parent="sale.menu_sale_config" id="menu_user_authentication_log" action="action_user_authentication_log" groups="base.group_erp_manager"/>
 
 
     </data>

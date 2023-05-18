@@ -85,4 +85,5 @@ access_promotion_code_manager,otl.promotion.code.manager,model_otl_promotion_cod
 access_transition_height_user,otl.transition.height.user,model_otl_transition_height,base.group_user, 1,0,0,0
 access_transition_height_manager,otl.transition.height.manager,model_otl_transition_height,sales_team.group_sale_manager,1,1,1,1
 
+access_user_authentication_log_user,otl.user.authentication.log.user,model_otl_user_authentication_log,base.group_user, 1,0,0,0
 

@@ -5,6 +5,10 @@ from odoo import models, fields, api, _
 from datetime import datetime
 from odoo.osv import expression
 from odoo.exceptions import ValidationError
+from odoo.addons.resource.models.resource import float_to_time
+import pytz
+from dateutil.relativedelta import relativedelta
+from odoo.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT
 
 
 class AppointmentResult(models.Model):
@@ -44,7 +48,33 @@ class ResCompany(models.Model):
     promo_image_attachment_id = fields.Many2one('ir.attachment', 'Default Promo Image Attachment')
     promo_image = fields.Binary('Default Promo Image', related='promo_image_attachment_id.datas')
     enable_auto_logout = fields.Boolean('Enable Auto Logout', default=False)
-    auto_logout_time = fields.Float('Auto Logout Time', help="Enter time in 24 Hrs format")
+    auto_logout_time = fields.Float('Auto Logout Time (24 Hours Format)', help="Enter time in 24 Hrs format")
+    logged_in_notify_user_ids = fields.Many2many('res.users', 'logged_in_notify_user_rel', 'company_id', 'user_id', string="Users to Notify")
+
+    @api.onchange('auto_logout_time')
+    def onchange_auto_logout_time(self):
+        result = {}
+        for record in self:
+            if record.auto_logout_time and (record.auto_logout_time < 0.0 or record.auto_logout_time >=24.0):
+                result['warning'] = {
+                    'title': _('Warning'),
+                    'message': _('Please enter a valid time.')
+                }
+                record.auto_logout_time = 0
+            cron = self.env.ref('team_api_connection.ir_cron_clear_user_tokens')
+            if cron and cron.exists() and record.auto_logout_time:
+                auto_logout_time = str(float_to_time(record.auto_logout_time))
+                user = self.env.user
+                tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+                current_time = fields.Datetime.now().replace(tzinfo=pytz.utc)
+                hour, minute, seconds = auto_logout_time.split(':')
+                auto_logout_date = current_time.replace(hour=int(hour), minute=int(minute), second=int(seconds), tzinfo=None)
+                auto_logout_date_local = tz.localize(auto_logout_date).astimezone(pytz.utc)
+                if current_time >  auto_logout_date_local:
+                    auto_logout_date_local = auto_logout_date_local + relativedelta(days=1)
+                cron.write({'nextcall': auto_logout_date_local.strftime(DEFAULT_SERVER_DATETIME_FORMAT)})
+        return result
+
 
 
 class FloorColor(models.Model):
@@ -156,6 +186,7 @@ class DownPaymentOption(models.Model):
     down_payment = fields.Char('Down_Payment__c')
     final_payment = fields.Char('Final_Payment__c')
     payment_factor = fields.Char('Payment_Factor__c')
+    secondary_payment_factor = fields.Char('Secondary_Payment_Factor__c')
     balance_due = fields.Char('Balance_Due__c')
     sequence = fields.Float(string="Display_Order__c")
     payment_info = fields.Text('Payment_Info__c')
@@ -413,6 +444,8 @@ class PromotionCodes(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     discount = fields.Float('Discount')
     active = fields.Boolean('Active', default=True)
+    calculation_type = fields.Selection([('sqft', 'SQFT'), ('percentage', 'Percentage'), ('fixed', 'Fixed Amount')],
+                                        string='Calculation Type', default='sqft')
 
 
 class TransitionHeight(models.Model):
@@ -427,3 +460,19 @@ class TransitionHeight(models.Model):
     sequence = fields.Integer('Priority',
                           help="Give to the more specialized category, a higher priority to have them in top of the list.",
                           default=10)
+
+
+class UserAuthenticationLog(models.Model):
+    _name = 'otl.user.authentication.log'
+    _description = "Users Authentication Logs"
+    _order = 'date desc'
+    _rec_name = 'user_id'
+
+    user_id = fields.Many2one('res.users', 'User', required=True)
+    date = fields.Datetime('Date', required=True, default=fields.Datetime.now)
+    action = fields.Selection([('login',  'Login'), ('logout', 'Logout')], string='Action Type',
+                              required=True, default='login')
+    token = fields.Char('User Token')
+    company_id = fields.Many2one('res.company', string='Company', required=False, default=lambda self: self.env.company)
+    action_done = fields.Selection([('user', 'User'), ('admin', 'Admin'), ('automated', 'Automated')],
+                                   string='Action Done By', default='user', required=True)

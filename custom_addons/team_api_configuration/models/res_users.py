@@ -66,22 +66,26 @@ class ResUsers(models.Model):
         """
         _logger.info("------------inside verify api token-------------")
         _logger.info("------------Values :" + str(values))
-        result = []
         token = values.get('token' or '')
         id = values.get('id' or '')
         user = False
+        result = {
+            'user_exists': False,
+            'token_status': 'different'
+
+        }
         try:
-            user = self.sudo().search([('id', '=', int(id)), ('token_name', '=', token)])
-            _logger.info("------------User Id:" + str(user))
+            user = self.sudo().search([('id', '=', int(id))])
+            if user:
+                result.update({'id': user.id, 'user_exists': True})
+                if user.token_name == token:
+                    result.update({'token_status': 'same'})
+                elif not user.token_name:
+                    result.update({'token_status': 'empty'})
         except:
             user = False
-        # if not user:
-        #     return json.dumps({'result': 'Failed', 'message': 'Invalid user'})
-        if user:
-            result = [{'id': user.id}]
-            _logger.info("------------Result :" + str(result))
-            return result
-        return False
+        _logger.info("------------Result :" + str(result))
+        return result
 
     @api.model
     def log_out(self, values):

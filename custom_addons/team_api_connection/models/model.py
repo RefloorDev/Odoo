@@ -277,6 +277,86 @@ class ResUsers(models.Model):
             status = {'message': 'Url Endpoint Not Configured', 'result': 'Failed'}
             return status
 
+    def action_clear_token(self):
+        for record in self:
+            if record.token_name:
+                vals = {
+                    'user_id': record.id,
+                    'action': 'logout',
+                    'token': record.token_name,
+                    'action_done': 'admin',
+                }
+                record.write({'token_name': ''})
+                log = self.env['otl.user.authentication.log'].sudo().create(vals)
+                _logger.info("Authentication log created successfully----. Vals: %s, Record: %s" % (vals, log.id))
+        return True
+
+    @api.model
+    def cron_clear_user_tokens(self):
+        for company in self.env['res.company'].search([('enable_auto_logout', '=', True)]):
+            logged_in_users = self.search([('token_name', '!=', ''), ('company_id', '=', company.id)])
+            users_with_pending_sync = []
+            for user in logged_in_users:
+                pending_appointments = self.env['team.customer.appointment'].search(
+                    [('state', '=', 'scheduled'), ('user_id', '=', user.id)])
+                if pending_appointments:
+                    users_with_pending_sync.append(user.id)
+                else:
+                    vals = {
+                        'user_id': user.id,
+                        'action': 'logout',
+                        'token': user.token_name,
+                        'action_done': 'automated',
+                    }
+                    user.write({'token_name': ''})
+                    log = self.env['otl.user.authentication.log'].sudo().create(vals)
+                    _logger.info("Authentication log created successfully----. Vals: %s, Record: %s" % (vals, log.id))
+            if users_with_pending_sync:
+                try:
+                    # Get the template id corresponding to the email template
+                    # template_id = ir_model_data.get_object_reference('hr_holidays_custom', 'email_template_leave_request')[1]
+                    template_id = self.env.ref('team_api_connection.email_template_pending_users_logout')
+                except ValueError:
+                    template_id = False
+                if template_id:
+                    template_id.send_mail(company.id, force_send=True, raise_exception=False)
+        return True
+
+
+class ResCompany(models.Model):
+    _inherit = 'res.company'
+
+    def get_logged_in_notify_user_ids(self):
+        email_to = ''
+        for company in self:
+            if company.logged_in_notify_user_ids:
+                for user in company.logged_in_notify_user_ids:
+                    email = user.email
+                    if not email_to:
+                        email_to = email
+                    else:
+                        email_to += ', ' + email
+        return email_to
+
+    def get_pending_logout_users_list(self):
+        result = []
+        for company in self:
+            logged_in_users = self.env['res.users'].search([('token_name', '!=', ''), ('company_id', '=', company.id)])
+            for user in logged_in_users:
+                pending_appointments = self.env['team.customer.appointment'].search(
+                    [('state', '=', 'scheduled'), ('user_id', '=', user.id)])
+                appointments = []
+                for appointment in pending_appointments:
+                    appointments.append(appointment.name)
+                result.append({
+                    'name': user.name,
+                    'login': user.login,
+                    'appointments': appointments
+                })
+        return result
+
+
+
 
 class TeamRoomRoom(models.Model):
     _inherit = 'team.room.room'

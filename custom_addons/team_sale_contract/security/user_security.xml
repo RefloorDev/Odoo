@@ -117,5 +117,12 @@
             <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
         </record>
 
+        <record id="otl_user_authentication_log_rule" model="ir.rule">
+            <field name="name">User Authentication- Company Rule</field>
+            <field name="model_id" ref="model_otl_user_authentication_log"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('user_id.company_id','=',False),('user_id.company_id', 'in', company_ids)]</field>
+        </record>
+
     </data>
 </odoo>
