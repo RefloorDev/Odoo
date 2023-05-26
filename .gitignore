@@ -38,5 +38,5 @@ setup/win32/static/wkhtmltopdf/
 setup/win32/static/postgresql*.exe
 
 # controllers
-custom_addons/team_api_configuration/controllers/configurations.py
+#custom_addons/team_api_configuration/controllers/configurations.py
 
