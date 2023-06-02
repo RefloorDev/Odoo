@@ -2354,6 +2354,7 @@ class SaleOrder(models.Model):
         :return:
         """
         acquirer = self.env.ref('payment.payment_acquirer_authorize')
+        card_type = ''
         for order in self:
             transaction = AuthorizeAPICustom(acquirer)
             if order.authorize_transaction_id:
@@ -2375,7 +2376,8 @@ class SaleOrder(models.Model):
                 }
             transaction_ref = response.get('transactionResponse', {}).get('transId', '')
             card_type = response.get('transactionResponse', {}).get('accountType', '')
-            order.write({'authorize_transaction_id': transaction_ref, 'card_type': card_type})
+            # [FIX] order update restricting to avoid concurrent error
+            #order.write({'authorize_transaction_id': transaction_ref, 'card_type': card_type})
             currency = order.pricelist_id.currency_id
             partner = order.partner_id
             vals = {
@@ -2384,7 +2386,7 @@ class SaleOrder(models.Model):
                 'partner_id': partner.id,
                 'sale_order_ids': [(6, 0, self.ids)],
                 'acquirer_id': acquirer.id,
-                'acquirer_reference': response.get('transactionResponse', {}).get('transId'),
+                'acquirer_reference': response.get('transactionResponse', {}).get('transId', ''),
                 'date': fields.Datetime.now(),
             }
             transaction = self.env['payment.transaction'].create(vals)
@@ -2399,6 +2401,7 @@ class SaleOrder(models.Model):
             return {
                 'result': 'Success',
                 'transaction_id': transaction_ref,
+                'card_type': card_type,
                 'message': response.get('transactionResponse', {}).get('messages')[0].get('description'),
             }
 
@@ -2521,6 +2524,14 @@ class SaleOrder(models.Model):
                 }
                 payment_status = order.action_authcapture_payment(payment_data)
                 if not payment_status['result'] == 'Success':
+                    if payment_status.get('transaction_id', ''):
+                        values.update({
+                            'authorize_transaction_id': payment_status.get('transaction_id', '')
+                        })
+                    if payment_status.get('card_type', ''):
+                        values.update({
+                            'card_type': payment_status.get('card_type', '')
+                        })
                     order.write(values)
                     _logger.info("------ Payment_Transaction Failed------------")
                     status = {
@@ -2530,8 +2541,9 @@ class SaleOrder(models.Model):
                     return status
             order.write(values)
             order.action_confirm()
-            if order.appointment_id.completed_date:
-                order.write({'date_order': order.appointment_id.completed_date})
+            # [FIX] order update restricting to avoid concurrent error
+            # if order.appointment_id.completed_date:
+            #     order.write({'date_order': order.appointment_id.completed_date})
             status = {
                 'message': 'Sale order payment method is updated successfully',
                 'result': 'Success'
@@ -3266,8 +3278,13 @@ class SaleOrder(models.Model):
                         if sign_logs:
                             sign_logs.sudo().with_context(delete_log=True).unlink()
                         sign_requests.sudo().unlink()
+                    order_vals = {}
+                    if order.appointment_id.completed_date:
+                        order_vals.update({'date_order': order.appointment_id.completed_date})
                     if data.get('recision_date', False):
-                        order.write({'recision_date': data.get('recision_date', False)})
+                        order_vals.update({'recision_date': data.get('recision_date', False)})
+                    if order_vals:
+                        order.write(order_vals)
                     if appointment.app_version_id:
                         if order.coapplicant_skip or not order.appointment_id.co_applicant:
                             document_template_id = appointment.app_version_id.sale_contract_tmpl_id_ncp.id or False
