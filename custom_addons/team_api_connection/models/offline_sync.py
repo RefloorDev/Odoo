@@ -144,6 +144,8 @@ class ResUsers(models.Model):
         room_list = self.env['team.room.room'].get_rooms()
         questionnaire_list = self.env['team.quote.question'].get_all_questionnaires()
         flooring_colors_list = self.env['product.product'].get_all_flooring_colors()
+        floor_colors_list = self.env['product.product'].get_all_flooring_colors('floor')
+        stair_colors_list = self.env['product.product'].get_all_flooring_colors('stair')
         molding_type_list = self.env['team.floor.molding'].get_all_molding_types()
         payment_option_list = self.env['team.downpayment.option'].get_all_payment_options()
         discount_coupon_list = self.env['team.monthly.promo'].get_all_discount_coupons()
@@ -170,6 +172,8 @@ class ResUsers(models.Model):
             'rooms': room_list,
             'questionnaires': questionnaire_list,
             'flooring_colors': flooring_colors_list,
+            'floor_colors_list': floor_colors_list,
+            'stair_colors_list': stair_colors_list,
             'molding_types': molding_type_list,
             'payment_options': payment_option_list,
             'discount_coupons': discount_coupon_list,
@@ -447,8 +451,13 @@ class ProductProduct(models.Model):
         return url
 
     @api.model
-    def get_all_flooring_colors(self):
-        product_list = self.search([('active', '=', True), ('is_material', '=', True)])
+    def get_all_flooring_colors(self, room_type=''):
+        domain = [('active', '=', True), ('is_material', '=', True)]
+        if room_type == 'floor':
+            domain.append(('categ_id.name', 'not ilike', 'Stairs'))
+        elif room_type == 'stair':
+            domain.append(('categ_id.name', 'ilike', 'Stairs'))
+        product_list = self.search(domain)
         materials_list = []
         default_material_image_attachment_id = self.env.user.company_id.material_image_attachment_id or False
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
