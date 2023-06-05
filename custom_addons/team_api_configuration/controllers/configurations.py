@@ -12,7 +12,7 @@ import odoo.tools as TOOLS
 config = TOOLS.config
 
 _logger.info("Configurations=================")
-# This configurations are needs to be provided in the odoo.conf file
+
 _logger.info(config.get('api_url',''))
 _logger.info(config.get('api_db',''))
 _logger.info(config.get('api_user_id',''))

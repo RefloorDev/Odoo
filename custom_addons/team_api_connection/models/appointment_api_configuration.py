@@ -1402,7 +1402,21 @@ class TeamImproveitConfiguration(models.Model):
                         start_date_str = data.get('BeginDate', '')
                         end_date_str = data.get('EndDate', '')
                         name = data.get('Promotion', '')
-                        price = data.get('Discount', 0)
+                        price = 0
+                        calculation_type = 'sqft'
+                        promotion_type = data.get('PromotionType', 'Sqft')
+                        discount_sqft = data.get('DiscountSqft', 0)
+                        discount_perc = data.get('DiscountPercentage', 0)
+                        discount_fixed = data.get('DiscountFixedDollars', 0)
+                        if promotion_type == 'Sqft':
+                            calculation_type = 'sqft'
+                            price = discount_sqft
+                        elif promotion_type == 'Percent':
+                            calculation_type = 'percentage'
+                            price = discount_perc
+                        elif promotion_type == 'Dollars':
+                            calculation_type = 'fixed'
+                            price = discount_fixed
                         promocode = promocode_obj.search([('name', '=', name)], limit=1)
                         start_date_obj = datetime.strptime(start_date_str, '%Y-%m-%dT%H:%M:%S')
                         end_date_obj = datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S')
@@ -1413,6 +1427,7 @@ class TeamImproveitConfiguration(models.Model):
                             'end_date': end_date,
                             'name': name,
                             'discount': price,
+                            'calculation_type': calculation_type,
                         }
                         if promocode:
                             promocode.write(vals)
