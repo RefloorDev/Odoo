@@ -75,6 +75,8 @@
 
                         </group>
                         <group>
+                            <field name="exclude_from_disc"/>
+                            <field name="exclude_from_promo"/>
                             <field name="reflect_cost"/>
                             <field name="exclude_from_discount"/>
                             <field name="calculation_type" attrs="{'invisible': [('reflect_cost', '!=', True)], 'required': [('reflect_cost', '=', True)]}"/>
