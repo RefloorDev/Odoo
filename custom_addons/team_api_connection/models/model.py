@@ -2834,6 +2834,7 @@ class TeamContractRoomMeasurement(models.Model):
             result.append({
                 'molding_id': molding.id,
                 'name': molding.name,
+                'unit_price': molding.unit_price,
             })
         return result
 
