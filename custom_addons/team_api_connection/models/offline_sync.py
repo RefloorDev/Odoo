@@ -116,8 +116,8 @@ class ResUsers(models.Model):
                 'promotion_code_id': code.id,
                 'name': code.name,
                 'discount': code.discount or 0,
-                'start_date': code.start_date,
-                'end_date': code.end_date,
+                'start_date': '%s 00:00:00' % (code.start_date.strftime(DEFAULT_SERVER_DATE_FORMAT)),
+                'end_date': '%s 23:59:59' % (code.end_date.strftime(DEFAULT_SERVER_DATE_FORMAT)),
                 'calculation_type': code.calculation_type or ''
             })
         return promotion_code_list
@@ -599,6 +599,7 @@ class ProductTemplate(models.Model):
                 'unit_of_measure': product.unit_of_measure or '',
                 'grade': product.grade or '',
                 'stair_cost': stair_product and stair_product.list_price or 0,
+                'stair_msrp': stair_product and stair_product.msrp or 0,
                 'stair_product_id': stair_product and stair_product.id or 0
 
             })
@@ -1125,9 +1126,14 @@ class TeamCustomerAppointment(models.Model):
             promotion_code_id = int(data.get('promotion_code_id', 0))
             loan_payment = float(data.get('loan_payment', 0))
             calc_based_on = data.get('calc_based_on', 'list_price')
+            stair_calc_based_on = data.get('stair_calc_based_on', 'list_price')
             if calc_based_on not in ['list_price', 'msrp']:
                 _logger.info("------ Wrong value for Calculation Based On-------------")
                 status = {'message': 'Wrong value for Calculation Based On', 'result': 'Failed'}
+                return status
+            if stair_calc_based_on not in ['list_price', 'msrp']:
+                _logger.info("------ Wrong value for Stair Calculation Based On-------------")
+                status = {'message': 'Wrong value for Stair Calculation Based On', 'result': 'Failed'}
                 return status
             sale_order_obj = self.env['sale.order']
             res_partner_obj = self.env['res.partner']
@@ -1269,6 +1275,7 @@ class TeamCustomerAppointment(models.Model):
                 'stair_special_price_id': stair_special_price_id or False,
                 'promotion_code_id': promotion_code_id or False,
                 'calc_based_on': calc_based_on,
+                'stair_calc_based_on': stair_calc_based_on,
                 'balance_payment_method': payment_method,
                 'adjustment': adjustment,
                 'loan_payment': loan_payment,

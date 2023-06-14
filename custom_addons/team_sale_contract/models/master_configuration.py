@@ -438,8 +438,8 @@ class PromotionCodes(models.Model):
     _order = 'start_date desc'
 
     name = fields.Char('Promotion', required=True)
-    start_date = fields.Datetime('Start Date')
-    end_date = fields.Datetime('End Date')
+    start_date = fields.Date('Start Date')
+    end_date = fields.Date('End Date')
     description = fields.Char('Description')
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     discount = fields.Float('Discount')

@@ -395,6 +395,7 @@
                             <group>
                                 <group string="Down Payment">
                                     <field name="promotion_code_id" readonly="1"/>
+                                    <field name="stair_calc_based_on" readonly="1"/>
                                     <field name="calc_based_on" readonly="1"/>
                                     <field name="msrp_amount" readonly="1"/>
                                     <field name="additional_cost" readonly="1"/>
