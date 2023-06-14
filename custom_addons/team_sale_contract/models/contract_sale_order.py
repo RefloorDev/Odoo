@@ -2698,5 +2698,6 @@ class DiscountHistoryLine(models.Model):
     actual_price = fields.Float('Sale Price Before Disc')
     promo_type = fields.Boolean('Promo Code', default=False)
     type = fields.Selection([('amount', 'Amount'), ('percentage', 'Percentage')], string='Discount Type', default='amount')
+    non_disc_amt = fields.Float('Non-Discountable Amount')
 
 
