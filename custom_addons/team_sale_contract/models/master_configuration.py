@@ -30,7 +30,7 @@ class FloorMolding(models.Model):
                               help="Give to the more specialized category, a higher priority to have them in top of the list.")
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     active = fields.Boolean('Active', default=True)
-    unit_price = fields.Float(string="Molding Unit Price")
+    unit_price = fields.Float(string="Unit Price")
 
 
 class ResCompany(models.Model):

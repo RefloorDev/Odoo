@@ -1076,7 +1076,8 @@ class TeamImproveitConfiguration(models.Model):
                         molding_type_dict = {
                             'name': result_data.get('Name', False),
                             'sequence': sequence,
-                            'active': True
+                            'active': True,
+                            'unit_price': result_data.get('PricePerUnit', False),
                         }
                         sequence += 1
                         list_molding_type.append(result_data.get('Name', False))
