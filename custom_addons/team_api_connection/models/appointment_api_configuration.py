@@ -1076,7 +1076,8 @@ class TeamImproveitConfiguration(models.Model):
                         molding_type_dict = {
                             'name': result_data.get('Name', False),
                             'sequence': sequence,
-                            'active': True
+                            'active': True,
+                            'unit_price': result_data.get('PricePerUnit', False),
                         }
                         sequence += 1
                         list_molding_type.append(result_data.get('Name', False))
@@ -1227,6 +1228,12 @@ class TeamImproveitConfiguration(models.Model):
                         if question.get('ExcludeFromDiscount', False) in ['true', True]:
                             exclude_from_discount = True
                         vals.update({'exclude_from_discount': exclude_from_discount})
+
+                        exclude_from_promotion = False
+                        if question.get('ExcludeFromPromotion', False) in ['true', True]:
+                            exclude_from_promotion = True
+                        vals.update({'exclude_from_promotion': exclude_from_promotion})
+
                         if question.get('Price', 0):
                             reflect_cost = True
                         vals.update({'amount': question.get('Price', 0)})
