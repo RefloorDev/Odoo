@@ -1611,6 +1611,8 @@ class TeamQuoteQuestion(models.Model):
                     'amount': data.amount or 0,
                     'default_answer': data.default_answer or '',
                     'quote_label': quote_label,
+                    'exclude_from_discount': data.exclude_from_discount,
+                    'exclude_from_promotion': data.exclude_from_promotion,
                 }
                 list.append(vals)
 
@@ -2834,6 +2836,7 @@ class TeamContractRoomMeasurement(models.Model):
             result.append({
                 'molding_id': molding.id,
                 'name': molding.name,
+                'unit_price': molding.unit_price,
             })
         return result
 

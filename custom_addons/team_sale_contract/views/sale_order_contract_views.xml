@@ -376,6 +376,7 @@
                                         <field name="promo_type"/>
                                         <field name="actual_price"/>
                                         <field name="discount_amount"/>
+                                        <field name="non_disc_amt"/>
                                         <field name="sale_price"/>
                                     </tree>
                                     <form string="Discount History">
@@ -385,6 +386,7 @@
                                             <field name="promo_type"/>
                                             <field name="actual_price"/>
                                             <field name="discount_amount"/>
+                                            <field name="non_disc_amt"/>
                                             <field name="sale_price"/>
                                         </group>
                                     </form>

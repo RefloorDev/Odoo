@@ -1238,6 +1238,7 @@ class TeamCustomerAppointment(models.Model):
                 discount_history_vals_list.append((0, 0, {
                     'name': history_data.get('value', ''),
                     'discount_amount': history_data.get('discount_amount', 0),
+                    'non_disc_amt': history_data.get('non_disc_amt', 0),
                     'sale_price': history_data.get('sale_price', 0),
                     'actual_price': history_data.get('actual_price', 0),
                     'type': history_data.get('type', ''),
