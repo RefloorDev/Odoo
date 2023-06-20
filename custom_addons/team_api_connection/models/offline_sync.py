@@ -421,7 +421,8 @@ class TeamQuoteQuestion(models.Model):
                 'applicable_current_surface': question.applicable_current_surface or '',
                 'quote_label': quote_label,
                 'applicable_to': applicable_to,
-                'applicable_rooms': applicable_rooms_list
+                'applicable_rooms': applicable_rooms_list,
+                'exclude_from_promotion': question.exclude_from_promotion or False,
             })
         return questionnaire_list
 
@@ -503,6 +504,7 @@ class FloorMolding(models.Model):
             molding_type_list.append({
                 'molding_id': molding.id,
                 'name': molding.name,
+                'unit_price': molding.unit_price
             })
         return molding_type_list
 
