@@ -416,6 +416,7 @@ class TeamQuoteQuestion(models.Model):
                 'sequence': question.sequence or 0,
                 'default_answer': question.default_answer or '',
                 'exclude_from_discount': question.exclude_from_discount or False,
+                'exclude_from_promotion': question.exclude_from_promotion or False,
                 'multiply_with_area': question.multiply_with_area or False,
                 'set_default_answer': question.set_default_answer or False,
                 'applicable_current_surface': question.applicable_current_surface or '',
@@ -503,6 +504,7 @@ class FloorMolding(models.Model):
             molding_type_list.append({
                 'molding_id': molding.id,
                 'name': molding.name,
+                'unit_price': molding.unit_price or 0,
             })
         return molding_type_list
 
@@ -927,8 +929,10 @@ class TeamCustomerAppointment(models.Model):
                                     'message': 'Selected Molding is not existing in the system'
                                 }
                             vals.update({
-                                'molding_type_id': molding_type.id
+                                'molding_type_id': molding_type.id,
+                                'molding_unit_price': molding_type.unit_price or 0,
                             })
+
                     else:
                         _logger.info("------ Material ID Wrong-------------")
                         if self.appointment_result == 'Sold' and not exclude_from_calculation:
@@ -1115,6 +1119,7 @@ class TeamCustomerAppointment(models.Model):
             discount = float(data.get('discount', 0))
             msrp = float(data.get('msrp', 0))
             savings_amount = float(data.get('savings', 0))
+            excluded_amount_promotion = float(data.get('excluded_amount_promotion', 0))
             adjustment = float(data.get('adjustment', 0))
             additional_cost = float(data.get('additional_cost', 0))
             down_payment_amount = float(data.get('down_payment_amount', 0))
@@ -1238,7 +1243,7 @@ class TeamCustomerAppointment(models.Model):
                 discount_history_vals_list.append((0, 0, {
                     'name': history_data.get('value', ''),
                     'discount_amount': history_data.get('discount_amount', 0),
-                    'non_disc_amt': history_data.get('non_disc_amt', 0),
+                    'excluded_amount_discount': history_data.get('excluded_amount_discount', 0),
                     'sale_price': history_data.get('sale_price', 0),
                     'actual_price': history_data.get('actual_price', 0),
                     'type': history_data.get('type', ''),
@@ -1282,6 +1287,7 @@ class TeamCustomerAppointment(models.Model):
                 'loan_payment': loan_payment,
                 'msrp_amount': msrp,
                 'savings_amount': savings_amount,
+                'excluded_amount_promotion': excluded_amount_promotion,
                 'one_year_price': msrp+additional_cost,
                 'coapplicant_skip': True if coapplicant_skip == 1 else False,
                 'applicant_inititals': initials or '',

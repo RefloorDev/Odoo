@@ -1077,7 +1077,7 @@ class TeamImproveitConfiguration(models.Model):
                             'name': result_data.get('Name', False),
                             'sequence': sequence,
                             'active': True,
-                            'unit_price': result_data.get('PricePerUnit', False),
+                            'unit_price': result_data.get('PricePerUnit', 0),
                         }
                         sequence += 1
                         list_molding_type.append(result_data.get('Name', False))
