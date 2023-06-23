@@ -747,7 +747,7 @@ class SaleOrder(models.Model):
                         'product_uom_qty': 1,
                         'name': promotion_discount_product.name,
                         'order_id': record.id,
-                        'price_unit': -round(promotion_amount),
+                        'price_unit': -(promotion_amount),
                         'discount':  0
                     }
                     obj.create(vals)
