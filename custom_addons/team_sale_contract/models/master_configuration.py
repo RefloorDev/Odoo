@@ -30,6 +30,7 @@ class FloorMolding(models.Model):
                               help="Give to the more specialized category, a higher priority to have them in top of the list.")
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     active = fields.Boolean('Active', default=True)
+    unit_price = fields.Float(string="Unit Price", default=0.0)
 
 
 class ResCompany(models.Model):
@@ -438,8 +439,8 @@ class PromotionCodes(models.Model):
     _order = 'start_date desc'
 
     name = fields.Char('Promotion', required=True)
-    start_date = fields.Datetime('Start Date')
-    end_date = fields.Datetime('End Date')
+    start_date = fields.Date('Start Date')
+    end_date = fields.Date('End Date')
     description = fields.Char('Description')
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     discount = fields.Float('Discount')

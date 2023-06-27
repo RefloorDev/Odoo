@@ -1611,6 +1611,7 @@ class TeamQuoteQuestion(models.Model):
                     'amount': data.amount or 0,
                     'default_answer': data.default_answer or '',
                     'quote_label': quote_label,
+                    'exclude_from_discount': data.exclude_from_discount,
                 }
                 list.append(vals)
 

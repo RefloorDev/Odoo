@@ -175,15 +175,19 @@ class SaleOrder(models.Model):
             molding_none = False
             molding_vinyl = False
             molding_unfinished = False
+            molding_coved_baseboard = False
             if record.room_measurement_line.filtered(lambda x: x.molding_type_id and x.molding_type_id.name.lower() == 'no molding' and not x.exclude_from_calculation):
                 molding_none = True
             if record.room_measurement_line.filtered(lambda x: x.molding_type_id and x.molding_type_id.name.lower() == 'vinyl white' and not x.exclude_from_calculation):
                 molding_vinyl = True
             if record.room_measurement_line.filtered(lambda x: x.molding_type_id and x.molding_type_id.name.lower() == 'unfinished' and not x.exclude_from_calculation):
                 molding_unfinished = True
+            if record.room_measurement_line.filtered(lambda x: x.molding_type_id and x.molding_type_id.name.lower() == 'coved baseboard' and not x.exclude_from_calculation):
+                molding_coved_baseboard = True
             record.molding_none = molding_none
             record.molding_vinyl = molding_vinyl
             record.molding_unfinished = molding_unfinished
+            record.molding_coved_baseboard = molding_coved_baseboard
 
     @api.depends('card_type', 'cards',  'cash', 'check')
     def _compute_card_type(self):
@@ -271,6 +275,7 @@ class SaleOrder(models.Model):
     molding_none = fields.Boolean('Molding: None', compute='_compute_molding_type')
     molding_vinyl = fields.Boolean('Mulding: Vinyl', compute='_compute_molding_type')
     molding_unfinished = fields.Boolean('Molding: Unfinished', compute='_compute_molding_type')
+    molding_coved_baseboard = fields.Boolean('Molding: Coved Baseboard', compute='_compute_molding_type')
     card_type = fields.Char('Card Type', copy=False)
     card_visa = fields.Boolean('Card: Visa',  compute='_compute_card_type')
     card_amex = fields.Boolean('Card: Amex',  compute='_compute_card_type')
@@ -283,6 +288,9 @@ class SaleOrder(models.Model):
     promotion_code_id = fields.Many2one('otl.promotion.code', 'Promotion Code')
     calc_based_on = fields.Selection([('list_price', 'Sale Price'), ('msrp', 'MSRP')], string='Calculation Based On',
                                      default='list_price')
+    stair_calc_based_on = fields.Selection([('list_price', 'Sale Price'), ('msrp', 'MSRP')], string='Stair Calculation Based On',
+                                     default='list_price')
+    excluded_amount_promotion = fields.Float('Excluded Amount From Promotion')
 
     def write(self, vals):
         _logger.info('inside sale order-%s write: values -  %s'%(self and self[0].name or '', vals))
@@ -636,34 +644,10 @@ class SaleOrder(models.Model):
                 product = self.env.ref('team_sale_contract.product_payment')
                 additional_product = self.env.ref('team_sale_contract.additional_cost')
                 adjustment_product = self.env.ref('team_sale_contract.adjustment_cost')
+                promotion_discount_product = self.env.ref('team_sale_contract.quote_promotion_discount')
                 promo_product = self.env.ref('team_sale_contract.monthly_promo')
                 admin_fee_product = self.env.ref('team_sale_contract.admin_fee')
                 quote_round_off_product = self.env.ref('team_sale_contract.quote_round_off')
-                measurement_price = 0
-                if record.calc_based_on == 'list_price':
-                    list_price = record.floor_type.list_price or 0
-                    if record.special_price_id and record.special_price_id.list_price:
-                        list_price = record.special_price_id.list_price or 0
-                    measurement_price = record.total_area * list_price
-                else:
-                    promotion_amount = 0
-                    list_price = record.floor_type.msrp or 0
-                    if record.special_price_id and record.special_price_id.msrp:
-                        list_price = record.special_price_id.msrp or 0
-                    if record.promotion_code_id and record.promotion_code_id.discount:
-                        if record.promotion_code_id.calculation_type == 'sqft':
-                            promotion_amount = record.promotion_code_id.discount or 0
-                            list_price -= promotion_amount
-                            measurement_price = record.total_area * list_price
-                        elif record.promotion_code_id.calculation_type == 'percentage':
-                            promotion_amount = (record.total_area * list_price)*record.promotion_code_id.discount/100.0
-                            measurement_price = (record.total_area * list_price) - promotion_amount
-                        else:
-                            promotion_amount = record.promotion_code_id.discount or 0
-                            measurement_price = record.total_area * list_price - promotion_amount
-                    else:
-                        measurement_price = record.total_area * list_price
-
                 stair_count = 0
                 stair_product = False
 
@@ -684,14 +668,45 @@ class SaleOrder(models.Model):
                 stair_price = 0
                 stair_unit_price = 0
                 if stair_count and stair_product:
-                    stair_unit_price = stair_product.list_price or 0
-                    if record.stair_special_price_id and record.stair_special_price_id.list_price:
-                        stair_unit_price = record.stair_special_price_id.list_price or 0
+                    if record.stair_calc_based_on == 'list_price':
+                        stair_unit_price = stair_product.list_price or 0
+                        if record.stair_special_price_id and record.stair_special_price_id.list_price:
+                            stair_unit_price = record.stair_special_price_id.list_price or 0
+                    else:
+                        stair_unit_price = stair_product.msrp or 0
+                        if record.stair_special_price_id and record.stair_special_price_id.msrp:
+                            stair_unit_price = record.stair_special_price_id.msrp or 0
                     stair_price = stair_unit_price * stair_count
-                round_off_mismatched_amount = round(measurement_price+additional_cost+stair_price) - (measurement_price+additional_cost+stair_price)
+                measurement_price = 0
+                promotion_amount = 0
+                if record.calc_based_on == 'list_price':
+                    list_price = record.floor_type.list_price or 0
+                    if record.special_price_id and record.special_price_id.list_price:
+                        list_price = record.special_price_id.list_price or 0
+                else:
+                    list_price = record.floor_type.msrp or 0
+                    if record.special_price_id and record.special_price_id.msrp:
+                        list_price = record.special_price_id.msrp or 0
+                    _logger.info('promotion_amount----------%s' % (record.promotion_code_id))
+                    if record.promotion_code_id and record.promotion_code_id.discount:
+                        excluded_amount_from_promotion = 0
+                        for question_line in record.contract_question_line.filtered(
+                                lambda x: x.question_id.exclude_from_promotion and x.room_measurement_id and not x.room_measurement_id.exclude_from_calculation):
+                            if question_line.extra_price and question_line.answer_data:
+                                excluded_amount_from_promotion += question_line.extra_price
+                        if record.promotion_code_id.calculation_type == 'sqft':
+                            promo_discount = record.promotion_code_id.discount or 0
+                            promotion_amount = record.total_area * promo_discount
+                        elif record.promotion_code_id.calculation_type == 'percentage':
+                            promotion_amount = (record.total_area * list_price + additional_cost + stair_price - excluded_amount_from_promotion)*record.promotion_code_id.discount/100.0
+                            _logger.info('promotion_amount----------%s'%(promotion_amount))
+                        else:
+                            promotion_amount = record.promotion_code_id.discount or 0
+                measurement_price = record.total_area * list_price
+                round_off_mismatched_amount = round(measurement_price+additional_cost+stair_price+promotion_amount) - (measurement_price+additional_cost+stair_price+promotion_amount)
                 # round_off_mismatched_amount += round(adjustment) - adjustment
                 round_off_mismatched_amount += round(monthly_promo) - monthly_promo
-                net_amount = measurement_price + additional_cost + stair_price - round(adjustment) - monthly_promo
+                net_amount = measurement_price + additional_cost + stair_price - round(adjustment) - monthly_promo - promotion_amount
                 if min_sale_price and net_amount < min_sale_price:
                     round_off_amount = min_sale_price - net_amount + round_off_mismatched_amount
                 else:
@@ -723,6 +738,16 @@ class SaleOrder(models.Model):
                         'name': adjustment_product.name,
                         'order_id': record.id,
                         'price_unit': -round(adjustment),
+                        'discount':  0
+                    }
+                    obj.create(vals)
+                if promotion_discount_product and promotion_amount != 0.0:
+                    vals = {
+                        'product_id': promotion_discount_product.id,
+                        'product_uom_qty': 1,
+                        'name': promotion_discount_product.name,
+                        'order_id': record.id,
+                        'price_unit': -(promotion_amount),
                         'discount':  0
                     }
                     obj.create(vals)
@@ -1723,6 +1748,7 @@ class SaleOrder(models.Model):
                         leveling_solution_included = 0
                         removal_cost = 0
                         color_up_charge_total = room_line.color_up_charge_total or 0
+                        molding_total_price = room_line.molding_total_price or 0
                         comments = room_line.comments or ""
                         if room_line.image_comments:
                             if comments:
@@ -1752,7 +1778,10 @@ class SaleOrder(models.Model):
                             if contract_questions:
                                 for answer_obj in contract_questions.answers:
                                     stair_count = float(answer_obj.answer)
-                            room_cost = stair_count * stair_product.list_price
+                            if sale_order.stair_calc_based_on == 'list_price':
+                                room_cost = stair_count * stair_product.list_price
+                            else:
+                                room_cost = stair_count * stair_product.msrp
                         else:
                             data.update({
                                 "ProductName": product_name,
@@ -1771,7 +1800,7 @@ class SaleOrder(models.Model):
                             room_cost = 0
                             if floor_type:
                                 room_cost = room_line.adjusted_area * floor_type.flooring_cost
-                        unit_price = room_cost + reflect_cost + color_up_charge_total
+                        unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price
                         # discount = sale_order.adjustment or 0
                         discounted_unit_price = unit_price
                         data.update({"Description": room_line.room_id.name})
@@ -1898,6 +1927,7 @@ class SaleOrder(models.Model):
                         leveling_solution_included = 0
                         removal_cost = 0
                         color_up_charge_total = room_line.color_up_charge_total or 0
+                        molding_total_price = room_line.molding_total_price or 0
                         stair_product_name = ''
                         stair_improveit_product_id = ''
                         stair_category_name = ''
@@ -1942,7 +1972,10 @@ class SaleOrder(models.Model):
                             if contract_questions:
                                 for answer_obj in contract_questions.answers:
                                     stair_count = float(answer_obj.answer)
-                            room_cost = stair_count * stair_product.list_price
+                            if sale_order.stair_calc_based_on == 'list_price':
+                                room_cost = stair_count * stair_product.list_price
+                            else:
+                                room_cost = stair_count * stair_product.msrp
                         else:
                             data.update({
                                 "ProductName": product_name,
@@ -1959,7 +1992,7 @@ class SaleOrder(models.Model):
                                     if questions.question_id.code == 'RemoveCurrentCovering':
                                         removal_cost = questions.extra_price or 0
                             room_cost = room_line.adjusted_area * sale_order.floor_type.flooring_cost
-                        unit_price = room_cost + reflect_cost + color_up_charge_total
+                        unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price
                         discount = sale_order.adjustment or 0
                         discounted_unit_price = unit_price
                         data.update({'Description': room_line.room_id.name})
@@ -2698,5 +2731,5 @@ class DiscountHistoryLine(models.Model):
     actual_price = fields.Float('Sale Price Before Disc')
     promo_type = fields.Boolean('Promo Code', default=False)
     type = fields.Selection([('amount', 'Amount'), ('percentage', 'Percentage')], string='Discount Type', default='amount')
-
+    excluded_amount_discount = fields.Float('Excluded Amount From Discount')
 

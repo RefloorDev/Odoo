@@ -172,6 +172,14 @@ class TeamContractRoomMeasurement(models.Model):
                 color_up_charge_total = record.adjusted_area * record.color_up_charge_price
             record.color_up_charge_total = color_up_charge_total
 
+    @api.depends('molding_unit_price', 'molding_type_id', 'room_perimeter')
+    def _compute_molding_total_price(self):
+        for record in self:
+            molding_total_price = 0
+            if record.room_perimeter and record.molding_unit_price:
+                molding_total_price = record.room_perimeter * record.molding_unit_price
+            record.molding_total_price = molding_total_price
+
     name = fields.Text('Description', compute='_compute_name')
     room_id = fields.Many2one('team.room.room', string='Room', required=True)
     floor_id = fields.Many2one('team.floor.level', string='Floor', required=False)
@@ -197,6 +205,8 @@ class TeamContractRoomMeasurement(models.Model):
     transition_line_id = fields.One2many('team.contract.transition.line', 'room_measurement_id', 'Transitions')
     color_up_charge_price = fields.Float('Color Up Charge Price')
     color_up_charge_total = fields.Float('Color Up Charge Total Amount', compute='_compute_color_up_charge_total', store=True)
+    molding_unit_price = fields.Float('Molding Unit Price')
+    molding_total_price = fields.Float('Molding Total Amount', compute='_compute_molding_total_price', store=True)
 
 
 

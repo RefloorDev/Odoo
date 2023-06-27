@@ -1076,7 +1076,8 @@ class TeamImproveitConfiguration(models.Model):
                         molding_type_dict = {
                             'name': result_data.get('Name', False),
                             'sequence': sequence,
-                            'active': True
+                            'active': True,
+                            'unit_price': result_data.get('PricePerUnit', 0),
                         }
                         sequence += 1
                         list_molding_type.append(result_data.get('Name', False))
@@ -1227,6 +1228,12 @@ class TeamImproveitConfiguration(models.Model):
                         if question.get('ExcludeFromDiscount', False) in ['true', True]:
                             exclude_from_discount = True
                         vals.update({'exclude_from_discount': exclude_from_discount})
+
+                        exclude_from_promotion = False
+                        if question.get('ExcludeFromPromotion', False) in ['true', True]:
+                            exclude_from_promotion = True
+                        vals.update({'exclude_from_promotion': exclude_from_promotion})
+
                         if question.get('Price', 0):
                             reflect_cost = True
                         vals.update({'amount': question.get('Price', 0)})
@@ -1418,10 +1425,14 @@ class TeamImproveitConfiguration(models.Model):
                             calculation_type = 'fixed'
                             price = discount_fixed
                         promocode = promocode_obj.search([('name', '=', name)], limit=1)
-                        start_date_obj = datetime.strptime(start_date_str, '%Y-%m-%dT%H:%M:%S')
-                        end_date_obj = datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S')
-                        start_date = tz.localize(start_date_obj).astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
-                        end_date = tz.localize(end_date_obj).astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
+                        if 'T' in start_date_str:
+                            start_date_obj = datetime.strptime(start_date_str, '%Y-%m-%dT%H:%M:%S')
+                            end_date_obj = datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S')
+                            start_date = start_date_obj.strftime('%Y-%m-%d')
+                            end_date = end_date_obj.strftime('%Y-%m-%d')
+                        else:
+                            start_date = start_date_str
+                            end_date = end_date_str
                         vals= {
                             'start_date': start_date,
                             'end_date': end_date,

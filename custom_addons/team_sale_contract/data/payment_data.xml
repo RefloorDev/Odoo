@@ -49,6 +49,14 @@
             <field name="default_code">round off</field>
      </record>
 
+     <record id="quote_promotion_discount" model="product.product">
+            <field name="name">Promotion Discount</field>
+            <field name="type">service</field>
+            <field name="sale_ok">True</field>
+            <field name="purchase_ok">False</field>
+            <field name="default_code">promotion</field>
+     </record>
+
  </data>
 
 </odoo>
