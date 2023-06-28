@@ -229,7 +229,8 @@ class ResUsers(models.Model):
                     if not eval(content.get('ShowCustomerPhone', 'False')):
                         can_view_phone_number = False
                     if not users:
-                        users = self.env['res.users'].sudo().create({
+                        users = self.env['res.users'].sudo().with_context(no_reset_password=True, create_mode=False,
+                                                             mail_create_nosubscribe=True, tracking_disable=True).create({
                             'login': username,
                             'name': salesperson_name,
                             'email': username,
