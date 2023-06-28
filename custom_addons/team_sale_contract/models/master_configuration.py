@@ -469,7 +469,7 @@ class UserAuthenticationLog(models.Model):
     _order = 'date desc'
     _rec_name = 'user_id'
 
-    user_id = fields.Many2one('res.users', 'User', required=True)
+    user_id = fields.Many2one('res.users', 'User', required=True, ondelete='cascade')
     date = fields.Datetime('Date', required=True, default=fields.Datetime.now)
     action = fields.Selection([('login',  'Login'), ('logout', 'Logout')], string='Action Type',
                               required=True, default='login')
