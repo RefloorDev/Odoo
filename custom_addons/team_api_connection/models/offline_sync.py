@@ -2546,7 +2546,7 @@ class SaleOrder(models.Model):
                     'amount': order.down_payment_amount,
                 }
                 payment_status = order.action_authcapture_payment(payment_data)
-                if not payment_status['result'] == 'Success':
+                if payment_status['result'] == 'Success':
                     if payment_status.get('transaction_id', ''):
                         values.update({
                             'authorize_transaction_id': payment_status.get('transaction_id', '')
@@ -2555,7 +2555,7 @@ class SaleOrder(models.Model):
                         values.update({
                             'card_type': payment_status.get('card_type', '')
                         })
-                    order.write(values)
+                else:
                     _logger.info("------ Payment_Transaction Failed------------")
                     status = {
                         'result': 'Failed',
