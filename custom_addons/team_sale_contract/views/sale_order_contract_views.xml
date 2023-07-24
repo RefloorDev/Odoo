@@ -163,6 +163,7 @@
                         <field name="quote_id" readonly="1" attrs="{'invisible': [('quote_id', '=', False)]}"/>
                         <field name="special_price_id" readonly="1" attrs="{'invisible': [('special_price_id', '=', False)]}"/>
                         <field name="stair_special_price_id" readonly="1" attrs="{'invisible': [('stair_special_price_id', '=', False)]}"/>
+                        <field name="min_sale_price" readonly="1" groups="base.group_no_one"/>
                     </xpath>
                     <page name="optional_products" position="attributes">
                         <attribute name="invisible">1</attribute>
@@ -436,6 +437,7 @@
                                             <field name="state"/>
                                             <field name="message"/>
                                             <field name="error_code"/>
+                                            <field name="void_transaction"/>
                                         </tree>
                                     </field>
                                 </group>

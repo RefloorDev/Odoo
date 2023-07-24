@@ -528,6 +528,7 @@ class DownPaymentOption(models.Model):
                 'Balance_Due__c': payment_options.balance_due or '',
                 'Payment_Info__c': payment_options.payment_info or '',
                 'sequence': payment_options.sequence or 0,
+                'down_payment_message': payment_options.down_payment_message or '',
             }
             payment_list.append(payment_options_dict)
         return payment_list
@@ -577,6 +578,7 @@ class ProductTemplate(models.Model):
         products = self.search(
             [('type', '=', 'product'), ('product_variant_ids', '!=', False), ('categ_id.name', 'not ilike', 'Stairs')],
             order='sequence asc')
+        min_sale_price = float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0
         for product in products:
             stair_product = self.search([
                 ('type', '=', 'product'),
@@ -597,6 +599,7 @@ class ProductTemplate(models.Model):
                 'cost_per_sqft': product.msrp or 0,
                 'monthly_promo': product.monthly_promo or 0,
                 'warranty_info': product.warranty_info or '',
+                'min_sale_price': product.min_sale_price and product.min_sale_price or min_sale_price,
                 'eligible_for_discounts': product.eligible_for_discounts or '',
                 'unit_of_measure': product.unit_of_measure or '',
                 'grade': product.grade or '',
@@ -1130,8 +1133,11 @@ class TeamCustomerAppointment(models.Model):
             stair_special_price_id = int(data.get('stair_special_price_id', 0))
             promotion_code_id = int(data.get('promotion_code_id', 0))
             loan_payment = float(data.get('loan_payment', 0))
+            min_sale_price = float(data.get('min_sale_price', 0))
             calc_based_on = data.get('calc_based_on', 'list_price')
             stair_calc_based_on = data.get('stair_calc_based_on', 'list_price')
+            if not min_sale_price:
+                min_sale_price = float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0
             if calc_based_on not in ['list_price', 'msrp']:
                 _logger.info("------ Wrong value for Calculation Based On-------------")
                 status = {'message': 'Wrong value for Calculation Based On', 'result': 'Failed'}
@@ -1285,6 +1291,7 @@ class TeamCustomerAppointment(models.Model):
                 'balance_payment_method': payment_method,
                 'adjustment': adjustment,
                 'loan_payment': loan_payment,
+                'min_sale_price': min_sale_price,
                 'msrp_amount': msrp,
                 'savings_amount': savings_amount,
                 'excluded_amount_promotion': excluded_amount_promotion,
@@ -1574,6 +1581,8 @@ class TeamCustomerAppointment(models.Model):
                                 'state': 'failed',
                                 'name': 'SetAppointmentResult',
                             })
+                    # Remaining sync operation needs to perform only with a cron job.
+                    """
                     team_credit_application = self.env['team.credit.application'].search(
                         [('appointment_id', '=', int(appointment_id))], limit=1)
                     if team_credit_application and not team_credit_application.improveit_id:
@@ -1754,6 +1763,7 @@ class TeamCustomerAppointment(models.Model):
                     if sale_order.check_document_upload_completed():
                         sale_order.write({'is_data_upload_completed': True})
                     self.env.cr.commit()
+                    """
             new_cr.close()
             _logger.info('------End of action_start_sync_to_i360------: %s' % (sale_order_id))
         return True
@@ -1998,6 +2008,9 @@ class TeamCustomerAppointment(models.Model):
                 if order.down_payment_amount and not order.payment_method:
                     if data.get('paymentmethod', {}):
                         payment_result = order.action_update_payment_data(data.get('paymentmethod', {}))
+                        order_values = payment_result.get('values', {})
+                        if order_values:
+                            order.write(order_values)
                 if data.get('applicationInfo', {}):
                     credit_application = self.env['team.credit.application'].search(
                         [('appointment_id', '=', record.id)], limit=1)
@@ -2020,6 +2033,8 @@ class TeamCustomerAppointment(models.Model):
         # accepted values - online, offline
         operation_mode = data.get('operation_mode', 'offline')
         app_version = data.get('app_version', '')
+        transaction_id = ''
+        card_type = ''
         try:
             appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
             if appointment_id:
@@ -2030,21 +2045,38 @@ class TeamCustomerAppointment(models.Model):
                         payment_method_dict = data.get('paymentmethod', {})
                         paymentdetails_dict = data.get('paymentdetails', {})
                         credit_application_dict = data.get('applicationInfo', {})
+                        payment_transaction_info_dict = data.get('payment_transaction_info', {})
                         rooms_list = data.get('rooms', [])
                         answer_list = data.get('answer', [])
+                        existing_auth_transaction_id = ''
+                        if payment_transaction_info_dict:
+                            existing_auth_transaction_id = payment_transaction_info_dict.get('authorize_transaction_id', 0)
+                            card_type = payment_transaction_info_dict.get('card_type', '')
                         retry_order_creation = False
-                        if payment_method_dict and paymentdetails_dict:
+                        if payment_method_dict and paymentdetails_dict and not existing_auth_transaction_id:
                             payment_method = payment_method_dict.get('payment_method', '')
                             down_payment_amount = float(paymentdetails_dict.get('down_payment_amount', 0))
                             if order.payment_method in ['credit_card', 'debit_card'] and down_payment_amount and not order.card_transaction_log_line.filtered(lambda x: x.state == 'success'):
                                 retry_order_creation = True
                             elif order.payment_method in ['credit_card', 'debit_card'] and down_payment_amount and order.card_transaction_log_line.filtered(lambda x: x.state == 'success') and order.payment_method != payment_method:
                                 retry_order_creation = True
-                        if operation_mode == 'online' or retry_order_creation:
-                            if order.authorize_transaction_id:
-                                acquirer = self.env.ref('payment.payment_acquirer_authorize')
-                                transaction = AuthorizeAPICustom(acquirer)
-                                transaction.void(order.authorize_transaction_id or '')
+                        if (operation_mode == 'online' or retry_order_creation) and not existing_auth_transaction_id:
+                            valid_transactions_lines = appointment.card_transaction_log_line.filtered(lambda x:x.state == 'success' and not x.void_transaction)
+                            for line in valid_transactions_lines:
+                                authorize_transaction_id = line.name or ''
+                                if authorize_transaction_id:
+                                    acquirer = self.env.ref('payment.payment_acquirer_authorize')
+                                    transaction = AuthorizeAPICustom(acquirer)
+                                    response = transaction.void(authorize_transaction_id or '')
+                                    if response.get('x_trans_id', ''):
+                                        line.write({
+                                            'void_transaction': True,
+                                            'void_transaction_id': response.get('x_trans_id', '')
+                                        })
+                                    elif response.get('x_response_code', ''):
+                                        line.write({
+                                            'error_code': response.get('x_response_reason_text', '')
+                                        })
                             order.action_cancel()
                             order.action_draft()
                             order.write({'active': False})
@@ -2084,7 +2116,7 @@ class TeamCustomerAppointment(models.Model):
                                     order.add_payment_line(order.discount, order.adjustment, order.additional_cost,
                                                        monthly_promo, 0)
                                 if order.down_payment_amount and data.get('paymentmethod', {}) and not order.payment_method:
-                                    payment_result = order.action_update_payment_data(data.get('paymentmethod', {}))
+                                    payment_result = order.action_update_payment_data(data.get('paymentmethod', {}), existing_auth_transaction_id, card_type)
                                     payment_status = payment_result.get('result', '')
                                     if payment_result.get('result', '') != 'Success':
                                         payment_message = payment_result.get('message', '')
@@ -2137,6 +2169,11 @@ class TeamCustomerAppointment(models.Model):
                                                             notification.status = 'failed'
                                     else:
                                         payment_message = 'Payment Processed Successfully'
+                                        order_values = payment_result.get('values', {})
+                                        if order_values:
+                                            transaction_id = order_values.get('authorize_transaction_id','')
+                                            card_type = order_values.get('card_type','')
+                                            order.write(order_values)
 
                             return {
                                 'message': 'Sale order is already existing',
@@ -2237,6 +2274,14 @@ class TeamCustomerAppointment(models.Model):
                                                         notification.status = 'failed'
                                 else:
                                     payment_message = 'Payment Processed Successfully'
+                                    order_values = payment_result.get('values', {})
+                                    if order_values:
+                                        transaction_id = order_values.get('authorize_transaction_id', '')
+                                        card_type = order_values.get('card_type', '')
+                                        order.write(order_values)
+                                        if order.appointment_id.make_payment_failure:
+                                            x = False
+                                            x.append('1')
                                 if data.get('applicationInfo', {}):
                                     credit_application_result = order.action_create_credit_application(
                                         data.get('applicationInfo', {}))
@@ -2297,7 +2342,11 @@ class TeamCustomerAppointment(models.Model):
         except:
             result = {
                 'message': 'Something went wrong while executing the code',
-                'result': 'Failed'
+                'result': 'Failed',
+                'authorize_transaction_id': transaction_id,
+                'card_type': card_type,
+                'payment_status': payment_status,
+                'payment_message': payment_message,
             }
         _logger.info("------action_create_order_and_update_measurements result: %s-------------" % (result))
         return result
@@ -2393,6 +2442,7 @@ class SaleOrder(models.Model):
                     'state': 'failed',
                     'type': 'authcapture',
                 })
+                self.env.cr.commit()
                 return {
                     'result': 'Failed',
                     'message': response.get('error_text', '')
@@ -2421,6 +2471,7 @@ class SaleOrder(models.Model):
                 'state': 'success',
                 'type': 'authcapture',
             })
+            self.env.cr.commit()
             return {
                 'result': 'Success',
                 'transaction_id': transaction_ref,
@@ -2428,20 +2479,22 @@ class SaleOrder(models.Model):
                 'message': response.get('transactionResponse', {}).get('messages')[0].get('description'),
             }
 
-    def action_update_payment_data(self, data={}):
+    def action_update_payment_data(self, data={}, existing_auth_transaction_id='', existing_card_type=''):
         status = {
             'message': 'Sale order payment method update is failed due to some unknown reason',
             'result': 'Failed'
         }
+        values = {}
         for order in self:
             payment_method = data.get('payment_method', '')
-            values = {}
             if payment_method not in ['credit_card', 'debit_card', 'cash', 'check']:
                 _logger.info("------ Wrong Payment Method-------------")
                 status = {'message': 'Wrong Payment Method', 'result': 'Failed'}
                 return status
             values.update({
-                'payment_method': payment_method
+                'payment_method': payment_method,
+                'state': 'sale',
+                'date_order': order.appointment_id.completed_date
             })
             if order.invoice_ids:
                 _logger.info("------Payment Already Done------------")
@@ -2492,84 +2545,101 @@ class SaleOrder(models.Model):
                     'check_routing_number': check_routing_number,
                 })
             elif payment_method in ['credit_card', 'debit_card']:
-                if data.get('card_number', ''):
-                    card_number = data.get('card_number', '')
-                    card_number = card_number.replace(' ', '')
-                else:
-                    _logger.info("------card_number Empty------------")
-                    status = {
-                        'message': 'card_number  Empty',
-                        'result': 'Failed',
-                    }
-                    return status
-                if data.get('expiry_date', 0):
-                    card_expiry = data.get('expiry_date', 0)
-                else:
-                    _logger.info("------expiry_date Empty------------")
-                    status = {
-                        'message': 'expiry_date  Empty',
-                        'result': 'Failed',
-                    }
-                    return status
-                if data.get('card_name', ''):
-                    card_holder_name = data.get('card_name', "")
-                else:
-                    _logger.info("------card_name Empty------------")
-                    status = {
-                        'message': 'card_name  Empty',
-                        'result': 'Failed',
-                    }
-                    return status
-                if data.get('card_pinorcvv', ''):
-                    cardpin = data.get('card_pinorcvv', "")
-                else:
-                    _logger.info("------card_pinorcvv Empty------------")
-                    status = {
-                        'message': 'card_pinorcvv  Empty',
-                        'result': 'Failed',
-                    }
-                    return status
-                if card_expiry:
-                    if '/' in card_expiry:
-                        month, year = card_expiry.split('/')
-                    elif '-' in card_expiry:
-                        month, year = card_expiry.split('-')
-                    if len(year) == 4:
-                        year = year[2:]
-                        card_expiry = '%s/%s' % (month, year)
-                payment_data = {
-                    'sale_order_id': order.id,
-                    'cc_number': card_number,
-                    'cc_expiry': card_expiry,
-                    'cc_cvc': cardpin,
-                    'cc_holder_name': card_holder_name,
-                    'amount': order.down_payment_amount,
-                }
-                payment_status = order.action_authcapture_payment(payment_data)
-                if payment_status['result'] == 'Success':
-                    if payment_status.get('transaction_id', ''):
-                        values.update({
-                            'authorize_transaction_id': payment_status.get('transaction_id', '')
+                if existing_auth_transaction_id:
+                    values.update({
+                        'authorize_transaction_id': existing_auth_transaction_id,
+                        'card_type': existing_card_type
+                    })
+                    if not order.card_transaction_log_line.filtered(lambda x: x.name == existing_auth_transaction_id):
+                        self.env['otl.card.transaction.log'].create({
+                            'sale_order_id': order.id,
+                            'name': existing_auth_transaction_id,
+                            'message': '',
+                            'state': 'success',
+                            'type': 'authcapture',
                         })
-                    if payment_status.get('card_type', ''):
-                        values.update({
-                            'card_type': payment_status.get('card_type', '')
-                        })
+
                 else:
-                    _logger.info("------ Payment_Transaction Failed------------")
-                    status = {
-                        'result': 'Failed',
-                        'message': payment_status['message'],
+                    if data.get('card_number', ''):
+                        card_number = data.get('card_number', '')
+                        card_number = card_number.replace(' ', '')
+                    else:
+                        _logger.info("------card_number Empty------------")
+                        status = {
+                            'message': 'card_number  Empty',
+                            'result': 'Failed',
+                        }
+                        return status
+                    if data.get('expiry_date', 0):
+                        card_expiry = data.get('expiry_date', 0)
+                    else:
+                        _logger.info("------expiry_date Empty------------")
+                        status = {
+                            'message': 'expiry_date  Empty',
+                            'result': 'Failed',
+                        }
+                        return status
+                    if data.get('card_name', ''):
+                        card_holder_name = data.get('card_name', "")
+                    else:
+                        _logger.info("------card_name Empty------------")
+                        status = {
+                            'message': 'card_name  Empty',
+                            'result': 'Failed',
+                        }
+                        return status
+                    if data.get('card_pinorcvv', ''):
+                        cardpin = data.get('card_pinorcvv', "")
+                    else:
+                        _logger.info("------card_pinorcvv Empty------------")
+                        status = {
+                            'message': 'card_pinorcvv  Empty',
+                            'result': 'Failed',
+                        }
+                        return status
+                    if card_expiry:
+                        if '/' in card_expiry:
+                            month, year = card_expiry.split('/')
+                        elif '-' in card_expiry:
+                            month, year = card_expiry.split('-')
+                        if len(year) == 4:
+                            year = year[2:]
+                            card_expiry = '%s/%s' % (month, year)
+                    payment_data = {
+                        'sale_order_id': order.id,
+                        'cc_number': card_number,
+                        'cc_expiry': card_expiry,
+                        'cc_cvc': cardpin,
+                        'cc_holder_name': card_holder_name,
+                        'amount': order.down_payment_amount,
                     }
-                    return status
-            order.write(values)
-            order.action_confirm()
+                    payment_status = order.action_authcapture_payment(payment_data)
+                    if payment_status['result'] == 'Success':
+                        if payment_status.get('transaction_id', ''):
+                            values.update({
+                                'authorize_transaction_id': payment_status.get('transaction_id', '')
+                            })
+                        if payment_status.get('card_type', ''):
+                            values.update({
+                                'card_type': payment_status.get('card_type', '')
+                            })
+                    else:
+                        _logger.info("------ Payment_Transaction Failed------------")
+                        status = {
+                            'result': 'Failed',
+                            'message': payment_status['message'],
+                        }
+                        return status
+            #[FIX] Dtd: 07/07/2023 - to solve concurrent update error, passing 'state' & 'order date' in values instead of calling action_confirm() function.
+            #order.action_confirm()
+
             # [FIX] order update restricting to avoid concurrent error
             # if order.appointment_id.completed_date:
             #     order.write({'date_order': order.appointment_id.completed_date})
             status = {
                 'message': 'Sale order payment method is updated successfully',
-                'result': 'Success'
+                'result': 'Success',
+                'values': values
             }
         return status
 
