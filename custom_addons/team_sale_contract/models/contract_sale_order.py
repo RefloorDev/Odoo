@@ -291,6 +291,7 @@ class SaleOrder(models.Model):
     stair_calc_based_on = fields.Selection([('list_price', 'Sale Price'), ('msrp', 'MSRP')], string='Stair Calculation Based On',
                                      default='list_price')
     excluded_amount_promotion = fields.Float('Excluded Amount From Promotion')
+    min_sale_price = fields.Float('Minimum Sale Price', default=0)
 
     def write(self, vals):
         _logger.info('inside sale order-%s write: values -  %s'%(self and self[0].name or '', vals))
@@ -650,6 +651,8 @@ class SaleOrder(models.Model):
                 quote_round_off_product = self.env.ref('team_sale_contract.quote_round_off')
                 stair_count = 0
                 stair_product = False
+                if record.min_sale_price:
+                    min_sale_price = record.min_sale_price
 
                 stair_count_lines = record.contract_question_line.filtered(
                     lambda x: x.question_id.code == 'StairCount' and not x.room_measurement_id.exclude_from_calculation)
@@ -687,7 +690,6 @@ class SaleOrder(models.Model):
                     list_price = record.floor_type.msrp or 0
                     if record.special_price_id and record.special_price_id.msrp:
                         list_price = record.special_price_id.msrp or 0
-                    _logger.info('promotion_amount----------%s' % (record.promotion_code_id))
                     if record.promotion_code_id and record.promotion_code_id.discount:
                         excluded_amount_from_promotion = 0
                         for question_line in record.contract_question_line.filtered(
@@ -2718,6 +2720,8 @@ class CardTransactionLog(models.Model):
                             string='Process Type', default='capture')
     date = fields.Datetime('Transaction Time', default=fields.Datetime.now)
     synced = fields.Boolean('Synced to i360', default=False)
+    void_transaction = fields.Boolean('Is Void Transaction?', default=False)
+    void_transaction_id = fields.Char('Void Transaction ID')
 
 
 class DiscountHistoryLine(models.Model):

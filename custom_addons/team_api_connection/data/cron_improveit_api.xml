@@ -175,7 +175,7 @@
         </record>
 
         <record forcecreate="True" id="ir_cron_action_do_file_upload" model="ir.cron">
-            <field name="name">Document Upload to i360</field>
+            <field name="name">Document Upload to i360(Cron 2)</field>
             <field eval="True" name="active"/>
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">10</field>
@@ -185,6 +185,19 @@
             <field name="model_id" ref="sale.model_sale_order"/>
             <field name="state">code</field>
             <field name="code">model.cron_action_do_file_upload()</field>
+        </record>
+
+        <record forcecreate="True" id="ir_cron_action_sync_order_to_i360" model="ir.cron">
+            <field name="name">Sync Sale Data to i360(Cron 1)</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">10</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_action_sync_order_to_i360()</field>
         </record>
 
         <record forcecreate="True" id="ir_cron_clear_user_tokens" model="ir.cron">

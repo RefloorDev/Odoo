@@ -10,6 +10,7 @@ from odoo.exceptions import ValidationError,UserError
 from odoo.addons.team_api_configuration.controllers.configurations import URL, DB, API_USER_ID, API_USER_PASSWORD
 from odoo.addons.team_api_configuration.jwt.api_jws import encode as JWT_ENCODE
 from odoo.addons.team_api_configuration.jwt.api_jws import decode as JWT_DECODE
+from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
 import ast
 
 JWT_SECRET = 'secretXXXY'
@@ -773,12 +774,12 @@ class TeamCreditApplication(models.Model):
                         if current_request_item:
                             for item_type in sign_item_types:
                                 if item_type['auto_field']:
-                                    fields = item_type['auto_field'].split('.')
+                                    field_list = item_type['auto_field'].split('.')
                                     selected_record = self.env[
                                         current_request_item.model_id.model].sudo().search(
                                         [('id', '=', current_request_item.res_id)], limit=1)
                                     auto_field = selected_record if selected_record else current_request_item.partner_id
-                                    for field in fields:
+                                    for field in field_list:
                                         if auto_field and field in auto_field:
                                             if field in FIELDS_TO_ENCRYPT:
                                                 auto_field = auto_field.action_decrypt_field(field)
@@ -811,8 +812,11 @@ class TeamCreditApplication(models.Model):
                         for value in sr_values:
                             item_values[value.sign_item_id.id] = value.value
                         request_item.sign(request_item.signature)
-                        request_item.action_completed()
-                        sign_request.action_signed()
+                        current_date = fields.Date.context_today(self).strftime(DEFAULT_SERVER_DATE_FORMAT)
+                        request_item.write({'signing_date': current_date, 'state': 'completed'})
+                        # request_item.action_completed()
+                        # sign_request.action_signed()
+                        sign_request.write({'state': 'signed'})
                         sign_request.generate_completed_document_credit_card_application()
                         # if sale_order:
                         #     sale_order.add_quote_id_file(sign_request.completed_document)

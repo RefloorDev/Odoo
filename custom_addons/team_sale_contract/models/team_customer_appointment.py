@@ -173,6 +173,7 @@ class TeamCustomerAppointment(models.Model):
     office_location_id = fields.Many2one('otl.office.location', 'Office Location', readonly=True, states={'draft': [('readonly', False)]})
     market_segment = fields.Char('Market Segment')
     app_version_id = fields.Many2one('otl.sales.app.version', 'App Version')
+    make_payment_failure = fields.Boolean('Set Payment as Failure')
 
     @api.onchange('country_id')
     def _onchange_country_id(self):

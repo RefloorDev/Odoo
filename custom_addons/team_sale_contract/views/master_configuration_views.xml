@@ -37,6 +37,7 @@
             </xpath>
             <field name="favicon" position="after">
                 <field name="recision_date"/>
+                <field name="attachment_delete_day_limit"/>
             </field>
         </field>
     </record>
@@ -286,7 +287,7 @@
                 <xpath expr="//page[1]" position="after">
                     <page string="Payment Configuration" name="contract_questions">
                         <group col="4">
-                            <field name="payment_plan" required="True"/>
+                            <field name="payment_plan" required="0"/>
                             <field name="sequence"/>
                             <field name="description" placeholder="Internal Notes..."/>
                             <field name="warranty"/>
@@ -294,6 +295,7 @@
                             <field name="msrp"/>
                             <field name="unit_of_measure"/>
                             <field name="warranty_info"/>
+                            <field name="min_sale_price"/>
 
                         </group>
                         <separator string="Calculation"/>
@@ -553,6 +555,7 @@
                             <field name="interest_rate" digits="[12,4]"/>
                             <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
                             <field name="active" invisible="1"/>
+                            <field name="down_payment_message"/>
                         </group>
                     </sheet>
                 </form>
@@ -579,7 +582,7 @@
             <field name="context">{}</field>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">
-                    Click here to create a new Payment OPtion.
+                    Click here to create a new Payment Option.
                 </p>
             </field>
         </record>
