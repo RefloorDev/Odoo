@@ -17,6 +17,8 @@ This module customizing sale module to create a sale contract & followups.
         'security/user_security.xml',
         'data/appointment_sequence_data.xml',
         'data/payment_data.xml',
+        'data/cron_data.xml',
+        'data/master_configuration_data.xml',
         'views/master_configuration_views.xml',
         'views/quote_question_views.xml',
         'views/team_customer_appointment_view.xml',

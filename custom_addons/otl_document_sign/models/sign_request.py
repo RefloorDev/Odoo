@@ -449,7 +449,6 @@ class SignRequest(models.Model):
                     continue
 
                 value = value.value
-                _logger.info('%s : %s '%(item.type_id.item_type, value))
 
                 if item.type_id.item_type == "text":
                     font_size = height * normalFontSize * 0.7
@@ -485,7 +484,6 @@ class SignRequest(models.Model):
                 elif item.type_id.item_type == "checkbox":
                     can.setFont(font, height*item.height*0.8)
                     value = '✔' if value in ['on', 'True'] else ''
-                    _logger.info('inside checkbox %s'%(value))
                     can.drawString(width*item.posX, height*(1-item.posY-item.height*0.9), value)
 
                 elif item.type_id.item_type == "signature" or item.type_id.item_type == "initial":

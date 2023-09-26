@@ -10,10 +10,11 @@ from odoo.addons.team_api_configuration.controllers.configurations import URL, D
 from odoo.http import request
 from odoo.addons.payment.controllers.portal import PaymentProcessing
 from odoo.addons.payment_authorize.models.authorize_request import AuthorizeAPI
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 import logging
 import requests
 import pytz
+
 TIMEOUT = 50
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
@@ -34,6 +35,7 @@ def local_2_utc(str_date, tz):
         datetime_in_utc = datetime_with_tz.astimezone(pytz.utc)
     return datetime_in_utc
 
+
 def get_week_date(day, tz):
     current_date = fields.Date.today()
     # Checked the first week
@@ -49,6 +51,7 @@ def get_week_date(day, tz):
     end_date_utc = datetime.strptime(end_date_utc, DEFAULT_SERVER_DATETIME_FORMAT)
     return start_date_utc, end_date_utc
 
+
 def utc_2_local(str_date, tz):
     if str_date:
         timez = 'UTC'
@@ -58,19 +61,19 @@ def utc_2_local(str_date, tz):
         date_with_tz = pytz.utc.localize(str_date).astimezone(local_tz)
     return date_with_tz
 
-_logger = logging.getLogger(__name__)
 
+_logger = logging.getLogger(__name__)
 
 
 class ResUsers(models.Model):
     _inherit = 'res.users'
 
-    def split_name(self,name):
+    def split_name(self, name):
         name = name.split(',')
         if len(name) == 2:
             last_name = name[0].strip()
             first_name = name[1].strip()
-            name_dict ={'first_name':first_name,"middle_name":'',"last_name":last_name}
+            name_dict = {'first_name': first_name, "middle_name": '', "last_name": last_name}
             return name_dict
         if len(name) > 2:
             last_name = name[0].strip()
@@ -83,7 +86,7 @@ class ResUsers(models.Model):
             name_dict = {'first_name': first_name, "middle_name": '', "last_name": ''}
             return name_dict
 
-    def get_sales_appointment_api(self,user_id):
+    def get_sales_appointment_api(self, user_id):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
         for record in configurations:
             end_point_url = record.token_url
@@ -97,7 +100,8 @@ class ResUsers(models.Model):
                         "SalespersonID": user_id
                     }
 
-                    req = requests.post(url, data=json.dumps(data), headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
+                    req = requests.post(url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
+                                        verify=configurations.enable_ssl)
                     req.raise_for_status()
                     content = req.json()
                     res_user = self.env['res.users'].search([('improveit_user_id', '=', user_id)], limit=1)
@@ -108,13 +112,14 @@ class ResUsers(models.Model):
                         _logger.info("-----Start Processing Appointments----------")
                         count = 0
                         for appointment in content:
-                            _logger.info('----appointment data: %s'%(appointment))
+                            _logger.info('----appointment data: %s' % (appointment))
                             improveit_appointment_ids.append(appointment['AppointmentID'])
                             date = appointment['AppointmentDate'].split()
                             appointment_date_str = '%s %s' % (date[0], date[1])
                             date_obj = datetime.strptime(date[0], '%Y%m%d')
                             partner = self.env['res.partner'].search(
-                                [('name', '=', appointment.get('ProspectName','')), ('email', '=', appointment.get('ProspectEmail', ''))], limit=1)
+                                [('name', '=', appointment.get('ProspectName', '')),
+                                 ('email', '=', appointment.get('ProspectEmail', ''))], limit=1)
                             applicant_name_split = self.split_name(appointment['ProspectName'])
                             str1 = appointment.get('AppointmentTime', '0:00 AM')
                             str1_list = str1.split(' ')
@@ -131,13 +136,15 @@ class ResUsers(models.Model):
                             appointment_date = tz.localize(appointment_date).astimezone(pytz.utc).strftime(
                                 '%Y-%m-%d %H:%M:%S')
                             state = self.env['res.country.state'].search(
-                                [('country_id', '=', 233), ('code', '=', appointment.get('ProspectState',''))],limit=1)
+                                [('country_id', '=', 233), ('code', '=', appointment.get('ProspectState', ''))],
+                                limit=1)
                             appointments = self.env['team.customer.appointment'].search(
-                                [('improveit_appointment_id', '=', appointment['AppointmentID'])], limit=1, order='id desc')
+                                [('improveit_appointment_id', '=', appointment['AppointmentID'])], limit=1,
+                                order='id desc')
                             if appointments and appointments.sale_order_ids:
                                 if appointments.sale_order_ids.filtered(lambda x: x.state in ['sale', 'done']):
                                     appointments = False
-                            _logger.info('Existing Appointment: %s'%(appointments))
+                            _logger.info('Existing Appointment: %s' % (appointments))
                             market_segment = appointment.get('MarketSegment', '')
                             office_location_id = False
                             if market_segment:
@@ -148,11 +155,11 @@ class ResUsers(models.Model):
                                     'improveit_appointment_id': appointment['AppointmentID'],
                                     'partner_id': partner.id if partner else False,
                                     'user_id': res_user and res_user.id or False,
-                                    'customer_name': appointment.get('ProspectName',''),
-                                    'street': appointment.get('ProspectAddress',''),
-                                    'city': appointment.get('ProspectCity',''),
-                                    'zip': appointment.get('ProspectPostalCode',''),
-                                    'phone': appointment.get('ProspectPhone',''),
+                                    'customer_name': appointment.get('ProspectName', ''),
+                                    'street': appointment.get('ProspectAddress', ''),
+                                    'city': appointment.get('ProspectCity', ''),
+                                    'zip': appointment.get('ProspectPostalCode', ''),
+                                    'phone': appointment.get('ProspectPhone', ''),
                                     'appointment_date': appointment_date,
                                     'state': 'scheduled',
                                     'email': appointment.get('ProspectEmail', ''),
@@ -167,7 +174,8 @@ class ResUsers(models.Model):
                                 }
                                 appointment_obj = self.env['team.customer.appointment'].create(appointment_values)
                                 if market_segment and not office_location_id:
-                                    appointment_obj.message_post(body='Office Location is not found for Market Segment %s'%(market_segment))
+                                    appointment_obj.message_post(
+                                        body='Office Location is not found for Market Segment %s' % (market_segment))
                             elif appointments and update_existing_record:
                                 appointment_values = {
                                     'improveit_appointment_id': appointment['AppointmentID'],
@@ -176,8 +184,8 @@ class ResUsers(models.Model):
                                     'customer_name': appointment.get('ProspectName', ''),
                                     'street': appointment.get('ProspectAddress', ''),
                                     'city': appointment.get('ProspectCity', ''),
-                                    'zip': appointment.get('ProspectPostalCode',''),
-                                    'phone': appointment.get('ProspectPhone',''),
+                                    'zip': appointment.get('ProspectPostalCode', ''),
+                                    'phone': appointment.get('ProspectPhone', ''),
                                     'appointment_date': appointment_date,
                                     'state': 'scheduled',
                                     'email': appointment.get('ProspectEmail', ''),
@@ -192,7 +200,8 @@ class ResUsers(models.Model):
                                 }
                                 appointments.write(appointment_values)
                                 if market_segment and not office_location_id:
-                                    appointments.message_post(body='Office Location is not found for Market Segment %s'%(market_segment))
+                                    appointments.message_post(
+                                        body='Office Location is not found for Market Segment %s' % (market_segment))
                     # if improveit_appointment_ids:
                     appointments = self.env['team.customer.appointment'].search([
                         ('improveit_appointment_id', 'not in', improveit_appointment_ids),
@@ -206,9 +215,9 @@ class ResUsers(models.Model):
         return True
 
     @api.model
-    def authenticate_salesperson_user(self,data):
-        username = data.get('username',0)
-        password = data.get('password',0)
+    def authenticate_salesperson_user(self, data):
+        username = data.get('username', 0)
+        password = data.get('password', 0)
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')], limit=1)
         if configurations:
             end_point_url = configurations.token_url
@@ -218,7 +227,8 @@ class ResUsers(models.Model):
             headers = {"Content-type": "application/json"}
             data = {"LoginID": username, "Password": password}
             try:
-                req = requests.post(url, data=json.dumps(data), headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
+                req = requests.post(url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
+                                    verify=configurations.enable_ssl)
                 req.raise_for_status()
                 content = req.json()
                 user_existed = True
@@ -230,15 +240,18 @@ class ResUsers(models.Model):
                         can_view_phone_number = False
                     if not users:
                         users = self.env['res.users'].sudo().with_context(no_reset_password=True, create_mode=False,
-                                                             mail_create_nosubscribe=True, tracking_disable=True).create({
+                                                                          mail_create_nosubscribe=True,
+                                                                          tracking_disable=True).create({
                             'login': username,
                             'name': salesperson_name,
                             'email': username,
                             'password': password,
                             'can_view_phone_number': can_view_phone_number,
                             'groups_id': [(6, 0, [self.env.ref('sales_team.group_sale_salesman').id,
-                                          self.env.ref('base.group_partner_manager').id,self.env.ref('account.group_account_invoice').id])],
-                            'improveit_user_id': content.get('SalespersonID', '') or content.get('InstallerID', '') or ''
+                                                  self.env.ref('base.group_partner_manager').id,
+                                                  self.env.ref('account.group_account_invoice').id])],
+                            'improveit_user_id': content.get('SalespersonID', '') or content.get('InstallerID',
+                                                                                                 '') or ''
                         })
                         self.env.cr.commit()
                         user_existed = False
@@ -357,8 +370,6 @@ class ResCompany(models.Model):
         return result
 
 
-
-
 class TeamRoomRoom(models.Model):
     _inherit = 'team.room.room'
 
@@ -388,7 +399,7 @@ class TeamRoomRoom(models.Model):
     def get_rooms(self):
 
         list = []
-        rooms = self.env['team.room.room'].search([('active', '=', True)])
+        rooms = self.env['team.room.room'].search([('active', '=', True), ('is_custom', '!=', True)])
         if rooms:
             for room in rooms:
                 room_image_url = ''
@@ -410,7 +421,7 @@ class TeamRoomRoom(models.Model):
         return list
 
     @api.model
-    def get_room_list(self,data):
+    def get_room_list(self, data):
         appointment_id = data.get('appointment_id', False)
         if not appointment_id:
             _logger.info("------Empty Appointment id-------------")
@@ -429,9 +440,9 @@ class TeamRoomRoom(models.Model):
                 if room.image:
                     room_image_url = self.profile_image(room.name, 'team.room.room', room.image, room.id)
                 measurement_exist = 'False'
-                custom_room_parent ='False'
+                custom_room_parent = 'False'
                 if room.is_custom:
-                    custom_room_parent='True'
+                    custom_room_parent = 'True'
                 contract_room_lines = self.env['team.contract.room.measurement.line'].search(
                     [('appointment_id', '=', int(appointment_id)), ('room_id', '=', room.id)])
                 if contract_room_lines and not room.is_custom:
@@ -444,21 +455,22 @@ class TeamRoomRoom(models.Model):
                     'note': room.note or '',
                     'company_id': room.company_id.id,
                     'image': room_image_url,
-                    'measurement_exist':measurement_exist,
-                    'is_custom_room':'False',
-                    'custom_room_measurement_id':'False',
-                    'custom_room_parent':custom_room_parent,
+                    'measurement_exist': measurement_exist,
+                    'is_custom_room': 'False',
+                    'custom_room_measurement_id': 'False',
+                    'custom_room_parent': custom_room_parent,
                     'room_category': room.product_category_id and room.product_category_id.name or '',
 
                 }
                 list.append(vals)
             room_lines = self.env['team.contract.room.measurement.line'].search(
-                [('appointment_id', '=', int(appointment_id)), ('room_id.is_custom', '=',True)])
+                [('appointment_id', '=', int(appointment_id)), ('room_id.is_custom', '=', True)])
             if room_lines:
                 for custom_room in room_lines:
                     room_image_url = ''
                     if custom_room.room_id.image:
-                        room_image_url = self.profile_image(custom_room.room_id.name, 'team.room.room', custom_room.room_id.image, custom_room.room_id.id)
+                        room_image_url = self.profile_image(custom_room.room_id.name, 'team.room.room',
+                                                            custom_room.room_id.image, custom_room.room_id.id)
                     if custom_room.custom_room_measured:
                         measurement_exist = 'True'
                     else:
@@ -472,9 +484,9 @@ class TeamRoomRoom(models.Model):
                         'company_id': custom_room.room_id.company_id.id,
                         'image': room_image_url,
                         'measurement_exist': measurement_exist,
-                        'is_custom_room':'True',
-                        'custom_room_measurement_id':custom_room.id,
-                        'custom_room_parent':'False',
+                        'is_custom_room': 'True',
+                        'custom_room_measurement_id': custom_room.id,
+                        'custom_room_parent': 'False',
                         'room_category': custom_room.room_id.product_category_id and custom_room.room_id.product_category_id.name or '',
 
                     }
@@ -487,8 +499,8 @@ class TeamRoomRoom(models.Model):
 
     @api.model
     def add_custom_rooms(self, data):
-        room_list=[]
-        vals={}
+        room_list = []
+        vals = {}
         appointment_id = data.get('appointment_id', False)
         room_name = data.get('room_name', False)
         if not appointment_id:
@@ -503,12 +515,13 @@ class TeamRoomRoom(models.Model):
             _logger.info("------Empty Room Name-------------")
             status = {'message': 'Empty Room Name', 'result': 'Success'}
             return status
-        room_exists = self.env['team.contract.room.measurement.line'].search([('appointment_id','=',int(appointment_id)),('custom_room_name','=',room_name)])
+        room_exists = self.env['team.contract.room.measurement.line'].search(
+            [('appointment_id', '=', int(appointment_id)), ('custom_room_name', '=', room_name)])
         if room_exists:
             _logger.info("------Custom Room Already Exist-------------")
             status = {'message': 'Custom Room Already Exist', 'result': 'Success'}
             return status
-        room_id = self.env['team.room.room'].search([('is_custom', '=',True)],limit=1)
+        room_id = self.env['team.room.room'].search([('is_custom', '=', True)], limit=1)
         if not room_id:
             _logger.info("------Room Others Not Found-------------")
             status = {'message': 'Room Others Not Found', 'result': 'Success'}
@@ -516,42 +529,41 @@ class TeamRoomRoom(models.Model):
         obj = self.env['team.contract.room.measurement.line']
 
         vals.update({
-            'room_id':room_id.id,
-            'appointment_id':appointment_id,
-            'custom_room_name':room_name,
+            'room_id': room_id.id,
+            'appointment_id': appointment_id,
+            'custom_room_name': room_name,
 
         })
-        record=obj.create(vals)
+        record = obj.create(vals)
         if record:
-            status = {'message': 'Custom Room Created','custom_room_measurement_id':record.id, 'result': 'Success'}
+            status = {'message': 'Custom Room Created', 'custom_room_measurement_id': record.id, 'result': 'Success'}
         else:
             status = {'message': 'Custom Room Creation Failed', 'result': 'Success'}
         return status
-
 
 
 class TeamCustomerAppointment(models.Model):
     _inherit = 'team.customer.appointment'
 
     @api.model
-    def get_appointment_result(self,data):
+    def get_appointment_result(self, data):
         results = []
         appointment_results = self.env['appointment.result'].search([])
         for appointment_result in appointment_results:
-            content_dict={
-                'id':appointment_result.id,
-                'result':appointment_result.result or ''
+            content_dict = {
+                'id': appointment_result.id,
+                'result': appointment_result.result or ''
             }
             results.append(content_dict)
 
-        return {'message': 'Get Appointment Result Success','appointment_result':results, 'result': 'Success'}
+        return {'message': 'Get Appointment Result Success', 'appointment_result': results, 'result': 'Success'}
 
-    def split_name(self,name):
+    def split_name(self, name):
         name = name.split(',')
         if len(name) == 2:
             last_name = name[0].strip()
             first_name = name[1].strip()
-            name_dict ={'first_name':first_name,"middle_name":'',"last_name":last_name}
+            name_dict = {'first_name': first_name, "middle_name": '', "last_name": last_name}
             return name_dict
         if len(name) > 2:
             last_name = name[0].strip()
@@ -578,15 +590,15 @@ class TeamCustomerAppointment(models.Model):
 
     @api.model
     def submit_appointment_result(self, data):
-        result = data.get('result','')
-        appointment_id = data.get('appointment_id','')
-        sale_order = self.env['sale.order'].search([('appointment_id','=',int(appointment_id))],limit=1)
+        result = data.get('result', '')
+        appointment_id = data.get('appointment_id', '')
+        sale_order = self.env['sale.order'].search([('appointment_id', '=', int(appointment_id))], limit=1)
         if sale_order and result:
             try:
                 completed_document = False
                 model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
                 sign_request = self.env['otl_document_sign.request'].sudo().search(
-                    [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)],limit=1)
+                    [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)], limit=1)
                 if sign_request:
                     if sign_request.completed_document:
                         completed_document = sign_request.document_image()
@@ -698,21 +710,21 @@ class TeamCustomerAppointment(models.Model):
 
     @api.model
     def submit_appointment_result_without_upload(self, data):
-        result = data.get('result','')
-        what_happened_notes = data.get('what_happened_notes','')
-        whats_next_notes = data.get('whats_next_notes','')
-        appointment_id = data.get('appointment_id','')
+        result = data.get('result', '')
+        what_happened_notes = data.get('what_happened_notes', '')
+        whats_next_notes = data.get('whats_next_notes', '')
+        appointment_id = data.get('appointment_id', '')
         notes = {
             'whats_next_notes': whats_next_notes,
             'what_happened_notes': what_happened_notes,
         }
-        sale_order = self.env['sale.order'].search([('appointment_id','=',int(appointment_id))],limit=1)
+        sale_order = self.env['sale.order'].search([('appointment_id', '=', int(appointment_id))], limit=1)
         if sale_order and result:
             try:
                 completed_document = False
                 model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
                 sign_request = self.env['otl_document_sign.request'].sudo().search(
-                    [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)],limit=1)
+                    [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)], limit=1)
                 # if sign_request:
                 #     if sign_request.completed_document:
                 #         completed_document = sign_request.document_image()
@@ -735,7 +747,7 @@ class TeamCustomerAppointment(models.Model):
                     'what_happened_notes': what_happened_notes,
                     'whats_next_notes': whats_next_notes,
                 })
-                response_result = sale_order.set_appointment_result_api(status=result, notes= notes)
+                response_result = sale_order.set_appointment_result_api(status=result, notes=notes)
                 _logger.info('-------i360 SetAppointmentResult Response: %s' % (response_result))
                 # if response_result.get('Result', '') == 'Success':
                 #     _logger.info("------ Set Appointment Result API is Success-------------")
@@ -849,9 +861,9 @@ class TeamCustomerAppointment(models.Model):
         if sale_order and sale_order.appointment_result and not sale_order.is_data_upload_completed:
             if not sale_order.quote_id:
                 response_result = sale_order.add_quote_sales_app(status=sale_order.appointment_result)
-                _logger.info('-------i360 AddQuote Response: %s'%(response_result))
+                _logger.info('-------i360 AddQuote Response: %s' % (response_result))
             response_result = sale_order.add_quote_items_sales_app()
-            _logger.info('-------i360 AddQuoteItem Response: %s'%(response_result))
+            _logger.info('-------i360 AddQuoteItem Response: %s' % (response_result))
             if not sale_order.other_files_uploaded:
                 if sale_order.state in ['sale', 'done'] or sale_order.appointment_result == 'Sold':
                     result = sale_order.add_sale_id_file()
@@ -868,10 +880,10 @@ class TeamCustomerAppointment(models.Model):
         }
 
     @api.model
-    def add_applicant_signature(self,data):
+    def add_applicant_signature(self, data):
         vals = {}
         if data.get('appointment_id', False):
-            if  self.env['team.customer.appointment'].browse(int(data.get('appointment_id', False))).exists():
+            if self.env['team.customer.appointment'].browse(int(data.get('appointment_id', False))).exists():
                 appointment_id = data.get('appointment_id', False)
             else:
                 return {'message': 'Wrong Appointment ID', 'result': 'Success'}
@@ -891,41 +903,41 @@ class TeamCustomerAppointment(models.Model):
             return {'message': 'contract Parameter Empty', 'result': 'Success'}
         finance_application = data.get('finance_application', False)
         if finance_application == 'True':
-            status_finance_application ='True'
-            vals.update({'finance_application':True})
+            status_finance_application = 'True'
+            vals.update({'finance_application': True})
         else:
             status_finance_application = 'False'
             vals.update({'finance_application': False})
         credit_card = data.get('credit_card', False)
         if credit_card == 'True':
             status_credit_card = 'True'
-            vals.update({'credit_card':True})
+            vals.update({'credit_card': True})
         else:
             status_credit_card = 'False'
             vals.update({'credit_card': False})
         contract = data.get('contract', False)
         if contract == 'True':
             status_contract = 'True'
-            vals.update({'contract':True})
+            vals.update({'contract': True})
         else:
-            status_contract ='False'
+            status_contract = 'False'
             vals.update({'contract': False})
         if data.get('applicant_signature_id', False):
             if appointment.applicant_signature_id:
                 appointment.applicant_signature_id.sudo().unlink()
-            vals.update({'applicant_signature_id':int(data.get('applicant_signature_id', False))})
+            vals.update({'applicant_signature_id': int(data.get('applicant_signature_id', False))})
         if data.get('co_applicant_signature_id', False):
             if appointment.co_applicant_signature_id:
                 appointment.co_applicant_signature_id.sudo().unlink()
-            vals.update({'co_applicant_signature_id':int(data.get('co_applicant_signature_id', False))})
+            vals.update({'co_applicant_signature_id': int(data.get('co_applicant_signature_id', False))})
         if data.get('applicant_initial_id', False):
             if appointment.applicant_initial_id:
                 appointment.applicant_initial_id.sudo().unlink()
-            vals.update({'applicant_initial_id':int(data.get('applicant_initial_id', False))})
+            vals.update({'applicant_initial_id': int(data.get('applicant_initial_id', False))})
         if data.get('co_applicant_initial_id', False):
             if appointment.co_applicant_initial_id:
                 appointment.co_applicant_initial_id.sudo().unlink()
-            vals.update({'co_applicant_initial_id':int(data.get('co_applicant_initial_id', False))})
+            vals.update({'co_applicant_initial_id': int(data.get('co_applicant_initial_id', False))})
         appointment.write(vals)
         applicant_signature_image = []
         if appointment.applicant_signature_id:
@@ -952,7 +964,7 @@ class TeamCustomerAppointment(models.Model):
                 'url': url,
             })
 
-        applicant_initial_image =[]
+        applicant_initial_image = []
         if appointment.applicant_initial_id:
             if not appointment.applicant_initial_id.access_token:
                 appointment.applicant_initial_id.generate_access_token()
@@ -977,7 +989,12 @@ class TeamCustomerAppointment(models.Model):
                 'url': url,
             })
 
-        return {'message': 'Applicant Signature Updated','applicant_signature_image':applicant_signature_image,'co_applicant_signature_image':co_applicant_signature_image ,'applicant_initial_image':applicant_initial_image,'co_applicant_initial_image':co_applicant_initial_image,'Document':'','finance_application':status_finance_application,'credit_card':status_credit_card,'contract':status_contract,'result': 'Success'}
+        return {'message': 'Applicant Signature Updated', 'applicant_signature_image': applicant_signature_image,
+                'co_applicant_signature_image': co_applicant_signature_image,
+                'applicant_initial_image': applicant_initial_image,
+                'co_applicant_initial_image': co_applicant_initial_image, 'Document': '',
+                'finance_application': status_finance_application, 'credit_card': status_credit_card,
+                'contract': status_contract, 'result': 'Success'}
 
     def update_appointment_to_boomi(self):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
@@ -1014,7 +1031,8 @@ class TeamCustomerAppointment(models.Model):
                         _logger.info(update_prospects_vals)
                         req = requests.post(url, data=json.dumps(update_prospects_vals), headers=headers,
                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
-                        _logger.error('UpdateAppointmentProspect API Response of Appointment %s : %s' %(appointment.id, str(req.content)))
+                        _logger.error('UpdateAppointmentProspect API Response of Appointment %s : %s' % (
+                        appointment.id, str(req.content)))
                         req.raise_for_status()
                         try:
                             content = req.json()
@@ -1038,7 +1056,8 @@ class TeamCustomerAppointment(models.Model):
                                         }
                                     ]
                                 }
-                        _logger.info('UpdateAppointmentProspect API Response of Appointment %s :%s' %(appointment.id, content))
+                        _logger.info(
+                            'UpdateAppointmentProspect API Response of Appointment %s :%s' % (appointment.id, content))
                         return content
                     except IOError:
                         status = {'message': 'Appointment Update API Error', 'result': False}
@@ -1056,8 +1075,8 @@ class TeamCustomerAppointment(models.Model):
             return status
         appointment = self.env['team.customer.appointment'].search([('id', '=', int(appointment_id))], limit=1)
         vals = {}
-        state=''
-        co_applicant_state=''
+        state = ''
+        co_applicant_state = ''
         _logger.info(data)
         partner_vals = {}
         if appointment:
@@ -1142,7 +1161,8 @@ class TeamCustomerAppointment(models.Model):
                 vals.update({'co_applicant_secondary_phone': data.get('co_applicant_secondary_phone')})
             if data.get('co_applicant_last_name', '') or data.get('co_applicant_first_name', ''):
                 vals.update(
-                    ({'co_applicant': '%s, %s' % (data.get('co_applicant_last_name', ''), data.get('co_applicant_first_name', ''))}))
+                    ({'co_applicant': '%s, %s' % (
+                    data.get('co_applicant_last_name', ''), data.get('co_applicant_first_name', ''))}))
             if partner_vals and partner:
                 partner.write(partner_vals)
             update = appointment.write(vals)
@@ -1195,29 +1215,29 @@ class TeamCustomerAppointment(models.Model):
                         continue
                     improveit_appointment_ids.append(data.improveit_appointment_id)
                 appointment_date = data.appointment_date and utc_2_local(data.appointment_date, tz) or False
-                appointment_datetime= ''
+                appointment_datetime = ''
                 if appointment_date:
-                    appointment_datetime= appointment_date.strftime('%d %b %I:%M %p')
+                    appointment_datetime = appointment_date.strftime('%d %b %I:%M %p')
                 vals = {
                     'id': data.id,
                     'name': data.name,
                     'customer_name': data.customer_name and data.customer_name.upper() or '',
                     'applicant_first_name': data.applicant_first_name or '',
-                    'applicant_middle_name':data.applicant_middle_name or '' ,
+                    'applicant_middle_name': data.applicant_middle_name or '',
                     'applicant_last_name': data.applicant_last_name or '',
                     'co_applicant_first_name': data.co_applicant_first_name or '',
-                    'co_applicant_middle_name':data.co_applicant_middle_name or '',
+                    'co_applicant_middle_name': data.co_applicant_middle_name or '',
                     'co_applicant_last_name': data.co_applicant_last_name or '',
                     'co_applicant_phone': data.co_applicant_phone or '',
                     'co_applicant_email': data.co_applicant_email or '',
-                    'co_applicant_address':data.co_applicant_address or '',
-                    'co_applicant_city':data.co_applicant_city or '',
-                    'co_applicant_state_id':data.co_applicant_state.id or '',
+                    'co_applicant_address': data.co_applicant_address or '',
+                    'co_applicant_city': data.co_applicant_city or '',
+                    'co_applicant_state_id': data.co_applicant_state.id or '',
                     'co_applicant_state_code': data.co_applicant_state.code or '',
                     'co_applicant_state_name': data.co_applicant_state.name or '',
-                    'co_applicant_zip':data.co_applicant_zip or '',
-                    'co_applicant_secondary_phone':data.co_applicant_secondary_phone or '',
-                    'is_room_measurement_exist':data.measurement_exist,
+                    'co_applicant_zip': data.co_applicant_zip or '',
+                    'co_applicant_secondary_phone': data.co_applicant_secondary_phone or '',
+                    'is_room_measurement_exist': data.measurement_exist,
                     'customer_id': data.partner_id.id or 0,
                     'co_applicant': data.co_applicant or '',
                     'appointment_date': appointment_date,
@@ -1230,7 +1250,7 @@ class TeamCustomerAppointment(models.Model):
                     'state': data.state_id.name or '',
                     'country_id': data.country_id.id or 0,
                     'country': data.country_id.name or '',
-                    'zip':data.zip or '',
+                    'zip': data.zip or '',
                     'country_code': data.country_id.code or '',
                     'phone': data.phone or '',
                     'mobile': data.mobile,
@@ -1254,7 +1274,7 @@ class TeamCustomerAppointment(models.Model):
         user = self.env['res.users'].browse(user_id)
         tz = user.tz or self._context.get('tz') or 'UTC'
         appointment_data = self.env['team.customer.appointment'].search([
-            ('customer_name', 'ilike', '%'+customer_name),
+            ('customer_name', 'ilike', '%' + customer_name),
             ('state', '=', 'scheduled'),
             ('user_id', '=', user_id)
         ], order='appointment_date asc')
@@ -1329,7 +1349,7 @@ class TeamCustomerAppointment(models.Model):
         appointment = self.env['team.customer.appointment'].search([('id', '=', int(appointment_id))], limit=1)
         if appointment and attachment_id:
             appointment.write({'attachment_ids': [(4, attachment_id)]})
-            status= {
+            status = {
                 'message': 'Snapshot uploaded successfully',
                 'result': 'Success',
                 'attachment_id': attachment_id
@@ -1340,6 +1360,7 @@ class TeamCustomerAppointment(models.Model):
                 'result': 'Failed',
             }
         return status
+
 
 class Product(models.Model):
     _inherit = 'product.template'
@@ -1352,12 +1373,12 @@ class Product(models.Model):
         plan_id = int(data.get('paymentplan_id', 0))
         total_area = 0
         if appointment_id:
-            room_measurements_lines = self.env['team.contract.room.measurement.line'].search([('appointment_id', '=', int(appointment_id))])
+            room_measurements_lines = self.env['team.contract.room.measurement.line'].search(
+                [('appointment_id', '=', int(appointment_id))])
             if room_measurements_lines:
                 for room_measurements_line in room_measurements_lines:
                     if not room_measurements_line.exclude_from_calculation:
                         total_area = total_area + room_measurements_line.adjusted_area
-
 
         downpayment_percentages = self.env['team.payment.percentage'].search([])
         payment_percentage = []
@@ -1390,17 +1411,17 @@ class Product(models.Model):
 
     def get_payment_options(self):
         payment_list = []
-        all_payment_options = self.env['team.downpayment.option'].search([],order='sequence asc')
+        all_payment_options = self.env['team.downpayment.option'].search([], order='sequence asc')
         for payment_options in all_payment_options:
             payment_options_dict = {
-                'id':payment_options.id or 0,
+                'id': payment_options.id or 0,
                 'Name': payment_options.name or '',
-                'Description__c':payment_options.description or '' ,
-                'Down_Payment__c':payment_options.down_payment or '',
-                'Final_Payment__c':payment_options.final_payment or '',
-                'Payment_Factor__c':payment_options.payment_factor or '' ,
-                'Balance_Due__c':payment_options.balance_due or '',
-                'Payment_Info__c':payment_options.payment_info or '',
+                'Description__c': payment_options.description or '',
+                'Down_Payment__c': payment_options.down_payment or '',
+                'Final_Payment__c': payment_options.final_payment or '',
+                'Payment_Factor__c': payment_options.payment_factor or '',
+                'Balance_Due__c': payment_options.balance_due or '',
+                'Payment_Info__c': payment_options.payment_info or '',
                 'sequence': payment_options.sequence or 0,
             }
             payment_list.append(payment_options_dict)
@@ -1453,19 +1474,21 @@ class Product(models.Model):
                 return discount_coupon_list
 
     @api.model
-    def get_payment_plan(self,data):
+    def get_payment_plan(self, data):
         payment_plan_list = []
-        additional_cost=0
+        additional_cost = 0
         color_up_charge_total = 0
         discount_exclude_amount = 0
         appointment_id = int(data.get('appointment_id', 0))
         contract_questions = self.env['team.contract.question.line'].search(
             [('appointment_id', '=', int(appointment_id))])
 
-        for questions in contract_questions.filtered(lambda x: x.question_id.code != 'StairCount' and x. room_measurement_id and not x.room_measurement_id.exclude_from_calculation):
+        for questions in contract_questions.filtered(
+                lambda x: x.question_id.code != 'StairCount' and x.room_measurement_id and not x.room_measurement_id.exclude_from_calculation):
             if questions.extra_price and questions.answer_data:
                 additional_cost += questions.extra_price
-        for questions in contract_questions.filtered(lambda x: x.question_id.exclude_from_discount and x. room_measurement_id and not x.room_measurement_id.exclude_from_calculation):
+        for questions in contract_questions.filtered(
+                lambda x: x.question_id.exclude_from_discount and x.room_measurement_id and not x.room_measurement_id.exclude_from_calculation):
             if questions.extra_price and questions.answer_data:
                 discount_exclude_amount += questions.extra_price
         room_measurement_lines = self.env['team.contract.room.measurement.line'].search(
@@ -1474,32 +1497,34 @@ class Product(models.Model):
             color_up_charge_total += room.color_up_charge_total or 0
         if color_up_charge_total:
             additional_cost += color_up_charge_total
-        floor_type_data = self.env['product.template'].search([('type','=','product'),('product_variant_ids','!=',False), ('categ_id.name', 'not ilike', 'Stairs')], order='sequence asc')
+        floor_type_data = self.env['product.template'].search(
+            [('type', '=', 'product'), ('product_variant_ids', '!=', False), ('categ_id.name', 'not ilike', 'Stairs')],
+            order='sequence asc')
         if floor_type_data:
             for data in floor_type_data:
                 stair_product = self.env['product.template'].search([
-                    ('type','=','product'),
-                    ('product_variant_ids','!=',False),
+                    ('type', '=', 'product'),
+                    ('product_variant_ids', '!=', False),
                     ('categ_id.name', 'ilike', 'Stairs'),
                     ('grade', '=', data.grade)
                 ], order='sequence asc', limit=1)
-                warranty=dict(data._fields['warranty'].selection).get(data.warranty)
+                warranty = dict(data._fields['warranty'].selection).get(data.warranty)
                 vals = {
                     'id': data.id,
                     'plan_title': data.name or '',
                     'plan_subtitle': data.payment_plan or '',
                     'description': data.description or '',
-                    'material_cost':data.list_price,
+                    'material_cost': data.list_price,
                     'warranty': warranty or '',
                     'sequence': data.sequence or '',
                     'company_id': data.company_id.id or 0,
                     'cost_per_sqft': data.msrp or 0,
-                    'monthly_promo':data.monthly_promo or 0,
+                    'monthly_promo': data.monthly_promo or 0,
                     'additional_cost': additional_cost,
                     'discount_exclude_amount': discount_exclude_amount,
-                    'warranty_info':data.warranty_info or '',
-                    'eligible_for_discounts':data.eligible_for_discounts or '',
-                    'unit_of_measure':data.unit_of_measure or '',
+                    'warranty_info': data.warranty_info or '',
+                    'eligible_for_discounts': data.eligible_for_discounts or '',
+                    'unit_of_measure': data.unit_of_measure or '',
                     'grade': data.grade or '',
                     'stair_cost': stair_product and stair_product.list_price or 0
 
@@ -1543,9 +1568,9 @@ class Product(models.Model):
         values = {
             'payment_plans': payment_plan_list,
             'payment_options': payment_option_list,
-            'monthly_promo':discount_coupon_list,
+            'monthly_promo': discount_coupon_list,
             # 'materials': list,
-            'admin_fee' : float(self.env['ir.config_parameter'].sudo().get_param('admin_fee')) or 0.0,
+            'admin_fee': float(self.env['ir.config_parameter'].sudo().get_param('admin_fee')) or 0.0,
             'min_sale_price': float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0
         }
         return [values]
@@ -1554,9 +1579,8 @@ class Product(models.Model):
 class TeamQuoteQuestion(models.Model):
     _inherit = 'team.quote.question'
 
-
     def get_quote_label(self):
-        list=[]
+        list = []
         if not self.constr_mandatory:
             list.append({
                 'question_id': self.id,
@@ -1564,23 +1588,21 @@ class TeamQuoteQuestion(models.Model):
             })
         if self.labels_ids:
             for label in self.labels_ids:
-
-                vals ={
-                'question_id' : label.question_id.id or 0,
-                'sequence' : label.sequence,
-                'value' : label.value or '',
-                'is_correct' : label.is_correct,
-                'answer_score' : label.answer_score or 0,
+                vals = {
+                    'question_id': label.question_id.id or 0,
+                    'sequence': label.sequence,
+                    'value': label.value or '',
+                    'is_correct': label.is_correct,
+                    'answer_score': label.answer_score or 0,
                 }
 
                 list.append(vals)
         return list
 
-
     @api.model
-    def get_question_data(self,data):
-        type=data.get('type')
-        room_id=data.get('room_id')
+    def get_question_data(self, data):
+        type = data.get('type')
+        room_id = data.get('room_id')
         list = []
         product_category_id = 0
         room_obj = self.env['team.room.room'].search([('id', '=', int(room_id))])
@@ -1589,8 +1611,8 @@ class TeamQuoteQuestion(models.Model):
         quote_question = self.env['team.quote.question'].search([
             ('active', '=', True),
             (type, '=', True),
-            ('room_ids','in',[int(room_id)]),
-            ('product_category_ids','in',[int(product_category_id)]),
+            ('room_ids', 'in', [int(room_id)]),
+            ('product_category_ids', 'in', [int(product_category_id)]),
         ])
         if quote_question:
             for data in quote_question:
@@ -1620,7 +1642,7 @@ class TeamQuoteQuestion(models.Model):
 
 
 class TeamTransitionLine(models.Model):
-    _inherit= 'team.contract.transition.line'
+    _inherit = 'team.contract.transition.line'
 
     @api.model
     def get_transition_data(self, vals):
@@ -1639,11 +1661,12 @@ class TeamTransitionLine(models.Model):
                 _logger.info("------Custom Room Not Exist-------------")
                 status = {'message': 'Custom Room Not Exist', 'result': 'Success'}
                 return status
-        if appointment_id and  room_id:
+        if appointment_id and room_id:
             if custom_room:
-                domain = [('room_measurement_id','=',int(room_measurement_id)),('appointment_id', '=', int(appointment_id)),('room_id', '=', int(room_id))]
+                domain = [('room_measurement_id', '=', int(room_measurement_id)),
+                          ('appointment_id', '=', int(appointment_id)), ('room_id', '=', int(room_id))]
             else:
-                domain = [('appointment_id', '=', int(appointment_id)),('room_id', '=', int(room_id))]
+                domain = [('appointment_id', '=', int(appointment_id)), ('room_id', '=', int(room_id))]
             transitions = self.env['team.contract.transition.line'].search(domain)
             if transitions:
                 for transition in transitions:
@@ -1654,7 +1677,7 @@ class TeamTransitionLine(models.Model):
                         url = URL + '/web/image/' + str(attachment.id) + '?access_token=' + str(attachment.access_token)
                         attachments.append({
                             'id': attachment.id,
-                            'name':attachment.name,
+                            'name': attachment.name,
                             'url': url,
                         })
 
@@ -1665,9 +1688,9 @@ class TeamTransitionLine(models.Model):
                         'room_id': transition.room_id.id or 0,
                         'room_name': transition.room_measurement_id.custom_room_name if custom_room else transition.room_id.name or '',
                         'company_id': transition.company_id.id or 0,
-                        'attachments':attachments,
-                        'custom_room':custom_room,
-                        'custom_room_id':transition.room_measurement_id.id if custom_room else ''
+                        'attachments': attachments,
+                        'custom_room': custom_room,
+                        'custom_room_id': transition.room_measurement_id.id if custom_room else ''
                     }
                     list.append(vals)
 
@@ -1676,7 +1699,7 @@ class TeamTransitionLine(models.Model):
     @api.model
     def create_transitions(self, data):
         obj = self.env['team.contract.transition.line']
-        status={}
+        status = {}
         description = data.get('name', '')
         if not description:
             _logger.info("------Description Empty-------------")
@@ -1691,8 +1714,8 @@ class TeamTransitionLine(models.Model):
             _logger.info("------ Appointment ID Error-------------")
             status = {'message': 'Appointment ID Error', 'result': False}
             return status
-        transition_width = data.get('transition_width',0)
-        room_id = data.get('room_id',False)
+        transition_width = data.get('transition_width', 0)
+        room_id = data.get('room_id', False)
         if not room_id:
             _logger.info("------ Room_id Empty-------------")
             status = {'message': 'Room_id Empty', 'result': 'Success'}
@@ -1703,8 +1726,8 @@ class TeamTransitionLine(models.Model):
             return status
         custom_room = False
         if self.env['team.room.room'].browse(int(room_id)).is_custom:
-            room_measurement_id = data.get('room_measurement_id','')
-            custom_room =True
+            room_measurement_id = data.get('room_measurement_id', '')
+            custom_room = True
             if not room_measurement_id:
                 _logger.info("------Custom Room_id Empty-------------")
                 status = {'message': 'room_measurement_id Empty', 'result': 'Success'}
@@ -1713,14 +1736,15 @@ class TeamTransitionLine(models.Model):
                 _logger.info("------Custom Room Not Exist-------------")
                 status = {'message': 'Custom Room Not Exist', 'result': 'Success'}
                 return status
-            measurement_line = self.env['team.contract.room.measurement.line'].search([('id','=',int(room_measurement_id)),('appointment_id','=',int(appointment_id))])
+            measurement_line = self.env['team.contract.room.measurement.line'].search(
+                [('id', '=', int(room_measurement_id)), ('appointment_id', '=', int(appointment_id))])
             if not measurement_line:
                 _logger.info("------Wrong Measurement ID For custom Room-------------")
                 status = {'message': 'Wrong Measurement ID For custom Room', 'result': 'Success'}
                 return status
         attachment_ids = data.get('image_ids', [])
         vals = {
-            "name":description,
+            "name": description,
             "transition_width": transition_width,
             "room_id": int(room_id),
             'appointment_id': int(appointment_id),
@@ -1728,7 +1752,7 @@ class TeamTransitionLine(models.Model):
         }
         if attachment_ids:
             vals.update({'attachment_ids': [(6, 0, attachment_ids)]})
-        record=obj.create(vals)
+        record = obj.create(vals)
         if record:
             for attachment in self.env['ir.attachment'].browse(attachment_ids):
                 if attachment.exists():
@@ -1737,16 +1761,16 @@ class TeamTransitionLine(models.Model):
                         'res_id': record.id,
                     })
             _logger.info("------Transition created-------------")
-            status={
-                'message':'Transition created',
+            status = {
+                'message': 'Transition created',
                 'result': 'Success',
-                'transition_id':record.id}
+                'transition_id': record.id}
 
         else:
             _logger.info("------Transition creation Failed-------------")
             status = {
                 'message': 'Transition Creation Failed',
-                'result':'Success'
+                'result': 'Success'
             }
         return status
 
@@ -1786,6 +1810,7 @@ class TeamTransitionLine(models.Model):
                 }
         return status
 
+
 class TeamContractQuestions(models.Model):
     _inherit = 'team.contract.question.line'
 
@@ -1797,7 +1822,7 @@ class TeamContractQuestions(models.Model):
         question_data = data.get('questions', [])
         appointment_id = data.get('appointment_id', 0)
         room_id = data.get('room_id', 0)
-        _logger.info("create_contract_questions data: %s"%(data))
+        _logger.info("create_contract_questions data: %s" % (data))
         if not self.env['team.customer.appointment'].browse(int(appointment_id)).exists():
             _logger.info("------ Appointment ID Error-------------")
             status = {'message': 'Appointment ID Error', 'result': 'False'}
@@ -1821,10 +1846,11 @@ class TeamContractQuestions(models.Model):
         if appointment_id:
             if custom_room:
                 contract_questions = self.env['team.contract.question.line'].search(
-                    [('appointment_id', '=', int(appointment_id)), ('room_measurement_id', '=', int(room_measurement_id))])
+                    [('appointment_id', '=', int(appointment_id)),
+                     ('room_measurement_id', '=', int(room_measurement_id))])
             else:
                 contract_questions = self.env['team.contract.question.line'].search(
-                [('appointment_id', '=', int(appointment_id)), ('room_id', '=', int(room_id))])
+                    [('appointment_id', '=', int(appointment_id)), ('room_id', '=', int(room_id))])
             if contract_questions:
                 for answer_to_update in question_data:
                     quote_question_id = answer_to_update.get('question_id', False)
@@ -1834,14 +1860,16 @@ class TeamContractQuestions(models.Model):
                              ('room_measurement_id', '=', int(room_measurement_id))])
                     else:
                         contract_questions_filtered = self.env['team.contract.question.line'].search(
-                        [('question_id','=',quote_question_id),('appointment_id', '=', int(appointment_id)), ('room_id', '=', int(room_id))])
+                            [('question_id', '=', quote_question_id), ('appointment_id', '=', int(appointment_id)),
+                             ('room_id', '=', int(room_id))])
 
                     for contract_question in contract_questions_filtered:
                         answer_obj = self.env['team.contract.answer.line']
                         for answer in contract_question.answers:
                             answer.sudo().unlink()
 
-                        contract_question.write({'question_id': answer_to_update.get('question_id', False), 'room_measurement_id': room_measurement_id})
+                        contract_question.write({'question_id': answer_to_update.get('question_id', False),
+                                                 'room_measurement_id': room_measurement_id})
                         answers = answer_to_update.get('answer', [])
                         answer_exists = False
                         for answer in answers:
@@ -1915,16 +1943,16 @@ class TeamContractQuestions(models.Model):
 
         _logger.info("------Contract Questions created-------------")
         status = {
-                'message': 'Contract Question Created',
-                'result': 'Success',
-                'question_answer_ids': records_created
-            }
+            'message': 'Contract Question Created',
+            'result': 'Success',
+            'question_answer_ids': records_created
+        }
         return status
 
     @api.model
     def list_contract_question_line(self, vals):
         list = []
-        status={}
+        status = {}
         appointment_id = vals.get('appointment_id', 0)
         room_id = vals.get('room_id', 0)
         if appointment_id:
@@ -1937,10 +1965,11 @@ class TeamContractQuestions(models.Model):
                     return status
             if custom_room:
                 contract_questions = self.env['team.contract.question.line'].search(
-                    [('appointment_id', '=', int(appointment_id)), ('room_measurement_id', '=', int(room_measurement_id))])
+                    [('appointment_id', '=', int(appointment_id)),
+                     ('room_measurement_id', '=', int(room_measurement_id))])
             else:
                 contract_questions = self.env['team.contract.question.line'].search(
-                [('appointment_id', '=', int(appointment_id)), ('room_id', '=', int(room_id))])
+                    [('appointment_id', '=', int(appointment_id)), ('room_id', '=', int(room_id))])
             if contract_questions:
                 for data in contract_questions:
                     if data.room_id.is_custom:
@@ -1959,13 +1988,13 @@ class TeamContractQuestions(models.Model):
                         'contract_question_line_id': data.id,
                         'name': data.name or '',
                         'room_id': data.room_id.id or 0,
-                        'room_name':data.room_measurement_id.custom_room_name if custom_room else data.room_id.name or '',
+                        'room_name': data.room_measurement_id.custom_room_name if custom_room else data.room_id.name or '',
                         'company_id': data.company_id.id or 0,
                         'appointment_id': data.appointment_id.id or 0,
                         'question_id': data.question_id.id or 0,
-                        'question':data.question_id.name,
+                        'question': data.question_id.name,
                         'answers': list_answers,
-                        'custom_room':custom_room
+                        'custom_room': custom_room
                     }
                     list.append(vals)
                 status = {
@@ -2091,19 +2120,20 @@ class TeamContractRoomMeasurement(models.Model):
     improveit_id = fields.Char('Improveit Reference ID')
 
     @api.model
-    def Checkroomstatus(self,data):
+    def Checkroomstatus(self, data):
         appointment_id = int(data.get('appointment_id', False))
         room_id = int(data.get('room_id', False))
         if appointment_id and room_id:
-            contract_room_lines = self.env['team.contract.room.measurement.line'].search([('appointment_id', '=', appointment_id),('room_id', '=', room_id)])
+            contract_room_lines = self.env['team.contract.room.measurement.line'].search(
+                [('appointment_id', '=', appointment_id), ('room_id', '=', room_id)])
             if contract_room_lines:
-                status = {'result': 'True','message': 'Contract Room line  already exist for this appointment'}
+                status = {'result': 'True', 'message': 'Contract Room line  already exist for this appointment'}
                 return status
             else:
-                status = {'result': 'False','message': 'No Contract Room line Exist for this appointment  ' }
+                status = {'result': 'False', 'message': 'No Contract Room line Exist for this appointment  '}
                 return status
         else:
-            status =  {'result': 'False','message': 'No Contract Room line Exist for this appointment  '}
+            status = {'result': 'False', 'message': 'No Contract Room line Exist for this appointment  '}
             return status
 
     @api.model
@@ -2293,7 +2323,7 @@ class TeamContractRoomMeasurement(models.Model):
                     'room_id': room_id,
                     'appointment_id': appointment_id,
                 })
-                _logger.info('Transition Created: %s'%(transition_data))
+                _logger.info('Transition Created: %s' % (transition_data))
 
             _logger.info("------ Contract Room Measurement Created-------------")
             status = {
@@ -2320,7 +2350,7 @@ class TeamContractRoomMeasurement(models.Model):
             material = self.env['product.product'].browse(material_id)
             measurement_ref.write({
                 'material_id': material_id,
-                'material_comments':comments,
+                'material_comments': comments,
                 'color_up_charge_price': material.color_up_charge_price or 0,
             })
             _logger.info("------Material created-------------")
@@ -2348,7 +2378,8 @@ class TeamContractRoomMeasurement(models.Model):
             })
             _logger.info("------Material created-------------")
             if measurement_ref.appointment_id:
-                response =  self.env['team.contract.room.measurement.line'].list_contract_room_measurement_line({"appointment_id": measurement_ref.appointment_id.id})
+                response = self.env['team.contract.room.measurement.line'].list_contract_room_measurement_line(
+                    {"appointment_id": measurement_ref.appointment_id.id})
                 return response
 
             else:
@@ -2395,8 +2426,8 @@ class TeamContractRoomMeasurement(models.Model):
     @api.model
     def list_overall_room_summary(self, vals):
         appointment_id = vals.get('appointment_id', 0)
-        status={}
-        room_list=[]
+        status = {}
+        room_list = []
         room_values = {}
         if appointment_id:
             room_measurements_list = self.env['team.contract.room.measurement.line'].search(
@@ -2415,12 +2446,13 @@ class TeamContractRoomMeasurement(models.Model):
                         'url': url,
                     })
                 room_ids = list(set([(data.room_id.id) for data in room_measurements]))
-                material_image_url=''
+                material_image_url = ''
                 material = 0
                 if room_measurements.material_id.id:
-                    material_ref = self.env['product.product'].search([('id', '=', int(room_measurements.material_id.id))])
-                    if material_ref and material_ref.is_material==True:
-                        material=material_ref.id
+                    material_ref = self.env['product.product'].search(
+                        [('id', '=', int(room_measurements.material_id.id))])
+                    if material_ref and material_ref.is_material == True:
+                        material = material_ref.id
                         if material_ref.image_1920:
                             material_image_url = material_ref.profile_image('product.product')
 
@@ -2436,119 +2468,121 @@ class TeamContractRoomMeasurement(models.Model):
                             stair_count = answer_obj.answer
                 room_values = {
                     'room_ids': room_ids,
-                    'material_id':material,
-                    'striked':'True' if room_measurements.exclude_from_calculation is True else 'False',
-                    'material_image_url':material_image_url,
-                    'shape_image_id':room_measurements.shape_image_id and room_measurements.shape_image_id.id or 0,
+                    'material_id': material,
+                    'striked': 'True' if room_measurements.exclude_from_calculation is True else 'False',
+                    'material_image_url': material_image_url,
+                    'shape_image_id': room_measurements.shape_image_id and room_measurements.shape_image_id.id or 0,
                     'stair_count': stair_count,
                 }
                 room_list.append(room_values)
             status = {
-                    'result': 'Success',
-                    'values': room_list,
-                    'message': '',
-                }
+                'result': 'Success',
+                'values': room_list,
+                'message': '',
+            }
             return status
 
     @api.model
-    def list_room_measurement(self,vals):
-            list = []
-            status={}
-            appointment_id = vals.get('appointment_id', 0)
-            room_id = vals.get('room_id', 0)
-            if not self.env['team.room.room'].browse(int(room_id)).exists():
-                _logger.info("------Room Not Exist-------------")
-                status = {'message': 'Room Not Exist', 'result': 'Success'}
-                return status
-            custom_room = False
-            if self.env['team.room.room'].browse(int(room_id)).is_custom:
-                custom_room =True
-                room_measurement_id = vals.get('room_measurement_id', 0)
-                if not room_measurement_id:
-                    _logger.info("------room_measurement_id empty-------------")
-                    status = {'message': 'room_measurement_id empty', 'result': 'Success'}
-                    return status
-                if not self.env['team.contract.room.measurement.line'].browse(int(room_measurement_id)).exists():
-                    _logger.info("------Custom Room Not Found-------------")
-                    status = {'message': 'Custom Room Not Found', 'result': 'Success'}
-                    return status
-            if appointment_id:
-                if custom_room:
-                    room_measurements = self.env['team.contract.room.measurement.line'].search([('id', '=', int(room_measurement_id))])
-                else:
-                    room_measurements = self.env['team.contract.room.measurement.line'].search([('appointment_id', '=', int(appointment_id)),('room_id', '=', int(room_id))])
-                if room_measurements:
-                    for data in room_measurements:
-                        if data.room_id.is_custom:
-                            custom_room = 'True'
-                        else:
-                            custom_room = 'False'
-                        material_image_url = ''
-                        attachments = []
-                        for attachment in data.attachment_ids:
-                            if not attachment.access_token:
-                                attachment.generate_access_token()
-                            url = URL + '/web/image/' + str(attachment.id) + '?access_token=' + str(
-                                attachment.access_token)
-                            attachments.append({
-                                'id': attachment.id,
-                                'name': attachment.name,
-                                'url': url,
-                            })
-                        shape_image_url = []
-                        if data.shape_image_id:
-                            if not data.shape_image_id.access_token:
-                                data.shape_image_id.generate_access_token()
-                            url = URL + '/web/image/' + str(
-                                data.shape_image_id.id) + '?access_token=' + str(
-                                data.shape_image_id.access_token)
-                            shape_image_url.append({
-                                'id': data.shape_image_id.id,
-                                'name': data.shape_image_id.name,
-                                'url': url,
-                            })
-                        material = 0
-                        if data.material_id.is_material == True:
-                            material = data.material_id.id
-                            if data.material_id.image_1920:
-                                material_image_url = data.material_id.profile_image('product.product')
-                        stair_count = 0
-                        if data.room_id and data.room_id.product_category_id and data.room_id.product_category_id.name.upper() == 'VINYL STAIRS':
-                            contract_questions = self.env['team.contract.question.line'].search([
-                                ('room_id', '=', data.get('room_id', 0)),
-                                ('appointment_id', '=', data.get('appointment_id', 0)),
-                                ('question_id.code', '=', 'StairCount')
-                            ], limit=1)
-                            if contract_questions:
-                                for answer_obj in contract_questions.answers:
-                                    stair_count = answer_obj.answer
-                        vals = {
-                            'contract_measurement_id': data.id,
-                            'name': data.name or '',
-                            'material_image_url':material_image_url,
-                            'material_id':material,
-                            'room_id': data.room_id.id or 0,
-                            'striked': 'True' if data.exclude_from_calculation is True else 'False',
-                            'room_name':data.room_id.name or '',
-                            'drawing_attachment':shape_image_url,
-                            'attachments':attachments,
-                            'company_id': data.company_id.id or 0,
-                            'appointment_id':data.appointment_id.id or 0,
-                            'room_area':data.room_area or 0,
-                            'adjusted_area':data.adjusted_area or 0,
-                            'custom_room':custom_room,
-                            'stair_count': stair_count,
-
-                        }
-                        list.append(vals)
-
-                status = {
-                    'result': 'Success',
-                    'values': list,
-                    'message': '',
-                }
-
+    def list_room_measurement(self, vals):
+        list = []
+        status = {}
+        appointment_id = vals.get('appointment_id', 0)
+        room_id = vals.get('room_id', 0)
+        if not self.env['team.room.room'].browse(int(room_id)).exists():
+            _logger.info("------Room Not Exist-------------")
+            status = {'message': 'Room Not Exist', 'result': 'Success'}
             return status
+        custom_room = False
+        if self.env['team.room.room'].browse(int(room_id)).is_custom:
+            custom_room = True
+            room_measurement_id = vals.get('room_measurement_id', 0)
+            if not room_measurement_id:
+                _logger.info("------room_measurement_id empty-------------")
+                status = {'message': 'room_measurement_id empty', 'result': 'Success'}
+                return status
+            if not self.env['team.contract.room.measurement.line'].browse(int(room_measurement_id)).exists():
+                _logger.info("------Custom Room Not Found-------------")
+                status = {'message': 'Custom Room Not Found', 'result': 'Success'}
+                return status
+        if appointment_id:
+            if custom_room:
+                room_measurements = self.env['team.contract.room.measurement.line'].search(
+                    [('id', '=', int(room_measurement_id))])
+            else:
+                room_measurements = self.env['team.contract.room.measurement.line'].search(
+                    [('appointment_id', '=', int(appointment_id)), ('room_id', '=', int(room_id))])
+            if room_measurements:
+                for data in room_measurements:
+                    if data.room_id.is_custom:
+                        custom_room = 'True'
+                    else:
+                        custom_room = 'False'
+                    material_image_url = ''
+                    attachments = []
+                    for attachment in data.attachment_ids:
+                        if not attachment.access_token:
+                            attachment.generate_access_token()
+                        url = URL + '/web/image/' + str(attachment.id) + '?access_token=' + str(
+                            attachment.access_token)
+                        attachments.append({
+                            'id': attachment.id,
+                            'name': attachment.name,
+                            'url': url,
+                        })
+                    shape_image_url = []
+                    if data.shape_image_id:
+                        if not data.shape_image_id.access_token:
+                            data.shape_image_id.generate_access_token()
+                        url = URL + '/web/image/' + str(
+                            data.shape_image_id.id) + '?access_token=' + str(
+                            data.shape_image_id.access_token)
+                        shape_image_url.append({
+                            'id': data.shape_image_id.id,
+                            'name': data.shape_image_id.name,
+                            'url': url,
+                        })
+                    material = 0
+                    if data.material_id.is_material == True:
+                        material = data.material_id.id
+                        if data.material_id.image_1920:
+                            material_image_url = data.material_id.profile_image('product.product')
+                    stair_count = 0
+                    if data.room_id and data.room_id.product_category_id and data.room_id.product_category_id.name.upper() == 'VINYL STAIRS':
+                        contract_questions = self.env['team.contract.question.line'].search([
+                            ('room_id', '=', data.get('room_id', 0)),
+                            ('appointment_id', '=', data.get('appointment_id', 0)),
+                            ('question_id.code', '=', 'StairCount')
+                        ], limit=1)
+                        if contract_questions:
+                            for answer_obj in contract_questions.answers:
+                                stair_count = answer_obj.answer
+                    vals = {
+                        'contract_measurement_id': data.id,
+                        'name': data.name or '',
+                        'material_image_url': material_image_url,
+                        'material_id': material,
+                        'room_id': data.room_id.id or 0,
+                        'striked': 'True' if data.exclude_from_calculation is True else 'False',
+                        'room_name': data.room_id.name or '',
+                        'drawing_attachment': shape_image_url,
+                        'attachments': attachments,
+                        'company_id': data.company_id.id or 0,
+                        'appointment_id': data.appointment_id.id or 0,
+                        'room_area': data.room_area or 0,
+                        'adjusted_area': data.adjusted_area or 0,
+                        'custom_room': custom_room,
+                        'stair_count': stair_count,
+
+                    }
+                    list.append(vals)
+
+            status = {
+                'result': 'Success',
+                'values': list,
+                'message': '',
+            }
+
+        return status
 
     @api.model
     def update_room_measurement(self, data):
@@ -2560,7 +2594,8 @@ class TeamContractRoomMeasurement(models.Model):
             _logger.info("------Empty Contract Measurement ID-------------")
             status = {'message': 'Empty Contract Measurement ID', 'result': 'False'}
             return status
-        contract_measurement = self.env['team.contract.room.measurement.line'].search([('id', '=', int(contract_measurement_id))], limit=1)
+        contract_measurement = self.env['team.contract.room.measurement.line'].search(
+            [('id', '=', int(contract_measurement_id))], limit=1)
         vals = {}
         if contract_measurement:
             if data.get('name', ''):
@@ -2573,9 +2608,9 @@ class TeamContractRoomMeasurement(models.Model):
                 vals.update({'room_area': float(data.get('room_area', 0))})
                 vals.update({'adjusted_area': float(data.get('room_area', 0))})
             if data.get('image_id', ''):
-                vals.update({'shape_image_id':image_id})
+                vals.update({'shape_image_id': image_id})
             if contract_measurement.room_id.is_custom:
-                vals.update({'custom_room_measured' : True})
+                vals.update({'custom_room_measured': True})
             contract_measurement.write(vals)
             if data.get('transitions', []):
                 if contract_measurement.transition_line_id:
@@ -2588,7 +2623,7 @@ class TeamContractRoomMeasurement(models.Model):
                         'room_id': contract_measurement.room_id.id,
                         'appointment_id': contract_measurement.appointment_id.id,
                     })
-                    _logger.info('Transition Created: %s'%(transition_data))
+                    _logger.info('Transition Created: %s' % (transition_data))
             attachments = []
             shape_image_url = []
             questionaire_list = []
@@ -2675,20 +2710,20 @@ class TeamContractRoomMeasurement(models.Model):
             status = {
                 'result': 'Success',
                 'message': ' Contract Measurement Update Success',
-                'contract_measurement_id':contract_measurement.id,
+                'contract_measurement_id': contract_measurement.id,
                 'values': [{
-                    'comments':contract_measurement.comments or '',
+                    'comments': contract_measurement.comments or '',
                     'attachments': attachments,
-                    'attachment_comments':contract_measurement.image_comments or '',
+                    'attachment_comments': contract_measurement.image_comments or '',
                     'drawing_attachment': shape_image_url,
-                    'questionaire':questionaire_list,
+                    'questionaire': questionaire_list,
                     'contract_measurement_id': contract_measurement.id,
                     'stair_count': stair_count,
                     'transitions': transitions,
                 }]
             }
         else:
-            status = {'result': 'False','message': 'Contract Measurement  Not Exist',}
+            status = {'result': 'False', 'message': 'Contract Measurement  Not Exist', }
         return status
 
     @api.model
@@ -2703,8 +2738,8 @@ class TeamContractRoomMeasurement(models.Model):
         for contract_measurement_id in measurement_line_ids:
             contracts_measurements = self.sudo().search([('id', '=', contract_measurement_id)])
             if contracts_measurements:
-                appointment_id=contracts_measurements.appointment_id.id
-                room_id=contracts_measurements.room_id.id
+                appointment_id = contracts_measurements.appointment_id.id
+                room_id = contracts_measurements.room_id.id
                 if contracts_measurements.room_id.is_custom:
                     room_measurement_id = contracts_measurements.id
                     transitions = self.env['team.contract.transition.line'].search(
@@ -2719,9 +2754,10 @@ class TeamContractRoomMeasurement(models.Model):
                 if contracts_measurements.room_id.is_custom:
                     room_measurement_id = contracts_measurements.id
                     contract_questions = self.env['team.contract.question.line'].search(
-                    [('appointment_id', '=',appointment_id), ('room_measurement_id', '=',room_measurement_id)])
+                        [('appointment_id', '=', appointment_id), ('room_measurement_id', '=', room_measurement_id)])
                 else:
-                    contract_questions = self.env['team.contract.question.line'].search([('appointment_id', '=', appointment_id), ('room_id', '=', room_id)])
+                    contract_questions = self.env['team.contract.question.line'].search(
+                        [('appointment_id', '=', appointment_id), ('room_id', '=', room_id)])
                 for answers in contract_questions.answers:
                     answers.sudo().unlink()
                 if contract_questions:
@@ -2745,7 +2781,7 @@ class TeamContractRoomMeasurement(models.Model):
         return status
 
     @api.model
-    def edit_contract_room_measurement_line(self,data):
+    def edit_contract_room_measurement_line(self, data):
         status = {}
         measurement_line_id = data.get('contract_measurement_id', False)
         if not measurement_line_id:
@@ -2758,11 +2794,11 @@ class TeamContractRoomMeasurement(models.Model):
         vals = {}
         if contracts_measurement:
             if data.get('operation', '') == 'delete':
-                if  contracts_measurement.room_id and contracts_measurement.appointment_id:
+                if contracts_measurement.room_id and contracts_measurement.appointment_id:
                     if contracts_measurement.room_id.is_custom:
                         room_measurement_id = contracts_measurement.id
                         transitions = self.env['team.contract.transition.line'].search(
-                            [('room_measurement_id', '=',room_measurement_id ),
+                            [('room_measurement_id', '=', room_measurement_id),
                              ('appointment_id', '=', contracts_measurement.appointment_id.id)])
                     else:
                         transitions = self.env['team.contract.transition.line'].search(
@@ -2775,9 +2811,13 @@ class TeamContractRoomMeasurement(models.Model):
                         transition.sudo().unlink()
                     if contracts_measurement.room_id.is_custom:
                         room_measurement_id = contracts_measurement.id
-                        questionaires = self.env['team.contract.question.line'] .search([('room_measurement_id','=',room_measurement_id),('appointment_id','=',contracts_measurement.appointment_id.id)])
+                        questionaires = self.env['team.contract.question.line'].search(
+                            [('room_measurement_id', '=', room_measurement_id),
+                             ('appointment_id', '=', contracts_measurement.appointment_id.id)])
                     else:
-                        questionaires = self.env['team.contract.question.line'] .search([('room_id','=',contracts_measurement.room_id.id),('appointment_id','=',contracts_measurement.appointment_id.id)])
+                        questionaires = self.env['team.contract.question.line'].search(
+                            [('room_id', '=', contracts_measurement.room_id.id),
+                             ('appointment_id', '=', contracts_measurement.appointment_id.id)])
                     for questionaire in questionaires:
                         for answer in questionaire.answers:
                             answer.sudo().unlink()
@@ -2788,24 +2828,24 @@ class TeamContractRoomMeasurement(models.Model):
                     attachment.sudo().unlink()
                 contracts_measurement.sudo().unlink()
 
-                status = { 'result': 'True','message': ' Contract Measurement Room  Deletion Success'}
+                status = {'result': 'True', 'message': ' Contract Measurement Room  Deletion Success'}
                 return status
             if data.get('operation', '') == 'strike':
                 if contracts_measurement.exclude_from_calculation:
                     vals.update({'exclude_from_calculation': False})
                     contracts_measurement.write(vals)
-                    status = { 'result': 'True','message': 'Remove Strike on Contract Measurement Room Success',
-                              'contract_measurement_id': contracts_measurement.id,'strike':'False'}
+                    status = {'result': 'True', 'message': 'Remove Strike on Contract Measurement Room Success',
+                              'contract_measurement_id': contracts_measurement.id, 'strike': 'False'}
                 else:
                     vals.update({'exclude_from_calculation': True})
                     contracts_measurement.write(vals)
-                    status = { 'result': 'True','message': 'Strike on Contract Measurement Room Success',
-                              'contract_measurement_id': contracts_measurement.id,'strike':'True'}
+                    status = {'result': 'True', 'message': 'Strike on Contract Measurement Room Success',
+                              'contract_measurement_id': contracts_measurement.id, 'strike': 'True'}
             else:
-                status = { 'result': 'False','message': 'Invalid Parameter'}
+                status = {'result': 'False', 'message': 'Invalid Parameter'}
                 return status
         else:
-            status = {'result': 'False','message': 'Contract Measurement  Not Exist'}
+            status = {'result': 'False', 'message': 'Contract Measurement  Not Exist'}
         return status
 
     def profile_image(self, name, model_name, image, res_id):
@@ -2846,7 +2886,7 @@ class TeamContractRoomMeasurement(models.Model):
         if appointment_id:
             room_measurements_line_records = self.env['team.contract.room.measurement.line'].search(
                 [('appointment_id', '=', int(appointment_id))])
-            room_measurements_line=room_measurements_line_records.sorted(key=lambda r: r.room_id.sequence)
+            room_measurements_line = room_measurements_line_records.sorted(key=lambda r: r.room_id.sequence)
             if not room_measurements_line:
                 return {'message': 'Contract Room Measurements Not Found', 'result': 'Success', 'values': []}
             total_area = 0
@@ -2856,7 +2896,9 @@ class TeamContractRoomMeasurement(models.Model):
             default_image_url = ''
             for measurement_line in room_measurements_line:
                 if measurement_line.company_id.default_image:
-                    default_image_url = self.profile_image("default_image", 'res.company', measurement_line.company_id.default_image, measurement_line.company_id.id) or ""
+                    default_image_url = self.profile_image("default_image", 'res.company',
+                                                           measurement_line.company_id.default_image,
+                                                           measurement_line.company_id.id) or ""
                 material_image_url = ''
                 shape_image_url = []
                 if measurement_line.shape_image_id:
@@ -2872,7 +2914,8 @@ class TeamContractRoomMeasurement(models.Model):
                 if measurement_line.attachment_ids:
                     if not measurement_line.attachment_ids[0].access_token:
                         measurement_line.attachment_ids[0].generate_access_token()
-                    room_image_url = URL + '/web/image/' + str(measurement_line.attachment_ids[0].id) + '?access_token=' + str(
+                    room_image_url = URL + '/web/image/' + str(
+                        measurement_line.attachment_ids[0].id) + '?access_token=' + str(
                         measurement_line.attachment_ids[0].access_token)
                     room_image_id = measurement_line.attachment_ids[0].id
 
@@ -2888,7 +2931,7 @@ class TeamContractRoomMeasurement(models.Model):
                         vals = {
                             'material_id': product.id or 0,
                             'name': product.name,
-                            'color':  product.floor_color if product.floor_color else "Select Color",
+                            'color': product.floor_color if product.floor_color else "Select Color",
                             'material_image_url': floor_color_url,
                         }
                         materials_list.append(vals)
@@ -2905,9 +2948,9 @@ class TeamContractRoomMeasurement(models.Model):
                     else:
                         material_image_url = default_image_url
                 if measurement_line.room_id.is_custom:
-                    custom_room ='True'
+                    custom_room = 'True'
                 else:
-                    custom_room ='False'
+                    custom_room = 'False'
                 molding_type_list = self.get_molding_type()
                 stair_count = 0
                 if measurement_line.room_id and measurement_line.room_id.product_category_id and measurement_line.room_id.product_category_id.name.upper() == 'VINYL STAIRS':
@@ -2924,12 +2967,12 @@ class TeamContractRoomMeasurement(models.Model):
                     'name': measurement_line.name or '',
                     'material_id': measurement_line.material_id.id or 0,
                     'material_image_url': material_image_url or default_image_url,
-                    'color':  measurement_line.material_id.floor_color if measurement_line.material_id.floor_color else "Select Color",
-                    'material_name':measurement_line.material_id.name or '',
-                    'room_image_url':room_image_url if room_image_url else '',
-                    'room_image_id':room_image_id if room_image_id else '',
+                    'color': measurement_line.material_id.floor_color if measurement_line.material_id.floor_color else "Select Color",
+                    'material_name': measurement_line.material_id.name or '',
+                    'room_image_url': room_image_url if room_image_url else '',
+                    'room_image_id': room_image_id if room_image_id else '',
                     # 'floor_colors':floor_color_list,
-                    'material_colors':sorted_material_list,
+                    'material_colors': sorted_material_list,
                     'molding_type': molding_type_list,
                     'moulding': measurement_line.molding_type_id and measurement_line.molding_type_id.name or "",
                     'moulding_id': measurement_line.molding_type_id and measurement_line.molding_type_id.id or 0,
@@ -2938,9 +2981,9 @@ class TeamContractRoomMeasurement(models.Model):
                     'room_name': measurement_line.custom_room_name if measurement_line.room_id.is_custom else measurement_line.room_id.name or '',
                     'appointment_id': measurement_line.appointment_id.id or 0,
                     'room_area': measurement_line.room_area or 0,
-                    'adjusted_area':measurement_line.adjusted_area or 0,
+                    'adjusted_area': measurement_line.adjusted_area or 0,
                     'drawing_attachment': shape_image_url or '',
-                    'custom_room':custom_room,
+                    'custom_room': custom_room,
                     'stair_count': stair_count,
                 }
                 list.append(vals)
@@ -2954,9 +2997,8 @@ class TeamContractRoomMeasurement(models.Model):
                 'total_stair_count': total_stair_count,
             }
             list.append(area)
-        status = {'result': 'Success', 'values': list,'message': 'Success'}
+        status = {'result': 'Success', 'values': list, 'message': 'Success'}
         return status
-
 
     @api.model
     def summary_contract_room_measurement_line(self, data):
@@ -2970,12 +3012,12 @@ class TeamContractRoomMeasurement(models.Model):
             }
         if measurement_line_id:
             room_measurements_line = self.env['team.contract.room.measurement.line'].search(
-                [('id', '=', int(measurement_line_id))],limit=1)
+                [('id', '=', int(measurement_line_id))], limit=1)
             if not room_measurements_line:
                 return {'message': 'Contract Room Measurements Not Found', 'result': 'False'}
             appointment_id = room_measurements_line.appointment_id.id or 0
             room_id = room_measurements_line.room_id.id or 0
-            transition_list=[]
+            transition_list = []
             if room_measurements_line.room_id.is_custom:
                 custom_room = True
             else:
@@ -3006,7 +3048,7 @@ class TeamContractRoomMeasurement(models.Model):
                             'transition_width': transition.transition_width or 0,
                             'room_id': transition.room_id.id or 0,
                             'room_measurement_id': transition.room_measurement_id.id or 0,
-                            'room_name':transition.room_measurement_id.custom_room_name or '' if transition.room_id.is_custom else transition.room_id.name or '',
+                            'room_name': transition.room_measurement_id.custom_room_name or '' if transition.room_id.is_custom else transition.room_id.name or '',
                             'company_id': transition.company_id.id or 0,
                             'attachments': attachments,
 
@@ -3032,20 +3074,24 @@ class TeamContractRoomMeasurement(models.Model):
                                 'name': questions.name or '',
                                 'question': questions.question_id.name or '',
                                 'room_id': questions.room_id.id or 0,
-                                'custom_room_measurement_id':questions.room_measurement_id.id or 0,
-                                'room_name':questions.room_measurement_id.custom_room_name if  questions.room_id.is_custom else questions.room_id.name or '',
+                                'custom_room_measurement_id': questions.room_measurement_id.id or 0,
+                                'room_name': questions.room_measurement_id.custom_room_name if questions.room_id.is_custom else questions.room_id.name or '',
                                 'company_id': questions.company_id.id or 0,
                                 'appointment_id': questions.appointment_id.id or 0,
                                 'question_id': questions.question_id.id or 0,
                                 'code': questions.question_id.code or '',
                                 'description': questions.question_id.description or '',
                                 'question_type': questions.question_id.question_type or '',
-                                'validation_required': questions.question_id.validation_required and str(questions.question_id.validation_required) or 'False',
-                                'validation_email_required': questions.question_id.validation_email and str(questions.question_id.validation_email) or 'False',
+                                'validation_required': questions.question_id.validation_required and str(
+                                    questions.question_id.validation_required) or 'False',
+                                'validation_email_required': questions.question_id.validation_email and str(
+                                    questions.question_id.validation_email) or 'False',
                                 'validation_error_msg': questions.question_id.validation_error_msg or '',
-                                'mandatory_answer': questions.question_id.constr_mandatory and str(questions.question_id.constr_mandatory) or 'False',
+                                'mandatory_answer': questions.question_id.constr_mandatory and str(
+                                    questions.question_id.constr_mandatory) or 'False',
                                 'Error_message': questions.question_id.constr_error_msg or '',
-                                'Refelct_in_cost': questions.question_id.reflect_cost and str(questions.question_id.reflect_cost) or 0,
+                                'Refelct_in_cost': questions.question_id.reflect_cost and str(
+                                    questions.question_id.reflect_cost) or 0,
                                 'calculation_type': questions.question_id.calculation_type or '',
                                 'amount': questions.question_id.amount or 0,
                                 'default_answer': questions.question_id.default_answer or '',
@@ -3054,13 +3100,13 @@ class TeamContractRoomMeasurement(models.Model):
                             questionaire_list.append(question_line_vals)
 
             for measurement_line in room_measurements_line:
-                material_image_url=''
+                material_image_url = ''
                 if measurement_line.material_id and measurement_line.material_id.is_material == True:
                     if measurement_line.material_id.image_1920:
-                        material_image_url=measurement_line.material_id.profile_image('product.product')
+                        material_image_url = measurement_line.material_id.profile_image('product.product')
                 shape_image_url = []
                 if measurement_line.shape_image_id:
-                    if not measurement_line.shape_image_id.access_token :
+                    if not measurement_line.shape_image_id.access_token:
                         measurement_line.shape_image_id.generate_access_token()
                     url = URL + '/web/image/' + str(measurement_line.shape_image_id.id) + '?access_token=' + str(
                         measurement_line.shape_image_id.access_token)
@@ -3093,26 +3139,26 @@ class TeamContractRoomMeasurement(models.Model):
                 measurement_line_vals = {
                     'contract_measurement_id': measurement_line.id,
                     'name': measurement_line.name or '',
-                    'material_id':measurement_line.material_id.id or 0,
-                    'material_image_url':material_image_url,
-                    'material_comments':measurement_line.material_comments or '',
+                    'material_id': measurement_line.material_id.id or 0,
+                    'material_image_url': material_image_url,
+                    'material_comments': measurement_line.material_comments or '',
                     'room_id': measurement_line.room_id.id or 0,
                     'room_name': measurement_line.custom_room_name if measurement_line.room_id.is_custom else measurement_line.room_id.name or '',
                     'appointment_id': measurement_line.appointment_id.id or 0,
                     'room_area': measurement_line.room_area or 0,
-                    'adjusted_area':measurement_line.adjusted_area or 0,
-                    'comments':measurement_line.comments or '',
+                    'adjusted_area': measurement_line.adjusted_area or 0,
+                    'comments': measurement_line.comments or '',
                     'attachments': attachments,
-                    'attachment_comments':measurement_line.image_comments or '',
+                    'attachment_comments': measurement_line.image_comments or '',
                     'drawing_attachment': shape_image_url,
-                    'striked':'True' if measurement_line.exclude_from_calculation is True else 'False',
-                    'transition':transition_list,
-                    'questionaire':questionaire_list,
-                    'custom_room':'True' if  measurement_line.room_id.is_custom else 'False',
+                    'striked': 'True' if measurement_line.exclude_from_calculation is True else 'False',
+                    'transition': transition_list,
+                    'questionaire': questionaire_list,
+                    'custom_room': 'True' if measurement_line.room_id.is_custom else 'False',
                     'stair_count': stair_count,
                 }
                 list.append(measurement_line_vals)
-            status = {'result':'Success','values': list,'message': 'Success'}
+            status = {'result': 'Success', 'values': list, 'message': 'Success'}
         return status
 
     @api.model
@@ -3128,7 +3174,7 @@ class TeamContractRoomMeasurement(models.Model):
         contracts_measurement = self.sudo().search([('id', '=', int(measurement_line_id))])
         if contracts_measurement:
             if data.get('comments', ''):
-                contracts_measurement.write({'image_comments':data.get('comments', '')})
+                contracts_measurement.write({'image_comments': data.get('comments', '')})
             if data.get('image_ids', []):
                 attachment_ids = data.get('image_ids', [])
                 for room_image_id in attachment_ids:
@@ -3137,16 +3183,16 @@ class TeamContractRoomMeasurement(models.Model):
                         status = {'message': 'Image Attachment Not Exist', 'result': 'Success'}
                         return status
                 for attachment_id in attachment_ids:
-                    contracts_measurement.write({'attachment_ids':  [(4, attachment_id)]})
+                    contracts_measurement.write({'attachment_ids': [(4, attachment_id)]})
             values = {
                 'contract_measurement_id': contracts_measurement.id,
                 'room_id': contracts_measurement.room_id and contracts_measurement.room_id.id or False,
-                'appointment_id': contracts_measurement.appointment_id and contracts_measurement.appointment_id.id  or False,
+                'appointment_id': contracts_measurement.appointment_id and contracts_measurement.appointment_id.id or False,
             }
             result = self.update_room_measurement(values)
             status = {
                 'message': 'Update Images,Comment on Room Successful',
-                'contract_room_measurement_id':contracts_measurement.id,
+                'contract_room_measurement_id': contracts_measurement.id,
                 'result': 'True',
                 'values': result.get('values', [])
             }
@@ -3158,20 +3204,30 @@ class TeamContractRoomMeasurement(models.Model):
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
-    
+
     def check_document_upload_completed(self):
         is_data_upload_completed = True
         for record in self:
             if record.appointment_id and not record.appointment_id.status_updated_to_i360:
                 is_data_upload_completed = False
-            if not record.quote_id:
-                is_data_upload_completed = False
             if record.appointment_result == 'Sold' and not record.contract_document_uploaded:
                 is_data_upload_completed = False
             if not record.other_files_uploaded:
                 is_data_upload_completed = False
-            for room_measurement in record.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation):
-                if not room_measurement.improveit_id:
+            if record.appointment_result == 'Sold':
+                if not record.quote_id:
+                    is_data_upload_completed = False
+                if record.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation and not x.improveit_id):
+                    is_data_upload_completed = False
+            else:
+                included_room_measurement_lines = record.room_measurement_line.filtered(
+                    lambda x: not x.exclude_from_calculation)
+                excluded_room_measurement_lines = record.room_measurement_line.filtered(
+                    lambda x: x.exclude_from_calculation)
+                if (included_room_measurement_lines and not record.quote_id) or (
+                        excluded_room_measurement_lines and not record.excluded_quote_id):
+                    is_data_upload_completed = False
+                if record.room_measurement_line.filtered(lambda x: not x.improveit_id):
                     is_data_upload_completed = False
             if record.required_file_upload:
                 is_data_upload_completed = False
@@ -3238,8 +3294,8 @@ class SaleOrder(models.Model):
 
         list = []
         vals = {"appointment_id": appointment.id or '',
-                "applicant_signature":applicant_signature_image,
-                "co_applicant_signature":co_applicant_signature_image,
+                "applicant_signature": applicant_signature_image,
+                "co_applicant_signature": co_applicant_signature_image,
                 }
         list.append(vals)
         status = {'result': 'Success', 'values': list, 'message': 'Listing  Applicant Signature  Success'}
@@ -3264,7 +3320,7 @@ class SaleOrder(models.Model):
             [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)], order='create_date desc')
         if sign_requests:
             for sign_request in sign_requests:
-                sign_logs = self.env['otl_document_sign.log'].search([('sign_request_id','=',sign_request.id)])
+                sign_logs = self.env['otl_document_sign.log'].search([('sign_request_id', '=', sign_request.id)])
                 if sign_logs:
                     for sign_log in sign_logs:
                         sign_log.sudo().with_context(delete_log=True).unlink()
@@ -3273,8 +3329,8 @@ class SaleOrder(models.Model):
         contract_document_url = sale_order.link_to_share
         team_credit_application = self.env['team.credit.application'].search(
             [('appointment_id', '=', int(appointment_id))], limit=1)
-        share_url =''
-        if  team_credit_application:
+        share_url = ''
+        if team_credit_application:
             share_url = team_credit_application.generate_link(sale_order)
         sale_order.recision_date = self.env.user.company_id.recision_date
         # configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
@@ -3289,13 +3345,13 @@ class SaleOrder(models.Model):
         #         if content.get('RecisionDate',False):
         #             recesion_date = datetime.strptime(content.get('RecisionDate',False), '%m/%d/%Y').strftime('%Y-%m-%d')
         #             sale_order.recision_date = recesion_date
-        status = {'message': 'Credit Application Document , Contract Document Generated', 'result': 'Success','document':contract_document_url,'credit_document':share_url}
+        status = {'message': 'Credit Application Document , Contract Document Generated', 'result': 'Success',
+                  'document': contract_document_url, 'credit_document': share_url}
         _logger.info('generate_credit_application Status: %s', status)
         return status
 
-
     @api.model
-    def list_credit_application(self,data):
+    def list_credit_application(self, data):
         appointment_id = (data.get('appointment_id', 0))
         if not appointment_id:
             _logger.info("------Empty Appointment id-------------")
@@ -3305,8 +3361,8 @@ class SaleOrder(models.Model):
             _logger.info("------ Appointment Not Exist-------------")
             status = {'message': 'Appointment Not Exist', 'result': 'Success'}
             return status
-        appointment =  self.env['team.customer.appointment'].browse(int(appointment_id))
-        applicant_signature_image =[]
+        appointment = self.env['team.customer.appointment'].browse(int(appointment_id))
+        applicant_signature_image = []
         if appointment.applicant_signature_id:
             if not appointment.applicant_signature_id.access_token:
                 appointment.applicant_signature_id.generate_access_token()
@@ -3330,175 +3386,176 @@ class SaleOrder(models.Model):
                 'name': appointment.co_applicant_signature_id.name,
                 'url': url,
             })
-        credit_application = self.env['team.credit.application'].search([('appointment_id','=',int(appointment_id))],limit=1)
+        credit_application = self.env['team.credit.application'].search([('appointment_id', '=', int(appointment_id))],
+                                                                        limit=1)
         if not credit_application:
             _logger.info("------Credit Application Not Exist-------------")
             status = {'message': 'Credit Application Not Exist for this Appointment', 'result': 'Success'}
             return status
-        list=[]
-        vals ={ "appointment_id": credit_application.appointment_id.id or '',
-                "total_price":credit_application.total_price or '',
-                "downpayment":credit_application.downpayment or '',
-                "amount_financed":credit_application.amount_financed or '',
-                "type_of_loan":credit_application.type_of_loan or '',
-                "type_of_property":credit_application.type_of_property    or '',
-                "work_to_be_done":credit_application.work_to_be_done    or '',
-                "owners":credit_application.owners    or '',
-                "owners_if_different":credit_application.owners_if_different or '',
-                "address_of_property":credit_application.address_of_property    or '',
-                "street":credit_application.street    or '',
-                "street2":credit_application.street2    or '',
-                "city":credit_application.city    or '',
-                "state":credit_application.state    or '',
-                "zip":credit_application.zip    or '',
-                "same_property_address":credit_application.same_property_address or '',
-                "applicant_first_name":credit_application.applicant_first_name    or '',
-                "applicant_middle_name":credit_application.applicant_middle_name    or '',
-                "applicant_last_name":credit_application.applicant_last_name    or '',
-                "drivers_license":credit_application.drivers_license    or '',
-                "drivers_license_exp_date":credit_application.drivers_license_exp_date    or '',
-                "date_of_birth":credit_application.date_of_birth    or '',
-                "social_security_number":credit_application.social_security_number  or '',
-                "address_of_applicant_street":credit_application.address_of_applicant_street    or '',
-                "address_of_applicant_street2":credit_application.address_of_applicant_street    or '',
-                "address_of_applicant_city":credit_application.address_of_applicant_city    or '',
-                "address_of_applicant_state":credit_application.address_of_applicant_state    or '',
-                "address_of_applicant_zip":credit_application.address_of_applicant_zip    or '',
-                "previous_address_of_applicant":credit_application.previous_address_of_applicant    or '',
-                "previous_address_of_applicant_street":credit_application.previous_address_of_applicant_street    or '',
-                "previous_address_of_applicant_street2":credit_application.previous_address_of_applicant_street2    or '',
-                "previous_address_of_applicant_city":credit_application.previous_address_of_applicant_city    or '',
-                "previous_address_of_applicant_state":credit_application.previous_address_of_applicant_state    or '',
-                "previous_address_of_applicant_zip":credit_application.previous_address_of_applicant_zip    or '',
-                "cell_phone":credit_application.cell_phone    or '',
-                "home_phone":credit_application.home_phone    or '',
-                "how_long":credit_application.how_long    or '',
-                "previous_address_how_long":credit_application.previous_address_how_long    or '',
-                "present_employer":credit_application.present_employer    or '',
-                "years_on_job":credit_application.years_on_job    or '',
-                "occupation":credit_application.occupation    or '',
-                "present_employers_address":credit_application.present_employers_address    or '',
-                "present_employers_address_street":credit_application.present_employers_address_street    or '',
-                "present_employers_address_street2":credit_application.present_employers_address_street2    or '',
-                "present_employers_address_city":credit_application.present_employers_address_city    or '',
-                "present_employers_address_state":credit_application.present_employers_address_state    or '',
-                "present_employers_address_zip":credit_application.present_employers_address_zip    or '',
-                "earnings_from_employment":credit_application.earnings_from_employment    or '',
-                "supervisor_or_department":credit_application.supervisor_or_department   or '',
-                "employers_phone_number":credit_application.employers_phone_number    or '',
-                "previous_employers_address":credit_application.previous_employers_address,
-                "previous_employers_address_street":credit_application.previous_employers_address_street    or '',
-                "previous_employers_address_street2":credit_application.previous_employers_address_street2    or '',
-                "previous_employers_address_city":credit_application.previous_employers_address_city    or '',
-                "previous_employers_address_state":credit_application.previous_employers_address_state    or '',
-                "previous_employers_address_zip":credit_application.previous_employers_address_zip    or '',
-                "earnings_per_month":credit_application.earnings_per_month    or '',
-                "years_on_job_previous_employer":credit_application.years_on_job_previous_employer or '',
-                "occupation_previous_employer":credit_application.occupation_previous_employer    or '',
-                "previous_employers_phone_number":credit_application.previous_employers_phone_number    or '',
-                "co_applicant_first_name":credit_application.co_applicant_first_name    or '',
-                "co_applicant_middle_name":credit_application.co_applicant_middle_name    or '',
-                "co_applicant_last_name":credit_application.co_applicant_last_name    or '',
-                "co_applicant_drivers_license":credit_application.co_applicant_drivers_license    or '',
-                "co_applicant_drivers_license_exp_date":credit_application.co_applicant_drivers_license_exp_date    or '',
-                "co_applicant_date_of_birth":credit_application.co_applicant_date_of_birth    or '',
-                "co_applicant_social_security_number":credit_application.co_applicant_social_security_number    or '',
-                "co_applicant_address_of_applicant":credit_application.co_applicant_address_of_applicant    or '',
-                "co_applicant_street":credit_application.co_applicant_street    or '',
-                "co_applicant_street2":credit_application.co_applicant_street2    or '',
-                "co_applicant_city":credit_application.co_applicant_city    or '',
-                "co_applicant_state":credit_application.co_applicant_state    or '',
-                "co_applicant_zip":credit_application.co_applicant_zip    or '',
-                "co_applicant_phone":credit_application.co_applicant_phone    or '',
-                "co_applicant_secondary_phone":credit_application.co_applicant_secondary_phone    or '',
-                "co_applicant_previous_address_of_applicant":credit_application.co_applicant_previous_address_of_applicant    or '',
-                "co_applicant_previous_street":credit_application.co_applicant_previous_street    or '',
-                "co_applicant_previous_street2":credit_application.co_applicant_previous_street2    or '',
-                "co_applicant_previous_city":credit_application.co_applicant_previous_city    or '',
-                "co_applicant_previous_state":credit_application.co_applicant_previous_state    or '',
-                "co_applicant_previous_zip":credit_application.co_applicant_previous_zip    or '',
-                "co_applicant_how_long":credit_application.co_applicant_how_long    or '',
-                "co_applicant_present_employer":credit_application.co_applicant_present_employer    or '',
-                "co_applicant_years_on_job":credit_application.co_applicant_years_on_job    or '',
-                "co_applicant_occupation":credit_application.co_applicant_occupation,
-                "co_applicant_present_employers_address":credit_application.co_applicant_present_employers_address    or '',
-                "co_applicant_present_employers_street":credit_application.co_applicant_present_employers_street    or '',
-                "co_applicant_present_employers_street2":credit_application.co_applicant_present_employers_street2    or '',
-                "co_applicant_present_employers_city":credit_application.co_applicant_present_employers_city or '',
-                "co_applicant_present_employers_state":credit_application.co_applicant_present_employers_state    or '',
-                "co_applicant_present_employers_zip":credit_application.co_applicant_present_employers_zip    or '',
-                "co_applicant_earnings_from_employment":credit_application.co_applicant_earnings_from_employment    or '',
-                "co_applicant_supervisor_or_department":credit_application.co_applicant_supervisor_or_department    or '',
-                "co_applicant_employers_phone_number":credit_application.co_applicant_employers_phone_number    or '',
-                "co_applicant_previous_employers_address":credit_application.co_applicant_previous_employers_address    or '',
-                "co_applicant_previous_employers_street":credit_application.co_applicant_previous_employers_street    or '',
-                "co_applicant_previous_employers_street2":credit_application.co_applicant_previous_employers_street2    or '',
-                "co_applicant_previous_employers_city":credit_application.co_applicant_previous_employers_city   or '',
-                "co_applicant_previous_employers_state":credit_application.co_applicant_previous_employers_state    or '',
-                "co_applicant_previoust_employers_zip":credit_application.co_applicant_previoust_employers_zip    or '',
-                "co_applicant_earnings_per_month":credit_application.co_applicant_earnings_per_month    or '',
-                "co_applicant_years_on_job_previous_employer":credit_application.co_applicant_years_on_job_previous_employer    or '',
-                "co_applicant_occupation_previous_employer":credit_application.co_applicant_occupation_previous_employer    or '',
-                "co_applicant_previous_employers_phone_number":credit_application.co_applicant_previous_employers_phone_number    or '',
-                "source_of_other_income":credit_application.source_of_other_income,
-                "amount_monthly":credit_application.amount_monthly   or '',
-                "nearest_relative":credit_application.nearest_relative    or '',
-                "relationship":credit_application.relationship    or '',
-                "address_relationship":credit_application.address_relationship    or '',
-                "address_relationship_street":credit_application.address_relationship_street    or '',
-                "address_relationship_street2":credit_application.address_relationship_street2    or '',
-                "address_relationship_city":credit_application.address_relationship_street2    or '',
-                "address_relationship_state":credit_application.address_relationship_state    or '',
-                "address_relationship_zip":credit_application.address_relationship_zip    or '',
-                "phone_number_relationship":credit_application.phone_number_relationship    or '',
-                "property_details":credit_application.property_details    or '',
-                "lender_name":credit_application.lender_name    or '',
-                "lender_address":credit_application.lender_address    or '',
-                "lender_address_street":credit_application.lender_address_street    or '',
-                "lender_address_street2":credit_application.lender_address_street2    or '',
-                "lender_address_city":credit_application.lender_address_city    or '',
-                "lender_address_state":credit_application.lender_address_state    or '',
-                "lender_address_zip":credit_application.lender_address_zip    or '',
-                "lender_phone":credit_application.lender_phone    or '',
-                "original_purchase_price":credit_application.original_purchase_price    or '',
-                "original_mortage_amount":credit_application.original_mortage_amount    or '',
-                "monthly_mortage_payment":credit_application.monthly_mortage_payment    or '',
-                "date_aquired":credit_application.date_aquired    or '',
-                "present_balance":credit_application.present_balance    or '',
-                "present_value_of_home":credit_application.present_value_of_home    or '',
-                "second_mortage":credit_application.second_mortage    or '',
-                "lender_name_or_phone":credit_application.lender_name_or_phone    or '',
+        list = []
+        vals = {"appointment_id": credit_application.appointment_id.id or '',
+                "total_price": credit_application.total_price or '',
+                "downpayment": credit_application.downpayment or '',
+                "amount_financed": credit_application.amount_financed or '',
+                "type_of_loan": credit_application.type_of_loan or '',
+                "type_of_property": credit_application.type_of_property or '',
+                "work_to_be_done": credit_application.work_to_be_done or '',
+                "owners": credit_application.owners or '',
+                "owners_if_different": credit_application.owners_if_different or '',
+                "address_of_property": credit_application.address_of_property or '',
+                "street": credit_application.street or '',
+                "street2": credit_application.street2 or '',
+                "city": credit_application.city or '',
+                "state": credit_application.state or '',
+                "zip": credit_application.zip or '',
+                "same_property_address": credit_application.same_property_address or '',
+                "applicant_first_name": credit_application.applicant_first_name or '',
+                "applicant_middle_name": credit_application.applicant_middle_name or '',
+                "applicant_last_name": credit_application.applicant_last_name or '',
+                "drivers_license": credit_application.drivers_license or '',
+                "drivers_license_exp_date": credit_application.drivers_license_exp_date or '',
+                "date_of_birth": credit_application.date_of_birth or '',
+                "social_security_number": credit_application.social_security_number or '',
+                "address_of_applicant_street": credit_application.address_of_applicant_street or '',
+                "address_of_applicant_street2": credit_application.address_of_applicant_street or '',
+                "address_of_applicant_city": credit_application.address_of_applicant_city or '',
+                "address_of_applicant_state": credit_application.address_of_applicant_state or '',
+                "address_of_applicant_zip": credit_application.address_of_applicant_zip or '',
+                "previous_address_of_applicant": credit_application.previous_address_of_applicant or '',
+                "previous_address_of_applicant_street": credit_application.previous_address_of_applicant_street or '',
+                "previous_address_of_applicant_street2": credit_application.previous_address_of_applicant_street2 or '',
+                "previous_address_of_applicant_city": credit_application.previous_address_of_applicant_city or '',
+                "previous_address_of_applicant_state": credit_application.previous_address_of_applicant_state or '',
+                "previous_address_of_applicant_zip": credit_application.previous_address_of_applicant_zip or '',
+                "cell_phone": credit_application.cell_phone or '',
+                "home_phone": credit_application.home_phone or '',
+                "how_long": credit_application.how_long or '',
+                "previous_address_how_long": credit_application.previous_address_how_long or '',
+                "present_employer": credit_application.present_employer or '',
+                "years_on_job": credit_application.years_on_job or '',
+                "occupation": credit_application.occupation or '',
+                "present_employers_address": credit_application.present_employers_address or '',
+                "present_employers_address_street": credit_application.present_employers_address_street or '',
+                "present_employers_address_street2": credit_application.present_employers_address_street2 or '',
+                "present_employers_address_city": credit_application.present_employers_address_city or '',
+                "present_employers_address_state": credit_application.present_employers_address_state or '',
+                "present_employers_address_zip": credit_application.present_employers_address_zip or '',
+                "earnings_from_employment": credit_application.earnings_from_employment or '',
+                "supervisor_or_department": credit_application.supervisor_or_department or '',
+                "employers_phone_number": credit_application.employers_phone_number or '',
+                "previous_employers_address": credit_application.previous_employers_address,
+                "previous_employers_address_street": credit_application.previous_employers_address_street or '',
+                "previous_employers_address_street2": credit_application.previous_employers_address_street2 or '',
+                "previous_employers_address_city": credit_application.previous_employers_address_city or '',
+                "previous_employers_address_state": credit_application.previous_employers_address_state or '',
+                "previous_employers_address_zip": credit_application.previous_employers_address_zip or '',
+                "earnings_per_month": credit_application.earnings_per_month or '',
+                "years_on_job_previous_employer": credit_application.years_on_job_previous_employer or '',
+                "occupation_previous_employer": credit_application.occupation_previous_employer or '',
+                "previous_employers_phone_number": credit_application.previous_employers_phone_number or '',
+                "co_applicant_first_name": credit_application.co_applicant_first_name or '',
+                "co_applicant_middle_name": credit_application.co_applicant_middle_name or '',
+                "co_applicant_last_name": credit_application.co_applicant_last_name or '',
+                "co_applicant_drivers_license": credit_application.co_applicant_drivers_license or '',
+                "co_applicant_drivers_license_exp_date": credit_application.co_applicant_drivers_license_exp_date or '',
+                "co_applicant_date_of_birth": credit_application.co_applicant_date_of_birth or '',
+                "co_applicant_social_security_number": credit_application.co_applicant_social_security_number or '',
+                "co_applicant_address_of_applicant": credit_application.co_applicant_address_of_applicant or '',
+                "co_applicant_street": credit_application.co_applicant_street or '',
+                "co_applicant_street2": credit_application.co_applicant_street2 or '',
+                "co_applicant_city": credit_application.co_applicant_city or '',
+                "co_applicant_state": credit_application.co_applicant_state or '',
+                "co_applicant_zip": credit_application.co_applicant_zip or '',
+                "co_applicant_phone": credit_application.co_applicant_phone or '',
+                "co_applicant_secondary_phone": credit_application.co_applicant_secondary_phone or '',
+                "co_applicant_previous_address_of_applicant": credit_application.co_applicant_previous_address_of_applicant or '',
+                "co_applicant_previous_street": credit_application.co_applicant_previous_street or '',
+                "co_applicant_previous_street2": credit_application.co_applicant_previous_street2 or '',
+                "co_applicant_previous_city": credit_application.co_applicant_previous_city or '',
+                "co_applicant_previous_state": credit_application.co_applicant_previous_state or '',
+                "co_applicant_previous_zip": credit_application.co_applicant_previous_zip or '',
+                "co_applicant_how_long": credit_application.co_applicant_how_long or '',
+                "co_applicant_present_employer": credit_application.co_applicant_present_employer or '',
+                "co_applicant_years_on_job": credit_application.co_applicant_years_on_job or '',
+                "co_applicant_occupation": credit_application.co_applicant_occupation,
+                "co_applicant_present_employers_address": credit_application.co_applicant_present_employers_address or '',
+                "co_applicant_present_employers_street": credit_application.co_applicant_present_employers_street or '',
+                "co_applicant_present_employers_street2": credit_application.co_applicant_present_employers_street2 or '',
+                "co_applicant_present_employers_city": credit_application.co_applicant_present_employers_city or '',
+                "co_applicant_present_employers_state": credit_application.co_applicant_present_employers_state or '',
+                "co_applicant_present_employers_zip": credit_application.co_applicant_present_employers_zip or '',
+                "co_applicant_earnings_from_employment": credit_application.co_applicant_earnings_from_employment or '',
+                "co_applicant_supervisor_or_department": credit_application.co_applicant_supervisor_or_department or '',
+                "co_applicant_employers_phone_number": credit_application.co_applicant_employers_phone_number or '',
+                "co_applicant_previous_employers_address": credit_application.co_applicant_previous_employers_address or '',
+                "co_applicant_previous_employers_street": credit_application.co_applicant_previous_employers_street or '',
+                "co_applicant_previous_employers_street2": credit_application.co_applicant_previous_employers_street2 or '',
+                "co_applicant_previous_employers_city": credit_application.co_applicant_previous_employers_city or '',
+                "co_applicant_previous_employers_state": credit_application.co_applicant_previous_employers_state or '',
+                "co_applicant_previoust_employers_zip": credit_application.co_applicant_previoust_employers_zip or '',
+                "co_applicant_earnings_per_month": credit_application.co_applicant_earnings_per_month or '',
+                "co_applicant_years_on_job_previous_employer": credit_application.co_applicant_years_on_job_previous_employer or '',
+                "co_applicant_occupation_previous_employer": credit_application.co_applicant_occupation_previous_employer or '',
+                "co_applicant_previous_employers_phone_number": credit_application.co_applicant_previous_employers_phone_number or '',
+                "source_of_other_income": credit_application.source_of_other_income,
+                "amount_monthly": credit_application.amount_monthly or '',
+                "nearest_relative": credit_application.nearest_relative or '',
+                "relationship": credit_application.relationship or '',
+                "address_relationship": credit_application.address_relationship or '',
+                "address_relationship_street": credit_application.address_relationship_street or '',
+                "address_relationship_street2": credit_application.address_relationship_street2 or '',
+                "address_relationship_city": credit_application.address_relationship_street2 or '',
+                "address_relationship_state": credit_application.address_relationship_state or '',
+                "address_relationship_zip": credit_application.address_relationship_zip or '',
+                "phone_number_relationship": credit_application.phone_number_relationship or '',
+                "property_details": credit_application.property_details or '',
+                "lender_name": credit_application.lender_name or '',
+                "lender_address": credit_application.lender_address or '',
+                "lender_address_street": credit_application.lender_address_street or '',
+                "lender_address_street2": credit_application.lender_address_street2 or '',
+                "lender_address_city": credit_application.lender_address_city or '',
+                "lender_address_state": credit_application.lender_address_state or '',
+                "lender_address_zip": credit_application.lender_address_zip or '',
+                "lender_phone": credit_application.lender_phone or '',
+                "original_purchase_price": credit_application.original_purchase_price or '',
+                "original_mortage_amount": credit_application.original_mortage_amount or '',
+                "monthly_mortage_payment": credit_application.monthly_mortage_payment or '',
+                "date_aquired": credit_application.date_aquired or '',
+                "present_balance": credit_application.present_balance or '',
+                "present_value_of_home": credit_application.present_value_of_home or '',
+                "second_mortage": credit_application.second_mortage or '',
+                "lender_name_or_phone": credit_application.lender_name_or_phone or '',
                 "applicant_second_mortage_phone": credit_application.applicant_second_mortage_phone or '',
-                "original_amount":credit_application.original_amount    or '',
-                "present_balance_second_mortage":credit_application.present_balance_second_mortage   or '',
-                "monthly_payment":credit_application.monthly_payment    or '',
-                "other_obligations":credit_application.other_obligations    or '',
-                "total_monthly_payments":credit_application.total_monthly_payments    or '',
-                "checking_account_no":credit_application.checking_account_no    or '',
-                "checking_routing_no":credit_application.checking_routing_no    or '',
-                "name_of_bank":credit_application.name_of_bank    or '',
-                "bank_phone_number":credit_application.bank_phone_number    or '',
-                "insurance_company": credit_application.insurance_company    or '',
-                "agent":credit_application.agent    or '',
-                "insurance_phone_no":credit_application.insurance_phone_no    or '',
-                "coverage":credit_application.coverage    or '',
-                "ethnicity":credit_application.ethnicity    or '',
-                "race":credit_application.race    or '',
-                "sex":credit_application.sex    or '',
-                "marital_status":credit_application.marital_status    or '',
-                "co_applicant_ethnicity":credit_application.co_applicant_ethnicity    or '',
-                "co_applicant_race":credit_application.co_applicant_race    or '',
-                "co_applicant_sex":credit_application.co_applicant_sex    or '',
-                "co_applicant_marital_status":credit_application.co_applicant_marital_status    or '',
-                "type_of_credit_requested":credit_application.co_applicant_marital_status    or '',
-                "joint_credit_initials":credit_application.joint_credit_initials or '',
-                "applicant_signature_date":credit_application.applicant_signature_date    or '',
-                "co_applicant_signature_date":credit_application.co_applicant_signature_date    or '',
-                "applicant_signature":applicant_signature_image,
-                "co_applicant_signature":co_applicant_signature_image,
-                "applicant_other_race":credit_application.applicant_other_race,
-                "co_applicant_other_race":credit_application.co_applicant_other_race,
-                "hunter_message_status":credit_application.hunter_message_status,
+                "original_amount": credit_application.original_amount or '',
+                "present_balance_second_mortage": credit_application.present_balance_second_mortage or '',
+                "monthly_payment": credit_application.monthly_payment or '',
+                "other_obligations": credit_application.other_obligations or '',
+                "total_monthly_payments": credit_application.total_monthly_payments or '',
+                "checking_account_no": credit_application.checking_account_no or '',
+                "checking_routing_no": credit_application.checking_routing_no or '',
+                "name_of_bank": credit_application.name_of_bank or '',
+                "bank_phone_number": credit_application.bank_phone_number or '',
+                "insurance_company": credit_application.insurance_company or '',
+                "agent": credit_application.agent or '',
+                "insurance_phone_no": credit_application.insurance_phone_no or '',
+                "coverage": credit_application.coverage or '',
+                "ethnicity": credit_application.ethnicity or '',
+                "race": credit_application.race or '',
+                "sex": credit_application.sex or '',
+                "marital_status": credit_application.marital_status or '',
+                "co_applicant_ethnicity": credit_application.co_applicant_ethnicity or '',
+                "co_applicant_race": credit_application.co_applicant_race or '',
+                "co_applicant_sex": credit_application.co_applicant_sex or '',
+                "co_applicant_marital_status": credit_application.co_applicant_marital_status or '',
+                "type_of_credit_requested": credit_application.co_applicant_marital_status or '',
+                "joint_credit_initials": credit_application.joint_credit_initials or '',
+                "applicant_signature_date": credit_application.applicant_signature_date or '',
+                "co_applicant_signature_date": credit_application.co_applicant_signature_date or '',
+                "applicant_signature": applicant_signature_image,
+                "co_applicant_signature": co_applicant_signature_image,
+                "applicant_other_race": credit_application.applicant_other_race,
+                "co_applicant_other_race": credit_application.co_applicant_other_race,
+                "hunter_message_status": credit_application.hunter_message_status,
                 }
 
         list.append(vals)
@@ -3518,10 +3575,11 @@ class SaleOrder(models.Model):
             _logger.info("------ Appointment Not Exist-------------")
             status = {'message': 'Appointment Not Exist', 'result': 'Failed'}
             return status
-        team_credit_application = self.env['team.credit.application'].search([('appointment_id', '=', appointment_id)], limit=1)
+        team_credit_application = self.env['team.credit.application'].search([('appointment_id', '=', appointment_id)],
+                                                                             limit=1)
         if team_credit_application:
             team_credit_application.sudo().unlink()
-        vals={}
+        vals = {}
         co_applicant_vals = {}
         applicant_vals = {}
         partner_vals = {}
@@ -3537,20 +3595,20 @@ class SaleOrder(models.Model):
                 sale_order.write({'coapplicant_skip': False})
         total_price = data.get('total_price', 0)
         if total_price:
-            vals.update({'total_price':total_price})
+            vals.update({'total_price': total_price})
         downpayment = data.get('downpayment', 0)
         if downpayment:
-            vals.update({'downpayment':downpayment})
+            vals.update({'downpayment': downpayment})
         amount_financed = data.get('amount_financed', 0)
         if amount_financed:
-            vals.update({'amount_financed':amount_financed})
+            vals.update({'amount_financed': amount_financed})
         type_of_loan = data.get('type_of_loan', 0)
         if type_of_loan:
-            if type_of_loan not in ['Low Payment','No Interest','One Year no Payments']:
+            if type_of_loan not in ['Low Payment', 'No Interest', 'One Year no Payments']:
                 _logger.info("------ Wrong value for type_of_loan-------------")
                 status = {'message': 'Wrong value for type of loan', 'result': 'Failed'}
                 return status
-            vals.update({'type_of_loan':type_of_loan})
+            vals.update({'type_of_loan': type_of_loan})
             if type_of_loan == 'Low Payment':
                 vals.update({'low_payment': True})
             if type_of_loan == 'No Interest':
@@ -3559,11 +3617,11 @@ class SaleOrder(models.Model):
                 vals.update({'no_payment': True})
         type_of_property = data.get('type_of_property', "")
         if type_of_property:
-            if type_of_property not in ['Single Family','Mobile Home','Condo']:
+            if type_of_property not in ['Single Family', 'Mobile Home', 'Condo']:
                 _logger.info("------ Wrong value for type_of_property-------------")
                 status = {'message': 'Wrong value for type of property', 'result': 'Failed'}
                 return status
-            vals.update({'type_of_property':type_of_property})
+            vals.update({'type_of_property': type_of_property})
             if type_of_property == 'Single Family':
                 vals.update({'single_family': True})
             if type_of_property == 'Mobile Home':
@@ -3573,48 +3631,50 @@ class SaleOrder(models.Model):
 
         address_of_property = data.get('address_of_property', "")
         if address_of_property:
-            vals.update({'address_of_property':address_of_property})
+            vals.update({'address_of_property': address_of_property})
 
         applicant_first_name = data.get('applicant_first_name', "")
         if applicant_first_name:
-            vals.update({'applicant_first_name':applicant_first_name})
+            vals.update({'applicant_first_name': applicant_first_name})
             if appointment.applicant_first_name != applicant_first_name:
-                applicant_vals.update({'applicant_first_name':applicant_first_name})
+                applicant_vals.update({'applicant_first_name': applicant_first_name})
         applicant_middle_name = data.get('applicant_middle_name', "")
         if applicant_middle_name:
-            vals.update({'applicant_middle_name':applicant_middle_name})
+            vals.update({'applicant_middle_name': applicant_middle_name})
             if appointment.applicant_middle_name != applicant_middle_name:
                 applicant_vals.update({'applicant_middle_name': applicant_middle_name})
         applicant_last_name = data.get('applicant_last_name', "")
         if applicant_last_name:
-            vals.update({'applicant_last_name':applicant_last_name})
+            vals.update({'applicant_last_name': applicant_last_name})
             if appointment.applicant_last_name != applicant_last_name:
                 applicant_vals.update({'applicant_last_name': applicant_last_name})
-        applicant_name = '%s, %s'%(applicant_last_name, applicant_first_name)
+        applicant_name = '%s, %s' % (applicant_last_name, applicant_first_name)
         if partner.name != applicant_name:
             partner_vals.update({'name': applicant_name})
         if appointment.customer_name != applicant_name:
             applicant_vals.update({'customer_name': applicant_name})
         drivers_license = data.get('drivers_license', "")
         if drivers_license:
-            vals.update({'drivers_license':drivers_license})
+            vals.update({'drivers_license': drivers_license})
         drivers_license_exp_date = data.get('drivers_license_exp_date', "")
         if drivers_license_exp_date:
-            vals.update({'drivers_license_exp_date':datetime.strptime(drivers_license_exp_date, '%m/%d/%Y').strftime('%Y-%m-%d')})
+            vals.update({'drivers_license_exp_date': datetime.strptime(drivers_license_exp_date, '%m/%d/%Y').strftime(
+                '%Y-%m-%d')})
         drivers_license_issue_date = data.get('drivers_license_issue_date', "")
         if drivers_license_issue_date:
-            vals.update({'drivers_license_issue_date':datetime.strptime(drivers_license_issue_date, '%m/%d/%Y').strftime('%Y-%m-%d')})
+            vals.update({'drivers_license_issue_date': datetime.strptime(drivers_license_issue_date,
+                                                                         '%m/%d/%Y').strftime('%Y-%m-%d')})
         date_of_birth = data.get('date_of_birth', "")
         if date_of_birth:
-            vals.update({'date_of_birth':datetime.strptime(date_of_birth, '%m/%d/%Y').strftime('%Y-%m-%d')})
+            vals.update({'date_of_birth': datetime.strptime(date_of_birth, '%m/%d/%Y').strftime('%Y-%m-%d')})
         social_security_number = data.get('social_security_number', "")
         if social_security_number:
-            vals.update({'social_security_number':social_security_number})
+            vals.update({'social_security_number': social_security_number})
         address_of_applicant = data.get('address_of_applicant', "")
         if address_of_applicant:
-            vals.update({'address_of_applicant':address_of_applicant})
-            applicant_vals.update({'street':address_of_applicant})
-            partner_vals.update({'street':address_of_applicant})
+            vals.update({'address_of_applicant': address_of_applicant})
+            applicant_vals.update({'street': address_of_applicant})
+            partner_vals.update({'street': address_of_applicant})
         address_of_applicant_street = data.get('address_of_applicant_street', "")
         if address_of_applicant_street:
             vals.update({'address_of_applicant_street': address_of_applicant_street})
@@ -3628,7 +3688,7 @@ class SaleOrder(models.Model):
             applicant_vals.update({'city': address_of_applicant_city})
         address_of_applicant_state = data.get('address_of_applicant_state', "")
         if address_of_applicant_state:
-            vals.update({'address_of_applicant_state':address_of_applicant_state})
+            vals.update({'address_of_applicant_state': address_of_applicant_state})
         address_of_applicant_zip = data.get('address_of_applicant_zip', "")
         if address_of_applicant_zip:
             vals.update({'address_of_applicant_zip': address_of_applicant_zip})
@@ -3636,22 +3696,22 @@ class SaleOrder(models.Model):
             applicant_vals.update({'zip': address_of_applicant_zip})
         previous_address_of_applicant = data.get('previous_address_of_applicant', "")
         if previous_address_of_applicant:
-            vals.update({'previous_address_of_applicant':previous_address_of_applicant})
+            vals.update({'previous_address_of_applicant': previous_address_of_applicant})
         previous_address_of_applicant_street = data.get('previous_address_of_applicant_street', "")
         if previous_address_of_applicant_street:
-            vals.update({'previous_address_of_applicant_street':previous_address_of_applicant_street})
+            vals.update({'previous_address_of_applicant_street': previous_address_of_applicant_street})
         previous_address_of_applicant_street2 = data.get('previous_address_of_applicant_street2', "")
         if previous_address_of_applicant_street2:
-            vals.update({'previous_address_of_applicant_street2':previous_address_of_applicant_street2})
+            vals.update({'previous_address_of_applicant_street2': previous_address_of_applicant_street2})
         previous_address_of_applicant_city = data.get('previous_address_of_applicant_city', "")
         if previous_address_of_applicant_city:
-            vals.update({'previous_address_of_applicant_city':previous_address_of_applicant_city})
+            vals.update({'previous_address_of_applicant_city': previous_address_of_applicant_city})
         previous_address_of_applicant_state = data.get('previous_address_of_applicant_state', "")
         if previous_address_of_applicant_state:
-            vals.update({'previous_address_of_applicant_state':previous_address_of_applicant_state})
+            vals.update({'previous_address_of_applicant_state': previous_address_of_applicant_state})
         previous_address_of_applicant_zip = data.get('previous_address_of_applicant_zip', "")
         if previous_address_of_applicant_zip:
-            vals.update({'previous_address_of_applicant_zip':previous_address_of_applicant_zip})
+            vals.update({'previous_address_of_applicant_zip': previous_address_of_applicant_zip})
         co_applicant_email = data.get('co_applicant_email', "")
         if co_applicant_email:
             vals.update({'co_applicant_email': co_applicant_email})
@@ -3671,231 +3731,234 @@ class SaleOrder(models.Model):
             partner_vals.update({'email': applicant_email})
         cell_phone = data.get('cell_phone', "")
         if cell_phone:
-            vals.update({'cell_phone':cell_phone})
+            vals.update({'cell_phone': cell_phone})
         home_phone = data.get('home_phone', "")
         if home_phone:
-            vals.update({'home_phone':home_phone})
-            applicant_vals.update({'phone':home_phone})
-            partner_vals.update({'phone':home_phone})
+            vals.update({'home_phone': home_phone})
+            applicant_vals.update({'phone': home_phone})
+            partner_vals.update({'phone': home_phone})
         how_long = data.get('how_long', "")
         if how_long:
-            vals.update({'how_long':how_long})
+            vals.update({'how_long': how_long})
         previous_address_how_long = data.get('previous_address_how_long', "")
         if previous_address_how_long:
-            vals.update({'previous_address_how_long':previous_address_how_long})
+            vals.update({'previous_address_how_long': previous_address_how_long})
         present_employer = data.get('present_employer', "")
         if present_employer:
-            vals.update({'present_employer':present_employer})
+            vals.update({'present_employer': present_employer})
         years_on_job = data.get('years_on_job', "")
         if years_on_job:
-            vals.update({'years_on_job':years_on_job})
+            vals.update({'years_on_job': years_on_job})
         occupation = data.get('occupation', "")
         if occupation:
-            vals.update({'occupation':occupation})
+            vals.update({'occupation': occupation})
         present_employers_address = data.get('present_employers_address', "")
         if present_employers_address:
-            vals.update({'present_employers_address':present_employers_address})
+            vals.update({'present_employers_address': present_employers_address})
         present_employers_address_street = data.get('present_employers_address_street', "")
         if present_employers_address_street:
-            vals.update({'present_employers_address_street':present_employers_address_street})
+            vals.update({'present_employers_address_street': present_employers_address_street})
         present_employers_address_street2 = data.get('present_employers_address_street2', "")
         if present_employers_address_street2:
-            vals.update({'present_employers_address_street2':present_employers_address_street2})
+            vals.update({'present_employers_address_street2': present_employers_address_street2})
         present_employers_address_city = data.get('present_employers_address_city', "")
         if present_employers_address_city:
-            vals.update({'present_employers_address_city':present_employers_address_city})
+            vals.update({'present_employers_address_city': present_employers_address_city})
         present_employers_address_state = data.get('present_employers_address_state', "")
         if present_employers_address_state:
-            vals.update({'present_employers_address_state':present_employers_address_state})
+            vals.update({'present_employers_address_state': present_employers_address_state})
         present_employers_address_zip = data.get('present_employers_address_zip', "")
         if present_employers_address_zip:
-            vals.update({'present_employers_address_zip':present_employers_address_zip})
+            vals.update({'present_employers_address_zip': present_employers_address_zip})
         earnings_from_employment = data.get('earnings_from_employment', "")
         if earnings_from_employment:
-            vals.update({'earnings_from_employment':earnings_from_employment})
-            vals.update({'is_earning_from_employment':True})
+            vals.update({'earnings_from_employment': earnings_from_employment})
+            vals.update({'is_earning_from_employment': True})
         supervisor_or_department = data.get('supervisor_or_department', "")
         if supervisor_or_department:
-            vals.update({'supervisor_or_department':supervisor_or_department})
+            vals.update({'supervisor_or_department': supervisor_or_department})
         employers_phone_number = data.get('employers_phone_number', "")
         if employers_phone_number:
-            vals.update({'employers_phone_number':employers_phone_number})
+            vals.update({'employers_phone_number': employers_phone_number})
         previous_employers_address = data.get('previous_employers_address', "")
         if previous_employers_address:
-            vals.update({'previous_employers_address':previous_employers_address})
+            vals.update({'previous_employers_address': previous_employers_address})
         previous_employers_address_street = data.get('previous_employers_address_street', "")
         if previous_employers_address_street:
-            vals.update({'previous_employers_address_street':previous_employers_address_street})
+            vals.update({'previous_employers_address_street': previous_employers_address_street})
         previous_employers_address_street2 = data.get('previous_employers_address_street2', "")
         if previous_employers_address_street2:
-            vals.update({'previous_employers_address_street2':previous_employers_address_street2})
+            vals.update({'previous_employers_address_street2': previous_employers_address_street2})
         previous_employers_address_city = data.get('previous_employers_address_city', "")
         if previous_employers_address_city:
-            vals.update({'previous_employers_address_city':previous_employers_address_city})
+            vals.update({'previous_employers_address_city': previous_employers_address_city})
         previous_employers_address_state = data.get('previous_employers_address_state', "")
         if previous_employers_address_state:
-            vals.update({'previous_employers_address_state':previous_employers_address_state})
+            vals.update({'previous_employers_address_state': previous_employers_address_state})
         previous_employers_address_zip = data.get('previous_employers_address_zip', "")
         if previous_employers_address_zip:
-            vals.update({'previous_employers_address_zip':previous_employers_address_zip})
+            vals.update({'previous_employers_address_zip': previous_employers_address_zip})
         earnings_per_month = data.get('earnings_per_month', "")
         if earnings_per_month:
-            vals.update({'earnings_per_month':earnings_per_month})
+            vals.update({'earnings_per_month': earnings_per_month})
         years_on_job_previous_employer = data.get('years_on_job_previous_employer', "")
         if years_on_job_previous_employer:
-            vals.update({'years_on_job_previous_employer':years_on_job_previous_employer})
+            vals.update({'years_on_job_previous_employer': years_on_job_previous_employer})
         occupation_previous_employer = data.get('occupation_previous_employer', "")
         if occupation_previous_employer:
-            vals.update({'occupation_previous_employer':occupation_previous_employer})
+            vals.update({'occupation_previous_employer': occupation_previous_employer})
         previous_employers_phone_number = data.get('previous_employers_phone_number', "")
         if previous_employers_phone_number:
-            vals.update({'previous_employers_phone_number':previous_employers_phone_number})
+            vals.update({'previous_employers_phone_number': previous_employers_phone_number})
         co_applicant_first_name = data.get('co_applicant_first_name', "")
         if co_applicant_first_name:
-            vals.update({'co_applicant_first_name':co_applicant_first_name})
-            co_applicant_vals.update({'co_applicant_first_name':co_applicant_first_name})
+            vals.update({'co_applicant_first_name': co_applicant_first_name})
+            co_applicant_vals.update({'co_applicant_first_name': co_applicant_first_name})
         co_applicant_middle_name = data.get('co_applicant_middle_name', "")
         if co_applicant_middle_name:
-            vals.update({'co_applicant_middle_name':co_applicant_middle_name})
+            vals.update({'co_applicant_middle_name': co_applicant_middle_name})
         co_applicant_last_name = data.get('co_applicant_last_name', "")
         if co_applicant_last_name:
-            vals.update({'co_applicant_last_name':co_applicant_last_name})
-            co_applicant_vals.update({'co_applicant_last_name':co_applicant_last_name})
+            vals.update({'co_applicant_last_name': co_applicant_last_name})
+            co_applicant_vals.update({'co_applicant_last_name': co_applicant_last_name})
         if co_applicant_last_name or co_applicant_first_name:
-            co_applicant_vals.update(({'co_applicant': '%s, %s'%(co_applicant_last_name, co_applicant_first_name)}))
+            co_applicant_vals.update(({'co_applicant': '%s, %s' % (co_applicant_last_name, co_applicant_first_name)}))
         co_applicant_drivers_license = data.get('co_applicant_drivers_license', "")
         if co_applicant_drivers_license:
-            vals.update({'co_applicant_drivers_license':co_applicant_drivers_license})
+            vals.update({'co_applicant_drivers_license': co_applicant_drivers_license})
         co_applicant_drivers_license_exp_date = data.get('co_applicant_drivers_license_exp_date', "")
         if co_applicant_drivers_license_exp_date:
-            vals.update({'co_applicant_drivers_license_exp_date':datetime.strptime(co_applicant_drivers_license_exp_date, '%m/%d/%Y').strftime('%Y-%m-%d')})
+            vals.update({'co_applicant_drivers_license_exp_date': datetime.strptime(
+                co_applicant_drivers_license_exp_date, '%m/%d/%Y').strftime('%Y-%m-%d')})
         co_applicant_drivers_license_issue_date = data.get('co_applicant_drivers_license_issue_date', "")
         if co_applicant_drivers_license_issue_date:
-            vals.update({'co_applicant_drivers_license_issue_date':datetime.strptime(co_applicant_drivers_license_issue_date, '%m/%d/%Y').strftime('%Y-%m-%d')})
+            vals.update({'co_applicant_drivers_license_issue_date': datetime.strptime(
+                co_applicant_drivers_license_issue_date, '%m/%d/%Y').strftime('%Y-%m-%d')})
         co_applicant_date_of_birth = data.get('co_applicant_date_of_birth', "")
         if co_applicant_date_of_birth:
-            vals.update({'co_applicant_date_of_birth':datetime.strptime(co_applicant_date_of_birth, '%m/%d/%Y').strftime('%Y-%m-%d')})
+            vals.update({'co_applicant_date_of_birth': datetime.strptime(co_applicant_date_of_birth,
+                                                                         '%m/%d/%Y').strftime('%Y-%m-%d')})
         co_applicant_social_security_number = data.get('co_applicant_social_security_number', "")
         if co_applicant_social_security_number:
-            vals.update({'co_applicant_social_security_number':co_applicant_social_security_number})
+            vals.update({'co_applicant_social_security_number': co_applicant_social_security_number})
         co_applicant_address_of_applicant = data.get('co_applicant_address_of_applicant', "")
         if co_applicant_address_of_applicant:
-            vals.update({'co_applicant_address_of_applicant':co_applicant_address_of_applicant})
-            co_applicant_vals.update({'co_applicant_address':co_applicant_address_of_applicant})
+            vals.update({'co_applicant_address_of_applicant': co_applicant_address_of_applicant})
+            co_applicant_vals.update({'co_applicant_address': co_applicant_address_of_applicant})
         co_applicant_street = data.get('co_applicant_street', "")
         if co_applicant_street:
-            vals.update({'co_applicant_street':co_applicant_street})
+            vals.update({'co_applicant_street': co_applicant_street})
         co_applicant_street2 = data.get('co_applicant_street2', "")
         if co_applicant_street2:
-            vals.update({'co_applicant_street2':co_applicant_street2})
+            vals.update({'co_applicant_street2': co_applicant_street2})
         co_applicant_city = data.get('co_applicant_city', "")
         if co_applicant_city:
-            vals.update({'co_applicant_city':co_applicant_city})
-            co_applicant_vals.update({'co_applicant_city':co_applicant_city})
+            vals.update({'co_applicant_city': co_applicant_city})
+            co_applicant_vals.update({'co_applicant_city': co_applicant_city})
         co_applicant_state = data.get('co_applicant_state', "")
         if co_applicant_state:
-            vals.update({'co_applicant_state':co_applicant_state})
+            vals.update({'co_applicant_state': co_applicant_state})
             co_applicant_state_id = self.env['res.country.state'].search([
                 ('country_id', '=', self.env.ref('base.us').id),
                 '|', ('name', '=', co_applicant_state), ('code', '=', co_applicant_state)
             ], limit=1)
             if co_applicant_state_id:
-                co_applicant_vals.update({'co_applicant_state':co_applicant_state_id.id})
+                co_applicant_vals.update({'co_applicant_state': co_applicant_state_id.id})
 
         co_applicant_zip = data.get('co_applicant_zip', "")
         if co_applicant_zip:
-            vals.update({'co_applicant_zip':co_applicant_zip})
-            co_applicant_vals.update({'co_applicant_zip':co_applicant_zip})
+            vals.update({'co_applicant_zip': co_applicant_zip})
+            co_applicant_vals.update({'co_applicant_zip': co_applicant_zip})
         co_applicant_previous_address_of_applicant = data.get('co_applicant_previous_address_of_applicant', "")
         if co_applicant_previous_address_of_applicant:
-            vals.update({'co_applicant_previous_address_of_applicant':co_applicant_previous_address_of_applicant})
+            vals.update({'co_applicant_previous_address_of_applicant': co_applicant_previous_address_of_applicant})
         co_applicant_previous_street = data.get('co_applicant_previous_street', "")
         if co_applicant_previous_street:
-            vals.update({'co_applicant_previous_street':co_applicant_previous_street})
+            vals.update({'co_applicant_previous_street': co_applicant_previous_street})
         co_applicant_previous_street2 = data.get('co_applicant_previous_street2', "")
         if co_applicant_previous_street2:
-            vals.update({'co_applicant_previous_street2':co_applicant_previous_street2})
+            vals.update({'co_applicant_previous_street2': co_applicant_previous_street2})
         co_applicant_previous_city = data.get('co_applicant_previous_city', "")
         if co_applicant_previous_city:
-            vals.update({'co_applicant_previous_city':co_applicant_previous_city})
+            vals.update({'co_applicant_previous_city': co_applicant_previous_city})
         co_applicant_previous_state = data.get('co_applicant_previous_state', "")
         if co_applicant_previous_state:
-            vals.update({'co_applicant_previous_state':co_applicant_previous_state})
+            vals.update({'co_applicant_previous_state': co_applicant_previous_state})
         co_applicant_previous_zip = data.get('co_applicant_previous_zip', "")
         if co_applicant_previous_zip:
-            vals.update({'co_applicant_previous_zip':co_applicant_previous_zip})
+            vals.update({'co_applicant_previous_zip': co_applicant_previous_zip})
         co_applicant_how_long = data.get('co_applicant_how_long', "")
         if co_applicant_how_long:
-            vals.update({'co_applicant_how_long':co_applicant_how_long})
+            vals.update({'co_applicant_how_long': co_applicant_how_long})
         co_applicant_present_employer = data.get('co_applicant_present_employer', "")
         if co_applicant_present_employer:
-            vals.update({'co_applicant_present_employer':co_applicant_present_employer})
+            vals.update({'co_applicant_present_employer': co_applicant_present_employer})
         co_applicant_years_on_job = data.get('co_applicant_years_on_job', "")
         if co_applicant_years_on_job:
-            vals.update({'co_applicant_years_on_job':co_applicant_years_on_job})
+            vals.update({'co_applicant_years_on_job': co_applicant_years_on_job})
         co_applicant_occupation = data.get('co_applicant_occupation', "")
         if co_applicant_occupation:
-            vals.update({'co_applicant_occupation':co_applicant_occupation})
+            vals.update({'co_applicant_occupation': co_applicant_occupation})
         co_applicant_present_employers_address = data.get('co_applicant_present_employers_address', "")
         if co_applicant_present_employers_address:
-            vals.update({'co_applicant_present_employers_address':co_applicant_present_employers_address})
+            vals.update({'co_applicant_present_employers_address': co_applicant_present_employers_address})
         co_applicant_present_employers_street = data.get('co_applicant_present_employers_street', "")
         if co_applicant_present_employers_street:
-            vals.update({'co_applicant_present_employers_street':co_applicant_present_employers_street})
-        co_applicant_present_employers_street2 =   data.get('co_applicant_present_employers_street2', "")
+            vals.update({'co_applicant_present_employers_street': co_applicant_present_employers_street})
+        co_applicant_present_employers_street2 = data.get('co_applicant_present_employers_street2', "")
         if co_applicant_present_employers_street2:
-            vals.update({'co_applicant_present_employers_street2':co_applicant_present_employers_street2})
+            vals.update({'co_applicant_present_employers_street2': co_applicant_present_employers_street2})
         co_applicant_present_employers_city = data.get('co_applicant_present_employers_city', "")
         if co_applicant_present_employers_city:
-            vals.update({'co_applicant_present_employers_city':co_applicant_present_employers_city})
+            vals.update({'co_applicant_present_employers_city': co_applicant_present_employers_city})
         co_applicant_present_employers_state = data.get('co_applicant_present_employers_state', "")
         if co_applicant_present_employers_state:
-            vals.update({'co_applicant_present_employers_state':co_applicant_present_employers_state})
+            vals.update({'co_applicant_present_employers_state': co_applicant_present_employers_state})
         co_applicant_present_employers_zip = data.get('co_applicant_present_employers_zip', "")
         if co_applicant_present_employers_zip:
-            vals.update({'co_applicant_present_employers_zip':co_applicant_present_employers_zip})
+            vals.update({'co_applicant_present_employers_zip': co_applicant_present_employers_zip})
         co_applicant_earnings_from_employment = data.get('co_applicant_earnings_from_employment', "")
         if co_applicant_earnings_from_employment:
-            vals.update({'co_applicant_earnings_from_employment':co_applicant_earnings_from_employment})
+            vals.update({'co_applicant_earnings_from_employment': co_applicant_earnings_from_employment})
         co_applicant_supervisor_or_department = data.get('co_applicant_supervisor_or_department', "")
         if co_applicant_supervisor_or_department:
-            vals.update({'co_applicant_supervisor_or_department':co_applicant_supervisor_or_department})
+            vals.update({'co_applicant_supervisor_or_department': co_applicant_supervisor_or_department})
         co_applicant_employers_phone_number = data.get('co_applicant_employers_phone_number', "")
         if co_applicant_employers_phone_number:
-            vals.update({'co_applicant_employers_phone_number':co_applicant_employers_phone_number})
+            vals.update({'co_applicant_employers_phone_number': co_applicant_employers_phone_number})
         co_applicant_previous_employers_address = data.get('co_applicant_previous_employers_address', "")
         if co_applicant_previous_employers_address:
-            vals.update({'co_applicant_previous_employers_address':co_applicant_previous_employers_address})
+            vals.update({'co_applicant_previous_employers_address': co_applicant_previous_employers_address})
         co_applicant_previous_employers_street = data.get('co_applicant_previous_employers_street', "")
         if co_applicant_previous_employers_street:
-            vals.update({'co_applicant_previous_employers_street':co_applicant_previous_employers_street})
+            vals.update({'co_applicant_previous_employers_street': co_applicant_previous_employers_street})
         co_applicant_previous_employers_street2 = data.get('co_applicant_previous_employers_street2', "")
         if co_applicant_previous_employers_street2:
-            vals.update({'co_applicant_previous_employers_street2':co_applicant_previous_employers_street2})
+            vals.update({'co_applicant_previous_employers_street2': co_applicant_previous_employers_street2})
         co_applicant_previous_employers_city = data.get('co_applicant_previous_employers_city', "")
         if co_applicant_previous_employers_city:
-            vals.update({'co_applicant_previous_employers_city':co_applicant_previous_employers_city})
+            vals.update({'co_applicant_previous_employers_city': co_applicant_previous_employers_city})
         co_applicant_previous_employers_state = data.get('co_applicant_previous_employers_state', "")
         if co_applicant_previous_employers_state:
-            vals.update({'co_applicant_previous_employers_state':co_applicant_previous_employers_state})
+            vals.update({'co_applicant_previous_employers_state': co_applicant_previous_employers_state})
         co_applicant_previoust_employers_zip = data.get('co_applicant_previoust_employers_zip', "")
         if co_applicant_previoust_employers_zip:
-            vals.update({'co_applicant_previoust_employers_zip':co_applicant_previoust_employers_zip})
+            vals.update({'co_applicant_previoust_employers_zip': co_applicant_previoust_employers_zip})
         co_applicant_earnings_per_month = data.get('co_applicant_earnings_per_month', "")
         if co_applicant_earnings_per_month:
-            vals.update({'co_applicant_earnings_per_month':co_applicant_earnings_per_month})
+            vals.update({'co_applicant_earnings_per_month': co_applicant_earnings_per_month})
         co_applicant_years_on_job_previous_employer = data.get('co_applicant_years_on_job_previous_employer', "")
         if co_applicant_years_on_job_previous_employer:
-            vals.update({'co_applicant_years_on_job_previous_employer':co_applicant_years_on_job_previous_employer})
+            vals.update({'co_applicant_years_on_job_previous_employer': co_applicant_years_on_job_previous_employer})
         co_applicant_occupation_previous_employer = data.get('co_applicant_occupation_previous_employer', "")
         if co_applicant_occupation_previous_employer:
-            vals.update({'co_applicant_occupation_previous_employer':co_applicant_occupation_previous_employer})
+            vals.update({'co_applicant_occupation_previous_employer': co_applicant_occupation_previous_employer})
         co_applicant_previous_employers_phone_number = data.get('co_applicant_previous_employers_phone_number', "")
         if co_applicant_previous_employers_phone_number:
-            vals.update({'co_applicant_previous_employers_phone_number':co_applicant_previous_employers_phone_number})
+            vals.update({'co_applicant_previous_employers_phone_number': co_applicant_previous_employers_phone_number})
         source_of_other_income = data.get('source_of_other_income', "")
         if source_of_other_income:
-            if source_of_other_income not in ['Social Security','Pension','Child Support','Rental','Other']:
+            if source_of_other_income not in ['Social Security', 'Pension', 'Child Support', 'Rental', 'Other']:
                 _logger.info("------ Wrong value for source_of_other_income-------------")
                 status = {'message': 'Wrong value for source of other income', 'result': 'Failed'}
                 return status
@@ -3934,7 +3997,7 @@ class SaleOrder(models.Model):
             vals.update({'address_relationship_city': address_relationship_city})
         address_relationship_state = data.get('address_relationship_state', "")
         if address_relationship_state:
-            vals.update({'address_relationship_state':address_relationship_state})
+            vals.update({'address_relationship_state': address_relationship_state})
         address_relationship_zip = data.get('address_relationship_zip', "")
         if address_relationship_zip:
             vals.update({'address_relationship_zip': address_relationship_zip})
@@ -3958,7 +4021,7 @@ class SaleOrder(models.Model):
             vals.update({'lender_address_city': lender_address_city})
         lender_address_state = data.get('lender_address_state', "")
         if lender_address_state:
-            vals.update({'lender_address_state':lender_address_state})
+            vals.update({'lender_address_state': lender_address_state})
         lender_address_zip = data.get('lender_address_zip', "")
         if lender_address_zip:
             vals.update({'lender_address_zip': lender_address_zip})
@@ -4051,13 +4114,13 @@ class SaleOrder(models.Model):
                 vals.update({'race_black': True})
             if race == 'Other':
                 vals.update({'race_other': True})
-                if not data.get('applicant_otherRace',''):
+                if not data.get('applicant_otherRace', ''):
                     _logger.info("------ Wrong value for applicant_otherRace-------------")
                     status = {'message': 'No value entered for applicant Other Race', 'result': 'Failed'}
                     return status
         sex = data.get('sex', "")
         if sex:
-            if sex not in ['Male','Female']:
+            if sex not in ['Male', 'Female']:
                 _logger.info("------ Wrong value for sex-------------")
                 status = {'message': 'Wrong value for sex', 'result': 'Failed'}
                 return status
@@ -4068,7 +4131,7 @@ class SaleOrder(models.Model):
                 vals.update({'sex_female': True})
         marital_status = data.get('marital_status', "")
         if marital_status:
-            if marital_status not in ['Married','Unmarried','Separated']:
+            if marital_status not in ['Married', 'Unmarried', 'Separated']:
                 _logger.info("------ Wrong value for marital_status-------------")
                 status = {'message': 'Wrong value for marital status', 'result': 'Failed'}
                 return status
@@ -4081,9 +4144,10 @@ class SaleOrder(models.Model):
                 vals.update({'marital_status_separated': True})
         co_applicant_race = data.get('co_applicant_race', "")
         if co_applicant_race and co_applicant_race != 'Select':
-            if co_applicant_race not in ['I do not wish to furnish this information', 'American Indian or Alaskan Native',
-                            'White/Caucasian (non Hispanic)', 'Hispanic', 'Asian or Pacific Islander',
-                            'Black (non Hispanic)', 'Other']:
+            if co_applicant_race not in ['I do not wish to furnish this information',
+                                         'American Indian or Alaskan Native',
+                                         'White/Caucasian (non Hispanic)', 'Hispanic', 'Asian or Pacific Islander',
+                                         'Black (non Hispanic)', 'Other']:
                 _logger.info("------ Wrong value for co_applicant_race-------------")
                 status = {'message': 'Wrong value for co_applicant race', 'result': 'Failed'}
                 return status
@@ -4102,13 +4166,13 @@ class SaleOrder(models.Model):
                 vals.update({'co_applicant_race_black': True})
             if co_applicant_race == 'Other':
                 vals.update({'co_applicant_race_other': True})
-                if not data.get('co_applicant_otherRace',''):
+                if not data.get('co_applicant_otherRace', ''):
                     _logger.info("------ Wrong value for co_applicant_otherRace-------------")
                     status = {'message': 'No value entered for Co Applicant Other Race', 'result': 'Failed'}
                     return status
         co_applicant_sex = data.get('co_applicant_sex', "")
         if co_applicant_sex:
-            if co_applicant_sex not in ['Male','Female']:
+            if co_applicant_sex not in ['Male', 'Female']:
                 _logger.info("------ Wrong value for co_applicant_sex-------------")
                 status = {'message': 'Wrong value for co-applicant sex', 'result': 'Failed'}
                 return status
@@ -4119,7 +4183,7 @@ class SaleOrder(models.Model):
                 vals.update({'co_applicant_sex_female': True})
         co_applicant_marital_status = data.get('co_applicant_marital_status', "")
         if co_applicant_marital_status:
-            if co_applicant_marital_status not in ['Married','Unmarried','Separated']:
+            if co_applicant_marital_status not in ['Married', 'Unmarried', 'Separated']:
                 _logger.info("------ Wrong value for co_applicant_marital_status-------------")
                 status = {'message': 'Wrong value for co_applicant marital status', 'result': 'Failed'}
                 return status
@@ -4132,7 +4196,9 @@ class SaleOrder(models.Model):
                 vals.update({'co_applicant_marital_status_separated': True})
         type_of_credit_requested = data.get('type_of_credit_requested', "")
         if type_of_credit_requested:
-            if type_of_credit_requested not in ['Individual Credit - relying solely on my income or assets','Joint Credit - We intend to apply for joint credit','Individual Credit - relying on my income or assets as well as income or assets from other sources']:
+            if type_of_credit_requested not in ['Individual Credit - relying solely on my income or assets',
+                                                'Joint Credit - We intend to apply for joint credit',
+                                                'Individual Credit - relying on my income or assets as well as income or assets from other sources']:
                 _logger.info("------ Wrong value for type_of_credit_requested-------------")
                 status = {'message': 'Wrong value for type of credit requested', 'result': 'Failed'}
                 return status
@@ -4148,10 +4214,12 @@ class SaleOrder(models.Model):
             vals.update({'joint_credit_initials': joint_credit_initials})
         applicant_signature_date = data.get('applicant_signature_date', "")
         if applicant_signature_date:
-            vals.update({'applicant_signature_date': datetime.strptime(applicant_signature_date, '%m/%d/%Y').strftime('%Y-%m-%d')})
+            vals.update({'applicant_signature_date': datetime.strptime(applicant_signature_date, '%m/%d/%Y').strftime(
+                '%Y-%m-%d')})
         co_applicant_signature_date = data.get('co_applicant_signature_date', "")
         if co_applicant_signature_date:
-            vals.update({'co_applicant_signature_date': datetime.strptime(co_applicant_signature_date, '%m/%d/%Y').strftime('%Y-%m-%d')})
+            vals.update({'co_applicant_signature_date': datetime.strptime(co_applicant_signature_date,
+                                                                          '%m/%d/%Y').strftime('%Y-%m-%d')})
         if appointment_id:
             vals.update({'appointment_id': appointment_id})
 
@@ -4161,10 +4229,10 @@ class SaleOrder(models.Model):
         if data.get('hunterMessageStatus', 'No') == 'Yes':
             hunter_message_status = True
         vals.update({
-            'applicant_other_race':data.get('applicant_otherRace', ''),
-            'co_applicant_other_race':data.get('co_applicant_otherRace',''),
-            'hunter_message_status':hunter_message_status,
-            })
+            'applicant_other_race': data.get('applicant_otherRace', ''),
+            'co_applicant_other_race': data.get('co_applicant_otherRace', ''),
+            'hunter_message_status': hunter_message_status,
+        })
         additional_monthly_income = data.get('additional_monthly_income', "")
         if additional_monthly_income:
             vals.update({'additional_monthly_income': additional_monthly_income})
@@ -4180,7 +4248,7 @@ class SaleOrder(models.Model):
         _logger.info(vals)
         team_credit_application = self.env['team.credit.application'].create(vals)
         self._cr.commit()
-        result= {}
+        result = {}
         if partner and partner_vals:
             partner.write(partner_vals)
         if co_applicant_vals and appointment and not data.get('co_applicant_skip', '0') == '1':
@@ -4263,7 +4331,7 @@ class SaleOrder(models.Model):
             return status
 
         values = {
-            'payment_method':'cash',
+            'payment_method': 'cash',
         }
         record = order.write(values)
         # journal_id = self.env['account.journal'].search([('type', '=', 'cash')], limit=1)
@@ -4369,28 +4437,28 @@ class SaleOrder(models.Model):
             status = {
                 'message': 'Payment Already Done',
                 'result': 'Success',
-                'document':order.link_to_share,
+                'document': order.link_to_share,
             }
             return status
         values = {
-            'payment_method':payment_method,
+            'payment_method': payment_method,
         }
         record = order.write(values)
         if card_expiry:
             month, year = card_expiry.split('/')
             if len(year) == 4:
                 year = year[2:]
-                card_expiry = '%s/%s'%(month, year)
+                card_expiry = '%s/%s' % (month, year)
         payment_data = {
             'sale_order_id': order.id,
             'cc_number': card_number,
             'cc_expiry': card_expiry,
             'cc_cvc': cardpin,
             'cc_holder_name': card_holder_name,
-            'amount':down_payment_amount,
+            'amount': down_payment_amount,
         }
-        payment_status=order.action_authorize_payment(payment_data)
-        if not payment_status['result'] == 'Success' :
+        payment_status = order.action_authorize_payment(payment_data)
+        if not payment_status['result'] == 'Success':
             _logger.info("------ Payment_Transaction Failed------------")
             status = {
                 'result': 'Failed',
@@ -4408,7 +4476,7 @@ class SaleOrder(models.Model):
             _logger.info("------ Payment_Transaction Created ------------")
             status = {
                 'result': 'Success',
-                'document':order.link_to_share,
+                'document': order.link_to_share,
                 'message': 'Payment done successfully',
             }
             return status
@@ -4472,16 +4540,16 @@ class SaleOrder(models.Model):
             status = {
                 'message': 'Payment Already Done',
                 'result': 'Success',
-                'document':order.link_to_share,
+                'document': order.link_to_share,
             }
             return status
 
         values = {
 
-            'payment_method':'check',
-            'check_number':check_number,
-            'check_account_number':check_account_number,
-            'check_routing_number':check_routing_number,
+            'payment_method': 'check',
+            'check_number': check_number,
+            'check_account_number': check_account_number,
+            'check_routing_number': check_routing_number,
         }
 
         record = order.write(values)
@@ -4506,7 +4574,7 @@ class SaleOrder(models.Model):
             _logger.info("------Payment done successfully------------")
             status = {
                 'result': 'Success',
-                'document':order.link_to_share,
+                'document': order.link_to_share,
                 'message': 'Payment done successfully',
             }
             return status
@@ -4519,9 +4587,9 @@ class SaleOrder(models.Model):
             return status
 
     @api.model
-    def check_document_status(self,data):
+    def check_document_status(self, data):
         sale_order_id = int(data.get('sale_order_id', False))
-        sale_order = self.env['sale.order'].search([('id','=',sale_order_id)],limit=1)
+        sale_order = self.env['sale.order'].search([('id', '=', sale_order_id)], limit=1)
         if not sale_order:
             status = {
                 'result': 'Success',
@@ -4529,8 +4597,9 @@ class SaleOrder(models.Model):
             return status
         else:
             if sale_order.link_to_share:
-                model_id=self.env['ir.model'].search([('model','=','sale.order')],limit=1)
-                sign_request = self.env['otl_document_sign.request'].sudo().search([('model_id','=',model_id.id),('res_id','=',sale_order_id)],order='create_date desc', limit=1)
+                model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+                sign_request = self.env['otl_document_sign.request'].sudo().search(
+                    [('model_id', '=', model_id.id), ('res_id', '=', sale_order_id)], order='create_date desc', limit=1)
                 if sign_request:
                     if sign_request.state == 'signed':
                         status = {
@@ -4562,7 +4631,7 @@ class SaleOrder(models.Model):
 
     @api.model
     def get_contract_document_status(self, data):
-        _logger.info('get_contract_document_status fn: %s'%(data))
+        _logger.info('get_contract_document_status fn: %s' % (data))
         sale_order_id = int(data.get('sale_order_id', False))
         sale_order = self.env['sale.order'].search([('id', '=', sale_order_id)], limit=1)
         _logger.info('get_contract_document_status sale_order: %s' % (sale_order))
@@ -4644,7 +4713,6 @@ class SaleOrder(models.Model):
                     register_payment_wizard.post()
         return True
 
-
     @api.model
     def capture_payment(self, data):
         sale_order_id = int(data.get('sale_order_id', False))
@@ -4688,7 +4756,8 @@ class SaleOrder(models.Model):
                 else:
                     _logger.info("------ Set Appointment Result API is Failed-------------")
                     return self.parse_error_response(response_result)
-                if sale_order.payment_method in ['cash', 'check'] or (sale_order.balance_payment_method and sale_order.balance_payment_method == 'finance' and not sale_order.payment_method):
+                if sale_order.payment_method in ['cash', 'check'] or (
+                        sale_order.balance_payment_method and sale_order.balance_payment_method == 'finance' and not sale_order.payment_method):
                     status = {
                         'result': 'Success',
                         'message': 'Payment has been Processed.\n\n This Appointment is Completed, please click on continue button to view the appointments',
@@ -4766,7 +4835,8 @@ class SaleOrder(models.Model):
                     # if sale_order.contract_doc_attachment_id:
                     #     sale_order.add_contract_document_file()
                     # sale_order.add_sale_id_file()
-                sale_order.appointment_id.write({'appointment_result': 'Sold', 'state': 'done', 'start_sync_to_i360': True})
+                sale_order.appointment_id.write(
+                    {'appointment_result': 'Sold', 'state': 'done', 'start_sync_to_i360': True})
                 response_result = sale_order.set_appointment_result_api()
                 _logger.info('-------i360 SetAppointmentResult Response: %s' % (response_result))
                 # if response_result.get('Result', '') == 'Success':
@@ -4775,7 +4845,8 @@ class SaleOrder(models.Model):
                 #     _logger.info("------ Set Appointment Result API is Failed-------------")
                 #     return self.parse_error_response(response_result)
 
-                if sale_order.payment_method in ['cash', 'check'] or (sale_order.balance_payment_method and sale_order.balance_payment_method == 'finance' and not sale_order.payment_method):
+                if sale_order.payment_method in ['cash', 'check'] or (
+                        sale_order.balance_payment_method and sale_order.balance_payment_method == 'finance' and not sale_order.payment_method):
                     status = {
                         'result': 'Success',
                         'message': 'Payment has been Processed.\n\n This Appointment is Completed, please click on continue button to view the appointments',
@@ -4837,14 +4908,15 @@ class SaleOrder(models.Model):
                     response_result = sale_order.add_sale_api()
                 else:
                     response_result = sale_order.add_quote_sales_app(sale_order.appointment_result)
-                _logger.info('-------i360 AddSale Response: %s'%(response_result))
+                _logger.info('-------i360 AddSale Response: %s' % (response_result))
             if sale_order.appointment_result == 'Sold':
                 response_result = sale_order.add_sale_items_api()
             else:
                 response_result = sale_order.add_quote_items_sales_app()
-            _logger.info('-------i360 AddSaleItem Response: %s'%(response_result))
+            _logger.info('-------i360 AddSaleItem Response: %s' % (response_result))
             if sale_order.appointment_result == 'Sold':
-                if sale_order.appointment_id.card_transaction_log_line.filtered(lambda x: x.state == 'failed' and not x.synced):
+                if sale_order.appointment_id.card_transaction_log_line.filtered(
+                        lambda x: x.state == 'failed' and not x.synced):
                     response_result = sale_order.add_card_decline_note_api()
                     _logger.info('-------i360 CreateChargeDeclineNotice Response: %s' % (response_result))
                 contract_doc_attachment = sale_order.contract_doc_attachment_id or False
@@ -4880,14 +4952,15 @@ class SaleOrder(models.Model):
         }
 
     @api.model
-    def cron_action_do_file_upload(self, data=[]):
-        _logger.info("------ Start Processing: cron_action_do_file_upload-------------")
-        # 02/02/2022 - 1 hour interval changed to 10 minuts
-        one_hour_ago_time = datetime.now() - relativedelta(minutes=10)
-        #find pending orders created 1 hour ago to sync for avoid the duplication of record creation in i360
-        orders = self.search([('is_data_upload_completed', '=', False), ('appointment_id.sync_initiated_date', '<=', one_hour_ago_time)])
-        model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+    def cron_action_sync_order_to_i360(self):
+        _logger.info("------ Start Processing: cron_action_sync_order_to_i360-------------")
+        # ----------------------------------------------------
+        # i360 sync operation is split into 2 cron job. Here we sync sale & update prospect info & appointment result
+        # -----------------------------------------------------
+        orders = self.search(
+            [('is_data_upload_completed', '=', False), ('appointment_id.start_sync_to_i360', '=', True)])
         sync_log = self.env['otl.appointment.sync.log']
+        model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
         for sale_order in orders:
             appointment = sale_order.appointment_id
             if appointment and appointment.start_sync_to_i360:
@@ -4909,9 +4982,16 @@ class SaleOrder(models.Model):
                                 'name': 'UpdateAppointmentProspect',
                             })
                     if not appointment.status_updated_to_i360:
-                        response_result = sale_order.set_appointment_result_api(sale_order.appointment_result)
+                        notes = {}
+                        if appointment.what_happened_notes and appointment.whats_next_notes:
+                            notes = {
+                                'what_happened_notes': appointment.what_happened_notes,
+                                'whats_next_notes': appointment.whats_next_notes,
+                            }
+                        response_result = sale_order.set_appointment_result_api(sale_order.appointment_result, notes=notes)
                         _logger.info('-------i360 SetAppointmentResult Response: %s' % (response_result))
-                        if response_result.get('Result', '') == 'Success' or response_result.get('success', '') == 'true':
+                        if response_result.get('Result', '') == 'Success' or response_result.get('success',
+                                                                                                 '') == 'true':
                             sync_log.create({
                                 'appointment_id': appointment.id,
                                 'response': response_result,
@@ -4924,6 +5004,53 @@ class SaleOrder(models.Model):
                                 'state': 'failed',
                                 'name': 'SetAppointmentResult',
                             })
+                    if not sale_order.quote_id:
+                        if sale_order.appointment_result == 'Sold':
+                            if sale_order.state != 'sale':
+                                sale_order.confirm_order_and_create_invoice()
+                            response_result = sale_order.add_sale_api()
+                            _logger.info('-------i360 AddSale Response: %s' % (response_result))
+                            if response_result.get('success', '') == 'true':
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'name': 'AddSale',
+                                })
+                                if response_result.get('duplicate', '') == 'true':
+                                    _logger.info('-------Sync Aborting due to Duplicate Sale - %s, Response: %s' % (sale_order.id, response_result))
+                                    return True
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'state': 'failed',
+                                    'name': 'AddSale',
+                                })
+                        else:
+                            included_room_measurement_lines = sale_order.room_measurement_line.filtered(
+                                lambda x: not x.exclude_from_calculation)
+                            excluded_room_measurement_lines = sale_order.room_measurement_line.filtered(
+                                lambda x: x.exclude_from_calculation)
+                            if (included_room_measurement_lines and not sale_order.quote_id) or (
+                                    excluded_room_measurement_lines and not sale_order.excluded_quote_id):
+                                response_result = sale_order.add_quote_sales_app(sale_order.appointment_result)
+                                if response_result.get('success', '') == 'true':
+                                    sync_log.create({
+                                        'appointment_id': appointment.id,
+                                        'response': response_result,
+                                        'name': 'AddQuote',
+                                    })
+                                    if response_result.get('duplicate', '') == 'true':
+                                        _logger.info('-------Sync Aborting due to Duplicate Quote - %s, Response: %s' % (sale_order.id, response_result))
+                                        return True
+                                else:
+                                    sync_log.create({
+                                        'appointment_id': appointment.id,
+                                        'response': response_result,
+                                        'state': 'failed',
+                                        'name': 'AddQuote',
+                                    })
+                                _logger.info('-------i360 AddQuote Response: %s' % (response_result))
                     team_credit_application = self.env['team.credit.application'].search(
                         [('appointment_id', '=', int(appointment.id))], limit=1)
                     if team_credit_application and not team_credit_application.improveit_id:
@@ -4944,40 +5071,6 @@ class SaleOrder(models.Model):
                                 'name': 'AddCreditApplication',
                             })
                     sale_order_vals = {}
-                    if not sale_order.quote_id:
-                        if sale_order.appointment_result == 'Sold':
-                            if sale_order.state != 'sale':
-                                sale_order.confirm_order_and_create_invoice()
-                            response_result = sale_order.add_sale_api()
-                            if response_result.get('success', '') == 'true':
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': response_result,
-                                    'name': 'AddSale',
-                                })
-                            else:
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': response_result,
-                                    'state': 'failed',
-                                    'name': 'AddSale',
-                                })
-                        else:
-                            response_result = sale_order.add_quote_sales_app(sale_order.appointment_result)
-                            if response_result.get('success', '') == 'true':
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': response_result,
-                                    'name': 'AddQuote',
-                                })
-                            else:
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': response_result,
-                                    'state': 'failed',
-                                    'name': 'AddQuote',
-                                })
-                        _logger.info('-------i360 AddSale Response: %s' % (response_result))
                     room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
                         lambda x: not x.exclude_from_calculation and not x.improveit_id)
                     if room_measurement_lines_to_sync:
@@ -5013,7 +5106,8 @@ class SaleOrder(models.Model):
                                 })
                         _logger.info('-------i360 AddSaleItem Response: %s' % (response_result))
                     if sale_order.appointment_result == 'Sold':
-                        if appointment.card_transaction_log_line.filtered(lambda x: x.state == 'failed' and not x.synced):
+                        if appointment.card_transaction_log_line.filtered(
+                                lambda x: x.state == 'failed' and not x.synced):
                             response_result = sale_order.add_card_decline_note_api()
                             _logger.info('-------i360 CreateChargeDeclineNotice Response: %s' % (response_result))
                             if response_result.get('success', '') == 'true':
@@ -5033,7 +5127,8 @@ class SaleOrder(models.Model):
                         contract_doc_attachment = sale_order.contract_doc_attachment_id or False
                         if not contract_doc_attachment:
                             sign_request = self.env['otl_document_sign.request'].sudo().search(
-                                [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)], order='create_date desc',
+                                [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)],
+                                order='create_date desc',
                                 limit=1)
                             if sign_request:
                                 if sign_request.state == 'signed':
@@ -5041,7 +5136,8 @@ class SaleOrder(models.Model):
                                         sign_request.generate_completed_document()
                                     contract_doc_attachment = sign_request.document_image()
                                     sale_order.write(
-                                        {'contract_doc_attachment_id': contract_doc_attachment.id, 'document_signed': True})
+                                        {'contract_doc_attachment_id': contract_doc_attachment.id,
+                                         'document_signed': True})
                         if contract_doc_attachment and not sale_order.contract_document_uploaded:
                             result = sale_order.add_contract_document_file()
                             if result.get('success', '') == 'true':
@@ -5060,7 +5156,7 @@ class SaleOrder(models.Model):
                                 })
                     if not sale_order.other_files_uploaded:
                         if sale_order.state in ['sale', 'done'] or sale_order.appointment_result == 'Sold':
-                            result= sale_order.add_sale_id_file()
+                            result = sale_order.add_sale_id_file()
                             if result.get('success', '') == 'true':
                                 sale_order_vals.update({'contract_document_uploaded': True})
                                 sync_log.create({
@@ -5076,7 +5172,7 @@ class SaleOrder(models.Model):
                                     'name': 'AddSaleAttachment',
                                 })
                         else:
-                            result= sale_order.add_quote_id_file(document=False)
+                            result = sale_order.add_quote_id_file(document=False)
                             if result.get('success', '') == 'true':
                                 sale_order_vals.update({'contract_document_uploaded': True})
                                 sync_log.create({
@@ -5100,10 +5196,175 @@ class SaleOrder(models.Model):
         return True
 
     @api.model
+    def cron_action_do_file_upload(self, data=[]):
+        """
+        Cron2 is disabled since duplicate sale is handled from i360 middleware
+        _logger.info("------ Start Processing: cron_action_do_file_upload-------------")
+        # 02/02/2022 - 1 hour interval changed to 10 minutes
+        # one_hour_ago_time = datetime.now() - relativedelta(minutes=10)
+        # find pending orders created 1 hour ago to sync for avoid the duplication of record creation in i360
+        # orders = self.search([('is_data_upload_completed', '=', False), ('appointment_id.sync_initiated_date', '<=', one_hour_ago_time)])
+        # ----------------------------------------------------
+        # i360 sync operation is split into 2 cron job. Here we sync credit application, sale items & file uploads
+        # -----------------------------------------------------
+        one_hour_ago_time = datetime.now() - relativedelta(minutes=10)
+        orders = self.search([('is_data_upload_completed', '=', False), ('quote_id', '!=', False), ('appointment_id.sync_initiated_date', '<=', one_hour_ago_time)])
+        model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+        sync_log = self.env['otl.appointment.sync.log']
+        for sale_order in orders:
+            appointment = sale_order.appointment_id
+            if appointment and appointment.start_sync_to_i360:
+                if sale_order.appointment_result:
+                    team_credit_application = self.env['team.credit.application'].search(
+                        [('appointment_id', '=', int(appointment.id))], limit=1)
+                    if team_credit_application and not team_credit_application.improveit_id:
+                        result = self.env['sale.order'].submit_credit_application_to_boomi(team_credit_application)
+                        if result.get('success', '') == 'true':
+                            _logger.info("------ Credit Application Create,Update Success-------------")
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'AddCreditApplication',
+                            })
+                        else:
+                            _logger.info("------ Credit Application Create,Update Failed-------------")
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'AddCreditApplication',
+                            })
+                    sale_order_vals = {}
+                    room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
+                        lambda x: not x.exclude_from_calculation and not x.improveit_id)
+                    if room_measurement_lines_to_sync:
+                        if sale_order.appointment_result == 'Sold':
+                            response_result = sale_order.add_sale_items_api()
+                            if response_result.get('success', '') == 'true':
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'name': 'AddSaleItem',
+                                })
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'state': 'failed',
+                                    'name': 'AddSaleItem',
+                                })
+                        else:
+                            response_result = sale_order.add_quote_items_sales_app()
+                            if response_result.get('success', '') == 'true':
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'name': 'AddQuoteItem',
+                                })
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'state': 'failed',
+                                    'name': 'AddQuoteItem',
+                                })
+                        _logger.info('-------i360 AddSaleItem Response: %s' % (response_result))
+                    if sale_order.appointment_result == 'Sold':
+                        if appointment.card_transaction_log_line.filtered(
+                                lambda x: x.state == 'failed' and not x.synced):
+                            response_result = sale_order.add_card_decline_note_api()
+                            _logger.info('-------i360 CreateChargeDeclineNotice Response: %s' % (response_result))
+                            if response_result.get('success', '') == 'true':
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'name': 'CreateChargeDeclineNotice',
+                                })
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'state': 'failed',
+                                    'name': 'CreateChargeDeclineNotice',
+                                })
+
+                        contract_doc_attachment = sale_order.contract_doc_attachment_id or False
+                        if not contract_doc_attachment:
+                            sign_request = self.env['otl_document_sign.request'].sudo().search(
+                                [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)],
+                                order='create_date desc',
+                                limit=1)
+                            if sign_request:
+                                if sign_request.state == 'signed':
+                                    if not sign_request.completed_document:
+                                        sign_request.generate_completed_document()
+                                    contract_doc_attachment = sign_request.document_image()
+                                    sale_order.write(
+                                        {'contract_doc_attachment_id': contract_doc_attachment.id,
+                                         'document_signed': True})
+                        if contract_doc_attachment and not sale_order.contract_document_uploaded:
+                            result = sale_order.add_contract_document_file()
+                            if result.get('success', '') == 'true':
+                                sale_order_vals.update({'contract_document_uploaded': True})
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': result,
+                                    'name': 'Contract Document',
+                                })
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': result,
+                                    'state': 'failed',
+                                    'name': 'Contract Document',
+                                })
+                    if not sale_order.other_files_uploaded:
+                        if sale_order.state in ['sale', 'done'] or sale_order.appointment_result == 'Sold':
+                            result = sale_order.add_sale_id_file()
+                            if result.get('success', '') == 'true':
+                                sale_order_vals.update({'contract_document_uploaded': True})
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': result,
+                                    'name': 'AddSaleAttachment',
+                                })
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': result,
+                                    'state': 'failed',
+                                    'name': 'AddSaleAttachment',
+                                })
+                        else:
+                            result = sale_order.add_quote_id_file(document=False)
+                            if result.get('success', '') == 'true':
+                                sale_order_vals.update({'contract_document_uploaded': True})
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': result,
+                                    'name': 'AddQuoteAttachment',
+                                })
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': result,
+                                    'state': 'failed',
+                                    'name': 'AddQuoteAttachment',
+                                })
+                        if result.get('success', '') == 'true':
+                            sale_order_vals.update({'other_files_uploaded': True})
+                    sale_order.write(sale_order_vals)
+                    if sale_order.check_document_upload_completed():
+                        sale_order.write({'is_data_upload_completed': True})
+                    self.env.cr.commit()
+        """
+        return True
+
+    @api.model
     def propose_reject_quote(self, data):
         sale_order_id = int(data.get('sale_order_id', False))
         sale_order = self.env['sale.order'].search([('id', '=', sale_order_id)], limit=1)
-        order_status=data.get('status',False)
+        order_status = data.get('status', False)
         if not order_status:
             status = {
                 'result': 'Success',
@@ -5126,11 +5387,11 @@ class SaleOrder(models.Model):
 
             if order_status == 'rejected':
                 sale_order.add_quote_sales_app("rejected")
-                sale_order.state ='cancel'
+                sale_order.state = 'cancel'
                 status = {
-                            'result': 'Success',
-                            'message': 'Quote Rejected Successfully'
-                        }
+                    'result': 'Success',
+                    'message': 'Quote Rejected Successfully'
+                }
                 return status
             else:
                 status = {
@@ -5138,7 +5399,7 @@ class SaleOrder(models.Model):
                     'message': 'Invalid Parameter For Quote Status'}
                 return status
 
-    def date_by_adding_business_days(self,add_days):
+    def date_by_adding_business_days(self, add_days):
         business_days_to_add = add_days
         current_date = datetime.today()
         while business_days_to_add > 0:
@@ -5287,7 +5548,7 @@ class SaleOrder(models.Model):
                                         'loan_payment': loan_payment,
                                         'photo_permission_yes': True if photo_permission == 1 else False,
                                         'photo_permission_no': True if photo_permission == 0 else False,
-                                        'coapplicant_skip' : True if coapplicant_skip == 1 else False,
+                                        'coapplicant_skip': True if coapplicant_skip == 1 else False,
                                         'installation_date': installation_date or False,
                                         'owners_right_to_cancel': final_date_to_cancel.strftime('%Y-%m-%d') or False,
                                         'requested_installation': requested_installation or False,
@@ -5430,7 +5691,6 @@ class SaleOrder(models.Model):
 
             return status
 
-
     def find_card_type(self, card_number):
         card_type = ''
         if card_number:
@@ -5506,7 +5766,6 @@ class SaleOrder(models.Model):
                         "zip": partner.zip or "",
                         "country": partner.country_id and partner.country_id.code or ""
                     },
-
 
                 }
             }
@@ -5636,8 +5895,6 @@ class SaleOrder(models.Model):
                 'message': response.get('transactionResponse', {}).get('messages')[0].get('description'),
             }
 
-
-
     """
     Code is commented since the process flow is changed
     def action_do_payment(self, data):
@@ -5728,6 +5985,7 @@ class SaleOrder(models.Model):
         return status
     """
 
+
 class AuthorizeAPICustom(AuthorizeAPI):
 
     def _authorize_request_custom(self, data):
@@ -5753,21 +6011,21 @@ class AuthorizeAPICustom(AuthorizeAPI):
         messages = resp.get('messages', {})
         if messages and messages.get('resultCode', '') == 'Error':
             error_text = ''
-            if transactionResponse and transactionResponse.get('errors', []) and transactionResponse.get('errors', [])[0].get('errorText', ''):
+            if transactionResponse and transactionResponse.get('errors', []) and transactionResponse.get('errors', [])[
+                0].get('errorText', ''):
                 error_text = transactionResponse.get('errors', [])[0].get('errorText', '')
             return {
                 'transaction_id': resp.get('transactionResponse', {}).get('transId', ''),
                 'err_code': messages.get('message')[0].get('code'),
                 'err_msg': messages.get('message')[0].get('text'),
-                'error_text' : error_text or messages.get('message')[0].get('text'),
+                'error_text': error_text or messages.get('message')[0].get('text'),
             }
 
         return resp
 
 
-
 class ProductProduct(models.Model):
-    _inherit ='product.product'
+    _inherit = 'product.product'
 
     @api.model
     def select_material_from_plan(self, data):
@@ -5787,8 +6045,7 @@ class ProductProduct(models.Model):
                 status = {'message': 'Update Material Based on plan Failed', 'result': 'False'}
                 return status
 
-
-    def profile_image(self,model_name):
+    def profile_image(self, model_name):
         url = ''
         Attachment = self.env['ir.attachment'].sudo().search([('res_model', '=', model_name), ('res_id', '=', self.id)],
                                                              limit=1)
@@ -5812,20 +6069,21 @@ class ProductProduct(models.Model):
     @api.model
     def get_material_list(self, data):
         payment_plan_id = int(data.get('payment_plan_id', 0))
-        list=[]
+        list = []
         if payment_plan_id:
-            product_list = self.env['product.product'].search([('product_tmpl_id','=',payment_plan_id),('is_material','=',True)])
+            product_list = self.env['product.product'].search(
+                [('product_tmpl_id', '=', payment_plan_id), ('is_material', '=', True)])
         else:
-            product_list = self.env['product.product'].search([('is_material','=',True)])
+            product_list = self.env['product.product'].search([('is_material', '=', True)])
         if product_list:
             for product in product_list:
                 material_image_url = ''
                 if product.image_1920:
                     material_image_url = product.profile_image('product.product')
-                vals={
-                    'material_id':product.id or 0,
-                    'name':product.name,
-                    'color':product.color or 'False',
+                vals = {
+                    'material_id': product.id or 0,
+                    'name': product.name,
+                    'color': product.color or 'False',
                     'material_image_url': material_image_url
                 }
                 list.append(vals)
@@ -5842,13 +6100,14 @@ class ProductProduct(models.Model):
             }
         return status
 
+
 class TeamPaymentTransaction(models.Model):
     _inherit = 'team.payment.transaction.line'
 
     @api.model
-    def create_payment_transaction(self,data):
+    def create_payment_transaction(self, data):
         if self.env['product.template'].browse(int(data.get('payment_plan', 0))).exists():
-            payment_plan =int(data.get('payment_plan', 0))
+            payment_plan = int(data.get('payment_plan', 0))
         else:
             _logger.info("------ Payment Plan ID Empty------------")
             status = {
@@ -5883,7 +6142,7 @@ class TeamPaymentTransaction(models.Model):
                 'result': 'Failed',
             }
             return status
-        if  self.env['sale.order'].browse(int(data.get('order_id', 0))).exists():
+        if self.env['sale.order'].browse(int(data.get('order_id', 0))).exists():
             order_id = int(data.get('order_id', 0))
         else:
             _logger.info("------order_id Empty------------")
@@ -5892,41 +6151,40 @@ class TeamPaymentTransaction(models.Model):
                 'result': 'Failed',
             }
             return status
-        total_price=0
+        total_price = 0
         if data.get('total_price', 0):
             total_price = int(data.get('total_price', 0))
-        downpayment=0
+        downpayment = 0
         if data.get('downpayment', 0):
             downpayment = int(data.get('downpayment', 0))
-        balance=0
+        balance = 0
         if data.get('balance', 0):
             balance = int(data.get('balance', 0))
 
-
-        values ={
-            'payment_plan':int(payment_plan) or 0,
-            'payment_option':int(payment_option) or 0,
-            'downpayment_percentage':int(downpayment_percentage) or 0,
-            'payment_method':payment_method or 0,
-            'total_price':total_price,
-            'downpayment':downpayment,
-            'balance':balance,
+        values = {
+            'payment_plan': int(payment_plan) or 0,
+            'payment_option': int(payment_option) or 0,
+            'downpayment_percentage': int(downpayment_percentage) or 0,
+            'payment_method': payment_method or 0,
+            'total_price': total_price,
+            'downpayment': downpayment,
+            'balance': balance,
             'order_id': int(order_id) or 0,
             'payment_success': True,
         }
-        payment_obj=self.env['team.payment.transaction.line']
+        payment_obj = self.env['team.payment.transaction.line']
         record = payment_obj.create(values)
         if record:
             _logger.info("------ Payment_Transaction Created ------------")
             status = {
                 'result': 'Success',
-                'message':'Payment Transaction Created',
+                'message': 'Payment Transaction Created',
             }
             return status
         else:
             _logger.info("------ Payment_Transaction Creation Failed ------------")
             status = {
                 'result': 'Failed',
-                'message':'Payment_Transaction Creation Failed ',}
+                'message': 'Payment_Transaction Creation Failed ', }
 
             return status

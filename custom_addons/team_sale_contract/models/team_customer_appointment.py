@@ -173,6 +173,7 @@ class TeamCustomerAppointment(models.Model):
     office_location_id = fields.Many2one('otl.office.location', 'Office Location', readonly=True, states={'draft': [('readonly', False)]})
     market_segment = fields.Char('Market Segment')
     app_version_id = fields.Many2one('otl.sales.app.version', 'App Version')
+    make_payment_failure = fields.Boolean('Set Payment as Failure')
 
     @api.onchange('country_id')
     def _onchange_country_id(self):
@@ -302,6 +303,11 @@ class APISyncLog(models.Model):
 
     def create_api_log(self, url, data, uid, result):
         appointment_id = data.get('appointment_id', False)
+        sale_order_id = data.get('sale_order_id', False)
+        if sale_order_id and not appointment_id:
+            sale_order = self.env['sale.order'].browse(int(sale_order_id))
+            if sale_order.exists() and sale_order.appointment_id:
+                appointment_id = sale_order.appointment_id.id
         state = 'success'
         if result.get('result', False) == 'Failed':
             state = 'failed'
