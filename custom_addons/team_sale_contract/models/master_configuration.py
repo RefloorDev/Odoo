@@ -10,6 +10,11 @@ import pytz
 from dateutil.relativedelta import relativedelta
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT
 
+import logging
+
+
+_logger = logging.getLogger(__name__)
+
 
 class AppointmentResult(models.Model):
     _name = 'appointment.result'
@@ -51,6 +56,7 @@ class ResCompany(models.Model):
     enable_auto_logout = fields.Boolean('Enable Auto Logout', default=False)
     auto_logout_time = fields.Float('Auto Logout Time (24 Hours Format)', help="Enter time in 24 Hrs format")
     logged_in_notify_user_ids = fields.Many2many('res.users', 'logged_in_notify_user_rel', 'company_id', 'user_id', string="Users to Notify")
+    attachment_delete_day_limit = fields.Integer('Day limit for Deleting Old Attachments', default= 0)
 
     @api.onchange('auto_logout_time')
     def onchange_auto_logout_time(self):
@@ -76,6 +82,45 @@ class ResCompany(models.Model):
                 cron.write({'nextcall': auto_logout_date_local.strftime(DEFAULT_SERVER_DATETIME_FORMAT)})
         return result
 
+    @api.model
+    def cron_delete_ild_attachments(self):
+        current_date = fields.Date.today()
+        for company in self.search([('attachment_delete_day_limit', '>', 0)]):
+            date_delete_appointment = current_date - relativedelta(days=company.attachment_delete_day_limit)
+            appointments = self.env['team.customer.appointment'].search([
+                ('appointment_date', '<=', date_delete_appointment),
+                ('state', '=', 'done'),
+            ])
+            count = 1
+            for appointment in appointments:
+                _logger.info('Start Processiing Appointment: %s, %s/%s'%(appointment.id,count, len(appointments)))
+                count +=1
+                if appointment.attachment_ids:
+                    appointment.attachment_ids.unlink()
+                if appointment.applicant_signature_id:
+                    appointment.applicant_signature_id.unlink()
+                if appointment.applicant_initial_id:
+                    appointment.applicant_initial_id.unlink()
+                if appointment.co_applicant_signature_id:
+                    appointment.co_applicant_signature_id.unlink()
+                if appointment.co_applicant_initial_id:
+                    appointment.co_applicant_initial_id.unlink()
+                sale_orders = appointment.sale_order_ids
+                credit_applications = self.env['team.credit.application'].search([('appointment_id', '=', appointment.id)])
+                for credit_application in credit_applications:
+                    if credit_application.attachment_id:
+                        credit_application.attachment_id.unlink()
+                for order in sale_orders:
+                    if order.contract_doc_attachment_id:
+                        order.contract_doc_attachment_id.unlink()
+                    for room_measure in order.room_measurement_line:
+                        if room_measure.attachment_ids:
+                            room_measure.attachment_ids.unlink()
+                        if room_measure.protrusion_image_ids:
+                            room_measure.protrusion_image_ids.unlink()
+                        if room_measure.shape_image_id:
+                            room_measure.shape_image_id.unlink()
+            self.env['ir.autovacuum'].sudo().power_on()
 
 
 class FloorColor(models.Model):
@@ -191,6 +236,7 @@ class DownPaymentOption(models.Model):
     balance_due = fields.Char('Balance_Due__c')
     sequence = fields.Float(string="Display_Order__c")
     payment_info = fields.Text('Payment_Info__c')
+    down_payment_message = fields.Char('Down Payment Message')
 
 
 class TeamMonthlyPromo(models.Model):
@@ -341,6 +387,8 @@ class Product(models.Model):
     warranty_info = fields.Char('Warranty Info')
     grade = fields.Char('Grade')
 
+    min_sale_price = fields.Float('Minimum Sale Price', default=0)
+
     @api.depends('list_price', 'cost_per_sqft')
     def _compute_flooring_cost(self):
         for record in self:
@@ -477,3 +525,48 @@ class UserAuthenticationLog(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=False, default=lambda self: self.env.company)
     action_done = fields.Selection([('user', 'User'), ('admin', 'Admin'), ('automated', 'Automated')],
                                    string='Action Done By', default='user', required=True)
+
+
+class Weekdays(models.Model):
+    _name = 'otl.weekdays'
+    _description = "Weekdays"
+
+    name = fields.Char("Name")
+
+
+class PaymentRestrictionRule(models.Model):
+    _name = 'otl.payment.restriction.rule'
+    _description = "Restricting Payment Rules"
+    _order = 'start_date desc'
+
+    name = fields.Char("Rule Name")
+    start_date = fields.Date("Start Date")
+    end_date = fields.Date("End Date")
+    location_ids = fields.Many2many("otl.office.location", string='Office Locations')
+    payment_option_ids = fields.Many2many("team.downpayment.option", string="Payment Options")
+    allowed_days_ids = fields.Many2many('otl.weekdays', string="Weekdays")
+    active = fields.Boolean("Active", default=True)
+    conditions = fields.Selection([
+        ('amount', 'Order Total'),
+        ('grade', 'Grade'),
+        ('margin', 'Margin'),
+    ])
+    min_order_total = fields.Integer("Minimum Order Total")
+    grade = fields.Char('Grade')
+    min_margin_amount = fields.Integer("Minimum Margin Amount")
+    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company.id)
+    promotion_code_ids = fields.Many2many('otl.promotion.code', string='Restricted Promotions')
+    discount_code_ids = fields.Many2many('team.monthly.promo', string='Restricted Discounts')
+
+
+class InstallationCrew(models.Model):
+    _name = 'otl.installation.crew'
+    _description = 'Installation Crew'
+
+    name = fields.Char('Crew Name', required=True)
+    active = fields.Boolean("Active", default=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True,
+                                 default=lambda self: self.env.company.id)
+    improveit_id = fields.Char('Improveit Reference ID')
+
+

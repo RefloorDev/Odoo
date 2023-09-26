@@ -250,6 +250,7 @@ class SaleOrder(models.Model):
     finance_amount = fields.Float('Finance Amount')
     loan_payment = fields.Float('Loan Payment')
     quote_id = fields.Char('i360 Reference ID')
+    excluded_quote_id = fields.Char('Excluded Quote i360 Reference ID')
     document_signed = fields.Boolean(string='Document Signed', default=False)
 
     photo_permission_yes = fields.Boolean(string='Photo Permission Yes', default=False)
@@ -291,6 +292,8 @@ class SaleOrder(models.Model):
     stair_calc_based_on = fields.Selection([('list_price', 'Sale Price'), ('msrp', 'MSRP')], string='Stair Calculation Based On',
                                      default='list_price')
     excluded_amount_promotion = fields.Float('Excluded Amount From Promotion')
+    min_sale_price = fields.Float('Minimum Sale Price', default=0)
+    available_installation_line = fields.One2many('otl.available.installation.line', 'order_id', string='Available Installtion Dates')
 
     def write(self, vals):
         _logger.info('inside sale order-%s write: values -  %s'%(self and self[0].name or '', vals))
@@ -650,6 +653,8 @@ class SaleOrder(models.Model):
                 quote_round_off_product = self.env.ref('team_sale_contract.quote_round_off')
                 stair_count = 0
                 stair_product = False
+                if record.min_sale_price:
+                    min_sale_price = record.min_sale_price
 
                 stair_count_lines = record.contract_question_line.filtered(
                     lambda x: x.question_id.code == 'StairCount' and not x.room_measurement_id.exclude_from_calculation)
@@ -687,7 +692,6 @@ class SaleOrder(models.Model):
                     list_price = record.floor_type.msrp or 0
                     if record.special_price_id and record.special_price_id.msrp:
                         list_price = record.special_price_id.msrp or 0
-                    _logger.info('promotion_amount----------%s' % (record.promotion_code_id))
                     if record.promotion_code_id and record.promotion_code_id.discount:
                         excluded_amount_from_promotion = 0
                         for question_line in record.contract_question_line.filtered(
@@ -846,7 +850,7 @@ class SaleOrder(models.Model):
                                 content = req.json()
                                 _logger.error('Attaching Document Finished %s ' % content)
                             for room_lines in sale_order.room_measurement_line:
-                                _logger.error('Attaching Room line  Data %s' % room_lines.room_id.name)
+                                _logger.error('Attaching Room line  Data %s' % room_lines.name)
                                 if room_lines.shape_image_id.datas:
                                     _logger.error('Started Attaching Room Shape Drawing')
                                     decoded_image = base64.decodestring(room_lines.shape_image_id.datas)
@@ -885,7 +889,7 @@ class SaleOrder(models.Model):
                                         req.raise_for_status()
                                         content = req.json()
                                         _logger.error('Attached Image %s ' % content)
-                                _logger.error(' Attaching Room line Data Finished %s' % room_lines.room_id.name)
+                                _logger.error(' Attaching Room line Data Finished %s' % room_lines.name)
                 except requests.HTTPError:
                     raise UserError(_("Something went wrong while Creating Attachments."))
             except IOError:
@@ -956,61 +960,134 @@ class SaleOrder(models.Model):
                         quote_name = lastname.strip(',') + " ," + first_name.strip(',')
                         sale_tax_rate = self.env.company.account_sale_tax_id.amount or 0
                         improveit_appointment_id = configurations.test_appointment_id or sale_order.appointment_id.improveit_appointment_id or ''
-    
-                        data = {
-                            "AppointmentID": improveit_appointment_id,
-                            "QuoteName": quote_name,
-                            "Status": status,
-                            "Description": sale_order.note or "",
-                            "ValidUntilDate": str(validation_date),
-                            "SalesTaxRate": sale_tax_rate,
-                            "AdditionalComments": sale_order.appointment_id.additional_comments or ""
-    
-                        }
-                        headers = {
-                            'Content-type': 'application/json',
-    
-                        }
-                        end_point_url = configurations.token_url
-                        client_token = configurations.client_token
-                        _logger.info(json.dumps(data))
-                        if end_point_url and client_token:
-                            request_url = end_point_url + 'AddQuote' + client_token
-                        req = requests.post(request_url, data=json.dumps(data), headers=headers,
-                                            timeout=TIMEOUT, verify=configurations.enable_ssl)
-                        req.raise_for_status()
-                        try:
-                            content = req.json()
-                        except IOError:
-                            if req.status_code == 200:
-                                return {
-                                    'success': 'false',
-                                    'errors': [
-                                        {
-                                            'message': "Sale data successfully send to the system, but response is in wrong format."
-                                        }
-                                    ]
-                                }
-                            else:
-                                return {
-                                    'success': 'false',
-                                    'errors': [
-                                        {
-                                            'message': "Wrong response format."
-                                        }
-                                    ]
-                                }
-                        _logger.error('Add Quote API Response of sale %s: %s' %(sale_order.id, content))
-                        if content['success'] == "true":
-                            sale_order.write({
-                                'quote_id': content['id'] or '',
-                            })
-                            # if sale_order.appointment_id:
-                            #     sale_order.appointment_id.write({
-                            #         'state': 'done'
-                            #     })
-                        if content.get('success', '') == "false":
-                            return content
+                        included_room_measurement_lines = sale_order.room_measurement_line.filtered(
+                            lambda x: not x.exclude_from_calculation)
+                        excluded_room_measurement_lines = sale_order.room_measurement_line.filtered(
+                            lambda x: x.exclude_from_calculation)
+                        if included_room_measurement_lines and not sale_order.quote_id:
+                            data = {
+                                "AppointmentID": improveit_appointment_id,
+                                "QuoteName": quote_name,
+                                "Status": status,
+                                "Description": sale_order.note or "",
+                                "ValidUntilDate": str(validation_date),
+                                "SalesTaxRate": sale_tax_rate,
+                                "AdditionalComments": sale_order.appointment_id.additional_comments or "",
+                                "Excluded": False,
+
+                            }
+                            headers = {
+                                'Content-type': 'application/json',
+
+                            }
+                            end_point_url = configurations.token_url
+                            client_token = configurations.client_token
+                            _logger.info(json.dumps(data))
+                            if end_point_url and client_token:
+                                request_url = end_point_url + 'AddQuote' + client_token
+                            req = requests.post(request_url, data=json.dumps(data), headers=headers,
+                                                timeout=TIMEOUT, verify=configurations.enable_ssl)
+                            req.raise_for_status()
+                            try:
+                                content = req.json()
+                            except IOError:
+                                if req.status_code == 200:
+                                    return {
+                                        'success': 'false',
+                                        'errors': [
+                                            {
+                                                'message': "Sale data successfully send to the system, but response is in wrong format."
+                                            }
+                                        ]
+                                    }
+                                else:
+                                    return {
+                                        'success': 'false',
+                                        'errors': [
+                                            {
+                                                'message': "Wrong response format."
+                                            }
+                                        ]
+                                    }
+                            _logger.error('Add Quote API Response of sale %s: %s' %(sale_order.id, content))
+                            if content['success'] == "true":
+                                sale_order.write({
+                                    'quote_id': content['id'] or '',
+                                })
+                                if content.get('duplicate', '') == "true":
+                                    result.update({
+                                        "duplicate": "true"
+                                    })
+                                # if sale_order.appointment_id:
+                                #     sale_order.appointment_id.write({
+                                #         'state': 'done'
+                                #     })
+                            if content.get('success', '') == "false":
+                                return content
+                            elif "Errors" in content:
+                                return content.get('Errors', {})
+                        if excluded_room_measurement_lines and not sale_order.excluded_quote_id:
+                            data = {
+                                "AppointmentID": improveit_appointment_id,
+                                "QuoteName": quote_name,
+                                "Status": status,
+                                "Description": sale_order.note or "",
+                                "ValidUntilDate": str(validation_date),
+                                "SalesTaxRate": sale_tax_rate,
+                                "AdditionalComments": sale_order.appointment_id.additional_comments or "",
+                                "Excluded": True,
+
+                            }
+                            headers = {
+                                'Content-type': 'application/json',
+
+                            }
+                            end_point_url = configurations.token_url
+                            client_token = configurations.client_token
+                            _logger.info('Excluded Add Quote API Payload: %s'%json.dumps(data))
+                            if end_point_url and client_token:
+                                request_url = end_point_url + 'AddQuote' + client_token
+                            req = requests.post(request_url, data=json.dumps(data), headers=headers,
+                                                timeout=TIMEOUT, verify=configurations.enable_ssl)
+                            req.raise_for_status()
+                            try:
+                                content = req.json()
+                            except IOError:
+                                if req.status_code == 200:
+                                    return {
+                                        'success': 'false',
+                                        'errors': [
+                                            {
+                                                'message': "Sale data successfully send to the system, but response is in wrong format."
+                                            }
+                                        ]
+                                    }
+                                else:
+                                    return {
+                                        'success': 'false',
+                                        'errors': [
+                                            {
+                                                'message': "Wrong response format."
+                                            }
+                                        ]
+                                    }
+                            _logger.error('Excluded Add Quote API Response of sale %s: %s' % (sale_order.id, content))
+                            if content['success'] == "true":
+                                sale_order.write({
+                                    'excluded_quote_id': content['id'] or '',
+                                })
+                                if content.get('duplicate', '') == "true":
+                                    result.update({
+                                        "duplicate": "true"
+                                    })
+                                # if sale_order.appointment_id:
+                                #     sale_order.appointment_id.write({
+                                #         'state': 'done'
+                                #     })
+                            if content.get('success', '') == "false":
+                                return content
+                            elif "Errors" in content:
+                                return content.get('Errors', {})
         except IOError:
             pass
             _logger.error('**********Error in add_quote_sales_app***************')
@@ -1102,12 +1179,18 @@ class SaleOrder(models.Model):
                         sale_order.write({
                             'quote_id': content['id'] or '',
                         })
+                        if content.get('duplicate', '') == "true":
+                            result.update({
+                                "duplicate": "true"
+                            })
                         # if sale_order.appointment_id:
                         #     sale_order.appointment_id.write({
                         #         'state': 'done'
                         #     })
                     if content.get('success', '') == "false":
                         return content
+                    elif "Errors" in content:
+                        return content.get('Errors', {})
         except IOError:
             pass
             _logger.error("******--------Error in add_sale_api---------********")
@@ -1126,18 +1209,21 @@ class SaleOrder(models.Model):
         for sale_order in self:
             appointment = sale_order.appointment_id
             transaction_logs = appointment.card_transaction_log_line.filtered(lambda x: x.state == 'failed' and not x.synced)
-            if transaction_logs and sale_order.quote_id:
+            if transaction_logs and (sale_order.quote_id or sale_order.excluded_quote_id):
                 headers = {
                     'Content-type': 'application/json',
 
                 }
+                quote_id = sale_order.quote_id
+                if not quote_id:
+                    quote_id = sale_order.excluded_quote_id
                 end_point_url = configurations.token_url
                 client_token = configurations.client_token
                 if end_point_url and client_token:
                     request_url = end_point_url + 'CreateChargeDeclineNotice' + client_token
                     for log in transaction_logs:
                         data = {
-                            "SaleId": sale_order.quote_id,
+                            "SaleId": quote_id,
                             "TransactionTimeStamp": log.date.strftime('%Y-%m-%dT%H:%M:%S.0000000Z'),
                             "ErrorCode": log.error_code or '',
                             "ErrorDescription": log.message or '',
@@ -1265,10 +1351,11 @@ class SaleOrder(models.Model):
             configurations = self.env['team.improveit.configuration'].search(
                 [('api_type', '=', 'zapier'), ('section', '=', 'QuoteAddAttachment')])
             for sale_order in self:
-                if sale_order.quote_id:
+                if sale_order.quote_id or sale_order.excluded_quote_id:
                     quote_id = sale_order.quote_id
+                    excluded_quote_id = sale_order.excluded_quote_id
                     request_url = configurations.token_url
-                    if document and document.store_fname and not document.improveit_id:
+                    if quote_id and document and document.store_fname and not document.improveit_id:
                         full_path = document._full_path(document.store_fname)
                         multi_part_data = MultipartEncoder(
                             fields={
@@ -1294,99 +1381,212 @@ class SaleOrder(models.Model):
                             _logger.error("******--------Error in Contract Document Upload---------********")
                             result.update({"success": "false"})
                     for room_lines in sale_order.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation):
-                        _logger.error('Attaching Room line  Data %s' % room_lines.room_id.name)
-                        if room_lines.shape_image_id:
-                            attach = room_lines.shape_image_id
-                            if attach.store_fname and not attach.improveit_id:
-                                full_path = attach._full_path(attach.store_fname)
-                                extension = attach.name.split(".")[-1]
-                                file_name = '%s_Measure.%s' % (room_lines.room_id.name, extension)
-                                multi_part_data = MultipartEncoder(
-                                    fields={
-                                        "QuoteID": quote_id or '',
-                                        "File": (file_name, open(full_path, 'rb'), attach.mimetype),
-                                    }
-                                )
-                                headers = {
-                                    'Content-type': multi_part_data.content_type,
-                                }
-                                _logger.info('Measurement Upload---------')
-                                _logger.info(multi_part_data)
-                                req = requests.post(request_url, data=multi_part_data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
-                                req.raise_for_status()
-                                content = req.json()
-                                _logger.error('Attaching Room Shape Drawing Finished of sale %s: %s' %(sale_order.id, content))
-                                if content.get('success', '') == "true":
-                                    attach.sudo().write({'improveit_id': content['id'] or ''})
-                                if content.get('success', '') == "false":
-                                    _logger.error("******--------Error in Room Shape Drawing Upload---------********")
-                                    result.update({"success": "false"})
-                        if room_lines.attachment_ids:
-                            count = 0
-                            for attachment in room_lines.attachment_ids:
-                                _logger.error('Attaching Room Images')
-                                if attachment.store_fname and not attachment.improveit_id:
-                                    count += 1
-                                    full_path = attachment._full_path(attachment.store_fname)
-                                    extension = attachment.name.split(".")[-1]
-                                    file_name = '%s_%s.%s' % (room_lines.room_id.name, count, extension)
+                        if quote_id:
+                            _logger.error('Attaching Room line  Data %s' % room_lines.name)
+                            if room_lines.shape_image_id:
+                                attach = room_lines.shape_image_id
+                                if attach.store_fname and not attach.improveit_id:
+                                    full_path = attach._full_path(attach.store_fname)
+                                    extension = attach.name.split(".")[-1]
+                                    room_name = room_lines.custom_room_name or ''
+                                    if not room_name:
+                                        room_name = room_lines.room_id.name
+                                    file_name = '%s_Measure.%s' % (room_name, extension)
                                     multi_part_data = MultipartEncoder(
                                         fields={
                                             "QuoteID": quote_id or '',
-                                            "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                            "File": (file_name, open(full_path, 'rb'), attach.mimetype),
                                         }
                                     )
                                     headers = {
                                         'Content-type': multi_part_data.content_type,
                                     }
-                                    _logger.info('Room images Upload---------')
+                                    _logger.info('Measurement Upload---------')
                                     _logger.info(multi_part_data)
-                                    req = requests.post(request_url, data=multi_part_data, headers=headers,
-                                                        timeout=TIMEOUT, verify=configurations.enable_ssl)
+                                    req = requests.post(request_url, data=multi_part_data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
                                     req.raise_for_status()
                                     content = req.json()
-                                    _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
+                                    _logger.error('Attaching Room Shape Drawing Finished of sale %s: %s' %(sale_order.id, content))
                                     if content.get('success', '') == "true":
-                                        attachment.sudo().write({'improveit_id': content['id'] or ''})
+                                        attach.sudo().write({'improveit_id': content['id'] or ''})
                                     if content.get('success', '') == "false":
-                                        _logger.error(
-                                            "******--------Error in Room Image- %s Upload---------********"%(file_name))
+                                        _logger.error("******--------Error in Room Shape Drawing Upload---------********")
                                         result.update({"success": "false"})
-                            _logger.error('%s Room Images upload completed--' % room_lines.room_id.name)
-                        if room_lines.protrusion_image_ids:
-                            count = 0
-                            for attachment in room_lines.protrusion_image_ids:
-                                _logger.error('Attaching Room Anomaly Images')
-                                if attachment.store_fname and not attachment.improveit_id:
-                                    count += 1
-                                    full_path = attachment._full_path(attachment.store_fname)
-                                    extension = attachment.name.split(".")[-1]
-                                    file_name = '%s_Anomaly_%s.%s' % (room_lines.room_id.name, count, extension)
+                            if room_lines.attachment_ids:
+                                count = 0
+                                for attachment in room_lines.attachment_ids:
+                                    _logger.error('Attaching Room Images')
+                                    if attachment.store_fname and not attachment.improveit_id:
+                                        count += 1
+                                        full_path = attachment._full_path(attachment.store_fname)
+                                        extension = attachment.name.split(".")[-1]
+                                        room_name = room_lines.custom_room_name or ''
+                                        if not room_name:
+                                            room_name = room_lines.room_id.name
+                                        file_name = '%s_%s.%s' % (room_name, count, extension)
+                                        multi_part_data = MultipartEncoder(
+                                            fields={
+                                                "QuoteID": quote_id or '',
+                                                "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                            }
+                                        )
+                                        headers = {
+                                            'Content-type': multi_part_data.content_type,
+                                        }
+                                        _logger.info('Room images Upload---------')
+                                        _logger.info(multi_part_data)
+                                        req = requests.post(request_url, data=multi_part_data, headers=headers,
+                                                            timeout=TIMEOUT, verify=configurations.enable_ssl)
+                                        req.raise_for_status()
+                                        content = req.json()
+                                        _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
+                                        if content.get('success', '') == "true":
+                                            attachment.sudo().write({'improveit_id': content['id'] or ''})
+                                        if content.get('success', '') == "false":
+                                            _logger.error(
+                                                "******--------Error in Room Image- %s Upload---------********"%(file_name))
+                                            result.update({"success": "false"})
+                                _logger.error('%s Room Images upload completed--' % room_lines.name)
+                            if room_lines.protrusion_image_ids:
+                                count = 0
+                                for attachment in room_lines.protrusion_image_ids:
+                                    _logger.error('Attaching Room Anomaly Images')
+                                    if attachment.store_fname and not attachment.improveit_id:
+                                        count += 1
+                                        full_path = attachment._full_path(attachment.store_fname)
+                                        extension = attachment.name.split(".")[-1]
+                                        room_name = room_lines.custom_room_name or ''
+                                        if not room_name:
+                                            room_name = room_lines.room_id.name
+                                        file_name = '%s_Anomaly_%s.%s' % (room_name, count, extension)
+                                        multi_part_data = MultipartEncoder(
+                                            fields={
+                                                "QuoteID": quote_id or '',
+                                                "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                            }
+                                        )
+                                        headers = {
+                                            'Content-type': multi_part_data.content_type,
+                                        }
+                                        _logger.info('Room Anomaly images Upload---------')
+                                        _logger.info(multi_part_data)
+                                        req = requests.post(request_url, data=multi_part_data, headers=headers,
+                                                            timeout=TIMEOUT, verify=configurations.enable_ssl)
+                                        req.raise_for_status()
+                                        content = req.json()
+                                        _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
+                                        if content.get('success', '') == "true":
+                                            attachment.sudo().write({'improveit_id': content['id'] or ''})
+                                        if content.get('success', '') == "false":
+                                            _logger.error(
+                                                "******--------Error in Room Anomaly Image- %s Upload---------********"%(file_name))
+                                            result.update({"success": "false"})
+                                _logger.error('%s room anomaly images upload completed' % room_lines.name)
+                            _logger.error('Attaching Room line Data Finished %s' % room_lines.name)
+                    for room_lines in sale_order.room_measurement_line.filtered(lambda x: x.exclude_from_calculation):
+                        if excluded_quote_id:
+                            _logger.error('Attaching Room line  Data %s' % room_lines.name)
+                            if room_lines.shape_image_id:
+                                attach = room_lines.shape_image_id
+                                if attach.store_fname and not attach.improveit_id:
+                                    full_path = attach._full_path(attach.store_fname)
+                                    extension = attach.name.split(".")[-1]
+                                    room_name = room_lines.custom_room_name or ''
+                                    if not room_name:
+                                        room_name = room_lines.room_id.name
+                                    file_name = '%s_Measure.%s' % (room_name, extension)
                                     multi_part_data = MultipartEncoder(
                                         fields={
-                                            "QuoteID": quote_id or '',
-                                            "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                            "QuoteID": excluded_quote_id or '',
+                                            "File": (file_name, open(full_path, 'rb'), attach.mimetype),
                                         }
                                     )
                                     headers = {
                                         'Content-type': multi_part_data.content_type,
                                     }
-                                    _logger.info('Room Anomaly images Upload---------')
+                                    _logger.info('Measurement Upload---------')
                                     _logger.info(multi_part_data)
-                                    req = requests.post(request_url, data=multi_part_data, headers=headers,
-                                                        timeout=TIMEOUT, verify=configurations.enable_ssl)
+                                    req = requests.post(request_url, data=multi_part_data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
                                     req.raise_for_status()
                                     content = req.json()
-                                    _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
+                                    _logger.error('Attaching Room Shape Drawing Finished of sale %s: %s' %(sale_order.id, content))
                                     if content.get('success', '') == "true":
-                                        attachment.sudo().write({'improveit_id': content['id'] or ''})
+                                        attach.sudo().write({'improveit_id': content['id'] or ''})
                                     if content.get('success', '') == "false":
-                                        _logger.error(
-                                            "******--------Error in Room Anomaly Image- %s Upload---------********"%(file_name))
+                                        _logger.error("******--------Error in Room Shape Drawing Upload---------********")
                                         result.update({"success": "false"})
-                            _logger.error('%s room anomaly images upload completed' % room_lines.room_id.name)
-                        _logger.error('Attaching Room line Data Finished %s' % room_lines.room_id.name)
-                    if sale_order.appointment_id and sale_order.appointment_id.attachment_ids:
+                            if room_lines.attachment_ids:
+                                count = 0
+                                for attachment in room_lines.attachment_ids:
+                                    _logger.error('Attaching Room Images')
+                                    if attachment.store_fname and not attachment.improveit_id:
+                                        count += 1
+                                        full_path = attachment._full_path(attachment.store_fname)
+                                        extension = attachment.name.split(".")[-1]
+                                        room_name = room_lines.custom_room_name or ''
+                                        if not room_name:
+                                            room_name = room_lines.room_id.name
+                                        file_name = '%s_%s.%s' % (room_name, count, extension)
+                                        multi_part_data = MultipartEncoder(
+                                            fields={
+                                                "QuoteID": excluded_quote_id or '',
+                                                "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                            }
+                                        )
+                                        headers = {
+                                            'Content-type': multi_part_data.content_type,
+                                        }
+                                        _logger.info('Room images Upload---------')
+                                        _logger.info(multi_part_data)
+                                        req = requests.post(request_url, data=multi_part_data, headers=headers,
+                                                            timeout=TIMEOUT, verify=configurations.enable_ssl)
+                                        req.raise_for_status()
+                                        content = req.json()
+                                        _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
+                                        if content.get('success', '') == "true":
+                                            attachment.sudo().write({'improveit_id': content['id'] or ''})
+                                        if content.get('success', '') == "false":
+                                            _logger.error(
+                                                "******--------Error in Room Image- %s Upload---------********"%(file_name))
+                                            result.update({"success": "false"})
+                                _logger.error('%s Room Images upload completed--' % room_lines.name)
+                            if room_lines.protrusion_image_ids:
+                                count = 0
+                                for attachment in room_lines.protrusion_image_ids:
+                                    _logger.error('Attaching Room Anomaly Images')
+                                    if attachment.store_fname and not attachment.improveit_id:
+                                        count += 1
+                                        full_path = attachment._full_path(attachment.store_fname)
+                                        extension = attachment.name.split(".")[-1]
+                                        room_name = room_lines.custom_room_name or ''
+                                        if not room_name:
+                                            room_name = room_lines.room_id.name
+                                        file_name = '%s_Anomaly_%s.%s' % (room_name, count, extension)
+                                        multi_part_data = MultipartEncoder(
+                                            fields={
+                                                "QuoteID": excluded_quote_id or '',
+                                                "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                            }
+                                        )
+                                        headers = {
+                                            'Content-type': multi_part_data.content_type,
+                                        }
+                                        _logger.info('Room Anomaly images Upload---------')
+                                        _logger.info(multi_part_data)
+                                        req = requests.post(request_url, data=multi_part_data, headers=headers,
+                                                            timeout=TIMEOUT, verify=configurations.enable_ssl)
+                                        req.raise_for_status()
+                                        content = req.json()
+                                        _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
+                                        if content.get('success', '') == "true":
+                                            attachment.sudo().write({'improveit_id': content['id'] or ''})
+                                        if content.get('success', '') == "false":
+                                            _logger.error(
+                                                "******--------Error in Room Anomaly Image- %s Upload---------********"%(file_name))
+                                            result.update({"success": "false"})
+                                _logger.error('%s room anomaly images upload completed' % room_lines.name)
+                            _logger.error('Attaching Room line Data Finished %s' % room_lines.name)
+                    if quote_id and sale_order.appointment_id and sale_order.appointment_id.attachment_ids:
                         attachment_ids = sale_order.appointment_id.attachment_ids
                         count = 0
                         _logger.info('--------------Snapshot Uploading Started--------------')
@@ -1437,8 +1637,10 @@ class SaleOrder(models.Model):
         try:
             configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'contract_doc')])
             for sale_order in self:
-                if sale_order.quote_id:
+                if sale_order.quote_id or sale_order.excluded_quote_id:
                     quote_id = sale_order.quote_id
+                    if not quote_id:
+                        quote_id = sale_order.excluded_quote_id
                     request_url = configurations.token_url
                     if sale_order.contract_doc_attachment_id:
                         document = sale_order.contract_doc_attachment_id
@@ -1479,10 +1681,12 @@ class SaleOrder(models.Model):
 
     def action_upload_credit_application(self, result):
         for sale_order in self:
-            if sale_order.quote_id:
+            if sale_order.quote_id or sale_order.excluded_quote_id:
                 configurations = self.env['team.improveit.configuration'].search(
                     [('api_type', '=', 'zapier'), ('section', '=', 'SaleAddAttachment')])
                 quote_id = sale_order.quote_id
+                if not quote_id:
+                    quote_id = sale_order.excluded_quote_id
                 request_url = configurations.token_url
                 credit_application = self.env['team.credit.application'].search([
                     ('order_id', '=', sale_order.id)
@@ -1554,13 +1758,16 @@ class SaleOrder(models.Model):
                     #     _logger.error('Attaching Contract Document Finished %s ' % content)
                     result= sale_order.action_upload_credit_application(result)
                     for room_lines in sale_order.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation):
-                        _logger.error('Attaching Room line  Data %s' % room_lines.room_id.name)
+                        _logger.error('Attaching Room line  Data %s' % room_lines.name)
                         if room_lines.shape_image_id:
                             attach = room_lines.shape_image_id
                             if attach.store_fname and not attach.improveit_id:
                                 full_path = attach._full_path(attach.store_fname)
                                 extension = attach.name.split(".")[-1]
-                                file_name = '%s_Measure.%s'%(room_lines.room_id.name, extension)
+                                room_name = room_lines.custom_room_name or ''
+                                if not room_name:
+                                    room_name = room_lines.room_id.name
+                                file_name = '%s_Measure.%s'%(room_name, extension)
                                 multi_part_data = MultipartEncoder(
                                     fields={
                                         "SaleID": quote_id or '',
@@ -1589,7 +1796,10 @@ class SaleOrder(models.Model):
                                     count += 1
                                     full_path = attachment._full_path(attachment.store_fname)
                                     extension = attachment.name.split(".")[-1]
-                                    file_name = '%s_%s.%s' % (room_lines.room_id.name, count, extension)
+                                    room_name = room_lines.custom_room_name or ''
+                                    if not room_name:
+                                        room_name = room_lines.room_id.name
+                                    file_name = '%s_%s.%s' % (room_name, count, extension)
                                     multi_part_data = MultipartEncoder(
                                         fields={
                                             "SaleID": quote_id or '',
@@ -1620,7 +1830,10 @@ class SaleOrder(models.Model):
                                     count += 1
                                     full_path = attachment._full_path(attachment.store_fname)
                                     extension = attachment.name.split(".")[-1]
-                                    file_name = '%s_Anomaly_%s.%s' % (room_lines.room_id.name, count, extension)
+                                    room_name = room_lines.custom_room_name or ''
+                                    if not room_name:
+                                        room_name = room_lines.room_id.name
+                                    file_name = '%s_Anomaly_%s.%s' % (room_name, count, extension)
                                     multi_part_data = MultipartEncoder(
                                         fields={
                                             "SaleID": quote_id or '',
@@ -1643,8 +1856,8 @@ class SaleOrder(models.Model):
                                         _logger.error(
                                             "******--------Error in Room Anomaly  Image- %s Upload---------********"%(file_name))
                                         result.update({"success": "false"})
-                            _logger.error('%s room anomaly images upload completed' % room_lines.room_id.name)
-                        _logger.error('Attaching Room line Data Finished %s' % room_lines.room_id.name)
+                            _logger.error('%s room anomaly images upload completed' % room_lines.name)
+                        _logger.error('Attaching Room line Data Finished %s' % room_lines.name)
                     if sale_order.appointment_id and sale_order.appointment_id.attachment_ids:
                         attachment_ids = sale_order.appointment_id.attachment_ids
                         count = 0
@@ -1702,6 +1915,10 @@ class SaleOrder(models.Model):
                 [('api_type', '=', 'boomi')], limit=1)
             for sale_order in self:
                 if sale_order.appointment_id and sale_order.quote_id:
+                    included_room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
+                        lambda x: not x.exclude_from_calculation and not x.improveit_id)
+                    excluded_room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
+                        lambda x: x.exclude_from_calculation and not x.improveit_id)
                     customer_name = sale_order.appointment_id.customer_name
                     lastname = customer_name.split()[1]
                     first_name = customer_name.split()[0]
@@ -1725,175 +1942,346 @@ class SaleOrder(models.Model):
                     category_name = floor_type and floor_type.categ_id and floor_type.categ_id.name or ''
                     # no_of_rooms = len(sale_order.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation))
                     # discount_per_room = sale_order.adjustment and no_of_rooms and sale_order.adjustment/float(no_of_rooms) or 0
-                    room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
-                        lambda x: not x.exclude_from_calculation and not x.improveit_id)
-                    for room_line in room_measurement_lines_to_sync:
-                        stair_product_name = ''
-                        stair_improveit_product_id = ''
-                        stair_category_name = ''
-                        stair_product = False
-                        if room_line.room_id and room_line.room_id.product_category_id and room_line.room_id.product_category_id.name.upper() == 'VINYL STAIRS' and floor_type:
-                            stair_product = self.env['product.template'].search([
-                                ('type', '=', 'product'),
-                                ('product_variant_ids', '!=', False),
-                                ('categ_id.name', 'ilike', 'Stairs'),
-                                ('grade', '=', floor_type.grade)
-                            ], order='sequence asc', limit=1)
-                            if stair_product:
-                                stair_product_name = stair_product.name or ''
-                                stair_improveit_product_id = stair_product.improveit_product_id or ''
-                                stair_category_name = stair_product.categ_id and stair_product.categ_id.name or ''
+                    if included_room_measurement_lines_to_sync and sale_order.quote_id:
+                        for room_line in included_room_measurement_lines_to_sync:
+                            stair_product_name = ''
+                            stair_improveit_product_id = ''
+                            stair_category_name = ''
+                            stair_product = False
+                            if room_line.room_id and room_line.room_id.product_category_id and room_line.room_id.product_category_id.name.upper() == 'VINYL STAIRS' and floor_type:
+                                stair_product = self.env['product.template'].search([
+                                    ('type', '=', 'product'),
+                                    ('product_variant_ids', '!=', False),
+                                    ('categ_id.name', 'ilike', 'Stairs'),
+                                    ('grade', '=', floor_type.grade)
+                                ], order='sequence asc', limit=1)
+                                if stair_product:
+                                    stair_product_name = stair_product.name or ''
+                                    stair_improveit_product_id = stair_product.improveit_product_id or ''
+                                    stair_category_name = stair_product.categ_id and stair_product.categ_id.name or ''
 
-                        reflect_cost = 0
-                        leveling_solution_included = 0
-                        removal_cost = 0
-                        color_up_charge_total = room_line.color_up_charge_total or 0
-                        molding_total_price = room_line.molding_total_price or 0
-                        comments = room_line.comments or ""
-                        if room_line.image_comments:
-                            if comments:
-                                comments += ', ' + room_line.image_comments or ''
-                            else:
-                                comments = room_line.image_comments or ''
-                        if comments:
-                            comments = comments.replace('&', 'and')
-                        data = {
-
-                            "QuoteID": sale_order.quote_id or '',
-                            "MoldingType": room_line.molding_type_id and room_line.molding_type_id.name or "",
-                            "Comments": comments
-                        }
-                        if stair_product:
-                            data.update({
-                                "ProductName": stair_product_name,
-                                "ProductID": stair_improveit_product_id,
-                                "Category": stair_category_name,
-                            })
-                            stair_count = 0
-                            contract_questions = self.env['team.contract.question.line'].search([
-                                ('room_id', '=', room_line.room_id.id),
-                                ('appointment_id', '=', sale_order.appointment_id.id),
-                                ('question_id.code', '=', 'StairCount')
-                            ], limit=1)
-                            if contract_questions:
-                                for answer_obj in contract_questions.answers:
-                                    stair_count = float(answer_obj.answer)
-                            if sale_order.stair_calc_based_on == 'list_price':
-                                room_cost = stair_count * stair_product.list_price
-                            else:
-                                room_cost = stair_count * stair_product.msrp
-                        else:
-                            data.update({
-                                "ProductName": product_name,
-                                "ProductID": improveit_product_id,
-                                "Category": category_name,
-                            })
-
-                            for questions in sale_order.contract_question_line:
-                                if questions.room_id.id == room_line.room_id.id and questions.question_id.code != 'StairCount':
-                                    if questions.question_id.reflect_cost:
-                                        reflect_cost += questions.extra_price or 0
-                                    if questions.amount_included and questions.question_id.code == 'LevelingSolutionSqft':
-                                        leveling_solution_included = questions.amount_included
-                                    if questions.question_id.code == 'RemoveCurrentCovering':
-                                        removal_cost = questions.extra_price or 0
-                            room_cost = 0
-                            if floor_type:
-                                room_cost = room_line.adjusted_area * floor_type.flooring_cost
-                        unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price
-                        # discount = sale_order.adjustment or 0
-                        discounted_unit_price = unit_price
-                        data.update({"Description": room_line.room_id.name})
-                        data.update({"Taxable": True})
-                        data.update({"Units": "Room"})
-                        data.update({"Quantity": 1})
-                        data.update({"UnitPrice": discounted_unit_price})
-                        data.update({"RoomName": room_line.room_id.name})
-                        data.update({"RoomArea": room_line.adjusted_area})
-                        data.update({'Perimeter': room_line.room_perimeter})
-                        data.update({'ColorUpchargeTotal': color_up_charge_total})
-                        data.update({'LevelingSolutionIncluded': leveling_solution_included})
-                        data.update({'RemovalCost': removal_cost})
-                        attribute_value_ids = room_line.material_id.product_template_attribute_value_ids
-                        material_colour = ""
-                        for attribute in attribute_value_ids:
-                            if attribute.attribute_id.name == 'colour':
-                                material_colour = attribute.name
-                        data.update({"ProductSelected": material_colour})
-                        transitions = self.env['team.contract.transition.line'].search(
-                            [('room_id', '=', room_line.room_id.id),
-                             ('appointment_id', '=', sale_order.appointment_id.id)])
-                        count = 1
-                        for transition in transitions:
-                            transitions_key1 = 'Transition' + str(count)
-                            transitions_value_1 = transition.name
-                            transitions_key2 = 'TransitionLength' + str(count)
-                            transitions_value_2 = transition.transition_width
-                            transitions_key3 = 'TransitionHeight' + str(count)
-                            transitions_value_3 = transition.transition_height or ''
-                            data.update({
-                                transitions_key1: transitions_value_1,
-                                transitions_key2: transitions_value_2,
-                                transitions_key3: transitions_value_3,
-
-                            })
-                            count = count + 1
-                        _logger.error('Add Quote Items API Adding Room Transitions')
-                        contract_questions = self.env['team.contract.question.line'].search(
-                            [('room_id', '=', room_line.room_id.id), ('order_id', '=', sale_order.id)])
-                        for contract_question in contract_questions:
-                            question = contract_question.question_id.code
-                            answer = ""
-                            for contract_question_answer in contract_question.answers:
-                                if contract_question.question_id.question_type == 'numerical_box':
-                                    answer = eval(contract_question_answer.answer)
+                            reflect_cost = 0
+                            leveling_solution_included = 0
+                            removal_cost = 0
+                            color_up_charge_total = room_line.color_up_charge_total or 0
+                            molding_total_price = room_line.molding_total_price or 0
+                            comments = room_line.comments or ""
+                            if room_line.image_comments:
+                                if comments:
+                                    comments += ', ' + room_line.image_comments or ''
                                 else:
-                                    answer = contract_question_answer.answer
-                                if answer == 'Yes':
-                                    answer = True
-                                elif answer == 'No':
-                                    answer = False
+                                    comments = room_line.image_comments or ''
+                            if comments:
+                                comments = comments.replace('&', 'and')
+                            data = {
 
-                            data.update({question: answer})
-                        _logger.error('Add Quote Items API Adding Contract Questions')
-                        headers = {
-                            'Content-type': 'application/json',
-                        }
-
-                        end_point_url = configurations.token_url
-                        client_token = configurations.client_token
-                        _logger.info(data)
-                        if end_point_url and client_token:
-                            request_url = end_point_url + 'AddQuoteItem' + client_token
-                        req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
-                        _logger.error('Add Quote Item API Response of sale %s: %s' %(sale_order.id, str(req.content)))
-                        req.raise_for_status()
-                        try:
-                            content = req.json()
-                        except IOError:
-                            if req.status_code == 200:
-                                return {
-                                    'success': 'false',
-                                    'errors': [
-                                        {
-                                            'message': "Quote data successfully send to the system, but response is in wrong format."
-                                        }
-                                    ]
-                                }
+                                "QuoteID": sale_order.quote_id or '',
+                                "MoldingType": room_line.molding_type_id and room_line.molding_type_id.name or "",
+                                "Comments": comments
+                            }
+                            if stair_product:
+                                data.update({
+                                    "ProductName": stair_product_name,
+                                    "ProductID": stair_improveit_product_id,
+                                    "Category": stair_category_name,
+                                })
+                                stair_count = 0
+                                contract_questions = self.env['team.contract.question.line'].search([
+                                    ('room_id', '=', room_line.room_id.id),
+                                    ('appointment_id', '=', sale_order.appointment_id.id),
+                                    ('question_id.code', '=', 'StairCount')
+                                ], limit=1)
+                                if contract_questions:
+                                    for answer_obj in contract_questions.answers:
+                                        stair_count = float(answer_obj.answer)
+                                if sale_order.stair_calc_based_on == 'list_price':
+                                    room_cost = stair_count * stair_product.list_price
+                                else:
+                                    room_cost = stair_count * stair_product.msrp
                             else:
-                                return {
-                                    'success': 'false',
-                                    'errors': [
-                                        {
-                                            'message': "Wrong response format."
-                                        }
-                                    ]
-                                }
-                        _logger.error('Add Quote Items API Response of sale %s: %s' %(sale_order.id, content))
-                        if content.get('success', '') == "true":
-                            room_line.improveit_id = content['id'] or ''
-                        if content.get('success', '') == "false":
-                            return content
+                                data.update({
+                                    "ProductName": product_name,
+                                    "ProductID": improveit_product_id,
+                                    "Category": category_name,
+                                })
+
+                                for questions in sale_order.contract_question_line:
+                                    if questions.room_id.id == room_line.room_id.id and questions.question_id.code != 'StairCount':
+                                        if questions.question_id.reflect_cost:
+                                            reflect_cost += questions.extra_price or 0
+                                        if questions.amount_included and questions.question_id.code == 'LevelingSolutionSqft':
+                                            leveling_solution_included = questions.amount_included
+                                        if questions.question_id.code == 'RemoveCurrentCovering':
+                                            removal_cost = questions.extra_price or 0
+                                room_cost = 0
+                                if floor_type:
+                                    room_cost = room_line.adjusted_area * floor_type.flooring_cost
+                            unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price
+                            # discount = sale_order.adjustment or 0
+                            discounted_unit_price = unit_price
+                            data.update({"Description": room_line.custom_room_name and room_line.custom_room_name or room_line.room_id.name})
+                            data.update({"Taxable": True})
+                            data.update({"Units": "Room"})
+                            data.update({"Quantity": 1})
+                            data.update({"UnitPrice": discounted_unit_price})
+                            data.update({"RoomName": room_line.custom_room_name and room_line.custom_room_name or room_line.room_id.name})
+                            data.update({"RoomArea": room_line.adjusted_area})
+                            data.update({'Perimeter': room_line.room_perimeter})
+                            data.update({'ColorUpchargeTotal': color_up_charge_total})
+                            data.update({'LevelingSolutionIncluded': leveling_solution_included})
+                            data.update({'RemovalCost': removal_cost})
+                            attribute_value_ids = room_line.material_id.product_template_attribute_value_ids
+                            material_colour = ""
+                            for attribute in attribute_value_ids:
+                                if attribute.attribute_id.name == 'colour':
+                                    material_colour = attribute.name
+                            data.update({"ProductSelected": material_colour})
+                            transitions = self.env['team.contract.transition.line'].search(
+                                [('room_id', '=', room_line.room_id.id),
+                                 ('appointment_id', '=', sale_order.appointment_id.id)])
+                            count = 1
+                            for transition in transitions:
+                                transitions_key1 = 'Transition' + str(count)
+                                transitions_value_1 = transition.name
+                                transitions_key2 = 'TransitionLength' + str(count)
+                                transitions_value_2 = transition.transition_width
+                                transitions_key3 = 'TransitionHeight' + str(count)
+                                transitions_value_3 = transition.transition_height or ''
+                                data.update({
+                                    transitions_key1: transitions_value_1,
+                                    transitions_key2: transitions_value_2,
+                                    transitions_key3: transitions_value_3,
+
+                                })
+                                count = count + 1
+                            _logger.error('Add Quote Items API Adding Room Transitions')
+                            contract_questions = self.env['team.contract.question.line'].search(
+                                [('room_id', '=', room_line.room_id.id), ('order_id', '=', sale_order.id)])
+                            for contract_question in contract_questions:
+                                question = contract_question.question_id.code
+                                answer = ""
+                                for contract_question_answer in contract_question.answers:
+                                    if contract_question.question_id.question_type == 'numerical_box':
+                                        answer = eval(contract_question_answer.answer)
+                                    else:
+                                        answer = contract_question_answer.answer
+                                    if answer == 'Yes':
+                                        answer = True
+                                    elif answer == 'No':
+                                        answer = False
+
+                                data.update({question: answer})
+                            _logger.error('Add Quote Items API Adding Contract Questions')
+                            headers = {
+                                'Content-type': 'application/json',
+                            }
+
+                            end_point_url = configurations.token_url
+                            client_token = configurations.client_token
+                            _logger.info(data)
+                            if end_point_url and client_token:
+                                request_url = end_point_url + 'AddQuoteItem' + client_token
+                            req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
+                            _logger.error('Add Quote Item API Response of sale %s: %s' %(sale_order.id, str(req.content)))
+                            req.raise_for_status()
+                            try:
+                                content = req.json()
+                            except IOError:
+                                if req.status_code == 200:
+                                    return {
+                                        'success': 'false',
+                                        'errors': [
+                                            {
+                                                'message': "Quote data successfully send to the system, but response is in wrong format."
+                                            }
+                                        ]
+                                    }
+                                else:
+                                    return {
+                                        'success': 'false',
+                                        'errors': [
+                                            {
+                                                'message': "Wrong response format."
+                                            }
+                                        ]
+                                    }
+                            _logger.error('Add Quote Items API Response of sale %s: %s' %(sale_order.id, content))
+                            if content.get('success', '') == "true":
+                                room_line.improveit_id = content['id'] or ''
+                            if content.get('success', '') == "false":
+                                return content
+                    if excluded_room_measurement_lines_to_sync and sale_order.excluded_quote_id:
+                        for room_line in excluded_room_measurement_lines_to_sync:
+                            stair_product_name = ''
+                            stair_improveit_product_id = ''
+                            stair_category_name = ''
+                            stair_product = False
+                            if room_line.room_id and room_line.room_id.product_category_id and room_line.room_id.product_category_id.name.upper() == 'VINYL STAIRS' and floor_type:
+                                stair_product = self.env['product.template'].search([
+                                    ('type', '=', 'product'),
+                                    ('product_variant_ids', '!=', False),
+                                    ('categ_id.name', 'ilike', 'Stairs'),
+                                    ('grade', '=', floor_type.grade)
+                                ], order='sequence asc', limit=1)
+                                if stair_product:
+                                    stair_product_name = stair_product.name or ''
+                                    stair_improveit_product_id = stair_product.improveit_product_id or ''
+                                    stair_category_name = stair_product.categ_id and stair_product.categ_id.name or ''
+
+                            reflect_cost = 0
+                            leveling_solution_included = 0
+                            removal_cost = 0
+                            color_up_charge_total = room_line.color_up_charge_total or 0
+                            molding_total_price = room_line.molding_total_price or 0
+                            comments = room_line.comments or ""
+                            if room_line.image_comments:
+                                if comments:
+                                    comments += ', ' + room_line.image_comments or ''
+                                else:
+                                    comments = room_line.image_comments or ''
+                            if comments:
+                                comments = comments.replace('&', 'and')
+                            data = {
+
+                                "QuoteID": sale_order.excluded_quote_id or '',
+                                "MoldingType": room_line.molding_type_id and room_line.molding_type_id.name or "",
+                                "Comments": comments
+                            }
+                            if stair_product:
+                                data.update({
+                                    "ProductName": stair_product_name,
+                                    "ProductID": stair_improveit_product_id,
+                                    "Category": stair_category_name,
+                                })
+                                stair_count = 0
+                                contract_questions = self.env['team.contract.question.line'].search([
+                                    ('room_id', '=', room_line.room_id.id),
+                                    ('appointment_id', '=', sale_order.appointment_id.id),
+                                    ('question_id.code', '=', 'StairCount')
+                                ], limit=1)
+                                if contract_questions:
+                                    for answer_obj in contract_questions.answers:
+                                        stair_count = float(answer_obj.answer)
+                                if sale_order.stair_calc_based_on == 'list_price':
+                                    room_cost = stair_count * stair_product.list_price
+                                else:
+                                    room_cost = stair_count * stair_product.msrp
+                            else:
+                                data.update({
+                                    "ProductName": product_name,
+                                    "ProductID": improveit_product_id,
+                                    "Category": category_name,
+                                })
+
+                                for questions in sale_order.contract_question_line:
+                                    if questions.room_id.id == room_line.room_id.id and questions.question_id.code != 'StairCount':
+                                        if questions.question_id.reflect_cost:
+                                            reflect_cost += questions.extra_price or 0
+                                        if questions.amount_included and questions.question_id.code == 'LevelingSolutionSqft':
+                                            leveling_solution_included = questions.amount_included
+                                        if questions.question_id.code == 'RemoveCurrentCovering':
+                                            removal_cost = questions.extra_price or 0
+                                room_cost = 0
+                                if floor_type:
+                                    room_cost = room_line.adjusted_area * floor_type.flooring_cost
+                            unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price
+                            # discount = sale_order.adjustment or 0
+                            discounted_unit_price = unit_price
+                            data.update({
+                                            "Description": room_line.custom_room_name and room_line.custom_room_name or room_line.room_id.name})
+                            data.update({"Taxable": True})
+                            data.update({"Units": "Room"})
+                            data.update({"Quantity": 1})
+                            data.update({"UnitPrice": discounted_unit_price})
+                            data.update({
+                                            "RoomName": room_line.custom_room_name and room_line.custom_room_name or room_line.room_id.name})
+                            data.update({"RoomArea": room_line.adjusted_area})
+                            data.update({'Perimeter': room_line.room_perimeter})
+                            data.update({'ColorUpchargeTotal': color_up_charge_total})
+                            data.update({'LevelingSolutionIncluded': leveling_solution_included})
+                            data.update({'RemovalCost': removal_cost})
+                            attribute_value_ids = room_line.material_id.product_template_attribute_value_ids
+                            material_colour = ""
+                            for attribute in attribute_value_ids:
+                                if attribute.attribute_id.name == 'colour':
+                                    material_colour = attribute.name
+                            data.update({"ProductSelected": material_colour})
+                            transitions = self.env['team.contract.transition.line'].search(
+                                [('room_id', '=', room_line.room_id.id),
+                                 ('appointment_id', '=', sale_order.appointment_id.id)])
+                            count = 1
+                            for transition in transitions:
+                                transitions_key1 = 'Transition' + str(count)
+                                transitions_value_1 = transition.name
+                                transitions_key2 = 'TransitionLength' + str(count)
+                                transitions_value_2 = transition.transition_width
+                                transitions_key3 = 'TransitionHeight' + str(count)
+                                transitions_value_3 = transition.transition_height or ''
+                                data.update({
+                                    transitions_key1: transitions_value_1,
+                                    transitions_key2: transitions_value_2,
+                                    transitions_key3: transitions_value_3,
+
+                                })
+                                count = count + 1
+                            _logger.error('Add Quote Items API Adding Room Transitions')
+                            contract_questions = self.env['team.contract.question.line'].search(
+                                [('room_id', '=', room_line.room_id.id), ('order_id', '=', sale_order.id)])
+                            for contract_question in contract_questions:
+                                question = contract_question.question_id.code
+                                answer = ""
+                                for contract_question_answer in contract_question.answers:
+                                    if contract_question.question_id.question_type == 'numerical_box':
+                                        answer = eval(contract_question_answer.answer)
+                                    else:
+                                        answer = contract_question_answer.answer
+                                    if answer == 'Yes':
+                                        answer = True
+                                    elif answer == 'No':
+                                        answer = False
+
+                                data.update({question: answer})
+                            _logger.error('Add Quote Items API Adding Contract Questions')
+                            headers = {
+                                'Content-type': 'application/json',
+                            }
+
+                            end_point_url = configurations.token_url
+                            client_token = configurations.client_token
+                            _logger.info(data)
+                            if end_point_url and client_token:
+                                request_url = end_point_url + 'AddQuoteItem' + client_token
+                            req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
+                                                verify=configurations.enable_ssl)
+                            _logger.error(
+                                'Add Quote Item API Response of sale %s: %s' % (sale_order.id, str(req.content)))
+                            req.raise_for_status()
+                            try:
+                                content = req.json()
+                            except IOError:
+                                if req.status_code == 200:
+                                    return {
+                                        'success': 'false',
+                                        'errors': [
+                                            {
+                                                'message': "Quote data successfully send to the system, but response is in wrong format."
+                                            }
+                                        ]
+                                    }
+                                else:
+                                    return {
+                                        'success': 'false',
+                                        'errors': [
+                                            {
+                                                'message': "Wrong response format."
+                                            }
+                                        ]
+                                    }
+                            _logger.error('Add Quote Items API Response of sale %s: %s' % (sale_order.id, content))
+                            if content.get('success', '') == "true":
+                                room_line.improveit_id = content['id'] or ''
+                            if content.get('success', '') == "false":
+                                return content
         except IOError:
             # error_msg = _(
             #     "Something went wrong during adding quote items")
@@ -1995,12 +2383,12 @@ class SaleOrder(models.Model):
                         unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price
                         discount = sale_order.adjustment or 0
                         discounted_unit_price = unit_price
-                        data.update({'Description': room_line.room_id.name})
+                        data.update({'Description': room_line.custom_room_name and room_line.custom_room_name or room_line.room_id.name})
                         data.update({'Taxable': True})
                         data.update({'Units': "Room"})
                         data.update({'Quantity': 1})
                         data.update({'UnitPrice': discounted_unit_price})
-                        data.update({'RoomName': room_line.room_id.name})
+                        data.update({'RoomName': room_line.custom_room_name and room_line.custom_room_name or room_line.room_id.name})
                         data.update({'RoomArea': room_line.adjusted_area})
                         data.update({'Perimeter': room_line.room_perimeter})
                         data.update({'ColorUpchargeTotal': color_up_charge_total})
@@ -2686,6 +3074,107 @@ class SaleOrder(models.Model):
             raise self.env['res.config.settings'].get_config_warning(error_msg)
         return result
 
+    def create_project_in_i360(self, selected_installation):
+        result = {
+            "success": "true",
+            "errors": []
+        }
+        try:
+            configurations = self.env['team.improveit.configuration'].search(
+                [('api_type', '=', 'boomi')], limit=1)
+            _logger.info('--------Starting CreateProject API---------')
+            for sale_order in self:
+                _logger.info('--------Appointment ID---------: %s' % (sale_order.appointment_id))
+                if sale_order.appointment_id:
+                    data = {
+                        'SaleId': sale_order.quote_id or '',
+                        'StartDate': selected_installation.start_date.strftime(DEFAULT_SERVER_DATE_FORMAT),
+                    }
+                    headers = {
+                        'Content-type': 'application/json',
+                    }
+                    end_point_url = configurations.token_url
+                    client_token = configurations.client_token
+                    _logger.info(data)
+                    if end_point_url and client_token:
+                        request_url = end_point_url + 'CreateProject' + client_token
+                    req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
+                                        verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    _logger.error('CreateProject API Response of Appointment %s :%s' % (
+                    sale_order.appointment_id.id, content))
+                    if content.get('success', '') == "true":
+                        selected_installation.write({
+                            'project_i360_id': content['id'] or '',
+                        })
+                        if content.get('duplicate', '') == "true":
+                            result.update({
+                                "duplicate": "true"
+                            })
+                    if content.get('success', '') == "false":
+                        return content
+                    elif "Errors" in content:
+                        return content.get('Errors', {})
+
+        except IOError:
+            pass
+            _logger.error("******--------Error in create_project_in_i360 API---------********")
+            result.update({"success": "false"})
+        return result
+
+    def create_project_activity_in_i360(self, selected_installation):
+        result = {
+            "success": "true",
+            "errors": []
+        }
+        try:
+            configurations = self.env['team.improveit.configuration'].search(
+                [('api_type', '=', 'boomi')], limit=1)
+            _logger.info('--------Starting CreateProjectActivity API---------')
+            for sale_order in self:
+                _logger.info('--------Appointment ID---------: %s' % (sale_order.appointment_id))
+                if selected_installation.project_i360_id:
+                    data = {
+                        "ProjectId": selected_installation.project_i360_id or '',
+                        "Name": "IHS-Install-%s"%(sale_order.appointment_id.applicant_last_name),
+                        "StartDate": selected_installation.start_date.strftime('%Y-%m-%dT%H:%M:%S'),
+                        "Enddate": selected_installation.end_date.strftime('%Y-%m-%dT%H:%M:%S'),
+                        "AssignedTo": selected_installation.crew_id.improveit_id,
+                        "Comments": "Submitted On: %s"%(self.get_date_with_tz(fields.Datetime.now()).strftime('%Y-%m-%dT%H:%M:%S'))
+                    }
+                    headers = {
+                        'Content-type': 'application/json',
+                    }
+                    end_point_url = configurations.token_url
+                    client_token = configurations.client_token
+                    _logger.info('CreateProjectActivity Data: %s'%data)
+                    if end_point_url and client_token:
+                        request_url = end_point_url + 'CreateProjectActivity' + client_token
+                    req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
+                                        verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    _logger.error('CreateProjectActivity API Response of Appointment %s :%s' % (
+                    sale_order.appointment_id.id, content))
+                    if content.get('success', '') == "true":
+                        selected_installation.write({
+                            'project_activity_i360_id': content['id'] or '',
+                        })
+                        if content.get('duplicate', '') == "true":
+                            result.update({
+                                "duplicate": "true"
+                            })
+                    if content.get('success', '') == "false":
+                        return content
+                    elif "Errors" in content:
+                        return content.get('Errors', {})
+        except IOError:
+            pass
+            _logger.error("******--------Error in create_project_activity_in_i360 API---------********")
+            result.update({"success": "false"})
+        return result
+
 
 class Followers(models.Model):
     _inherit = 'mail.followers'
@@ -2718,6 +3207,8 @@ class CardTransactionLog(models.Model):
                             string='Process Type', default='capture')
     date = fields.Datetime('Transaction Time', default=fields.Datetime.now)
     synced = fields.Boolean('Synced to i360', default=False)
+    void_transaction = fields.Boolean('Is Void Transaction?', default=False)
+    void_transaction_id = fields.Char('Void Transaction ID')
 
 
 class DiscountHistoryLine(models.Model):
@@ -2732,4 +3223,19 @@ class DiscountHistoryLine(models.Model):
     promo_type = fields.Boolean('Promo Code', default=False)
     type = fields.Selection([('amount', 'Amount'), ('percentage', 'Percentage')], string='Discount Type', default='amount')
     excluded_amount_discount = fields.Float('Excluded Amount From Discount')
+
+
+class AvailableInstallationLine(models.Model):
+    _name = 'otl.available.installation.line'
+    _description = 'Available Installation Dates'
+    _order = 'start_date'
+
+    order_id = fields.Many2one('sale.order', string='Sale Order', ondelete='cascade')
+    start_date = fields.Datetime('Start Date')
+    end_date = fields.Datetime('End Date')
+    crew_id = fields.Many2one('otl.installation.crew', string='Crew')
+    selected = fields.Boolean('Selected Date', default=False)
+    project_i360_id = fields.Char('I360 Project ID')
+    project_activity_i360_id = fields.Char('I360 Project Activity ID')
+
 

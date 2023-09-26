@@ -10,6 +10,7 @@ from odoo.exceptions import ValidationError,UserError
 from odoo.addons.team_api_configuration.controllers.configurations import URL, DB, API_USER_ID, API_USER_PASSWORD
 from odoo.addons.team_api_configuration.jwt.api_jws import encode as JWT_ENCODE
 from odoo.addons.team_api_configuration.jwt.api_jws import decode as JWT_DECODE
+from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
 import ast
 
 JWT_SECRET = 'secretXXXY'
@@ -118,6 +119,7 @@ class TeamContractQuestions(models.Model):
             record.extra_price = extra_price
 
     name = fields.Text('Description',required=False)
+    room_name = fields.Char('Room Name')
     room_id = fields.Many2one('team.room.room', string='Room',required=True)
     floor_id = fields.Many2one('team.floor.level', string='Floor', required=False)
     question_id = fields.Many2one('team.quote.question',string='Question',ondelete='restrict')
@@ -161,7 +163,10 @@ class TeamContractRoomMeasurement(models.Model):
         for record in self:
             name= ''
             if record.room_id:
-                name = '%s-%s'%(record.room_id.name, record.room_area)
+                room_name = record.room_id.name or ''
+                if record.room_id.is_custom:
+                    room_name = record.custom_room_name or ''
+                name = '%s-%s'%(room_name, record.room_area)
             record.name = name
 
     @api.depends('color_up_charge_price', 'material_id', 'adjusted_area')
@@ -198,7 +203,7 @@ class TeamContractRoomMeasurement(models.Model):
     custom_room_name = fields.Char('Custom Room Name')
     adjusted_area = fields.Float(string="Adjusted Area")
     image_comments = fields.Char(string='Comments on Images')
-    custom_room_measured = fields.Boolean(string='custom_room_measured')
+    custom_room_measured = fields.Boolean(string='Is Custom Room?')
     moulding = fields.Char('Molding')
     molding_type_id = fields.Many2one('team.floor.molding', 'Molding Type')
     room_perimeter = fields.Float('Room Perimeter')
@@ -773,12 +778,12 @@ class TeamCreditApplication(models.Model):
                         if current_request_item:
                             for item_type in sign_item_types:
                                 if item_type['auto_field']:
-                                    fields = item_type['auto_field'].split('.')
+                                    field_list = item_type['auto_field'].split('.')
                                     selected_record = self.env[
                                         current_request_item.model_id.model].sudo().search(
                                         [('id', '=', current_request_item.res_id)], limit=1)
                                     auto_field = selected_record if selected_record else current_request_item.partner_id
-                                    for field in fields:
+                                    for field in field_list:
                                         if auto_field and field in auto_field:
                                             if field in FIELDS_TO_ENCRYPT:
                                                 auto_field = auto_field.action_decrypt_field(field)
@@ -811,8 +816,11 @@ class TeamCreditApplication(models.Model):
                         for value in sr_values:
                             item_values[value.sign_item_id.id] = value.value
                         request_item.sign(request_item.signature)
-                        request_item.action_completed()
-                        sign_request.action_signed()
+                        current_date = fields.Date.context_today(self).strftime(DEFAULT_SERVER_DATE_FORMAT)
+                        request_item.write({'signing_date': current_date, 'state': 'completed'})
+                        # request_item.action_completed()
+                        # sign_request.action_signed()
+                        sign_request.write({'state': 'signed'})
                         sign_request.generate_completed_document_credit_card_application()
                         # if sale_order:
                         #     sale_order.add_quote_id_file(sign_request.completed_document)

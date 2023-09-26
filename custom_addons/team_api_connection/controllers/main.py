@@ -205,9 +205,7 @@ class API_Homes(http.Controller):
                 _logger.info("------------Calling fuction verify api token---------------")
             except:
                 values = {}
-            _logger.info("------------before values---------------")
             if values != {}:
-                _logger.info("------------Entered---------------")
                 user_result = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'verify_api_token',
                                             [values])
                 _logger.info("User Id(after function).......:" + str(user_result))

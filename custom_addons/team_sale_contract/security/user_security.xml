@@ -124,5 +124,18 @@
             <field name="domain_force">['|',('user_id.company_id','=',False),('user_id.company_id', 'in', company_ids)]</field>
         </record>
 
+        <record id="otl_payment_restriction_comp_rule" model="ir.rule">
+            <field name="name">Payment Restriction- Company Rule</field>
+            <field name="model_id" ref="model_otl_payment_restriction_rule"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="otl_installation_crew_comp_rule" model="ir.rule">
+            <field name="name">Installation Crew- Company Rule</field>
+            <field name="model_id" ref="model_otl_installation_crew"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
     </data>
 </odoo>

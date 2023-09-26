@@ -29,7 +29,7 @@ class TeamImproveitConfiguration(models.Model):
     _description = "Team Improveit Api Configuration"
 
     name = fields.Char(string='Name')
-    client_id = fields.Char(string='Client Id')
+    client_id = fields.Char(string='Client ID')
     client_secret = fields.Char(string='Client Secret')
     username = fields.Char(string='username')
     password = fields.Char(string='password')
@@ -37,11 +37,13 @@ class TeamImproveitConfiguration(models.Model):
     token_generated = fields.Char(string='Token Generated')
     mode = fields.Selection([('live','Live'),('test','Test')], default='live')
     token_url = fields.Char(string='Token Endpoint URL')
+    auth_url = fields.Char(string='Authentication Endpoint URL')
     active = fields.Boolean(default=True)
     api_type = fields.Selection([
         ('improveit', 'Improveit'),
         ('zapier', 'Zapier'),
-        ('boomi','Boomi'),
+        ('boomi', 'Boomi'),
+        ('rules_engine', 'Rules Engine'),
         ('contract_doc', 'Contract Document'),
     ], string='API Type', default='improveit')
     section = fields.Selection([
@@ -727,6 +729,7 @@ class TeamImproveitConfiguration(models.Model):
                         payment_plan = product['SubTitle'] if product.get('SubTitle') else ''
                         description = product['Description'] if product.get('Description') else ''
                         warranty_info = product['WarrantyInfo'] if product.get('WarrantyInfo') else ''
+                        min_sale_price = product['MinimumDiscountedPrice'] if product.get('MinimumDiscountedPrice') else 0
                         msrp = product['MSRP'] if product.get('MSRP') else ''
                         elgible_discount = product['EligibleForAllDiscounts'] if product.get('ProductID') else ''
                         unit_of_measure = product['UnitOfMeasure'] if product.get('ProductID') else ''
@@ -754,6 +757,7 @@ class TeamImproveitConfiguration(models.Model):
                                 'payment_plan': payment_plan,
                                 'description': description,
                                 'warranty_info': warranty_info,
+                                'min_sale_price': float(min_sale_price),
                                 'msrp': msrp,
                                 'unit_of_measure': unit_of_measure,
                                 'eligible_for_discounts': elgible_discount,
@@ -886,7 +890,7 @@ class TeamImproveitConfiguration(models.Model):
                                 self.env['team.room.room'].create(room_dict)
                             if duplicate_room:
                                 duplicate_room.write(room_dict)
-                    unused_rooms = self.env['team.room.room'].search([('name', 'not in', room_name_list)])
+                    unused_rooms = self.env['team.room.room'].search([('name', 'not in', room_name_list), ('is_custom', '!=', True)])
                     if unused_rooms:
                         unused_rooms.write({'active': False})
                 except IOError:
@@ -914,6 +918,9 @@ class TeamImproveitConfiguration(models.Model):
                 for payment_option in payment_list:
                     if payment_option.get('Name',False):
                         payment_options_list.append(payment_option.get('Name',False))
+                        down_payment_message = payment_option.get('Down_Payment_Message__c', '')
+                        if down_payment_message == 'false':
+                            down_payment_message = ''
                         duplicate_payment_option = self.env['team.downpayment.option'].with_context(active_test=False).search([('name','=',payment_option.get('Name',False))],limit=1)
                         if not duplicate_payment_option:
                             payment_dict = {
@@ -925,7 +932,8 @@ class TeamImproveitConfiguration(models.Model):
                                     'secondary_payment_factor':payment_option.get('Secondary_Payment_Factor__c', '0'),
                                     'balance_due':payment_option.get('Balance_Due__c', False),
                                     'sequence': payment_option.get('Display_Order__c', False),
-                                    'payment_info': payment_option.get('Payment_Info__c', '')
+                                    'payment_info': payment_option.get('Payment_Info__c', ''),
+                                    'down_payment_message': down_payment_message
                                 }
                             self.env['team.downpayment.option'].create(payment_dict)
                         if duplicate_payment_option and duplicate_payment_option.active == True:
@@ -938,6 +946,7 @@ class TeamImproveitConfiguration(models.Model):
                                 'secondary_payment_factor': payment_option.get('Secondary_Payment_Factor__c', '0'),
                                 'balance_due': payment_option.get('Balance_Due__c', False),
                                 'payment_info': payment_option.get('Payment_Info__c', ''),
+                                'down_payment_message': down_payment_message,
                                 'sequence': payment_option.get('Display_Order__c', False)
                             }
                             duplicate_payment_option.write(payment_dict)
@@ -951,12 +960,14 @@ class TeamImproveitConfiguration(models.Model):
                                 'payment_factor': payment_option.get('Payment_Factor__c', False),
                                 'secondary_payment_factor': payment_option.get('Secondary_Payment_Factor__c', '0'),
                                 'balance_due': payment_option.get('Balance_Due__c', False),
-                                'sequence': payment_option.get('Display_Order__c', False)
+                                'sequence': payment_option.get('Display_Order__c', False),
+                                'down_payment_message': down_payment_message,
                             }
                             duplicate_payment_option.write(payment_dict)
                 unused_payment_options = self.env['team.downpayment.option'].search([('name', 'not in', payment_options_list)])
                 if unused_payment_options:
                     unused_payment_options.write({'active': False})
+        return True
 
     def get_discount_coupons(self):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
@@ -1456,7 +1467,6 @@ class TeamImproveitConfiguration(models.Model):
     def action_sync_master_data(self, data={}):
         _logger.info('-------Starting: action_sync_master_data')
         for record in self.sudo().search([('api_type', '=', 'boomi')]):
-
             if record.sync_master_data_in_progress:
                 current_date = datetime.now()
                 time_after_last_execution = (current_date - record.write_date).total_seconds()
@@ -1465,7 +1475,7 @@ class TeamImproveitConfiguration(models.Model):
                     _logger.info('-------Not Executed: action_sync_master_data')
                     return {
                         'result': 'success',
-                        'message': "Master Data synchronized successfully"
+                        'message': "Master Data synchronized successfully",
                     }
             record.sudo().write({'sync_master_data_in_progress': True})
             record.env.cr.commit()
@@ -1496,7 +1506,7 @@ class TeamImproveitConfiguration(models.Model):
         _logger.info('-------Completed: action_sync_master_data')
         return {
             'result': 'success',
-            'message': "Master Data synchronized successfully"
+            'message': "Master Data synchronized successfully",
         }
 
 

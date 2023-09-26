@@ -37,6 +37,7 @@
             </xpath>
             <field name="favicon" position="after">
                 <field name="recision_date"/>
+                <field name="attachment_delete_day_limit"/>
             </field>
         </field>
     </record>
@@ -286,7 +287,7 @@
                 <xpath expr="//page[1]" position="after">
                     <page string="Payment Configuration" name="contract_questions">
                         <group col="4">
-                            <field name="payment_plan" required="True"/>
+                            <field name="payment_plan" required="0"/>
                             <field name="sequence"/>
                             <field name="description" placeholder="Internal Notes..."/>
                             <field name="warranty"/>
@@ -294,6 +295,7 @@
                             <field name="msrp"/>
                             <field name="unit_of_measure"/>
                             <field name="warranty_info"/>
+                            <field name="min_sale_price"/>
 
                         </group>
                         <separator string="Calculation"/>
@@ -553,6 +555,7 @@
                             <field name="interest_rate" digits="[12,4]"/>
                             <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
                             <field name="active" invisible="1"/>
+                            <field name="down_payment_message"/>
                         </group>
                     </sheet>
                 </form>
@@ -579,7 +582,7 @@
             <field name="context">{}</field>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">
-                    Click here to create a new Payment OPtion.
+                    Click here to create a new Payment Option.
                 </p>
             </field>
         </record>
@@ -1116,6 +1119,118 @@
 
         <menuitem name="User Authentication Logs" parent="sale.menu_sale_config" id="menu_user_authentication_log" action="action_user_authentication_log" groups="base.group_erp_manager"/>
 
+    <record id="weekdays_form" model="ir.ui.view">
+        <field name="name">weekdays.form</field>
+        <field name="model">otl.weekdays</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
 
+    <record id="weekdays_action" model="ir.actions.act_window">
+        <field name="name">Weekdays</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">otl.weekdays</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create!
+            </p>
+        </field>
+    </record>
+
+<!--    &lt;!&ndash;sub menu item&ndash;&gt;-->
+
+    <menuitem id="weekdays_root"
+              name="Weekdays"
+              parent="measurement_conf_root"
+              action="weekdays_action"
+              sequence="7"/>
+
+
+        <record id="restriction_rule_form" model="ir.ui.view">
+            <field name="name">restriction.rule.form</field>
+            <field name="model">otl.payment.restriction.rule</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="start_date" required="1"/>
+                                <field name="active"/>
+                                <field name="allowed_days_ids" widget="many2many_tags"/>
+                            </group>
+                            <group>
+                                <field name="end_date" required="1"/>
+                                <field name="conditions"/>
+                                <field name="min_order_total" attrs="{'invisible': [('conditions', '!=', 'amount')], 'required': [('conditions', '=', 'amount')]}"/>
+                                <field name="grade" attrs="{'invisible': [('conditions', '!=', 'grade')], 'required': [('conditions', '=', 'grade')]}"/>
+                                <field name="min_margin_amount" attrs="{'invisible': [('conditions', '!=', 'margin')], 'required': [('conditions', '=', 'margin')]}"/>
+                            </group>
+                            <group>
+                                <field name="location_ids" widget="many2many_tags"/>
+                                <field name="promotion_code_ids" widget="many2many_tags"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                            <group>
+                                <field name="payment_option_ids" widget="many2many_tags"/>
+                                <field name="discount_code_ids" widget="many2many_tags"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="restriction_tree" model="ir.ui.view">
+            <field name="name">restriction.tree</field>
+            <field name="model">otl.payment.restriction.rule</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="conditions"/>
+                    <field name="active"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+    <record id="restriction_action" model="ir.actions.act_window">
+        <field name="name">Payment Restrictions</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">otl.payment.restriction.rule</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create!
+            </p>
+        </field>
+    </record>
+
+    <!--sub menu item-->
+
+    <menuitem id="payment_restriction_root"
+              name="Payment Restrictions"
+              parent="measurement_conf_root"
+              action="restriction_action"
+              sequence="10"/>
     </data>
 </odoo>

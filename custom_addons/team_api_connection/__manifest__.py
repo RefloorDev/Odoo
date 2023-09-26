@@ -17,4 +17,7 @@
     'qweb': [
         ],
     'installable': True,
+    'external_dependencies': {
+        'python': ['fusion_refloor'],
+    }
 }
