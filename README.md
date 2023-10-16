@@ -13,3 +13,8 @@ api_user_password = <API USER PASSWORD>
 
 Here, these values(<>) should be replaced by odoo base URL, DB name & API User ID & Password to communicate with Odoo in API calls. 
 Odoo instance should have only 1 database in order to work API calls.
+
+
+Install Fustion Refloor library using following steps:
+1. cd lib/python/fusion_refloor
+2. python3 setup.py install
