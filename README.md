@@ -1,4 +1,4 @@
-![image](https://github.com/RefloorDev/Odoo/assets/33627068/06d7bd13-15ff-4a31-9038-049cff95295d)# Odoo
+# Odoo
 
 Please note that, in order to run the APIs, following details needs to add in the odoo conf file
 
