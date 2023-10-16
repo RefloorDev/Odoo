@@ -154,6 +154,19 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-12 col-lg-6 o_setting_box" id="enable_api_queue_system_ncp_setting"
+                     groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Enable API Queueing System</span>
+                        <div class="text-muted">
+                            Enable queueing system to prevent concurrent API requests.
+                        </div>
+                        <div class="row mt16">
+                            <label for="enable_api_queue_system" string="Enable API Queueing System" class="col-lg-4 o_light_label"/>
+                            <field name="enable_api_queue_system" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
 
 
             </xpath>

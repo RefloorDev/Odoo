@@ -109,6 +109,8 @@
                         <field name="credit_application_url" widget="url" readonly="1" invisible="1"/>
                         <field name="what_happened_notes" readonly="1"/>
                         <field name="whats_next_notes" readonly="1"/>
+                        <field name="appointment_result" readonly="1"/>
+                        <field name="resulting_reason_id" readonly="1" attrs="{'invisible': [('resulting_reason_id', '=', False)]}"/>
                         <field name="office_location_id" readonly="1"/>
                         <field name="market_segment" readonly="1"/>
                         <field name="app_version_id" readonly="1"/>

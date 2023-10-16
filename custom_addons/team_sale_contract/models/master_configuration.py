@@ -559,6 +559,23 @@ class PaymentRestrictionRule(models.Model):
     discount_code_ids = fields.Many2many('team.monthly.promo', string='Restricted Discounts')
 
 
+class AppointmentResultReason(models.Model):
+    _name = 'otl.appointment.result.reason'
+    _description = "Appointment Resulting Reasons"
+    _order = 'sequence asc'
+
+    name = fields.Char("Reason", required=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company.id)
+    active = fields.Boolean("Active", default=True)
+    reference_id = fields.Char("i360 Reference ID")
+    sequence = fields.Integer('Priority',
+                              help="Give to the more specialized category, a higher priority to have them in top of the list.", default = 10)
+
+    _sql_constraints = [
+        ('name_company_uniq', 'unique (name,company_id)', 'Reason must be unique per company!')
+    ]
+
+
 class InstallationCrew(models.Model):
     _name = 'otl.installation.crew'
     _description = 'Installation Crew'

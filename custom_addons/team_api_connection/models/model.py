@@ -4988,6 +4988,10 @@ class SaleOrder(models.Model):
                                 'what_happened_notes': appointment.what_happened_notes,
                                 'whats_next_notes': appointment.whats_next_notes,
                             }
+                        if appointment.resulting_reason_id:
+                            notes.update({
+                                'result_details': appointment.resulting_reason_id.name
+                            })
                         response_result = sale_order.set_appointment_result_api(sale_order.appointment_result, notes=notes)
                         _logger.info('-------i360 SetAppointmentResult Response: %s' % (response_result))
                         if response_result.get('Result', '') == 'Success' or response_result.get('success',

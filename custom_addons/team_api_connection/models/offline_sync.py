@@ -158,6 +158,15 @@ class ResUsers(models.Model):
                       'payment_options': [{'id': fin.id,'name': fin.name} for fin in rule.payment_option_ids] or ''} for rule in rules]
         return rule_list
 
+    def get_appointment_result_reasons_api(self):
+        reasons = self.env['otl.appointment.result.reason'].search([])
+        reason_list = [{
+            'reason':  reason.name or "",
+            'reason_id' : reason.id or 0,
+        }
+            for reason in reasons]
+        return reason_list
+
     def get_dynamic_contract_vals_api(self):
 
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
@@ -251,6 +260,7 @@ class ResUsers(models.Model):
         promotion_code_list = self.get_promotion_codes()
         transition_height_list = self.get_transition_heights()
         rules = self.get_restriction_rules_api()
+        reasons_list = self.get_appointment_result_reasons_api()
         templates = self.sudo().get_dynamic_contract_vals_api()
         auto_logout_time = ''
         if self.env.user.company_id.enable_auto_logout:
@@ -284,6 +294,7 @@ class ResUsers(models.Model):
             'recision_date': self.env.user.company_id.recision_date and self.env.user.company_id.recision_date.strftime(DEFAULT_SERVER_DATE_FORMAT) or '',
             'auto_logout_time': auto_logout_time  or '',
             'payment_restriction_rules': rules,
+            'appointment_result_reasons': reasons_list,
             'contract_document_templates': templates
         })
         # except:
@@ -532,11 +543,12 @@ class ProductProduct(models.Model):
         url = ''
         Attachment = self.env['ir.attachment'].sudo().search([('res_model', '=', 'product.product'), ('res_id', '=', self.id)],
                                                              limit=1)
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         if Attachment:
             Attachment.sudo().write({'datas': self.image_variant_128})
             if not Attachment.access_token:
                 Attachment.generate_access_token()
-            url = URL + '/web/image/' + str(Attachment.id) + '?access_token=' + str(Attachment.access_token)
+            url = base_url + '/web/image/' + str(Attachment.id) + '?access_token=' + str(Attachment.access_token)
         else:
             Attachment = self.env['ir.attachment'].sudo().create({
                 'res_id': self.id,
@@ -546,7 +558,7 @@ class ProductProduct(models.Model):
 
             })
             Attachment.generate_access_token()
-            url = URL + '/web/image/' + str(Attachment.id) + '?access_token=' + str(Attachment.access_token)
+            url = base_url + '/web/image/' + str(Attachment.id) + '?access_token=' + str(Attachment.access_token)
         return url
 
     @api.model
@@ -856,9 +868,16 @@ class TeamCustomerAppointment(models.Model):
             app_version_id = False
             if app_version:
                 app_version_id = self.env['otl.sales.app.version'].search([('name', '=', app_version)], limit=1)
+            resulting_reason_id = False
+            if data.get('resulting_reason_id', False):
+                resulting_reason_id = int(data.get('resulting_reason_id', 0))
+                resulting_reason= self.env['otl.appointment.result.reason'].browse(resulting_reason_id)
+                if not resulting_reason or not resulting_reason.exists():
+                    return {'message': 'Wrong value for Appointment Resulting Reason', 'result': 'Failed'}
             vals = {
                 'what_happened_notes': data.get('what_happened_notes', ''),
                 'whats_next_notes': data.get('whats_next_notes', ''),
+                'resulting_reason_id': resulting_reason_id,
                 'additional_comments': data.get('additional_comments', ''),
                 'send_physical_document':  send_physical_document,
                 'flexible_installation':  flexible_installation,
@@ -1325,7 +1344,7 @@ class TeamCustomerAppointment(models.Model):
                     'message': 'Sale order is already existing',
                     'result': 'Success',
                 }
-            plan = self.env['product.template'].search([('id', '=', selected_package_id)], limit=1)
+            plan = self.env['product.template'].with_context(active_test=False).search([('id', '=', selected_package_id)], limit=1)
             if not plan:
                 _logger.info("------Payment Package Not Exist------------")
                 status = {
@@ -1333,6 +1352,15 @@ class TeamCustomerAppointment(models.Model):
                     'result': 'Failed',
                 }
                 return status
+            if not plan.active:
+                active_package = self.env['product.template'].search([('grade', '=', plan.grade), ('categ_id', '=', plan.categ_id.id)], limit=1)
+                if not active_package:
+                    status = {
+                        'message': 'No Active Payment Package is Exists',
+                        'result': 'Failed',
+                    }
+                    return status
+                selected_package_id = active_package.id
             payment_method = data.get('payment_method', '')
             if payment_method:
                 if payment_method not in ['credit_card', 'debit_card', 'cash', 'check', 'finance']:
@@ -1692,6 +1720,10 @@ class TeamCustomerAppointment(models.Model):
                             'what_happened_notes': appointment.what_happened_notes,
                             'whats_next_notes': appointment.whats_next_notes,
                         }
+                    if appointment.resulting_reason_id:
+                        notes.update({
+                            'result_details': appointment.resulting_reason_id.name
+                        })
                     response_result = sale_order.set_appointment_result_api(sale_order.appointment_result, notes=notes)
                     _logger.info('-------i360 SetAppointmentResult Response: %s' % (response_result))
                     if response_result.get('Result', '') == 'Success' or response_result.get('success', '') == 'true':
@@ -2731,7 +2763,7 @@ class TeamCustomerAppointment(models.Model):
                     if sale_order:
                         sale_sync_result = self.action_sync_sale_data_to_i360(appointment, sale_order, return_on_failure=True)
                         _logger.info('i360 Sale Manual Sync Response: --%s'%(sale_sync_result))
-                        if sale_sync_result.get('result', 'Success'):
+                        if sale_sync_result.get('result', '') == 'Success':
                             rules_engine_result = self.action_get_available_dates_from_rule_engine_api(sale_order)
                             if rules_engine_result.get('result', '') == 'Failed':
                                 return rules_engine_result
