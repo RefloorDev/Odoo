@@ -2506,6 +2506,7 @@ class SaleOrder(models.Model):
                         data.update({
                             "WhatHappenedNotes": notes.get('what_happened_notes', ''),
                             "WhatsNextNotes": notes.get('whats_next_notes', ''),
+                            "ResultDetail": notes.get('result_details', ''),
                         })
                     headers = {
                         'Content-type': 'application/json',

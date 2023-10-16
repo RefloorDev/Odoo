@@ -1435,29 +1435,31 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
+        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         if status:
-            _logger.info('image_sync_api_queue Data - Starting--:%s - Appointment ID: %s, Image: %s' % (
-                self.image_sync_api_queue, appointment_id, image_name))
-            time = datetime.now()
-            if appointment_id not in self.image_sync_api_queue:
-                self.image_sync_api_queue.update({
-                    appointment_id: {}
+            if enable_api_queue_system:
+                _logger.info('image_sync_api_queue Data - Starting--:%s - Appointment ID: %s, Image: %s' % (
+                    self.image_sync_api_queue, appointment_id, image_name))
+                time = datetime.now()
+                if appointment_id not in self.image_sync_api_queue:
+                    self.image_sync_api_queue.update({
+                        appointment_id: {}
+                    })
+                image_dict = self.image_sync_api_queue.get(appointment_id, {})
+                if image_name in image_dict:
+                    queue_time = image_dict.get(image_name, {})
+                    time_difference = (time - queue_time).total_seconds()
+                    if int(time_difference) < 60:
+                        _logger.info('image_sync_api_queue Data - Duplicate--:%s - Appointment ID: %s, Image: %s' % (
+                            self.image_sync_api_queue, appointment_id, image_name))
+                        result = {'override_json_result': 1, 'result': 'Failed',
+                                  'message': 'Execution is already in progress'}
+                        request.env['otl.api.sync.log'].sudo().create_api_log('/api/upload_images', {'appointment_id': appointment_id}, uid, result)
+                        return result
+                self.image_sync_api_queue[appointment_id].update({
+                    image_name: time
                 })
-            image_dict = self.image_sync_api_queue.get(appointment_id, {})
-            if image_name in image_dict:
-                queue_time = image_dict.get(image_name, {})
-                time_difference = (time - queue_time).total_seconds()
-                if int(time_difference) < 60:
-                    _logger.info('image_sync_api_queue Data - Duplicate--:%s - Appointment ID: %s, Image: %s' % (
-                        self.image_sync_api_queue, appointment_id, image_name))
-                    result = {'override_json_result': 1, 'result': 'Failed',
-                              'message': 'Execution is already in progress'}
-                    request.env['otl.api.sync.log'].sudo().create_api_log('/api/upload_images', {'appointment_id': appointment_id}, uid, result)
-                    return result
-            self.image_sync_api_queue[appointment_id].update({
-                image_name: time
-            })
-            _logger.info('image_sync_api_queue Data - Added--:%s' % (self.image_sync_api_queue))
+                _logger.info('image_sync_api_queue Data - Added--:%s' % (self.image_sync_api_queue))
             if not file:
                 return json.dumps({'result': 'Failed', 'message': 'Empty attachment in values.'})
 
@@ -1499,10 +1501,11 @@ class APIHomes(API_Homes):
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/upload_images', {'appointment_id': appointment_id}, uid,
                                                               result)
         result.update({'override_json_result': 1})
-        self.image_sync_api_queue[appointment_id].pop(image_name, {})
-        if not self.image_sync_api_queue[appointment_id]:
-            self.image_sync_api_queue.pop(appointment_id, '')
-        _logger.info('image_sync_api_queue Data - Ending--:%s' % (self.image_sync_api_queue))
+        if enable_api_queue_system:
+            self.image_sync_api_queue[appointment_id].pop(image_name, {})
+            if not self.image_sync_api_queue[appointment_id]:
+                self.image_sync_api_queue.pop(appointment_id, '')
+            _logger.info('image_sync_api_queue Data - Ending--:%s' % (self.image_sync_api_queue))
         return json.dumps(result)
 
     @route('/api/generate_contract_document', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
@@ -1540,6 +1543,7 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
+        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         if status:
             data = {
                 'appointment_id': int(appointment_id),
@@ -1550,26 +1554,27 @@ class APIHomes(API_Homes):
                 'additional_comments': additional_comments,
                 'recision_date': recision_date
             }
-            _logger.info('generate_contract_document_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                    self.generate_contract_document_api_queue, appointment_id))
-            time = datetime.now()
-            if appointment_id in self.generate_contract_document_api_queue:
-                queue_time = self.generate_contract_document_api_queue.get(appointment_id, {})
-                time_difference = (time - queue_time).total_seconds()
-                if int(time_difference) < 60:
-                    _logger.info('generate_contract_document_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
+            if enable_api_queue_system:
+                _logger.info('generate_contract_document_api_queue Data - Starting--:%s - Appointment ID: %s' % (
                         self.generate_contract_document_api_queue, appointment_id))
-                    result = {'override_json_result': 1, 'result': 'Failed',
-                              'message': 'Execution is already in progress'}
-                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                        '/api/generate_contract_document', data, uid,
-                        result)
-                    return result
-            self.generate_contract_document_api_queue.update({
-                appointment_id: time
-            })
-            _logger.info('generate_contract_document_api_queue Data - Added--:%s' % (
-                self.generate_contract_document_api_queue))
+                time = datetime.now()
+                if appointment_id in self.generate_contract_document_api_queue:
+                    queue_time = self.generate_contract_document_api_queue.get(appointment_id, {})
+                    time_difference = (time - queue_time).total_seconds()
+                    if int(time_difference) < 60:
+                        _logger.info('generate_contract_document_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
+                            self.generate_contract_document_api_queue, appointment_id))
+                        result = {'override_json_result': 1, 'result': 'Failed',
+                                  'message': 'Execution is already in progress'}
+                        request.env['otl.api.sync.log'].sudo().create_api_log(
+                            '/api/generate_contract_document', data, uid,
+                            result)
+                        return result
+                self.generate_contract_document_api_queue.update({
+                    appointment_id: time
+                })
+                _logger.info('generate_contract_document_api_queue Data - Added--:%s' % (
+                    self.generate_contract_document_api_queue))
 
             result = models.execute_kw(DB, int(uid), password, 'sale.order', 'action_generate_contract_document',
                                        [data])
@@ -1578,9 +1583,10 @@ class APIHomes(API_Homes):
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/generate_contract_document', data, uid,
                                                               result)
         result.update({'override_json_result': 1})
-        self.generate_contract_document_api_queue.pop(appointment_id, '')
-        _logger.info('generate_contract_document_api_queue Data - Ending--:%s' % (
-            self.generate_contract_document_api_queue))
+        if enable_api_queue_system:
+            self.generate_contract_document_api_queue.pop(appointment_id, '')
+            _logger.info('generate_contract_document_api_queue Data - Ending--:%s' % (
+                self.generate_contract_document_api_queue))
         return json.dumps(result)
 
     @route('/api/initiate_sync_to_i360', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
@@ -1639,41 +1645,43 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
+        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         if status:
-            if data.get('appointment_id', 0):
-                _logger.info('initiate_i360_sync_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                    self.initiate_i360_sync_api_queue, data.get('appointment_id', 0)))
-                appointment_id = data.get('appointment_id', 0) and str(data.get('appointment_id', 0)) or '0'
-                time = datetime.now()
-                if appointment_id in self.available_installation_date_api_queue:
-                    result = {'override_json_result': 1, 'result': 'Failed',
-                              'message': 'Installation Date API Execution is in Progress'}
-                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                        '/api/initiate_sync_to_i360_json', data, uid,
-                        result)
-                    return result
-                if appointment_id in self.initiate_i360_sync_api_queue:
-                    queue_time = self.initiate_i360_sync_api_queue.get(appointment_id, {})
-                    time_difference = (time - queue_time).total_seconds()
-                    if int(time_difference) < 60:
-                        _logger.info('initiate_i360_sync_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                            self.initiate_i360_sync_api_queue, data.get('appointment_id', 0)))
+            if enable_api_queue_system:
+                if data.get('appointment_id', 0):
+                    _logger.info('initiate_i360_sync_api_queue Data - Starting--:%s - Appointment ID: %s' % (
+                        self.initiate_i360_sync_api_queue, data.get('appointment_id', 0)))
+                    appointment_id = data.get('appointment_id', 0) and str(data.get('appointment_id', 0)) or '0'
+                    time = datetime.now()
+                    if appointment_id in self.available_installation_date_api_queue:
                         result = {'override_json_result': 1, 'result': 'Failed',
-                                  'message': 'Execution is already in progress'}
+                                  'message': 'Installation Date API Execution is in Progress'}
                         request.env['otl.api.sync.log'].sudo().create_api_log(
                             '/api/initiate_sync_to_i360_json', data, uid,
                             result)
                         return result
-                self.initiate_i360_sync_api_queue.update({
-                    appointment_id: time
-                })
-                _logger.info('initiate_i360_sync_api_queue Data - Added--:%s' % (
-                    self.initiate_i360_sync_api_queue))
-            else:
-                _logger.info(
-                    "------------Appointment ID missing in create_order_and_update_measurements_encoded api-------------------")
-                return json.dumps(
-                    {'override_json_result': 1, 'result': 'Failed', 'message': 'Appointment ID is missing'})
+                    if appointment_id in self.initiate_i360_sync_api_queue:
+                        queue_time = self.initiate_i360_sync_api_queue.get(appointment_id, {})
+                        time_difference = (time - queue_time).total_seconds()
+                        if int(time_difference) < 60:
+                            _logger.info('initiate_i360_sync_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
+                                self.initiate_i360_sync_api_queue, data.get('appointment_id', 0)))
+                            result = {'override_json_result': 1, 'result': 'Failed',
+                                      'message': 'Execution is already in progress'}
+                            request.env['otl.api.sync.log'].sudo().create_api_log(
+                                '/api/initiate_sync_to_i360_json', data, uid,
+                                result)
+                            return result
+                    self.initiate_i360_sync_api_queue.update({
+                        appointment_id: time
+                    })
+                    _logger.info('initiate_i360_sync_api_queue Data - Added--:%s' % (
+                        self.initiate_i360_sync_api_queue))
+                else:
+                    _logger.info(
+                        "------------Appointment ID missing in create_order_and_update_measurements_encoded api-------------------")
+                    return json.dumps(
+                        {'override_json_result': 1, 'result': 'Failed', 'message': 'Appointment ID is missing'})
             result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
                                        'action_initiate_sync_to_i360',
                                        [data])
@@ -1682,9 +1690,10 @@ class APIHomes(API_Homes):
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/initiate_sync_to_i360_json', data, uid,
                                                               result)
         result.update({'override_json_result': 1})
-        self.initiate_i360_sync_api_queue.pop(appointment_id, '')
-        _logger.info('initiate_i360_sync_api_queue Data - Ending--:%s' % (
-            self.initiate_i360_sync_api_queue))
+        if enable_api_queue_system:
+            self.initiate_i360_sync_api_queue.pop(appointment_id, '')
+            _logger.info('initiate_i360_sync_api_queue Data - Ending--:%s' % (
+                self.initiate_i360_sync_api_queue))
         return json.dumps(result)
 
     @route('/api/update_sync_log', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True, )
@@ -1786,35 +1795,37 @@ class APIHomes(API_Homes):
             _logger.info("------------password missing in main create_order_and_update_measurements_encoded api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
+        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         if status:
-            if data.get('appointment_id', 0):
-                _logger.info('create_order_and_update_measurements_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                    self.create_order_and_update_measurements_api_queue, data.get('appointment_id', 0)))
-                appointment_id = data.get('appointment_id', 0) and str(data.get('appointment_id', 0)) or '0'
-                time = datetime.now()
-                if appointment_id in self.create_order_and_update_measurements_api_queue:
-                    queue_time = self.create_order_and_update_measurements_api_queue.get(appointment_id, {})
-                    time_difference = (time - queue_time).total_seconds()
-                    if int(time_difference) < 60:
-                        _logger.info(
-                            'create_order_and_update_measurements_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                self.create_order_and_update_measurements_api_queue, data.get('appointment_id', 0)))
-                        result = {'override_json_result': 1, 'result': 'Failed',
-                                  'message': 'Execution is already in progress'}
-                        request.env['otl.api.sync.log'].sudo().create_api_log(
-                            '/api/create_order_and_update_measurements_encoded', data, uid,
-                            result)
-                        return result
-                self.create_order_and_update_measurements_api_queue.update({
-                    appointment_id: time
-                })
-                _logger.info('create_order_and_update_measurements_api_queue Data - Added--:%s' % (
-                    self.create_order_and_update_measurements_api_queue))
-            else:
-                _logger.info(
-                    "------------Appointment ID missing in create_order_and_update_measurements_encoded api-------------------")
-                return json.dumps(
-                    {'override_json_result': 1, 'result': 'Failed', 'message': 'Appointment ID is missing'})
+            if enable_api_queue_system:
+                if data.get('appointment_id', 0):
+                    _logger.info('create_order_and_update_measurements_api_queue Data - Starting--:%s - Appointment ID: %s' % (
+                        self.create_order_and_update_measurements_api_queue, data.get('appointment_id', 0)))
+                    appointment_id = data.get('appointment_id', 0) and str(data.get('appointment_id', 0)) or '0'
+                    time = datetime.now()
+                    if appointment_id in self.create_order_and_update_measurements_api_queue:
+                        queue_time = self.create_order_and_update_measurements_api_queue.get(appointment_id, {})
+                        time_difference = (time - queue_time).total_seconds()
+                        if int(time_difference) < 60:
+                            _logger.info(
+                                'create_order_and_update_measurements_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
+                                    self.create_order_and_update_measurements_api_queue, data.get('appointment_id', 0)))
+                            result = {'override_json_result': 1, 'result': 'Failed',
+                                      'message': 'Execution is already in progress'}
+                            request.env['otl.api.sync.log'].sudo().create_api_log(
+                                '/api/create_order_and_update_measurements_encoded', data, uid,
+                                result)
+                            return result
+                    self.create_order_and_update_measurements_api_queue.update({
+                        appointment_id: time
+                    })
+                    _logger.info('create_order_and_update_measurements_api_queue Data - Added--:%s' % (
+                        self.create_order_and_update_measurements_api_queue))
+                else:
+                    _logger.info(
+                        "------------Appointment ID missing in create_order_and_update_measurements_encoded api-------------------")
+                    return json.dumps(
+                        {'override_json_result': 1, 'result': 'Failed', 'message': 'Appointment ID is missing'})
             payment_method_secret = data.get('payment_method_secret', '')
             credit_application_secret = data.get('application_info_secret', '')
             try:
@@ -1829,7 +1840,8 @@ class APIHomes(API_Homes):
                 request.env['otl.api.sync.log'].sudo().create_api_log(
                     '/api/create_order_and_update_measurements_encoded', data, uid,
                     result)
-                self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
+                if enable_api_queue_system:
+                    self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
                 return json.dumps(result)
             try:
                 if credit_application_secret:
@@ -1843,7 +1855,8 @@ class APIHomes(API_Homes):
                 request.env['otl.api.sync.log'].sudo().create_api_log(
                     '/api/create_order_and_update_measurements_encoded', data, uid,
                     result)
-                self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
+                if enable_api_queue_system:
+                    self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
                 return json.dumps(result)
             if decoded_data:
                 payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
@@ -1858,9 +1871,10 @@ class APIHomes(API_Homes):
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements_encoded', data, uid,
                                                               result)
         result.update({'override_json_result': 1})
-        if appointment_id:
-            self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
-        _logger.info('create_order_and_update_measurements_api_queue Data - Ending--:%s'%(self.create_order_and_update_measurements_api_queue))
+        if enable_api_queue_system:
+            if appointment_id:
+                self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
+            _logger.info('create_order_and_update_measurements_api_queue Data - Ending--:%s'%(self.create_order_and_update_measurements_api_queue))
         return json.dumps(result)
 
     @route('/api/create_order_and_update_measurements_encoded_v2', type='json', auth="none", methods=['POST'], csrf=False)
@@ -1986,28 +2000,30 @@ class APIHomes(API_Homes):
             _logger.info("------------password missing in main action_get_available_installation_date api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
+        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         if status:
-            _logger.info('available_installation_date_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                self.available_installation_date_api_queue, appointment_id))
-            time = datetime.now()
-            if appointment_id in self.available_installation_date_api_queue:
-                queue_time = self.available_installation_date_api_queue.get(appointment_id, {})
-                time_difference = (time - queue_time).total_seconds()
-                if int(time_difference) < 60:
-                    _logger.info(
-                        'available_installation_date_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                            self.available_installation_date_api_queue, appointment_id))
-                    result = {'override_json_result': 1, 'result': 'Failed',
-                              'message': 'Execution is already in progress'}
-                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                        '/api/get_available_installation_date', params, uid,
-                        result)
-                    return result
-            self.available_installation_date_api_queue.update({
-                appointment_id: time
-            })
-            _logger.info('available_installation_date_api_queue Data - Added--:%s' % (
-                self.available_installation_date_api_queue))
+            if enable_api_queue_system:
+                _logger.info('available_installation_date_api_queue Data - Starting--:%s - Appointment ID: %s' % (
+                    self.available_installation_date_api_queue, appointment_id))
+                time = datetime.now()
+                if appointment_id in self.available_installation_date_api_queue:
+                    queue_time = self.available_installation_date_api_queue.get(appointment_id, {})
+                    time_difference = (time - queue_time).total_seconds()
+                    if int(time_difference) < 60:
+                        _logger.info(
+                            'available_installation_date_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
+                                self.available_installation_date_api_queue, appointment_id))
+                        result = {'override_json_result': 1, 'result': 'Failed',
+                                  'message': 'Execution is already in progress'}
+                        request.env['otl.api.sync.log'].sudo().create_api_log(
+                            '/api/get_available_installation_date', params, uid,
+                            result)
+                        return result
+                self.available_installation_date_api_queue.update({
+                    appointment_id: time
+                })
+                _logger.info('available_installation_date_api_queue Data - Added--:%s' % (
+                    self.available_installation_date_api_queue))
             result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment', 'action_get_available_installation_date', [{'appointment_id': appointment_id}])
         else:
             result = message
@@ -2016,9 +2032,10 @@ class APIHomes(API_Homes):
                                                               uid,
                                                               result)
         result.update({'override_json_result': 1})
-        self.available_installation_date_api_queue.pop(appointment_id, '')
-        _logger.info('------available_installation_date_api_queue Data - Ending--:%s' % (
-            self.available_installation_date_api_queue))
+        if enable_api_queue_system:
+            self.available_installation_date_api_queue.pop(appointment_id, '')
+            _logger.info('------available_installation_date_api_queue Data - Ending--:%s' % (
+                self.available_installation_date_api_queue))
         return json.dumps(result)
 
     @route('/api/submit_selected_installation_date', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
@@ -2047,28 +2064,30 @@ class APIHomes(API_Homes):
             _logger.info("------------password missing in main submit_selected_installation_date api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
+        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         if status:
-            _logger.info('selected_installation_date_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                self.selected_installation_date_api_queue, sale_order_id))
-            time = datetime.now()
-            if sale_order_id in self.selected_installation_date_api_queue:
-                queue_time = self.selected_installation_date_api_queue.get(sale_order_id, {})
-                time_difference = (time - queue_time).total_seconds()
-                if int(time_difference) < 60:
-                    _logger.info(
-                        'selected_installation_date_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                            self.selected_installation_date_api_queue, sale_order_id))
-                    result = {'override_json_result': 1, 'result': 'Failed',
-                              'message': 'Execution is already in progress'}
-                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                        '/api/get_available_installation_date', params, uid,
-                        result)
-                    return result
-            self.selected_installation_date_api_queue.update({
-                sale_order_id: time
-            })
-            _logger.info('selected_installation_date_api_queue Data - Added--:%s' % (
-                self.selected_installation_date_api_queue))
+            if enable_api_queue_system:
+                _logger.info('selected_installation_date_api_queue Data - Starting--:%s - Appointment ID: %s' % (
+                    self.selected_installation_date_api_queue, sale_order_id))
+                time = datetime.now()
+                if sale_order_id in self.selected_installation_date_api_queue:
+                    queue_time = self.selected_installation_date_api_queue.get(sale_order_id, {})
+                    time_difference = (time - queue_time).total_seconds()
+                    if int(time_difference) < 60:
+                        _logger.info(
+                            'selected_installation_date_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
+                                self.selected_installation_date_api_queue, sale_order_id))
+                        result = {'override_json_result': 1, 'result': 'Failed',
+                                  'message': 'Execution is already in progress'}
+                        request.env['otl.api.sync.log'].sudo().create_api_log(
+                            '/api/get_available_installation_date', params, uid,
+                            result)
+                        return result
+                self.selected_installation_date_api_queue.update({
+                    sale_order_id: time
+                })
+                _logger.info('selected_installation_date_api_queue Data - Added--:%s' % (
+                    self.selected_installation_date_api_queue))
             result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment', 'action_submit_selected_installation_date', [{'sale_order_id': sale_order_id, 'installation_id': installation_id}])
         else:
             result = message
@@ -2077,7 +2096,8 @@ class APIHomes(API_Homes):
                                                               uid,
                                                               result)
         result.update({'override_json_result': 1})
-        self.selected_installation_date_api_queue.pop(sale_order_id, '')
-        _logger.info('------selected_installation_date_api_queue Data - Ending--:%s' % (
-            self.selected_installation_date_api_queue))
+        if enable_api_queue_system:
+            self.selected_installation_date_api_queue.pop(sale_order_id, '')
+            _logger.info('------selected_installation_date_api_queue Data - Ending--:%s' % (
+                self.selected_installation_date_api_queue))
         return json.dumps(result)
