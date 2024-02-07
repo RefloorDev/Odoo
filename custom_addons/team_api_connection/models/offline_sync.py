@@ -28,9 +28,7 @@ import time
 from fusion_refloor.configuration import Configuration
 from fusion_refloor.api_client import ApiClient, ApiException
 from fusion_refloor.api import scheduling_services_api
-from fusion_refloor.model.schedule_model import ScheduleModel
 from fusion_refloor.model.schedule_request import ScheduleRequest
-from fusion_refloor.model.schedule_response import ScheduleResponse
 
 import logging
 _logger = logging.getLogger(__name__)
@@ -154,6 +152,7 @@ class ResUsers(models.Model):
                       'allowed_days': [{'id': day.id, 'name': day.name} for day in rule.allowed_days_ids],
                       'office_locations': [{'id': location.id,'name': location.name} for location in rule.location_ids],
                       'restricted_promotions': [{'id': promo.id,'name': promo.name} for promo in rule.promotion_code_ids],
+                      'conditional_promotions': [{'id': conditional_promo.id,'name': conditional_promo.name} for conditional_promo in rule.promos_ids],
                       'restricted_discounts': [{'id': discount.id,'code': discount.code} for discount in rule.discount_code_ids],
                       'payment_options': [{'id': fin.id,'name': fin.name} for fin in rule.payment_option_ids] or ''} for rule in rules]
         return rule_list
@@ -274,6 +273,7 @@ class ResUsers(models.Model):
             # auto_logout_date_local = tz.localize(auto_logout_date).astimezone(pytz.utc)
             # if current_time >  auto_logout_date_local:
             #     auto_logout_date_local = auto_logout_date_local + relativedelta(days=1)
+        company = self.env.user.company_id
         result.update({
             'rooms': room_list,
             'questionnaires': questionnaire_list,
@@ -291,11 +291,14 @@ class ResUsers(models.Model):
             'transition_heights': transition_height_list,
             'min_sale_price': float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0,
             'max_no_transitions': int(self.env['ir.config_parameter'].sudo().get_param('max_no_transitions')) or 0,
-            'recision_date': self.env.user.company_id.recision_date and self.env.user.company_id.recision_date.strftime(DEFAULT_SERVER_DATE_FORMAT) or '',
+            'recision_date': company.recision_date and company.recision_date.strftime(DEFAULT_SERVER_DATE_FORMAT) or '',
             'auto_logout_time': auto_logout_time  or '',
             'payment_restriction_rules': rules,
             'appointment_result_reasons': reasons_list,
-            'contract_document_templates': templates
+            'contract_document_templates': templates,
+            'versatile_url': company.versatile_url or '',
+            'versatile_api_key': company.versatile_api_key or '',
+            'versatile_entity_key': company.versatile_entity_key or '',
         })
         # except:
         #     result = {
@@ -510,6 +513,7 @@ class TeamQuoteQuestion(models.Model):
                 'id': question.id,
                 'name': question.name or '',
                 'code': question.code or '',
+                'max_allowed_limit': question.max_allowed_limit or 0,
                 'company_id': question.company_id.id,
                 'description': question.description or '',
                 'question_type': question.question_type or '',
@@ -526,6 +530,7 @@ class TeamQuoteQuestion(models.Model):
                 'default_answer': question.default_answer or '',
                 'exclude_from_discount': question.exclude_from_discount or False,
                 'exclude_from_promotion': question.exclude_from_promotion or False,
+                'calculate_order_wise': question.calculate_order_wise or False,
                 'multiply_with_area': question.multiply_with_area or False,
                 'set_default_answer': question.set_default_answer or False,
                 'applicable_current_surface': question.applicable_current_surface or '',
@@ -539,31 +544,19 @@ class TeamQuoteQuestion(models.Model):
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
+
     def get_material_color_url(self):
         url = ''
-        Attachment = self.env['ir.attachment'].sudo().search([('res_model', '=', 'product.product'), ('res_id', '=', self.id)],
-                                                             limit=1)
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-        if Attachment:
-            Attachment.sudo().write({'datas': self.image_variant_128})
-            if not Attachment.access_token:
-                Attachment.generate_access_token()
-            url = base_url + '/web/image/' + str(Attachment.id) + '?access_token=' + str(Attachment.access_token)
-        else:
-            Attachment = self.env['ir.attachment'].sudo().create({
-                'res_id': self.id,
-                'res_model': 'product.product',
-                'datas': self.image_variant_128,
-                'name': self.name
-
-            })
-            Attachment.generate_access_token()
-            url = base_url + '/web/image/' + str(Attachment.id) + '?access_token=' + str(Attachment.access_token)
+        if self.color_attachment_id:
+            attachment = self.color_attachment_id
+            attachment.generate_access_token()
+            url = base_url + '/web/image/' + str(attachment.id) + '?access_token=' + str(attachment.access_token)
         return url
 
     @api.model
     def get_all_flooring_colors(self, room_type=''):
-        domain = [('active', '=', True), ('is_material', '=', True)]
+        domain = [('active', '=', True), ('is_material', '=', True), ('floor_color', '!=', False)]
         if room_type == 'floor':
             domain.append(('categ_id.name', 'not ilike', 'Stairs'))
         elif room_type == 'stair':
@@ -578,28 +571,27 @@ class ProductProduct(models.Model):
                 default_material_image_attachment_id.sudo().generate_access_token()
             default_image_url = _('%s/web/image/%s?access_token=%s' % (
                 base_url, default_material_image_attachment_id.id, default_material_image_attachment_id.access_token))
+        color_list = []
         if product_list:
             for product in product_list:
-                if product.image_variant_128:
-                    floor_color_url = product.get_material_color_url()
-                else:
-                    floor_color_url = default_image_url
+                color = product.display_name_in_app and product.display_name_in_app or product.floor_color
+                if color and color not in color_list:
+                    if product.image_variant_128:
+                        floor_color_url = product.get_material_color_url()
+                    else:
+                        floor_color_url = default_image_url
 
-                vals = {
-                    'material_id': product.id or 0,
-                    'name': product.name,
-                    'color': product.display_name_in_app if product.display_name_in_app else "Select Color",
-                    'material_image_url': floor_color_url,
-                    'color_up_charge_price': product.color_up_charge_price or 0
-                }
-                materials_list.append(vals)
-        done = set()
-        result = []
-        for material in materials_list:
-            if material['color'] not in done:
-                done.add(material['color'])
-                result.append(material)
-        sorted_material_list = sorted(result, key=lambda k: k['color'])
+                    vals = {
+                        'material_id': product.id or 0,
+                        'name': product.name,
+                        'color': color,
+                        'material_image_url': floor_color_url,
+                        'color_up_charge_price': product.color_up_charge_price or 0
+                    }
+
+                    color_list.append(color)
+                    materials_list.append(vals)
+        sorted_material_list = sorted(materials_list, key=lambda k: k['color'])
         return sorted_material_list
 
 
@@ -779,6 +771,7 @@ class TeamCustomerAppointment(models.Model):
                     appointment_datetime = appointment_date.strftime('%d %b %I:%M %p')
                 vals = {
                     'id': data.id,
+                    'improveit_appointment_id': data.improveit_appointment_id or '',
                     'name': data.name,
                     'customer_name': data.customer_name and data.customer_name.upper() or '',
                     'applicant_first_name': data.applicant_first_name or '',
@@ -1125,6 +1118,7 @@ class TeamCustomerAppointment(models.Model):
                 question.unlink()
         for data in questionnaire_list:
             room_name = data.get('room_name', '')
+            calculate_order_wise = data.get('calculate_order_wise', 0)
             if data.get('room_id', False) or room_name:
                 room_id = int(data.get('room_id', False)) or 0
                 if not room_id:
@@ -1159,6 +1153,7 @@ class TeamCustomerAppointment(models.Model):
                                     'question_id': question_id,
                                     'room_name': room_name,
                                     'room_measurement_id': room_measure and room_measure.id or False,
+                                    'calculate_order_wise': calculate_order_wise and True or False,
                                     'appointment_id': self.id,
                                     'order_id': sale_order and sale_order.id or False
                                 })
@@ -1979,6 +1974,23 @@ class TeamCustomerAppointment(models.Model):
                                 })
                         if result.get('success', '') == 'true':
                             sale_order_vals.update({'other_files_uploaded': True})
+                    enable_additional_comment_api = eval(
+                        str(self.env['ir.config_parameter'].sudo().get_param('enable_additional_comment_api')))
+                    if enable_additional_comment_api and not sale_order.additional_comment_synced:
+                        result = sale_order.create_additional_comments_in_i360()
+                        if result.get('success', '') == 'true':
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'AddSaleComments',
+                            })
+                        else:
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'AddSaleComments',
+                            })
                     sale_order.write(sale_order_vals)
                     if sale_order.check_document_upload_completed():
                         sale_order.write({'is_data_upload_completed': True})
@@ -2727,7 +2739,16 @@ class TeamCustomerAppointment(models.Model):
 
             try:
                 # Request schedule using a new sales order
-                api_response = api_instance.schedule_existing_order(sale_order.quote_id)
+                appointment_date = sale_order.appointment_id and sale_order.appointment_id.appointment_date.date() or date.today()
+                installer_date_range_limit = int(self.env['ir.config_parameter'].sudo().get_param('installer_date_range_limit')) or 30
+                start_date = appointment_date + relativedelta(days=1)
+                end_date = start_date + relativedelta(days=installer_date_range_limit)
+
+                model = ScheduleRequest()
+                model.proposed_start_date = start_date
+                model.proposed_end_date = end_date
+
+                api_response = api_instance.schedule_existing_order(sale_order.quote_id, schedule_request=model)
                 _logger.info(api_response)
                 result.update({
                     'data': api_response.get('crews', [])
@@ -3002,6 +3023,126 @@ class TeamCustomerAppointment(models.Model):
                 'result': 'Failed',
             }
         _logger.info("------action_submit_selected_installation_date result: %s-------------" % (result))
+        return result
+
+    @api.model
+    def action_update_additional_appointment_data(self, data):
+        result = {
+            'message': 'Something went wrong updating the appointment',
+            'result': 'Failed'
+        }
+        _logger.info("------action_update_additional_appointment_data data: %s-------------" % (data))
+        try:
+            appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
+            send_physical_document = False
+            if data.get('send_physical_document', 0) == 1:
+                send_physical_document = True
+            flexible_installation = False
+            if data.get('flexible_installation', 0) == 1:
+                flexible_installation = True
+            if appointment_id:
+                appointment = self.env['team.customer.appointment'].browse(appointment_id)
+                if appointment.exists():
+                    appointment.write({
+                        'additional_comments': data.get('additional_comments', ''),
+                        'send_physical_document': send_physical_document,
+                        'flexible_installation': flexible_installation,
+                    })
+                    order = self.env['sale.order'].search([('appointment_id', '=', appointment_id)], limit=1)
+                    if not order:
+                        return {
+                            'message': 'Sale order is not found against the appointment',
+                            'result': 'Failed'
+                        }
+                    if data.get('recision_date', False):
+                        order.write({'recision_date': data.get('recision_date', False)})
+                    result = {
+                        'message': 'Data Updated Successfully',
+                        'result': 'Success',
+                    }
+                    _logger.info("------Data Updated Successfully-------------")
+                else:
+                    _logger.info("------Wrong Appointment Id-------------")
+                    result = {
+                        'message': 'Wrong Appointment Id',
+                        'result': 'Failed'
+                    }
+
+            else:
+                _logger.info("------Empty Appointment Id-------------")
+                result = {
+                    'message': 'Empty Appointment Id',
+                    'result': 'Failed'
+                }
+        except:
+            result = {
+                'message': 'Something Went Wrong.',
+                'result': 'Failed'
+            }
+        _logger.info("------action_update_additional_appointment_data result: %s-------------" % (result))
+        return result
+
+    @api.model
+    def action_get_credit_application_status(self, data):
+        result = {
+            'message': 'Something went wrong updating the appointment',
+            'result': 'Failed'
+        }
+        _logger.info("------action_get_credit_application_status data: %s-------------" % (data))
+        try:
+            appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
+            loan_type = data.get('loan_type', '')
+            if not loan_type:
+                return {
+                    'message': 'Empty Loan Type',
+                    'result': 'Failed'
+                }
+            if appointment_id:
+                appointment = self.env['team.customer.appointment'].browse(appointment_id)
+                if appointment.exists():
+                    if loan_type == 'versatile':
+                        versatile_application = self.env['otl.versatile.credit.application'].search([('appointment_id', '=', appointment_id)], limit=1)
+                        if not versatile_application:
+                            result = {
+                                'message': 'Credit application is not existing',
+                                'result': 'Failed'
+                            }
+                        else:
+                            result = {
+                                "result": "Success",
+                                "data": {
+                                    "application_id": versatile_application.application_id or "",
+                                    "provider": versatile_application.provider or "",
+                                    "provider_reference": versatile_application.provider_reference or "",
+                                    "status": versatile_application.status or "",
+                                    "approved_amount": versatile_application.approved_amount or 0,
+                                }
+                            }
+                    else:
+                        result = {
+                            'message': 'Wrong Loan Type',
+                            'result': 'Failed'
+                        }
+
+                else:
+                    _logger.info("------Wrong Appointment Id-------------")
+                    result = {
+                        'message': 'Wrong Appointment Id',
+                        'result': 'Failed'
+                    }
+
+            else:
+                _logger.info("------Empty Appointment Id-------------")
+                result = {
+                    'message': 'Empty Appointment Id',
+                    'result': 'Failed'
+                }
+        except:
+            result = {
+                'message': 'Something Went Wrong.',
+                'result': 'Failed'
+            }
+        _logger.info("------action_get_credit_application_status result: %s-------------" % (result))
         return result
 
 
@@ -4191,3 +4332,94 @@ class IRAttachment(models.Model):
                                      attachment.access_token)})
 
         return image_list
+
+
+class VersatileCreditApplication(models.Model):
+    _inherit = 'otl.versatile.credit.application'
+
+    def convert_date_to_utc(self, date, tz):
+        date_obj = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%fZ')
+        date_utc = tz.localize(date_obj).astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
+        return date_utc
+
+    @api.model
+    def action_create_versatile_credit_application(self, versatile_payload={}):
+        result = {
+            "result": "Failed",
+            "message": "Something went wrong"
+        }
+        user = self.env.user
+        tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+        data = versatile_payload.get("data", {})
+        webhook_event_id = versatile_payload.get('id', "")
+        event_type = versatile_payload.get('type', "")
+        event_date = versatile_payload.get('dateTime', "")
+        application_id = data.get("applicationId", "")
+        ext_customer_id = data.get("externalCustomerId", "")
+        if not ext_customer_id:
+            return {"result": "Failed", "message": "externalCustomerId is missing"}
+        appointment = self.env['team.customer.appointment'].search([('improveit_appointment_id', '=', ext_customer_id)], limit=1)
+        if not appointment:
+            return {"result": "Failed", "message": "Appointment is not found related to the External Customer ID '%s'."%(ext_customer_id)}
+        if event_date:
+            event_date = self.convert_date_to_utc(event_date, tz)
+        credit_application = self.search([('webhook_event_id', '=', webhook_event_id)], limit=1)
+
+        account_id = data.get("accountId", "")
+        provider = data.get("providerId", "")
+        session_id = data.get("sessionId", "")
+        provider_reference = data.get("providerReferenceNumber", "")
+        status = data.get("status", "")
+        submitted_date = data.get("submittedDateTime", False)
+        if submitted_date:
+            submitted_date = self.convert_date_to_utc(submitted_date, tz)
+        approved_amount_cent = data.get("approvedAmount", "")
+        applicant_data = data.get("applicant", {}) and data.get("applicant", {}) or {}
+        co_applicant_data = data.get("jointApplicant", {}) and data.get("jointApplicant", {}) or {}
+        applicant_first_name = ''
+        applicant_last_name = ''
+        co_applicant_first_name = ''
+        co_applicant_last_name = ''
+        if applicant_data:
+            applicant_first_name = applicant_data.get("firstName", "")
+            applicant_last_name = applicant_data.get("lastName", "")
+        if co_applicant_data:
+            co_applicant_first_name = co_applicant_data.get("firstName", "")
+            co_applicant_last_name = co_applicant_data.get("lastName", "")
+        error_list = data.get("errors", [])
+        vals = {
+            "webhook_event_id": webhook_event_id,
+            "event_type": event_type,
+            "event_date": event_date,
+            "appointment_id": appointment.id,
+            "application_id": application_id,
+            "account_id": account_id,
+            "provider": provider,
+            "session_id": session_id,
+            "provider_reference": provider_reference,
+            "status": status,
+            "submitted_date": submitted_date,
+            "approved_amount_cent": approved_amount_cent,
+            "ext_customer_id": ext_customer_id,
+            "applicant_first_name": applicant_first_name,
+            "applicant_last_name": applicant_last_name,
+            "co_applicant_first_name": co_applicant_first_name,
+            "co_applicant_last_name": co_applicant_last_name,
+            "error_line": [(0, 0, {"name": error}) for error in error_list],
+        }
+        if credit_application:
+            credit_application.write(vals)
+            result = {
+                "result": "Success",
+                "message": "Credit Application Updated Successfully",
+                "credit_application_id": credit_application.id
+            }
+        else:
+            credit_application = self.create(vals)
+            result = {
+                "result": "Success",
+                "message": "Credit Application Created Successfully",
+                "credit_application_id": credit_application.id
+            }
+        return result
+

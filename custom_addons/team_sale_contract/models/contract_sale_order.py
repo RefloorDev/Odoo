@@ -182,7 +182,7 @@ class SaleOrder(models.Model):
                 molding_vinyl = True
             if record.room_measurement_line.filtered(lambda x: x.molding_type_id and x.molding_type_id.name.lower() == 'unfinished' and not x.exclude_from_calculation):
                 molding_unfinished = True
-            if record.room_measurement_line.filtered(lambda x: x.molding_type_id and x.molding_type_id.name.lower() == 'coved baseboard' and not x.exclude_from_calculation):
+            if record.room_measurement_line.filtered(lambda x: x.molding_type_id and x.molding_type_id.name.lower() == 'cove baseboard' and not x.exclude_from_calculation):
                 molding_coved_baseboard = True
             record.molding_none = molding_none
             record.molding_vinyl = molding_vinyl
@@ -294,6 +294,7 @@ class SaleOrder(models.Model):
     excluded_amount_promotion = fields.Float('Excluded Amount From Promotion')
     min_sale_price = fields.Float('Minimum Sale Price', default=0)
     available_installation_line = fields.One2many('otl.available.installation.line', 'order_id', string='Available Installtion Dates')
+    additional_comment_synced = fields.Boolean("Synced Additional Comments", default=False)
 
     def write(self, vals):
         _logger.info('inside sale order-%s write: values -  %s'%(self and self[0].name or '', vals))
@@ -3176,6 +3177,52 @@ class SaleOrder(models.Model):
             result.update({"success": "false"})
         return result
 
+    def create_additional_comments_in_i360(self):
+        result = {
+            "success": "true",
+            "errors": []
+        }
+        try:
+            configurations = self.env['team.improveit.configuration'].search(
+                [('api_type', '=', 'boomi')], limit=1)
+            _logger.info('--------Starting AddSaleComments API---------')
+            for sale_order in self:
+                appointment = sale_order.appointment_id
+                _logger.info('--------Appointment ID---------: %s' % (sale_order.appointment_id))
+                if sale_order.quote_id and appointment:
+                    data = {
+                        'Id': sale_order.quote_id or '',
+                        'AdditionalComments': appointment.additional_comments or "",
+                        "FlexibleInstall": appointment.flexible_installation and "true" or "false"
+                    }
+                    headers = {
+                        'Content-type': 'application/json',
+                    }
+                    end_point_url = configurations.token_url
+                    client_token = configurations.client_token
+                    _logger.info(data)
+                    if end_point_url and client_token:
+                        request_url = end_point_url + 'AddSaleComments' + client_token
+                    req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
+                                        verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    _logger.error('AddSaleComments API Response of Appointment %s :%s' % (
+                        appointment.id, content))
+                    if content.get('success', '') == "true":
+                        sale_order.write({
+                            'additional_comment_synced': True,
+                        })
+                    if content.get('success', '') == "false":
+                        return content
+                    elif "Errors" in content:
+                        return content.get('Errors', {})
+
+        except IOError:
+            pass
+            _logger.error("******--------Error in create_additional_comments_in_i360 API---------********")
+            result.update({"success": "false"})
+        return result
 
 class Followers(models.Model):
     _inherit = 'mail.followers'

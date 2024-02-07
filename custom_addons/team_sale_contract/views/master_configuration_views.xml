@@ -34,6 +34,25 @@
                         </group>
                     </group>
                 </page>
+                <page string="Versatile">
+                    <group string="API Details">
+                        <group>
+                            <field name="versatile_url" widget="url"/>
+                            <field name="versatile_api_key"/>
+                        </group>
+                        <group>
+                            <field name="versatile_entity_key"/>
+                        </group>
+                    </group>
+                    <group string="Authentication Details">
+                        <group>
+                            <field name="versatile_user_id" options="{'no_create_edit': True, 'no_open':True,'no_create': True}" domain="[('improveit_user_id', '=', False)]"/>
+                        </group>
+                        <group>
+                            <button name="action_generate_versatile_user_token" string="Generate/View Auth token" type="object" class="oe_highlight"/>
+                        </group>
+                    </group>
+                </page>
             </xpath>
             <field name="favicon" position="after">
                 <field name="recision_date"/>
@@ -1182,6 +1201,7 @@
                                 <field name="min_order_total" attrs="{'invisible': [('conditions', '!=', 'amount')], 'required': [('conditions', '=', 'amount')]}"/>
                                 <field name="grade" attrs="{'invisible': [('conditions', '!=', 'grade')], 'required': [('conditions', '=', 'grade')]}"/>
                                 <field name="min_margin_amount" attrs="{'invisible': [('conditions', '!=', 'margin')], 'required': [('conditions', '=', 'margin')]}"/>
+                                <field name="promos_ids" widget="many2many_tags" attrs="{'invisible': [('conditions', '!=', 'promotions')], 'required': [('conditions', '=', 'promotions')]}"/>
                             </group>
                             <group>
                                 <field name="location_ids" widget="many2many_tags"/>

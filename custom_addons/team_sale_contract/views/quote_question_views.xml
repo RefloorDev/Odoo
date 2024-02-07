@@ -72,6 +72,7 @@
                             <field name="default_answer"/>
                             <field name="amount_included"/>
                             <field name="set_default_answer"/>
+                            <field name="calculate_order_wise"/>
 
                         </group>
                         <group>
@@ -82,6 +83,7 @@
                             <field name="multiply_with_area" attrs="{'invisible': [('reflect_cost', '!=', True), ('calculation_type', '!=', 'sqft')]}"/>
                             <field name="differ_cost_based_on_count" attrs="{'invisible': ['|', ('reflect_cost', '!=', True), ('calculation_type', '!=', 'unit')]}"/>
                             <field name="amount" attrs="{'invisible': [('differ_cost_based_on_count', '=', True), ('calculation_type', '=', 'unit')]}"/>
+                            <field name="max_allowed_limit"/>
                             <field name="count_cost_line" attrs="{'invisible': [('differ_cost_based_on_count', '!=', True)]}">
                                 <tree editable="bottom">
                                     <field name="count" required="1"/>

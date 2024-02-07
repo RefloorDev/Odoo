@@ -1006,11 +1006,18 @@ class TeamImproveitConfiguration(models.Model):
                             'active': True
                         }
                         if image_binary:
-                            attachment = self.env['ir.attachment'].sudo().create({
-                                'datas': image_binary,
-                                'name': thumb_nail
+                            if duplicate_discount_coupon and duplicate_discount_coupon.attachment_id:
+                                attachment = duplicate_discount_coupon.attachment_id
+                                attachment.sudo().write({
+                                    'datas': image_binary,
+                                    'name': thumb_nail
+                                })
+                            else:
+                                attachment = self.env['ir.attachment'].sudo().create({
+                                    'datas': image_binary,
+                                    'name': thumb_nail
 
-                            })
+                                })
                             attachment.generate_access_token()
                             discount_coupon_dict.update({
                                 'attachment_id': attachment.id
@@ -1147,15 +1154,31 @@ class TeamImproveitConfiguration(models.Model):
                             products = self.env['product.product'].search([('product_tmpl_id.grade', 'in', product_line_template)])
                             for product in products:
                                 if product.product_template_attribute_value_ids.filtered(lambda x: x.name == name and x.attribute_id.name == 'colour'):
+                                    attachment = False
                                     product.write({'floor_color': name,
                                                    'product_line': product_lines,
                                                    'thumb_nail': thumb_nail,
                                                    'url': image_url,
                                                    'color_up_charge_price': color_up_charge_price,
                                                    'display_name_in_app': display_name_in_app,
-                                                   'image_variant_1920': image_binary
+                                                   'image_variant_1920': image_binary,
                                                    })
+                                    if product.color_attachment_id:
+                                        if not product.image_variant_128:
+                                            product.color_attachment_id.unlink()
+                                        else:
+                                            attachment = product.color_attachment_id
+                                            attachment.sudo().write({
+                                                'datas': product.image_variant_128,
+                                                'name': thumb_nail
+                                            })
+                                    else:
+                                        attachment = self.env['ir.attachment'].sudo().create({
+                                            'datas': product.image_variant_128,
+                                            'name': thumb_nail
 
+                                        })
+                                    product.write({'color_attachment_id': attachment and attachment.id or False})
                 except IOError:
                     error_msg = _("Something went wrong during token generation.")
                     raise self.env['res.config.settings'].get_config_warning(error_msg)

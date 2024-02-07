@@ -25,6 +25,7 @@ This module customizing sale module to create a sale contract & followups.
         'views/sale_contract_views.xml',
         'views/sale_order_contract_views.xml',
         'views/res_config_settings_views.xml',
+        'wizard/generate_token_wizard_view.xml',
     ],
     
     'installable': True,
