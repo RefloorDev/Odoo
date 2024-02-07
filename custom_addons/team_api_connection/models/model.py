@@ -308,7 +308,8 @@ class ResUsers(models.Model):
     @api.model
     def cron_clear_user_tokens(self):
         for company in self.env['res.company'].search([('enable_auto_logout', '=', True)]):
-            logged_in_users = self.search([('token_name', '!=', ''), ('company_id', '=', company.id)])
+            #only fetching users having i360 ID.
+            logged_in_users = self.search([('token_name', '!=', ''), ('company_id', '=', company.id), ('improveit_user_id', '!=', '')])
             users_with_pending_sync = []
             for user in logged_in_users:
                 pending_appointments = self.env['team.customer.appointment'].search(
@@ -355,7 +356,7 @@ class ResCompany(models.Model):
     def get_pending_logout_users_list(self):
         result = []
         for company in self:
-            logged_in_users = self.env['res.users'].search([('token_name', '!=', ''), ('company_id', '=', company.id)])
+            logged_in_users = self.env['res.users'].search([('token_name', '!=', ''), ('company_id', '=', company.id), ('improveit_user_id', '!=', '')])
             for user in logged_in_users:
                 pending_appointments = self.env['team.customer.appointment'].search(
                     [('state', '=', 'scheduled'), ('user_id', '=', user.id)])
@@ -399,7 +400,7 @@ class TeamRoomRoom(models.Model):
     def get_rooms(self):
 
         list = []
-        rooms = self.env['team.room.room'].search([('active', '=', True)])
+        rooms = self.env['team.room.room'].search([('active', '=', True), ('is_custom', '!=', True)])
         if rooms:
             for room in rooms:
                 room_image_url = ''
@@ -3210,14 +3211,24 @@ class SaleOrder(models.Model):
         for record in self:
             if record.appointment_id and not record.appointment_id.status_updated_to_i360:
                 is_data_upload_completed = False
-            if not record.quote_id:
-                is_data_upload_completed = False
             if record.appointment_result == 'Sold' and not record.contract_document_uploaded:
                 is_data_upload_completed = False
             if not record.other_files_uploaded:
                 is_data_upload_completed = False
-            for room_measurement in record.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation):
-                if not room_measurement.improveit_id:
+            if record.appointment_result == 'Sold':
+                if not record.quote_id:
+                    is_data_upload_completed = False
+                if record.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation and not x.improveit_id):
+                    is_data_upload_completed = False
+            else:
+                included_room_measurement_lines = record.room_measurement_line.filtered(
+                    lambda x: not x.exclude_from_calculation)
+                excluded_room_measurement_lines = record.room_measurement_line.filtered(
+                    lambda x: x.exclude_from_calculation)
+                if (included_room_measurement_lines and not record.quote_id) or (
+                        excluded_room_measurement_lines and not record.excluded_quote_id):
+                    is_data_upload_completed = False
+                if record.room_measurement_line.filtered(lambda x: not x.improveit_id):
                     is_data_upload_completed = False
             if record.required_file_upload:
                 is_data_upload_completed = False
@@ -4950,6 +4961,7 @@ class SaleOrder(models.Model):
         orders = self.search(
             [('is_data_upload_completed', '=', False), ('appointment_id.start_sync_to_i360', '=', True)])
         sync_log = self.env['otl.appointment.sync.log']
+        model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
         for sale_order in orders:
             appointment = sale_order.appointment_id
             if appointment and appointment.start_sync_to_i360:
@@ -4971,7 +4983,17 @@ class SaleOrder(models.Model):
                                 'name': 'UpdateAppointmentProspect',
                             })
                     if not appointment.status_updated_to_i360:
-                        response_result = sale_order.set_appointment_result_api(sale_order.appointment_result)
+                        notes = {}
+                        if appointment.what_happened_notes and appointment.whats_next_notes:
+                            notes = {
+                                'what_happened_notes': appointment.what_happened_notes,
+                                'whats_next_notes': appointment.whats_next_notes,
+                            }
+                        if appointment.resulting_reason_id:
+                            notes.update({
+                                'result_details': appointment.resulting_reason_id.name
+                            })
+                        response_result = sale_order.set_appointment_result_api(sale_order.appointment_result, notes=notes)
                         _logger.info('-------i360 SetAppointmentResult Response: %s' % (response_result))
                         if response_result.get('Result', '') == 'Success' or response_result.get('success',
                                                                                                  '') == 'true':
@@ -4992,12 +5014,16 @@ class SaleOrder(models.Model):
                             if sale_order.state != 'sale':
                                 sale_order.confirm_order_and_create_invoice()
                             response_result = sale_order.add_sale_api()
+                            _logger.info('-------i360 AddSale Response: %s' % (response_result))
                             if response_result.get('success', '') == 'true':
                                 sync_log.create({
                                     'appointment_id': appointment.id,
                                     'response': response_result,
                                     'name': 'AddSale',
                                 })
+                                if response_result.get('duplicate', '') == 'true':
+                                    _logger.info('-------Sync Aborting due to Duplicate Sale - %s, Response: %s' % (sale_order.id, response_result))
+                                    return True
                             else:
                                 sync_log.create({
                                     'appointment_id': appointment.id,
@@ -5006,25 +5032,195 @@ class SaleOrder(models.Model):
                                     'name': 'AddSale',
                                 })
                         else:
-                            response_result = sale_order.add_quote_sales_app(sale_order.appointment_result)
+                            included_room_measurement_lines = sale_order.room_measurement_line.filtered(
+                                lambda x: not x.exclude_from_calculation)
+                            excluded_room_measurement_lines = sale_order.room_measurement_line.filtered(
+                                lambda x: x.exclude_from_calculation)
+                            if (included_room_measurement_lines and not sale_order.quote_id) or (
+                                    excluded_room_measurement_lines and not sale_order.excluded_quote_id):
+                                response_result = sale_order.add_quote_sales_app(sale_order.appointment_result)
+                                if response_result.get('success', '') == 'true':
+                                    sync_log.create({
+                                        'appointment_id': appointment.id,
+                                        'response': response_result,
+                                        'name': 'AddQuote',
+                                    })
+                                    if response_result.get('duplicate', '') == 'true':
+                                        _logger.info('-------Sync Aborting due to Duplicate Quote - %s, Response: %s' % (sale_order.id, response_result))
+                                        return True
+                                else:
+                                    sync_log.create({
+                                        'appointment_id': appointment.id,
+                                        'response': response_result,
+                                        'state': 'failed',
+                                        'name': 'AddQuote',
+                                    })
+                                _logger.info('-------i360 AddQuote Response: %s' % (response_result))
+                    team_credit_application = self.env['team.credit.application'].search(
+                        [('appointment_id', '=', int(appointment.id))], limit=1)
+                    if team_credit_application and not team_credit_application.improveit_id:
+                        result = self.env['sale.order'].submit_credit_application_to_boomi(team_credit_application)
+                        if result.get('success', '') == 'true':
+                            _logger.info("------ Credit Application Create,Update Success-------------")
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'AddCreditApplication',
+                            })
+                        else:
+                            _logger.info("------ Credit Application Create,Update Failed-------------")
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'AddCreditApplication',
+                            })
+                    sale_order_vals = {}
+                    room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
+                        lambda x: not x.exclude_from_calculation and not x.improveit_id)
+                    if room_measurement_lines_to_sync:
+                        if sale_order.appointment_result == 'Sold':
+                            response_result = sale_order.add_sale_items_api()
                             if response_result.get('success', '') == 'true':
                                 sync_log.create({
                                     'appointment_id': appointment.id,
                                     'response': response_result,
-                                    'name': 'AddQuote',
+                                    'name': 'AddSaleItem',
                                 })
                             else:
                                 sync_log.create({
                                     'appointment_id': appointment.id,
                                     'response': response_result,
                                     'state': 'failed',
-                                    'name': 'AddQuote',
+                                    'name': 'AddSaleItem',
                                 })
-                        _logger.info('-------i360 AddSale Response: %s' % (response_result))
+                        else:
+                            response_result = sale_order.add_quote_items_sales_app()
+                            if response_result.get('success', '') == 'true':
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'name': 'AddQuoteItem',
+                                })
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'state': 'failed',
+                                    'name': 'AddQuoteItem',
+                                })
+                        _logger.info('-------i360 AddSaleItem Response: %s' % (response_result))
+                    if sale_order.appointment_result == 'Sold':
+                        if appointment.card_transaction_log_line.filtered(
+                                lambda x: x.state == 'failed' and not x.synced):
+                            response_result = sale_order.add_card_decline_note_api()
+                            _logger.info('-------i360 CreateChargeDeclineNotice Response: %s' % (response_result))
+                            if response_result.get('success', '') == 'true':
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'name': 'CreateChargeDeclineNotice',
+                                })
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'state': 'failed',
+                                    'name': 'CreateChargeDeclineNotice',
+                                })
+
+                        contract_doc_attachment = sale_order.contract_doc_attachment_id or False
+                        if not contract_doc_attachment:
+                            sign_request = self.env['otl_document_sign.request'].sudo().search(
+                                [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)],
+                                order='create_date desc',
+                                limit=1)
+                            if sign_request:
+                                if sign_request.state == 'signed':
+                                    if not sign_request.completed_document:
+                                        sign_request.generate_completed_document()
+                                    contract_doc_attachment = sign_request.document_image()
+                                    sale_order.write(
+                                        {'contract_doc_attachment_id': contract_doc_attachment.id,
+                                         'document_signed': True})
+                        if contract_doc_attachment and not sale_order.contract_document_uploaded:
+                            result = sale_order.add_contract_document_file()
+                            if result.get('success', '') == 'true':
+                                sale_order_vals.update({'contract_document_uploaded': True})
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': result,
+                                    'name': 'Contract Document',
+                                })
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': result,
+                                    'state': 'failed',
+                                    'name': 'Contract Document',
+                                })
+                    if not sale_order.other_files_uploaded:
+                        if sale_order.state in ['sale', 'done'] or sale_order.appointment_result == 'Sold':
+                            result = sale_order.add_sale_id_file()
+                            if result.get('success', '') == 'true':
+                                sale_order_vals.update({'contract_document_uploaded': True})
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': result,
+                                    'name': 'AddSaleAttachment',
+                                })
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': result,
+                                    'state': 'failed',
+                                    'name': 'AddSaleAttachment',
+                                })
+                        else:
+                            result = sale_order.add_quote_id_file(document=False)
+                            if result.get('success', '') == 'true':
+                                sale_order_vals.update({'contract_document_uploaded': True})
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': result,
+                                    'name': 'AddQuoteAttachment',
+                                })
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': result,
+                                    'state': 'failed',
+                                    'name': 'AddQuoteAttachment',
+                                })
+                        if result.get('success', '') == 'true':
+                            sale_order_vals.update({'other_files_uploaded': True})
+                    enable_additional_comment_api = eval(
+                        str(self.env['ir.config_parameter'].sudo().get_param('enable_additional_comment_api')))
+                    if enable_additional_comment_api and not sale_order.additional_comment_synced:
+                        result = sale_order.create_additional_comments_in_i360()
+                        if result.get('success', '') == 'true':
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'AddSaleComments',
+                            })
+                        else:
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'AddSaleComments',
+                            })
+                    sale_order.write(sale_order_vals)
+                    if sale_order.check_document_upload_completed():
+                        sale_order.write({'is_data_upload_completed': True})
+                    self.env.cr.commit()
         return True
 
     @api.model
     def cron_action_do_file_upload(self, data=[]):
+        """
+        Cron2 is disabled since duplicate sale is handled from i360 middleware
         _logger.info("------ Start Processing: cron_action_do_file_upload-------------")
         # 02/02/2022 - 1 hour interval changed to 10 minutes
         # one_hour_ago_time = datetime.now() - relativedelta(minutes=10)
@@ -5033,7 +5229,8 @@ class SaleOrder(models.Model):
         # ----------------------------------------------------
         # i360 sync operation is split into 2 cron job. Here we sync credit application, sale items & file uploads
         # -----------------------------------------------------
-        orders = self.search([('is_data_upload_completed', '=', False), ('quote_id', '!=', False)])
+        one_hour_ago_time = datetime.now() - relativedelta(minutes=10)
+        orders = self.search([('is_data_upload_completed', '=', False), ('quote_id', '!=', False), ('appointment_id.sync_initiated_date', '<=', one_hour_ago_time)])
         model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
         sync_log = self.env['otl.appointment.sync.log']
         for sale_order in orders:
@@ -5182,6 +5379,7 @@ class SaleOrder(models.Model):
                     if sale_order.check_document_upload_completed():
                         sale_order.write({'is_data_upload_completed': True})
                     self.env.cr.commit()
+        """
         return True
 
     @api.model

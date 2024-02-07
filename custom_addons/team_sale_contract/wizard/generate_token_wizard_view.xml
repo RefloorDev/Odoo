@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="generate_token_form" model="ir.ui.view">
+            <field name="name">otl.generate.token.form</field>
+            <field name="model">otl.generate.token</field>
+            <field name="arch" type="xml">
+                <form string="Sign template model">
+                    <group>
+                        <group>
+                            <field name="user_id" required="1" options="{'no_create_edit': True, 'no_open':True,'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="password" password="True"/>
+                        </group>
+                    </group>
+                    <group attrs="{'invisible':[('token', '=', '')]}">
+                        <field name="token" readonly="1"/>
+                    </group>
+                    <footer>
+                        <button name="action_generate_token" string="Generate Token" type="object" class="oe_highlight" attrs="{'invisible':[('token', '!=', '')]}"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_generate_token" model="ir.actions.act_window">
+            <field name="name">Generate/View Token</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">otl.generate.token</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="generate_token_form"/>
+            <field name="target">new</field>
+        </record>
+
+    </data>
+</odoo>

@@ -25,6 +25,11 @@ from odoo.addons.resource.models.resource import float_to_time
 import threading
 import time
 
+from fusion_refloor.configuration import Configuration
+from fusion_refloor.api_client import ApiClient, ApiException
+from fusion_refloor.api import scheduling_services_api
+from fusion_refloor.model.schedule_request import ScheduleRequest
+
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -133,6 +138,103 @@ class ResUsers(models.Model):
             })
         return transition_height_list
 
+    def get_restriction_rules_api(self):
+        current_date = fields.Date.today()
+        rules = self.env['otl.payment.restriction.rule'].search([('active', '=', True), ('end_date', '>=', current_date)])
+        rule_list = [{'name': rule.name or '',
+                      'start_date': '%s 00:00:00' % (rule.start_date.strftime(DEFAULT_SERVER_DATE_FORMAT) or ''),
+                      'end_date': '%s 23:59:59' % (rule.end_date.strftime(DEFAULT_SERVER_DATE_FORMAT) or ''),
+                      'conditions': rule.conditions or '',
+                      'amount': rule.min_order_total or '',
+                      'margin_amount': rule.min_margin_amount or '',
+                      'grade': rule.grade or '',
+                      'company': [{'id': company.id, 'name': company.name} for company in rule.company_id],
+                      'allowed_days': [{'id': day.id, 'name': day.name} for day in rule.allowed_days_ids],
+                      'office_locations': [{'id': location.id,'name': location.name} for location in rule.location_ids],
+                      'restricted_promotions': [{'id': promo.id,'name': promo.name} for promo in rule.promotion_code_ids],
+                      'conditional_promotions': [{'id': conditional_promo.id,'name': conditional_promo.name} for conditional_promo in rule.promos_ids],
+                      'restricted_discounts': [{'id': discount.id,'code': discount.code} for discount in rule.discount_code_ids],
+                      'payment_options': [{'id': fin.id,'name': fin.name} for fin in rule.payment_option_ids] or ''} for rule in rules]
+        return rule_list
+
+    def get_appointment_result_reasons_api(self):
+        reasons = self.env['otl.appointment.result.reason'].search([])
+        reason_list = [{
+            'reason':  reason.name or "",
+            'reason_id' : reason.id or 0,
+        }
+            for reason in reasons]
+        return reason_list
+
+    def get_dynamic_contract_vals_api(self):
+
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+
+        applicant_list = []
+        non_applicant_list = []
+        latest_version = self.env['otl.sales.app.version'].search([], order='date desc', limit=1)
+        app_dict = [
+
+                    # 'app_id': latest_version.id,
+                    # 'app_name': latest_version.name,
+                    # 'with_co_applicant_template_url':url,
+                    # 'non_co_applicant_template_url':url
+
+                    ]
+        if latest_version.sale_contract_tmpl_id:
+            attachment = latest_version.sale_contract_tmpl_id.attachment_id
+            if not attachment.access_token:
+                attachment.sudo().generate_access_token()
+            contract_template_url = _('%s/web/image/%s?access_token=%s' % (base_url, attachment.id, attachment.access_token))
+            contract_template = latest_version.sale_contract_tmpl_id
+            for value in contract_template.sign_item_ids:
+                applicant_list.append({
+                    # 'id' : value.id and value.id or '',
+                    'type': value.type_id and value.type_id.name or '',
+                    'field_type': value.type_id and value.type_id.item_type or '',
+                    'option': value.type_id and value.type_id.option_field or '',
+                    'related_field': value.type_id.auto_field and value.type_id.auto_field or '',
+                    'responsible_id': value.responsible_id.name or '',
+                    'page': value.page or '',
+                    'posX': value.posX or '',
+                    'posY': value.posY or '',
+                    'width': value.width or '',
+                    'height': value.height or '',
+                })
+            app_dict.append({
+                'template_id': contract_template.id,
+                'document_url': contract_template_url,
+                'name': contract_template.name,
+                'type': 'with_co_applicant',
+                'fields': applicant_list})
+        #
+        if latest_version.sale_contract_tmpl_id_ncp:
+            attachment_non_co_app = latest_version.sale_contract_tmpl_id_ncp.attachment_id
+            if not attachment_non_co_app.access_token:
+                attachment_non_co_app.sudo().generate_access_token()
+            contract_template_url_non_co_applicant = _('%s/web/image/%s?access_token=%s' % (base_url, attachment_non_co_app.id, attachment_non_co_app.access_token))
+            contract_template_non_co = latest_version.sale_contract_tmpl_id_ncp
+            for value in contract_template_non_co.sign_item_ids:
+                non_applicant_list.append({
+                    'type': value.type_id and value.type_id.name or '',
+                    'field_type': value.type_id and value.type_id.item_type or '',
+                    'option': value.type_id and value.type_id.option_field or '',
+                    'responsible_id': value.responsible_id.name or '',
+                    'related_field': value.type_id.auto_field and value.type_id.auto_field or '',
+                    'page': value.page or '',
+                    'posX': value.posX or '',
+                    'posY': value.posY or '',
+                    'width': value.width or '',
+                    'height': value.height or '',
+                })
+            app_dict.append({'template_id': contract_template_non_co.id,
+                             'document_url': contract_template_url_non_co_applicant,
+                             'name': contract_template_non_co.name,
+                             'type': 'without_co_applicant',
+                             'fields': non_applicant_list})
+
+        return app_dict
+
 
     @api.model
     def get_master_data_contents(self, data={}):
@@ -156,6 +258,9 @@ class ResUsers(models.Model):
         special_price_list = self.get_special_pricing()
         promotion_code_list = self.get_promotion_codes()
         transition_height_list = self.get_transition_heights()
+        rules = self.get_restriction_rules_api()
+        reasons_list = self.get_appointment_result_reasons_api()
+        templates = self.sudo().get_dynamic_contract_vals_api()
         auto_logout_time = ''
         if self.env.user.company_id.enable_auto_logout:
             logout_time = self.env.user.company_id.auto_logout_time or 0
@@ -168,6 +273,7 @@ class ResUsers(models.Model):
             # auto_logout_date_local = tz.localize(auto_logout_date).astimezone(pytz.utc)
             # if current_time >  auto_logout_date_local:
             #     auto_logout_date_local = auto_logout_date_local + relativedelta(days=1)
+        company = self.env.user.company_id
         result.update({
             'rooms': room_list,
             'questionnaires': questionnaire_list,
@@ -185,8 +291,14 @@ class ResUsers(models.Model):
             'transition_heights': transition_height_list,
             'min_sale_price': float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0,
             'max_no_transitions': int(self.env['ir.config_parameter'].sudo().get_param('max_no_transitions')) or 0,
-            'recision_date': self.env.user.company_id.recision_date and self.env.user.company_id.recision_date.strftime(DEFAULT_SERVER_DATE_FORMAT) or '',
+            'recision_date': company.recision_date and company.recision_date.strftime(DEFAULT_SERVER_DATE_FORMAT) or '',
             'auto_logout_time': auto_logout_time  or '',
+            'payment_restriction_rules': rules,
+            'appointment_result_reasons': reasons_list,
+            'contract_document_templates': templates,
+            'versatile_url': company.versatile_url or '',
+            'versatile_api_key': company.versatile_api_key or '',
+            'versatile_entity_key': company.versatile_entity_key or '',
         })
         # except:
         #     result = {
@@ -401,6 +513,7 @@ class TeamQuoteQuestion(models.Model):
                 'id': question.id,
                 'name': question.name or '',
                 'code': question.code or '',
+                'max_allowed_limit': question.max_allowed_limit or 0,
                 'company_id': question.company_id.id,
                 'description': question.description or '',
                 'question_type': question.question_type or '',
@@ -417,6 +530,7 @@ class TeamQuoteQuestion(models.Model):
                 'default_answer': question.default_answer or '',
                 'exclude_from_discount': question.exclude_from_discount or False,
                 'exclude_from_promotion': question.exclude_from_promotion or False,
+                'calculate_order_wise': question.calculate_order_wise or False,
                 'multiply_with_area': question.multiply_with_area or False,
                 'set_default_answer': question.set_default_answer or False,
                 'applicable_current_surface': question.applicable_current_surface or '',
@@ -430,30 +544,19 @@ class TeamQuoteQuestion(models.Model):
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
+
     def get_material_color_url(self):
         url = ''
-        Attachment = self.env['ir.attachment'].sudo().search([('res_model', '=', 'product.product'), ('res_id', '=', self.id)],
-                                                             limit=1)
-        if Attachment:
-            Attachment.sudo().write({'datas': self.image_variant_128})
-            if not Attachment.access_token:
-                Attachment.generate_access_token()
-            url = URL + '/web/image/' + str(Attachment.id) + '?access_token=' + str(Attachment.access_token)
-        else:
-            Attachment = self.env['ir.attachment'].sudo().create({
-                'res_id': self.id,
-                'res_model': 'product.product',
-                'datas': self.image_variant_128,
-                'name': self.name
-
-            })
-            Attachment.generate_access_token()
-            url = URL + '/web/image/' + str(Attachment.id) + '?access_token=' + str(Attachment.access_token)
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        if self.color_attachment_id:
+            attachment = self.color_attachment_id
+            attachment.generate_access_token()
+            url = base_url + '/web/image/' + str(attachment.id) + '?access_token=' + str(attachment.access_token)
         return url
 
     @api.model
     def get_all_flooring_colors(self, room_type=''):
-        domain = [('active', '=', True), ('is_material', '=', True)]
+        domain = [('active', '=', True), ('is_material', '=', True), ('floor_color', '!=', False)]
         if room_type == 'floor':
             domain.append(('categ_id.name', 'not ilike', 'Stairs'))
         elif room_type == 'stair':
@@ -468,28 +571,27 @@ class ProductProduct(models.Model):
                 default_material_image_attachment_id.sudo().generate_access_token()
             default_image_url = _('%s/web/image/%s?access_token=%s' % (
                 base_url, default_material_image_attachment_id.id, default_material_image_attachment_id.access_token))
+        color_list = []
         if product_list:
             for product in product_list:
-                if product.image_variant_128:
-                    floor_color_url = product.get_material_color_url()
-                else:
-                    floor_color_url = default_image_url
+                color = product.display_name_in_app and product.display_name_in_app or product.floor_color
+                if color and color not in color_list:
+                    if product.image_variant_128:
+                        floor_color_url = product.get_material_color_url()
+                    else:
+                        floor_color_url = default_image_url
 
-                vals = {
-                    'material_id': product.id or 0,
-                    'name': product.name,
-                    'color': product.display_name_in_app if product.display_name_in_app else "Select Color",
-                    'material_image_url': floor_color_url,
-                    'color_up_charge_price': product.color_up_charge_price or 0
-                }
-                materials_list.append(vals)
-        done = set()
-        result = []
-        for material in materials_list:
-            if material['color'] not in done:
-                done.add(material['color'])
-                result.append(material)
-        sorted_material_list = sorted(result, key=lambda k: k['color'])
+                    vals = {
+                        'material_id': product.id or 0,
+                        'name': product.name,
+                        'color': color,
+                        'material_image_url': floor_color_url,
+                        'color_up_charge_price': product.color_up_charge_price or 0
+                    }
+
+                    color_list.append(color)
+                    materials_list.append(vals)
+        sorted_material_list = sorted(materials_list, key=lambda k: k['color'])
         return sorted_material_list
 
 
@@ -669,6 +771,7 @@ class TeamCustomerAppointment(models.Model):
                     appointment_datetime = appointment_date.strftime('%d %b %I:%M %p')
                 vals = {
                     'id': data.id,
+                    'improveit_appointment_id': data.improveit_appointment_id or '',
                     'name': data.name,
                     'customer_name': data.customer_name and data.customer_name.upper() or '',
                     'applicant_first_name': data.applicant_first_name or '',
@@ -758,9 +861,16 @@ class TeamCustomerAppointment(models.Model):
             app_version_id = False
             if app_version:
                 app_version_id = self.env['otl.sales.app.version'].search([('name', '=', app_version)], limit=1)
+            resulting_reason_id = False
+            if data.get('resulting_reason_id', False):
+                resulting_reason_id = int(data.get('resulting_reason_id', 0))
+                resulting_reason= self.env['otl.appointment.result.reason'].browse(resulting_reason_id)
+                if not resulting_reason or not resulting_reason.exists():
+                    return {'message': 'Wrong value for Appointment Resulting Reason', 'result': 'Failed'}
             vals = {
                 'what_happened_notes': data.get('what_happened_notes', ''),
                 'whats_next_notes': data.get('whats_next_notes', ''),
+                'resulting_reason_id': resulting_reason_id,
                 'additional_comments': data.get('additional_comments', ''),
                 'send_physical_document':  send_physical_document,
                 'flexible_installation':  flexible_installation,
@@ -901,20 +1011,35 @@ class TeamCustomerAppointment(models.Model):
         if transition_lines:
             transition_lines.unlink()
         for data in room_list:
-            if data.get('room_id', False):
+            custom_room_measured = int(data.get('is_custom_room', 0)) or 0
+            if data.get('room_id', False) or custom_room_measured:
                 room_id = int(data.get('room_id', False)) or 0
+                if custom_room_measured:
+                    room = self.env['team.room.room'].search([('is_custom', '=', True)], limit=1)
+                    room_id = room and room.id or 0
+                    if not room_id:
+                        return {
+                            'result': 'Failed',
+                            'message': 'Custom Room is not available in the system.'
+                        }
                 exclude_from_calculation = int(data.get('exclude_from_calculation', 0)) or 0
                 room = self.env['team.room.room'].browse(room_id)
                 if room.exists():
-                    room_measure = room_measure_obj.search([('appointment_id', '=', self.id), ('room_id', '=', room_id)], limit=1)
+                    room_domain = [('appointment_id', '=', self.id)]
+                    if custom_room_measured and data.get('room_name', ''):
+                        room_domain += [('custom_room_name', '=', data.get('room_name', ''))]
+                    elif data.get('room_id', False):
+                        room_domain += [('room_id', '=', room_id)]
+                    room_measure = room_measure_obj.search(room_domain, limit=1)
                     material_id = int(data.get('material_id', 0))
                     vals = {
-                        'name': data.get('room_name', ''),
+                        'custom_room_name': data.get('room_name', ''),
                         'comments': data.get('room_comments', ''),
                         'room_area': float(data.get('room_area', 0)),
                         'adjusted_area': float(data.get('room_adjusted_area', 0)),
                         'room_perimeter': float(data.get('room_perimeter', 0)),
                         'exclude_from_calculation': exclude_from_calculation and True or False,
+                        'custom_room_measured': custom_room_measured and True or False,
                     }
                     if material_id and self.env['product.product'].browse(material_id).exists():
                         vals.update({
@@ -992,8 +1117,13 @@ class TeamCustomerAppointment(models.Model):
                     question.answers.unlink()
                 question.unlink()
         for data in questionnaire_list:
-            if data.get('room_id', False):
+            room_name = data.get('room_name', '')
+            calculate_order_wise = data.get('calculate_order_wise', 0)
+            if data.get('room_id', False) or room_name:
                 room_id = int(data.get('room_id', False)) or 0
+                if not room_id:
+                    room = self.env['team.room.room'].search([('is_custom', '=', True)], limit=1)
+                    room_id = room and room.id or 0
                 question_id = int(data.get('question_id', False)) or 0
                 answers = data.get('answer', [])
                 answer_exists = False
@@ -1005,8 +1135,12 @@ class TeamCustomerAppointment(models.Model):
                         _logger.info("------ Question ID Missing-------------")
                         return {'message': 'Question ID Missing', 'result': 'Failed'}
                     if self.env['team.quote.question'].browse(question_id).exists():
-                        room_measure = room_measure_obj.search(
-                            [('appointment_id', '=', self.id), ('room_id', '=', room_id)], limit=1)
+                        if room_name:
+                            room_measure = room_measure_obj.search(
+                                [('appointment_id', '=', self.id), ('custom_room_name', '=', room_name)], limit=1)
+                        else:
+                            room_measure = room_measure_obj.search(
+                                [('appointment_id', '=', self.id), ('room_id', '=', room_id)], limit=1)
                         room_question = room_question_obj.search(
                             [('appointment_id', '=', self.id), ('question_id', '=', question_id), ('room_measurement_id', '=', room_measure.id)], limit=1)
                         if answer_exists:
@@ -1017,7 +1151,9 @@ class TeamCustomerAppointment(models.Model):
                                 room_question = room_question_obj.create({
                                     'room_id': room_id,
                                     'question_id': question_id,
+                                    'room_name': room_name,
                                     'room_measurement_id': room_measure and room_measure.id or False,
+                                    'calculate_order_wise': calculate_order_wise and True or False,
                                     'appointment_id': self.id,
                                     'order_id': sale_order and sale_order.id or False
                                 })
@@ -1102,7 +1238,7 @@ class TeamCustomerAppointment(models.Model):
                 }
         except:
             result= {
-                'message': 'Something went wrong while executing the code',
+                'message': 'Something went wrong',
                 'result': 'Failed'
             }
         _logger.info("------action_update_customer_and_room_information result: %s-------------" % (result))
@@ -1203,7 +1339,7 @@ class TeamCustomerAppointment(models.Model):
                     'message': 'Sale order is already existing',
                     'result': 'Success',
                 }
-            plan = self.env['product.template'].search([('id', '=', selected_package_id)], limit=1)
+            plan = self.env['product.template'].with_context(active_test=False).search([('id', '=', selected_package_id)], limit=1)
             if not plan:
                 _logger.info("------Payment Package Not Exist------------")
                 status = {
@@ -1211,6 +1347,15 @@ class TeamCustomerAppointment(models.Model):
                     'result': 'Failed',
                 }
                 return status
+            if not plan.active:
+                active_package = self.env['product.template'].search([('grade', '=', plan.grade), ('categ_id', '=', plan.categ_id.id)], limit=1)
+                if not active_package:
+                    status = {
+                        'message': 'No Active Payment Package is Exists',
+                        'result': 'Failed',
+                    }
+                    return status
+                selected_package_id = active_package.id
             payment_method = data.get('payment_method', '')
             if payment_method:
                 if payment_method not in ['credit_card', 'debit_card', 'cash', 'check', 'finance']:
@@ -1390,7 +1535,7 @@ class TeamCustomerAppointment(models.Model):
                                             'result': 'Failed'
                                         }
                                 result = {
-                                    'message': 'Order details are updated successfully',
+                                    'message': 'Order details updated successfully',
                                     'result': 'Success'
                                 }
                             else:
@@ -1427,7 +1572,7 @@ class TeamCustomerAppointment(models.Model):
                 }
         except:
             result= {
-                'message': 'Something went wrong while executing the code',
+                'message': 'Something went wrong',
                 'result': 'Failed'
             }
         _logger.info("------action_update_contract_information result: %s-------------" % (result))
@@ -1442,6 +1587,7 @@ class TeamCustomerAppointment(models.Model):
         _logger.info("------action_link_uploaded_image data: %s-------------" % (data))
         appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
         room_id = data.get('room_id', 0) and int(data.get('room_id', 0)) or 0
+        room_name = data.get('room_name', '')
         image_type = data.get('image_type', '')
         image_name = data.get('image_name', '')
         attachment_id = data.get('attachment_id', False)
@@ -1462,11 +1608,12 @@ class TeamCustomerAppointment(models.Model):
                 'message': 'Empty Image Name',
                 'result': 'Failed'
             }
-        if image_type in ['room_photo', 'measurement_image', 'protrusion_image'] and not room_id:
-            return {
-                'message': 'Room ID is missing',
-                'result': 'Failed'
-            }
+        if image_type in ['room_photo', 'measurement_image', 'protrusion_image']:
+            if not room_name and not room_id:
+                return {
+                    'message': 'Either Room ID or Room Name is required',
+                    'result': 'Failed'
+                }
         if appointment_id:
             appointment = self.browse(appointment_id)
             if appointment.exists():
@@ -1489,13 +1636,18 @@ class TeamCustomerAppointment(models.Model):
                         appointment.co_applicant_initial_id.sudo().unlink()
                     appointment.write({'co_applicant_initial_id': attachment_id})
                 elif image_type in ['room_photo', 'measurement_image', 'protrusion_image']:
-                    if not self.env['team.room.room'].browse(room_id).exists():
-                        return {
-                            'message': 'Room ID is Wrong',
-                            'result': 'Failed'
-                        }
-                    room_measure = room_measure_obj.search(
-                        [('appointment_id', '=', appointment_id), ('room_id', '=', room_id)], limit=1)
+                    if not room_name:
+                        if not self.env['team.room.room'].browse(room_id).exists():
+                            return {
+                                'message': 'Room ID is Wrong',
+                                'result': 'Failed'
+                            }
+                    if room_name:
+                        room_measure = room_measure_obj.search(
+                            [('appointment_id', '=', appointment_id), ('custom_room_name', '=', room_name)], limit=1)
+                    else:
+                        room_measure = room_measure_obj.search(
+                            [('appointment_id', '=', appointment_id), ('room_id', '=', room_id)], limit=1)
                     if not room_measure or not room_measure.exists():
                         return {
                             'message': 'Room Measurement is not existing for given Room',
@@ -1531,6 +1683,178 @@ class TeamCustomerAppointment(models.Model):
             }
         return result
 
+    def action_sync_sale_data_to_i360(self, appointment, sale_order, return_on_failure=False):
+        sync_log = self.env['otl.appointment.sync.log']
+        if not appointment.prospect_info_updated:
+            result = appointment.update_appointment_to_boomi()
+            if result.get('success', '') == 'true':
+                appointment.write({'prospect_info_updated': True})
+                sync_log.create({
+                    'appointment_id': appointment.id,
+                    'response': result,
+                    'name': 'UpdateAppointmentProspect',
+                })
+            else:
+                sync_log.create({
+                    'appointment_id': appointment.id,
+                    'response': result,
+                    'state': 'failed',
+                    'name': 'UpdateAppointmentProspect',
+                })
+                if return_on_failure:
+                    return {
+                        'message': 'UpdateAppointmentProspect Failed due to following reason: %s'%(result),
+                        'result': 'Failed'
+                    }
+        if sale_order and appointment:
+            if sale_order.appointment_result:
+                if not appointment.status_updated_to_i360:
+                    notes = {}
+                    if appointment.what_happened_notes and appointment.whats_next_notes:
+                        notes = {
+                            'what_happened_notes': appointment.what_happened_notes,
+                            'whats_next_notes': appointment.whats_next_notes,
+                        }
+                    if appointment.resulting_reason_id:
+                        notes.update({
+                            'result_details': appointment.resulting_reason_id.name
+                        })
+                    response_result = sale_order.set_appointment_result_api(sale_order.appointment_result, notes=notes)
+                    _logger.info('-------i360 SetAppointmentResult Response: %s' % (response_result))
+                    if response_result.get('Result', '') == 'Success' or response_result.get('success', '') == 'true':
+                        sync_log.create({
+                            'appointment_id': appointment.id,
+                            'response': response_result,
+                            'name': 'SetAppointmentResult',
+                        })
+                    else:
+                        sync_log.create({
+                            'appointment_id': appointment.id,
+                            'response': response_result,
+                            'state': 'failed',
+                            'name': 'SetAppointmentResult',
+                        })
+                sale_order_vals = {}
+                if not sale_order.quote_id:
+                    if sale_order.appointment_result == 'Sold':
+                        if sale_order.payment_method in ['credit_card',
+                                                         'debit_card'] and sale_order.down_payment_amount and not sale_order.card_transaction_log_line.filtered(
+                                lambda x: x.state == 'success'):
+                            sale_order.action_confirm()
+                        else:
+                            sale_order.confirm_order_and_create_invoice()
+                        response_result = sale_order.add_sale_api()
+                        _logger.info('-------i360 AddSale Response: %s' % (response_result))
+                        if response_result.get('success', '') == 'true':
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': response_result,
+                                'name': 'AddSale',
+                            })
+                            if response_result.get('duplicate', '') == 'true':
+                                _logger.info('-------Sync Aborting due to Duplicate Sale - %s, Response: %s' % (
+                                sale_order.id, response_result))
+                                return True
+                        else:
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': response_result,
+                                'state': 'failed',
+                                'name': 'AddSale',
+                            })
+                            if return_on_failure:
+                                return {
+                                    'message': 'AddSale Failed due to following reason: %s' % (
+                                        response_result),
+                                    'result': 'Failed'
+                                }
+                    else:
+                        included_room_measurement_lines = sale_order.room_measurement_line.filtered(
+                            lambda x: not x.exclude_from_calculation)
+                        excluded_room_measurement_lines = sale_order.room_measurement_line.filtered(
+                            lambda x: x.exclude_from_calculation)
+                        if (included_room_measurement_lines and not sale_order.quote_id) or (excluded_room_measurement_lines  and not sale_order.excluded_quote_id):
+                            response_result = sale_order.add_quote_sales_app(sale_order.appointment_result)
+                            _logger.info('-------i360 AddQuote Response: %s' % (response_result))
+                            if response_result.get('success', '') == 'true':
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'name': 'AddQuote',
+                                })
+                                if response_result.get('duplicate', '') == 'true':
+                                    _logger.info('-------Sync Aborting due to Duplicate Quote - %s, Response: %s' % (
+                                    sale_order.id, response_result))
+                                    return True
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'state': 'failed',
+                                    'name': 'AddQuote',
+                                })
+                                if return_on_failure:
+                                    return {
+                                        'message': 'AddQuote Failed due to following reason: %s' % (
+                                            response_result),
+                                        'result': 'Failed'
+                                    }
+
+                room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
+                    lambda x: not x.exclude_from_calculation and not x.improveit_id)
+                if room_measurement_lines_to_sync:
+                    if sale_order.appointment_result == 'Sold':
+                        if room_measurement_lines_to_sync.filtered(lambda x: not x.exclude_from_calculation and not x.improveit_id):
+                            response_result = sale_order.add_sale_items_api()
+                            _logger.info('-------i360 AddSaleItem Response: %s' % (response_result))
+                            if response_result.get('success', '') == 'true':
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'name': 'AddSaleItem',
+                                })
+                            else:
+                                sync_log.create({
+                                    'appointment_id': appointment.id,
+                                    'response': response_result,
+                                    'state': 'failed',
+                                    'name': 'AddSaleItem',
+                                })
+                                if return_on_failure:
+                                    return {
+                                        'message': 'AddSaleItem Failed due to following reason: %s' % (
+                                            response_result),
+                                        'result': 'Failed'
+                                    }
+                    else:
+                        response_result = sale_order.add_quote_items_sales_app()
+                        _logger.info('-------i360 AddQuoteItem Response: %s' % (response_result))
+                        if response_result.get('success', '') == 'true':
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': response_result,
+                                'name': 'AddQuoteItem',
+                            })
+                        else:
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': response_result,
+                                'state': 'failed',
+                                'name': 'AddQuoteItem',
+                            })
+                            if return_on_failure:
+                                return {
+                                    'message': 'AddSaleItem Failed due to following reason: %s' % (
+                                        response_result),
+                                    'result': 'Failed'
+                                }
+        return {
+            'message': 'Data synced successfully to i360',
+            'result': 'Success'
+        }
+
+
+
     def action_start_sync_to_i360(self, appointment_id, sale_order_id):
         time.sleep(3)
         with api.Environment.manage():
@@ -1541,48 +1865,9 @@ class TeamCustomerAppointment(models.Model):
             _logger.info('------Starting action_start_sync_to_i360------: %s'%(sale_order_id))
             appointment = self.env['team.customer.appointment'].browse(int(appointment_id))
             sale_order = self.env['sale.order'].browse(int(sale_order_id))
-            if sale_order.order_line and sale_order.room_measurement_line and not appointment.prospect_info_updated:
-                result = appointment.update_appointment_to_boomi()
-                if result.get('success', '') == 'true':
-                    appointment.write({'prospect_info_updated': True})
-                    sync_log.create({
-                        'appointment_id': appointment.id,
-                        'response': result,
-                        'name': 'UpdateAppointmentProspect',
-                    })
-                else:
-                    sync_log.create({
-                        'appointment_id': appointment.id,
-                        'response': result,
-                        'state': 'failed',
-                        'name': 'UpdateAppointmentProspect',
-                    })
+            sale_sync_result = self.action_sync_sale_data_to_i360(appointment, sale_order)
             if sale_order and appointment:
                 if sale_order.appointment_result:
-                    if not appointment.status_updated_to_i360:
-                        notes = {}
-                        if appointment.what_happened_notes and appointment.whats_next_notes:
-                            notes = {
-                                'what_happened_notes': appointment.what_happened_notes,
-                                'whats_next_notes': appointment.whats_next_notes,
-                            }
-                        response_result = sale_order.set_appointment_result_api(sale_order.appointment_result, notes=notes)
-                        _logger.info('-------i360 SetAppointmentResult Response: %s' % (response_result))
-                        if response_result.get('success', '') == 'true':
-                            sync_log.create({
-                                'appointment_id': appointment.id,
-                                'response': response_result,
-                                'name': 'SetAppointmentResult',
-                            })
-                        else:
-                            sync_log.create({
-                                'appointment_id': appointment.id,
-                                'response': response_result,
-                                'state': 'failed',
-                                'name': 'SetAppointmentResult',
-                            })
-                    # Remaining sync operation needs to perform only with a cron job.
-                    """
                     team_credit_application = self.env['team.credit.application'].search(
                         [('appointment_id', '=', int(appointment_id))], limit=1)
                     if team_credit_application and not team_credit_application.improveit_id:
@@ -1603,76 +1888,6 @@ class TeamCustomerAppointment(models.Model):
                                 'name': 'AddCreditApplication',
                             })
                     sale_order_vals = {}
-                    if not sale_order.quote_id:
-                        if sale_order.appointment_result == 'Sold':
-                            if sale_order.payment_method in ['credit_card', 'debit_card'] and sale_order.down_payment_amount and not sale_order.card_transaction_log_line.filtered(lambda x: x.state == 'success'):
-                                sale_order.action_confirm()
-                            else:
-                                sale_order.confirm_order_and_create_invoice()
-                            response_result = sale_order.add_sale_api()
-                            if response_result.get('success', '') == 'true':
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': response_result,
-                                    'name': 'AddSale',
-                                })
-                            else:
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': response_result,
-                                    'state': 'failed',
-                                    'name': 'AddSale',
-                                })
-                        else:
-                            response_result = sale_order.add_quote_sales_app(sale_order.appointment_result)
-                            if response_result.get('success', '') == 'true':
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': response_result,
-                                    'name': 'AddQuote',
-                                })
-                            else:
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': response_result,
-                                    'state': 'failed',
-                                    'name': 'AddQuote',
-                                })
-                        _logger.info('-------i360 AddSale Response: %s' % (response_result))
-                    room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
-                        lambda x: not x.exclude_from_calculation and not x.improveit_id)
-                    if room_measurement_lines_to_sync:
-                        if sale_order.appointment_result == 'Sold':
-                            response_result = sale_order.add_sale_items_api()
-                            if response_result.get('success', '') == 'true':
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': response_result,
-                                    'name': 'AddSaleItem',
-                                })
-                            else:
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': response_result,
-                                    'state': 'failed',
-                                    'name': 'AddSaleItem',
-                                })
-                        else:
-                            response_result = sale_order.add_quote_items_sales_app()
-                            if response_result.get('success', '') == 'true':
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': response_result,
-                                    'name': 'AddQuoteItem',
-                                })
-                            else:
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': response_result,
-                                    'state': 'failed',
-                                    'name': 'AddQuoteItem',
-                                })
-                        _logger.info('-------i360 AddSaleItem Response: %s' % (response_result))
                     if sale_order.appointment_result == 'Sold':
                         if appointment.card_transaction_log_line.filtered(
                                 lambda x: x.state == 'failed' and not x.synced):
@@ -1759,11 +1974,29 @@ class TeamCustomerAppointment(models.Model):
                                 })
                         if result.get('success', '') == 'true':
                             sale_order_vals.update({'other_files_uploaded': True})
+                    enable_additional_comment_api = eval(
+                        str(self.env['ir.config_parameter'].sudo().get_param('enable_additional_comment_api')))
+                    if enable_additional_comment_api and not sale_order.additional_comment_synced:
+                        result = sale_order.create_additional_comments_in_i360()
+                        if result.get('success', '') == 'true':
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'AddSaleComments',
+                            })
+                        else:
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'AddSaleComments',
+                            })
                     sale_order.write(sale_order_vals)
                     if sale_order.check_document_upload_completed():
                         sale_order.write({'is_data_upload_completed': True})
                     self.env.cr.commit()
-                    """
+
+            self.env.cr.commit()
             new_cr.close()
             _logger.info('------End of action_start_sync_to_i360------: %s' % (sale_order_id))
         return True
@@ -1813,7 +2046,7 @@ class TeamCustomerAppointment(models.Model):
                             'completion_date': completion_date_utc,
                         })
 
-                    sale_order = sale_order_obj.search([('appointment_id', '=', appointment_id)])
+                    sale_order = sale_order_obj.search([('appointment_id', '=', appointment_id)], limit=1)
                     if not sale_order:
                         sale_order_vals = {
                             'cards': False,
@@ -2027,13 +2260,13 @@ class TeamCustomerAppointment(models.Model):
         }
         payment_status = 'Not Done'
         payment_message = 'Payment is not Done'
-        success_msg = 'Order details are updated successfully'
+        success_msg = 'Order details updated successfully'
         _logger.info("------action_create_order_and_update_measurements data: %s-------------" % (data))
         sale_order_obj = self.env['sale.order']
         # accepted values - online, offline
         operation_mode = data.get('operation_mode', 'offline')
         app_version = data.get('app_version', '')
-        transaction_id = ''
+        transaction_id = 'Invalid'
         card_type = ''
         try:
             appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
@@ -2176,7 +2409,7 @@ class TeamCustomerAppointment(models.Model):
                                             order.write(order_values)
 
                             return {
-                                'message': 'Sale order is already existing',
+                                'message': 'Order details updated successfully.',
                                 'result': 'Success',
                                 'payment_status': payment_status,
                                 'payment_message': payment_message,
@@ -2316,7 +2549,7 @@ class TeamCustomerAppointment(models.Model):
                                     })
                                     return credit_application_result
                             result = {
-                                'message': 'Order details are updated successfully. ',
+                                'message': 'Order details updated successfully.',
                                 'result': 'Success',
                                 'payment_status': payment_status,
                                 'payment_message': payment_message,
@@ -2341,7 +2574,7 @@ class TeamCustomerAppointment(models.Model):
                 }
         except:
             result = {
-                'message': 'Something went wrong while executing the code',
+                'message': 'Something went wrong',
                 'result': 'Failed',
                 'authorize_transaction_id': transaction_id,
                 'card_type': card_type,
@@ -2349,6 +2582,567 @@ class TeamCustomerAppointment(models.Model):
                 'payment_message': payment_message,
             }
         _logger.info("------action_create_order_and_update_measurements result: %s-------------" % (result))
+        return result
+
+    def action_get_available_dates_from_rule_engine_api(self, sale_order):
+        result = {
+            'result': 'Success',
+            'data': {},
+            'message': ''
+        }
+        api_configuration = self.env['team.improveit.configuration'].search([('api_type', '=', 'rules_engine')], limit=1)
+        if not api_configuration:
+            return {
+                'message': 'Installer API Configuration is missing',
+                'result': 'Failed'
+            }
+        api_response = {}
+        if api_configuration.mode == 'test':
+            crews = [
+                {
+                    "id": "a0j74000000PTY4",
+                    "name": "Justin Kennedy - Pikes Peak Flooring",
+                    "totalCompletedInstalls": 40,
+                    "starRating": 4.5,
+                    "grade": "H",
+                    "slot": {
+                        "start_date": datetime.strptime("2023-10-09 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+                        "end_date": datetime.strptime("2023-10-10 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+                    }
+                },
+                {
+                    "id": "a0j74000000PTWr",
+                    "name": "Idris (Alex) Hunn - Hunn Homes Inc",
+                    "totalCompletedInstalls": 15,
+                    "starRating": 4.5,
+                    "grade": "M",
+                    "slot": {
+                        "start_date": datetime.strptime("2023-09-18 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+                        "end_date": datetime.strptime("2023-09-20 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+                    }
+                },
+                {
+                    "id": "a0j74000000PTWq3",
+                    "name": "John Escamilla - J Mack Flooring",
+                    "totalCompletedInstalls": 25,
+                    "starRating": 4.0,
+                    "grade": "H",
+                    "slot": {
+                        "start_date": datetime.strptime("2023-10-09 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+                        "end_date": datetime.strptime("2023-10-11 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+                    }
+                },
+                {
+                    "id": "a0j74000000PTWq",
+                    "name": "Michael Miller - Flooring Family",
+                    "totalCompletedInstalls": 26,
+                    "starRating": 4.0,
+                    "grade": "H",
+                    "slot": {
+                        "start_date": datetime.strptime("2023-10-02 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+                        "end_date": datetime.strptime("2023-10-04 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+                    }
+                },
+                {
+                    "id": "a0j74000000PTWp4",
+                    "name": "Nick Mastruserio - Nick Squared Contracting",
+                    "totalCompletedInstalls": 36,
+                    "starRating": 3.0,
+                    "grade": "M",
+                    "slot": {
+                        "start_date": datetime.strptime("2023-10-09 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+                        "end_date": datetime.strptime("2023-10-12 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+                    }
+                },
+                {
+                    "id": "a0j74000000PTWp5",
+                    "name": "John Kidd Jr. - Kidd Flooring",
+                    "totalCompletedInstalls": 29,
+                    "starRating": 3.0,
+                    "grade": "H",
+                    "slot": {
+                        "start_date": datetime.strptime("2023-10-02 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+                        "end_date": datetime.strptime("2023-10-03 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+                    }
+                },
+                {
+                    "id": "a0j74000000PTWp6",
+                    "name": "Spencer Nunnelly - Carpenter Bee Contracting",
+                    "totalCompletedInstalls": 18,
+                    "starRating": 3.0,
+                    "grade": "H"
+                },
+                {
+                    "id": "a0j74000000PTWp12",
+                    "name": "Santy Castro - D'castro Carpeting and Flooring",
+                    "totalCompletedInstalls": 39,
+                    "starRating": 3.0,
+                    "grade": "M",
+                    "slot": {
+                        "start_date": datetime.strptime("2023-10-02 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+                        "end_date": datetime.strptime("2023-10-04 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+                    }
+                },
+                {
+                    "id": "a0j4V00000CCOncQAH",
+                    "name": "Cody Harris - Mojo's Flooring",
+                    "totalCompletedInstalls": 23,
+                    "starRating": 2.5,
+                    "grade": "M",
+                    "slot": {
+                        "start_date": datetime.strptime("2023-10-09 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+                        "end_date": datetime.strptime("2023-10-12 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+                    }
+                },
+                {
+                    "id": "a0j74000000PTWp",
+                    "name": "Anthony Waters - Anthony's Renovation & Remodeling",
+                    "slot": {
+                        "start_date": datetime.strptime("2023-09-14 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+                        "end_date": datetime.strptime("2023-09-14 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+                    }
+                }
+            ]
+            result.update({
+                'data': crews
+            })
+            return result
+        if not api_configuration.auth_url:
+            return {
+                'message': 'Authentication URL is missing',
+                'result': 'Failed'
+            }
+        auth = requests.post(api_configuration.auth_url, data={
+            "client_id": api_configuration.client_id,
+            "client_secret": api_configuration.client_secret,
+            "grant_type": api_configuration.grant_type,
+            "Content-Type": "application/x-www-form-urlencoded"})
+        try:
+            auth_json = auth.json()
+            auth_token = auth_json['access_token']
+        except:
+            auth_token = ''
+        _logger.info('Auth Token--%s'%auth_token)
+        if not auth_token:
+            return {
+                'message': 'Authentication API is Failed',
+                'result': 'Failed'
+            }
+        configuration = Configuration(
+            host=api_configuration.token_url,
+            access_token=auth_token
+        )
+        if configuration:
+            configuration.verify_ssl = api_configuration.enable_ssl
+            api_client = ApiClient(configuration)
+            api_instance = scheduling_services_api.SchedulingServicesApi(api_client)
+
+            try:
+                # Request schedule using a new sales order
+                appointment_date = sale_order.appointment_id and sale_order.appointment_id.appointment_date.date() or date.today()
+                installer_date_range_limit = int(self.env['ir.config_parameter'].sudo().get_param('installer_date_range_limit')) or 30
+                start_date = appointment_date + relativedelta(days=1)
+                end_date = start_date + relativedelta(days=installer_date_range_limit)
+
+                model = ScheduleRequest()
+                model.proposed_start_date = start_date
+                model.proposed_end_date = end_date
+
+                api_response = api_instance.schedule_existing_order(sale_order.quote_id, schedule_request=model)
+                _logger.info(api_response)
+                result.update({
+                    'data': api_response.get('crews', [])
+                })
+            except ApiException as e:
+                error_content = e.body and eval(e.body) or {}
+                error_message = "Error occurred while searching available dates."
+                if error_content and error_content.get('message', ""):
+                    error_message = error_content.get('message', "")
+                _logger.info("Exception when calling SchedulingServicesApi->schedules_post: %s\n" % e)
+                result.update({
+                    'result': 'Failed',
+                    'message': error_message
+                })
+        return result
+
+
+    @api.model
+    def action_get_available_installation_date(self, data):
+        result = {
+            'message': 'No Data found to update',
+            'result': 'Failed'
+        }
+        sale_order_obj = self.env['sale.order']
+        crew_obj = self.env['otl.installation.crew']
+        _logger.info("------action_get_available_installation_date data: %s-------------" % (data))
+        try:
+            appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
+            if appointment_id:
+                appointment = self.browse(appointment_id)
+                if appointment.exists():
+                    sale_order = sale_order_obj.search([('appointment_id', '=', appointment_id)], limit=1)
+                    if sale_order:
+                        sale_sync_result = self.action_sync_sale_data_to_i360(appointment, sale_order, return_on_failure=True)
+                        _logger.info('i360 Sale Manual Sync Response: --%s'%(sale_sync_result))
+                        if sale_sync_result.get('result', '') == 'Success':
+                            rules_engine_result = self.action_get_available_dates_from_rule_engine_api(sale_order)
+                            if rules_engine_result.get('result', '') == 'Failed':
+                                return rules_engine_result
+                            crews_list = rules_engine_result.get('data', [])
+                            if not crews_list:
+                                return {
+                                    'message': 'No Data received from Rules Engine',
+                                    'result': 'Failed'
+                                }
+                            start_date_list = []
+                            user = self.env.user
+                            tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+                            if sale_order.available_installation_line:
+                                sale_order.available_installation_line.unlink()
+                            for crew_data in crews_list:
+                                i360_id = crew_data.get('id', '')
+                                name = crew_data.get('name', '')
+                                crew = crew_obj.search([('improveit_id', '=', i360_id)], limit=1)
+                                if not crew:
+                                    crew = crew_obj.create({'improveit_id': i360_id, 'name': name})
+                                time_slot = crew_data.get('slot', {})
+                                if time_slot:
+                                    start_date = time_slot.get('start_date', False)
+                                    end_date = time_slot.get('end_date', False)
+                                    start_date_utc = tz.localize(start_date).astimezone(pytz.utc).strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+                                    if start_date_utc not in start_date_list:
+                                        start_date_list.append(start_date_utc)
+                                        end_date_utc = tz.localize(end_date).astimezone(pytz.utc).strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+                                        self.env['otl.available.installation.line'].create({
+                                                'start_date': start_date_utc,
+                                                'end_date': end_date_utc,
+                                                'order_id': sale_order.id,
+                                                'crew_id': crew.id
+                                            })
+                            if not start_date_list:
+                                return {
+                                    'message': 'No Dates are Available',
+                                    'result': 'Failed'
+                                }
+                            available_date_list = []
+                            for installation_date in sale_order.available_installation_line:
+                                start_date = utc_2_local(installation_date.start_date, user.tz or 'UTC')
+                                end_date = utc_2_local(installation_date.end_date, user.tz or 'UTC')
+                                available_date_list.append({
+                                    'installation_id': installation_date.id,
+                                    'start_date': start_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+                                    'end_date': end_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+                                    'crew_id': installation_date.crew_id.id,
+                                    'crew_name': installation_date.crew_id.name,
+                                })
+                            if available_date_list:
+                                available_date_list.sort(key = lambda x:x['start_date'])
+                            return {
+                                'result': 'Success',
+                                'message': "Available Installation Date retrieved Successfully",
+                                'data': {
+                                    'available_dates': available_date_list,
+                                    'sale_order_id': sale_order.id
+                                }
+                            }
+                        else:
+                            return sale_sync_result
+                    else:
+                        _logger.info("------Sale Order is not existing against this appointment-------------")
+                        result = {
+                            'message': 'Sale Order is not existing against this appointment',
+                            'result': 'Failed'
+                        }
+                else:
+                    _logger.info("------Wrong Appointment id-------------")
+                    result = {
+                        'message': 'Wrong Appointment id',
+                        'result': 'Failed'
+                    }
+            else:
+                _logger.info("------Empty Appointment id-------------")
+                result = {
+                    'message': 'Empty Appointment id',
+                    'result': 'Failed'
+                }
+        except:
+            result = {
+                'message': 'Something went wrong.',
+                'result': 'Failed',
+            }
+        _logger.info("------action_get_available_installation_date result: %s-------------" % (result))
+        return result
+
+    def action_check_selected_date_still_available(self, sale_order, selected_installation):
+        result = {
+            'result': 'Failed',
+            'date_available': False
+        }
+        selected_installation_date = selected_installation.start_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+        rules_engine_result = self.action_get_available_dates_from_rule_engine_api(sale_order)
+        if rules_engine_result.get('result', '') == 'Failed':
+            return rules_engine_result
+        crews_list = rules_engine_result.get('data', [])
+        if not crews_list:
+            return {
+                'message': 'No Data received from Rules Engine',
+                'result': 'Failed'
+            }
+        user = self.env.user
+        tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+        for crew_data in crews_list:
+            time_slot = crew_data.get('slot', {})
+            crew_i360_id = crew_data.get('id', '')
+            if time_slot:
+                start_date = time_slot.get('start_date', False)
+                start_date_utc = tz.localize(start_date).astimezone(pytz.utc).strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+                if start_date_utc == selected_installation_date and crew_i360_id == selected_installation.crew_id.improveit_id:
+                    result.update({
+                        'result': 'Success',
+                        'date_available': True
+                    })
+                    return result
+        return result
+
+    @api.model
+    def action_submit_selected_installation_date(self, data):
+        result = {
+            'message': 'No Data found to update',
+            'result': 'Failed'
+        }
+        sale_order_obj = self.env['sale.order']
+        _logger.info("------action_submit_selected_installation_date data: %s-------------" % (data))
+        try:
+            sale_order_id = data.get('sale_order_id', 0) and int(data.get('sale_order_id', 0)) or 0
+            if sale_order_id:
+                sale_order = sale_order_obj.browse(sale_order_id)
+                if sale_order.exists():
+                    appointment = sale_order.appointment_id
+                    installation_id = data.get('installation_id', 0) and int(data.get('installation_id', 0)) or 0
+                    if installation_id:
+                        exists_selected_installation = sale_order.available_installation_line.filtered(lambda x: x.selected)
+                        if exists_selected_installation:
+                            return {
+                                'message': 'Your installation is already scheduled to %s. You can now skip to appointments list.'%(exists_selected_installation.start_date.strftime('%m-%d-%Y')),
+                                'result': 'Failed'
+                            }
+                        selected_installation = sale_order.available_installation_line.filtered(lambda x: x.id == installation_id)
+                        if selected_installation:
+                            response = self.action_check_selected_date_still_available(sale_order, selected_installation)
+                            if response.get('result', '') == 'Failed':
+                                if 'date_available' in response:
+                                    return {
+                                        'message': 'Selected Date is not available now. Please select different date',
+                                        'result': 'Failed'
+                                    }
+                                else:
+                                    return response
+                            else:
+                                sync_log = self.env['otl.appointment.sync.log']
+                                if not selected_installation.project_i360_id:
+                                    response_result = sale_order.create_project_in_i360(selected_installation)
+                                    if response_result.get('success', '') == 'true':
+                                        sync_log.create({
+                                            'appointment_id': appointment.id,
+                                            'response': response_result,
+                                            'name': 'CreateProject',
+                                        })
+                                        if response_result.get('duplicate', '') == 'true':
+                                            _logger.info(
+                                                '-------Sync Aborting due to Duplicate Project - %s, Response: %s' % (
+                                                    sale_order.id, response_result))
+                                    else:
+                                        sync_log.create({
+                                            'appointment_id': appointment.id,
+                                            'response': response_result,
+                                            'state': 'failed',
+                                            'name': 'CreateProject',
+                                        })
+                                        return {
+                                                'message': 'CreateProject Failed due to following reason: %s' % (
+                                                    response_result),
+                                                'result': 'Failed'
+                                            }
+                                if not selected_installation.project_activity_i360_id:
+                                    response_result = sale_order.create_project_activity_in_i360(selected_installation)
+                                    if response_result.get('success', '') == 'true':
+                                        sync_log.create({
+                                            'appointment_id': appointment.id,
+                                            'response': response_result,
+                                            'name': 'CreateProjectActivity',
+                                        })
+                                        if response_result.get('duplicate', '') == 'true':
+                                            _logger.info(
+                                                '-------Sync Aborting due to Duplicate CreateProjectActivity - %s, Response: %s' % (
+                                                    sale_order.id, response_result))
+                                    else:
+                                        sync_log.create({
+                                            'appointment_id': appointment.id,
+                                            'response': response_result,
+                                            'state': 'failed',
+                                            'name': 'CreateProjectActivity',
+                                        })
+                                        return {
+                                                'message': 'CreateProjectActivity Failed due to following reason: %s' % (
+                                                    response_result),
+                                                'result': 'Failed'
+                                            }
+                                selected_installation.write({'selected': True})
+                                result = {
+                                    'message': 'Your installation request has been submitted successfully',
+                                    'result': 'Success'
+                                }
+
+                        else:
+                            _logger.info("------Given Installation ID is not belongs to this order.-------------")
+                            result = {
+                                'message': 'Given Installation ID is not belongs to this order.',
+                                'result': 'Failed'
+                            }
+                    else:
+                        _logger.info("------Installation ID is Empty-------------")
+                        result = {
+                            'message': 'Installation ID is Empty',
+                            'result': 'Failed'
+                        }
+                else:
+                    _logger.info("------Wrong Sale Order id-------------")
+                    result = {
+                        'message': 'Wrong Sale Order id',
+                        'result': 'Failed'
+                    }
+            else:
+                _logger.info("------Empty Sale Order id-------------")
+                result = {
+                    'message': 'Empty Sale Order id',
+                    'result': 'Failed'
+                }
+        except:
+            result = {
+                'message': 'Something went wrong.',
+                'result': 'Failed',
+            }
+        _logger.info("------action_submit_selected_installation_date result: %s-------------" % (result))
+        return result
+
+    @api.model
+    def action_update_additional_appointment_data(self, data):
+        result = {
+            'message': 'Something went wrong updating the appointment',
+            'result': 'Failed'
+        }
+        _logger.info("------action_update_additional_appointment_data data: %s-------------" % (data))
+        try:
+            appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
+            send_physical_document = False
+            if data.get('send_physical_document', 0) == 1:
+                send_physical_document = True
+            flexible_installation = False
+            if data.get('flexible_installation', 0) == 1:
+                flexible_installation = True
+            if appointment_id:
+                appointment = self.env['team.customer.appointment'].browse(appointment_id)
+                if appointment.exists():
+                    appointment.write({
+                        'additional_comments': data.get('additional_comments', ''),
+                        'send_physical_document': send_physical_document,
+                        'flexible_installation': flexible_installation,
+                    })
+                    order = self.env['sale.order'].search([('appointment_id', '=', appointment_id)], limit=1)
+                    if not order:
+                        return {
+                            'message': 'Sale order is not found against the appointment',
+                            'result': 'Failed'
+                        }
+                    if data.get('recision_date', False):
+                        order.write({'recision_date': data.get('recision_date', False)})
+                    result = {
+                        'message': 'Data Updated Successfully',
+                        'result': 'Success',
+                    }
+                    _logger.info("------Data Updated Successfully-------------")
+                else:
+                    _logger.info("------Wrong Appointment Id-------------")
+                    result = {
+                        'message': 'Wrong Appointment Id',
+                        'result': 'Failed'
+                    }
+
+            else:
+                _logger.info("------Empty Appointment Id-------------")
+                result = {
+                    'message': 'Empty Appointment Id',
+                    'result': 'Failed'
+                }
+        except:
+            result = {
+                'message': 'Something Went Wrong.',
+                'result': 'Failed'
+            }
+        _logger.info("------action_update_additional_appointment_data result: %s-------------" % (result))
+        return result
+
+    @api.model
+    def action_get_credit_application_status(self, data):
+        result = {
+            'message': 'Something went wrong updating the appointment',
+            'result': 'Failed'
+        }
+        _logger.info("------action_get_credit_application_status data: %s-------------" % (data))
+        try:
+            appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
+            loan_type = data.get('loan_type', '')
+            if not loan_type:
+                return {
+                    'message': 'Empty Loan Type',
+                    'result': 'Failed'
+                }
+            if appointment_id:
+                appointment = self.env['team.customer.appointment'].browse(appointment_id)
+                if appointment.exists():
+                    if loan_type == 'versatile':
+                        versatile_application = self.env['otl.versatile.credit.application'].search([('appointment_id', '=', appointment_id)], limit=1)
+                        if not versatile_application:
+                            result = {
+                                'message': 'Credit application is not existing',
+                                'result': 'Failed'
+                            }
+                        else:
+                            result = {
+                                "result": "Success",
+                                "data": {
+                                    "application_id": versatile_application.application_id or "",
+                                    "provider": versatile_application.provider or "",
+                                    "provider_reference": versatile_application.provider_reference or "",
+                                    "status": versatile_application.status or "",
+                                    "approved_amount": versatile_application.approved_amount or 0,
+                                }
+                            }
+                    else:
+                        result = {
+                            'message': 'Wrong Loan Type',
+                            'result': 'Failed'
+                        }
+
+                else:
+                    _logger.info("------Wrong Appointment Id-------------")
+                    result = {
+                        'message': 'Wrong Appointment Id',
+                        'result': 'Failed'
+                    }
+
+            else:
+                _logger.info("------Empty Appointment Id-------------")
+                result = {
+                    'message': 'Empty Appointment Id',
+                    'result': 'Failed'
+                }
+        except:
+            result = {
+                'message': 'Something Went Wrong.',
+                'result': 'Failed'
+            }
+        _logger.info("------action_get_credit_application_status result: %s-------------" % (result))
         return result
 
 
@@ -3482,7 +4276,7 @@ class SaleOrder(models.Model):
                 }
         except:
             result = {
-                'message': 'Something went wrong while executing the code',
+                'message': 'Something went wrong.',
                 'result': 'Failed'
             }
         _logger.info("------action_generate_contract_document result: %s-------------" % (result))
@@ -3538,3 +4332,94 @@ class IRAttachment(models.Model):
                                      attachment.access_token)})
 
         return image_list
+
+
+class VersatileCreditApplication(models.Model):
+    _inherit = 'otl.versatile.credit.application'
+
+    def convert_date_to_utc(self, date, tz):
+        date_obj = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%fZ')
+        date_utc = tz.localize(date_obj).astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
+        return date_utc
+
+    @api.model
+    def action_create_versatile_credit_application(self, versatile_payload={}):
+        result = {
+            "result": "Failed",
+            "message": "Something went wrong"
+        }
+        user = self.env.user
+        tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+        data = versatile_payload.get("data", {})
+        webhook_event_id = versatile_payload.get('id', "")
+        event_type = versatile_payload.get('type', "")
+        event_date = versatile_payload.get('dateTime', "")
+        application_id = data.get("applicationId", "")
+        ext_customer_id = data.get("externalCustomerId", "")
+        if not ext_customer_id:
+            return {"result": "Failed", "message": "externalCustomerId is missing"}
+        appointment = self.env['team.customer.appointment'].search([('improveit_appointment_id', '=', ext_customer_id)], limit=1)
+        if not appointment:
+            return {"result": "Failed", "message": "Appointment is not found related to the External Customer ID '%s'."%(ext_customer_id)}
+        if event_date:
+            event_date = self.convert_date_to_utc(event_date, tz)
+        credit_application = self.search([('webhook_event_id', '=', webhook_event_id)], limit=1)
+
+        account_id = data.get("accountId", "")
+        provider = data.get("providerId", "")
+        session_id = data.get("sessionId", "")
+        provider_reference = data.get("providerReferenceNumber", "")
+        status = data.get("status", "")
+        submitted_date = data.get("submittedDateTime", False)
+        if submitted_date:
+            submitted_date = self.convert_date_to_utc(submitted_date, tz)
+        approved_amount_cent = data.get("approvedAmount", "")
+        applicant_data = data.get("applicant", {}) and data.get("applicant", {}) or {}
+        co_applicant_data = data.get("jointApplicant", {}) and data.get("jointApplicant", {}) or {}
+        applicant_first_name = ''
+        applicant_last_name = ''
+        co_applicant_first_name = ''
+        co_applicant_last_name = ''
+        if applicant_data:
+            applicant_first_name = applicant_data.get("firstName", "")
+            applicant_last_name = applicant_data.get("lastName", "")
+        if co_applicant_data:
+            co_applicant_first_name = co_applicant_data.get("firstName", "")
+            co_applicant_last_name = co_applicant_data.get("lastName", "")
+        error_list = data.get("errors", [])
+        vals = {
+            "webhook_event_id": webhook_event_id,
+            "event_type": event_type,
+            "event_date": event_date,
+            "appointment_id": appointment.id,
+            "application_id": application_id,
+            "account_id": account_id,
+            "provider": provider,
+            "session_id": session_id,
+            "provider_reference": provider_reference,
+            "status": status,
+            "submitted_date": submitted_date,
+            "approved_amount_cent": approved_amount_cent,
+            "ext_customer_id": ext_customer_id,
+            "applicant_first_name": applicant_first_name,
+            "applicant_last_name": applicant_last_name,
+            "co_applicant_first_name": co_applicant_first_name,
+            "co_applicant_last_name": co_applicant_last_name,
+            "error_line": [(0, 0, {"name": error}) for error in error_list],
+        }
+        if credit_application:
+            credit_application.write(vals)
+            result = {
+                "result": "Success",
+                "message": "Credit Application Updated Successfully",
+                "credit_application_id": credit_application.id
+            }
+        else:
+            credit_application = self.create(vals)
+            result = {
+                "result": "Success",
+                "message": "Credit Application Created Successfully",
+                "credit_application_id": credit_application.id
+            }
+        return result
+

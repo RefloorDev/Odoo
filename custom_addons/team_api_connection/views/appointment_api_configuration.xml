@@ -12,13 +12,14 @@
                             <field name="client_id"/>
                             <field name="api_type" required="1"/>
                             <field name="section"/>
-                            <field name="test_appointment_id"/>
+                            <field name="test_appointment_id" invisible="1"/>
                             <field name="mode" required="1"/>
                             <field name="client_secret"/>
                             <field name="username"/>
                             <field name="password"/>
                             <field name="grant_type"/>
                             <field name="token_url"/>
+                            <field name="auth_url"/>
                             <field name="update_existing_record"/>
                             <field name="enable_ssl"/>
                             <field name="active" invisible="1"/>

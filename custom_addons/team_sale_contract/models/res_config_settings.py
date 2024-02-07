@@ -13,9 +13,12 @@ class ResConfigSettings(models.TransientModel):
     admin_fee = fields.Float("Admin Fee")
     min_sale_price = fields.Float("Minimum Sale Price")
     max_no_transitions = fields.Integer("Maximum No. of Transitions Allowed")
-    doc_status_message =fields.Char("Document InCompletion Message")
-    doc_completion_message =fields.Char("Document Completion Message")
+    doc_status_message = fields.Char("Document InCompletion Message")
+    doc_completion_message = fields.Char("Document Completion Message")
     payment_plan_id = fields.Many2one('product.template', string='Default Payment Plan')
+    enable_api_queue_system = fields.Boolean('Enable API Queue System', default=False)
+    enable_additional_comment_api = fields.Boolean('Enable Additional Comments API', default=False)
+    installer_date_range_limit = fields.Integer("Installer Date Range Limit", default=30)
 
     @api.model
     def get_values(self):
@@ -32,6 +35,9 @@ class ResConfigSettings(models.TransientModel):
         doc_status_message = params.get_param('doc_status_message', default='It seems that you have not filled the required data in the contract. Please ensure all data are updated before proceeding!')
         doc_completion_message = params.get_param('doc_completion_message', default='Your credit/debit card payment is going to process.')
         payment_plan_id = params.get_param('payment_plan_id', default=False)
+        enable_api_queue_system = str(params.get_param('enable_api_queue_system', default=False))
+        enable_additional_comment_api = str(params.get_param('enable_additional_comment_api', default=False))
+        installer_date_range_limit = params.get_param('installer_date_range_limit',default=30)
 
 
         res.update({
@@ -45,6 +51,9 @@ class ResConfigSettings(models.TransientModel):
             'doc_status_message':doc_status_message,
             'doc_completion_message':doc_completion_message,
             'payment_plan_id': int(payment_plan_id),
+            'enable_api_queue_system': eval(enable_api_queue_system),
+            'enable_additional_comment_api': eval(enable_additional_comment_api),
+            'installer_date_range_limit':int(installer_date_range_limit),
         })
         return res
 
@@ -60,4 +69,7 @@ class ResConfigSettings(models.TransientModel):
         self.env['ir.config_parameter'].sudo().set_param("doc_status_message", self.doc_status_message)
         self.env['ir.config_parameter'].sudo().set_param("doc_completion_message", self.doc_completion_message)
         self.env['ir.config_parameter'].sudo().set_param("payment_plan_id", self.payment_plan_id.id)
+        self.env['ir.config_parameter'].sudo().set_param("enable_api_queue_system", self.enable_api_queue_system or 'False')
+        self.env['ir.config_parameter'].sudo().set_param("enable_additional_comment_api", self.enable_additional_comment_api or 'False')
+        self.env['ir.config_parameter'].sudo().set_param("installer_date_range_limit",self.installer_date_range_limit)
 

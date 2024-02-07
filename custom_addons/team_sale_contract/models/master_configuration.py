@@ -11,6 +11,8 @@ from dateutil.relativedelta import relativedelta
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT
 
 import logging
+
+
 _logger = logging.getLogger(__name__)
 
 
@@ -55,6 +57,21 @@ class ResCompany(models.Model):
     auto_logout_time = fields.Float('Auto Logout Time (24 Hours Format)', help="Enter time in 24 Hrs format")
     logged_in_notify_user_ids = fields.Many2many('res.users', 'logged_in_notify_user_rel', 'company_id', 'user_id', string="Users to Notify")
     attachment_delete_day_limit = fields.Integer('Day limit for Deleting Old Attachments', default= 0)
+    versatile_user_id = fields.Many2one('res.users', string="Versatile User")
+    versatile_url = fields.Char("Versatile URL")
+    versatile_api_key = fields.Char("Versatile API Key")
+    versatile_entity_key = fields.Char("Versatile Entity Key")
+
+    def action_generate_versatile_user_token(self):
+        for record in self:
+            if record.versatile_user_id:
+                action = self.env.ref('team_sale_contract.action_generate_token').read()[0]
+                action['context'] = {
+                    "default_user_id": record.versatile_user_id.id,
+                    "default_token": record.versatile_user_id.token_name or "",
+                }
+                return action
+
 
     @api.onchange('auto_logout_time')
     def onchange_auto_logout_time(self):
@@ -318,6 +335,7 @@ class ProductProduct(models.Model):
     url = fields.Char("Url")
     color_up_charge_price = fields.Float('Color Up Charge Price')
     display_name_in_app = fields.Char(string="Display Name in App")
+    color_attachment_id = fields.Many2one('ir.attachment', string='Color Attachment Ref', copy=False)
 
 
 class LaborCost(models.Model):
@@ -523,3 +541,67 @@ class UserAuthenticationLog(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=False, default=lambda self: self.env.company)
     action_done = fields.Selection([('user', 'User'), ('admin', 'Admin'), ('automated', 'Automated')],
                                    string='Action Done By', default='user', required=True)
+
+
+class Weekdays(models.Model):
+    _name = 'otl.weekdays'
+    _description = "Weekdays"
+
+    name = fields.Char("Name")
+
+
+class PaymentRestrictionRule(models.Model):
+    _name = 'otl.payment.restriction.rule'
+    _description = "Restricting Payment Rules"
+    _order = 'start_date desc'
+
+    name = fields.Char("Rule Name")
+    start_date = fields.Date("Start Date")
+    end_date = fields.Date("End Date")
+    location_ids = fields.Many2many("otl.office.location", string='Office Locations')
+    payment_option_ids = fields.Many2many("team.downpayment.option", string="Payment Options")
+    allowed_days_ids = fields.Many2many('otl.weekdays', string="Weekdays")
+    active = fields.Boolean("Active", default=True)
+    conditions = fields.Selection([
+        ('amount', 'Order Total'),
+        ('grade', 'Grade'),
+        ('margin', 'Margin'),
+        ('promotions', 'Promotions'),
+    ])
+    min_order_total = fields.Integer("Minimum Order Total")
+    grade = fields.Char('Grade')
+    min_margin_amount = fields.Integer("Minimum Margin Amount")
+    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company.id)
+    promotion_code_ids = fields.Many2many('otl.promotion.code', string='Restricted Promotions')
+    promos_ids = fields.Many2many('otl.promotion.code', relation='conditional_promotion_rel',column1='restriction_rule_id',column2='promotion_id', string='Promotions')
+    discount_code_ids = fields.Many2many('team.monthly.promo', string='Restricted Discounts')
+
+
+class AppointmentResultReason(models.Model):
+    _name = 'otl.appointment.result.reason'
+    _description = "Appointment Resulting Reasons"
+    _order = 'sequence asc'
+
+    name = fields.Char("Reason", required=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company.id)
+    active = fields.Boolean("Active", default=True)
+    reference_id = fields.Char("i360 Reference ID")
+    sequence = fields.Integer('Priority',
+                              help="Give to the more specialized category, a higher priority to have them in top of the list.", default = 10)
+
+    _sql_constraints = [
+        ('name_company_uniq', 'unique (name,company_id)', 'Reason must be unique per company!')
+    ]
+
+
+class InstallationCrew(models.Model):
+    _name = 'otl.installation.crew'
+    _description = 'Installation Crew'
+
+    name = fields.Char('Crew Name', required=True)
+    active = fields.Boolean("Active", default=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True,
+                                 default=lambda self: self.env.company.id)
+    improveit_id = fields.Char('Improveit Reference ID')
+
+

@@ -29,7 +29,7 @@ class TeamImproveitConfiguration(models.Model):
     _description = "Team Improveit Api Configuration"
 
     name = fields.Char(string='Name')
-    client_id = fields.Char(string='Client Id')
+    client_id = fields.Char(string='Client ID')
     client_secret = fields.Char(string='Client Secret')
     username = fields.Char(string='username')
     password = fields.Char(string='password')
@@ -37,11 +37,13 @@ class TeamImproveitConfiguration(models.Model):
     token_generated = fields.Char(string='Token Generated')
     mode = fields.Selection([('live','Live'),('test','Test')], default='live')
     token_url = fields.Char(string='Token Endpoint URL')
+    auth_url = fields.Char(string='Authentication Endpoint URL')
     active = fields.Boolean(default=True)
     api_type = fields.Selection([
         ('improveit', 'Improveit'),
         ('zapier', 'Zapier'),
-        ('boomi','Boomi'),
+        ('boomi', 'Boomi'),
+        ('rules_engine', 'Rules Engine'),
         ('contract_doc', 'Contract Document'),
     ], string='API Type', default='improveit')
     section = fields.Selection([
@@ -888,7 +890,7 @@ class TeamImproveitConfiguration(models.Model):
                                 self.env['team.room.room'].create(room_dict)
                             if duplicate_room:
                                 duplicate_room.write(room_dict)
-                    unused_rooms = self.env['team.room.room'].search([('name', 'not in', room_name_list)])
+                    unused_rooms = self.env['team.room.room'].search([('name', 'not in', room_name_list), ('is_custom', '!=', True)])
                     if unused_rooms:
                         unused_rooms.write({'active': False})
                 except IOError:
@@ -1004,11 +1006,18 @@ class TeamImproveitConfiguration(models.Model):
                             'active': True
                         }
                         if image_binary:
-                            attachment = self.env['ir.attachment'].sudo().create({
-                                'datas': image_binary,
-                                'name': thumb_nail
+                            if duplicate_discount_coupon and duplicate_discount_coupon.attachment_id:
+                                attachment = duplicate_discount_coupon.attachment_id
+                                attachment.sudo().write({
+                                    'datas': image_binary,
+                                    'name': thumb_nail
+                                })
+                            else:
+                                attachment = self.env['ir.attachment'].sudo().create({
+                                    'datas': image_binary,
+                                    'name': thumb_nail
 
-                            })
+                                })
                             attachment.generate_access_token()
                             discount_coupon_dict.update({
                                 'attachment_id': attachment.id
@@ -1101,6 +1110,13 @@ class TeamImproveitConfiguration(models.Model):
                 if unused_molding_types:
                     unused_molding_types.write({'active': False})
 
+    def is_valid_url_image(self, image_url):
+        try:
+            image = Image.open(requests.get(image_url, stream=True).raw)
+        except:
+            return False
+        return image
+
     def get_floor_color_api(self):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
         if configurations:
@@ -1115,34 +1131,54 @@ class TeamImproveitConfiguration(models.Model):
                     req.raise_for_status()
                     content = req.json()
                     for color in content:
-                        name = color.get('Name') or ''
-                        display_name_in_app = color.get('SalesAppDisplayName') or color.get('Name') or ''
-                        product_lines = color.get('ProductLines', '') or ''
-                        color_up_charge_price = color.get('ColorUpcharge', 0) or 0
+                        name = color.get('name') or ''
+                        display_name_in_app = color.get('salesAppDisplayName') or color.get('name') or ''
+                        product_lines = color.get('productLines', '') or color.get('ProductLines', '') or ''
+                        color_up_charge_price = color.get('colorUpcharge', 0) or 0
                         if product_lines:
-                            thumb_nail = color.get('Thumbnail') or ''
+                            thumb_nail = color.get('thumbnail') or ''
+                            image_url = ''
                             if thumb_nail:
                                 image_url = "https://refloormichigan.com/FlooringThumbs/%s"%(thumb_nail)
+                            _logger.info('image_url: %s'%image_url)
+                            image_data = self.is_valid_url_image(image_url)
+                            if image_data:
                                 try:
                                     image_data = urlopen(image_url).read()
                                     image_binary = base64.encodestring(image_data)
                                 except:
                                     image_binary = False
-
-                            product_line_template = color.get('ProductLines').split(';')
+                            else:
+                                image_url = ''
+                            product_line_template = product_lines.split(';')
                             products = self.env['product.product'].search([('product_tmpl_id.grade', 'in', product_line_template)])
                             for product in products:
-                                for attributes_line in product.product_template_attribute_value_ids:
-                                    if attributes_line.name == name and attributes_line.attribute_id.name == 'colour':
-                                        product.write({'floor_color': name,
-                                                       'product_line': product_lines,
-                                                       'thumb_nail': thumb_nail,
-                                                       'url': 'https://refloormichigan.com/FlooringThumbs/',
-                                                       'color_up_charge_price': color_up_charge_price,
-                                                       'display_name_in_app': display_name_in_app,
-                                                       'image_variant_1920': image_binary
-                                                       })
+                                if product.product_template_attribute_value_ids.filtered(lambda x: x.name == name and x.attribute_id.name == 'colour'):
+                                    attachment = False
+                                    product.write({'floor_color': name,
+                                                   'product_line': product_lines,
+                                                   'thumb_nail': thumb_nail,
+                                                   'url': image_url,
+                                                   'color_up_charge_price': color_up_charge_price,
+                                                   'display_name_in_app': display_name_in_app,
+                                                   'image_variant_1920': image_binary,
+                                                   })
+                                    if product.color_attachment_id:
+                                        if not product.image_variant_128:
+                                            product.color_attachment_id.unlink()
+                                        else:
+                                            attachment = product.color_attachment_id
+                                            attachment.sudo().write({
+                                                'datas': product.image_variant_128,
+                                                'name': thumb_nail
+                                            })
+                                    else:
+                                        attachment = self.env['ir.attachment'].sudo().create({
+                                            'datas': product.image_variant_128,
+                                            'name': thumb_nail
 
+                                        })
+                                    product.write({'color_attachment_id': attachment and attachment.id or False})
                 except IOError:
                     error_msg = _("Something went wrong during token generation.")
                     raise self.env['res.config.settings'].get_config_warning(error_msg)
@@ -1462,10 +1498,48 @@ class TeamImproveitConfiguration(models.Model):
                     error_msg = _("Something went wrong during token generation.")
                     raise self.env['res.config.settings'].get_config_warning(error_msg)
 
+    def get_appointment_result_detail_api(self):
+        configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
+        if configurations:
+            end_point_url = configurations.token_url
+            client_token = configurations.client_token
+            if end_point_url and client_token:
+                url = end_point_url + 'GetAppointmentResultDetails' + client_token
+                headers = {"Content-type": "application/json"}
+                data = {}
+                try:
+                    req = requests.get(url, data=data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    reason_i360_ref_list = []
+                    reason_obj = self.env['otl.appointment.result.reason']
+                    sequence = 10
+                    for data in content:
+                        reason = data.get('Value', '')
+                        reference_id = data.get('Id', '')
+                        values = {
+                            'active': True,
+                            'name': reason,
+                            'reference_id': reference_id,
+                            'sequence': sequence
+                        }
+                        if reference_id:
+                            reason_i360_ref_list.append(reference_id)
+                        reason = reason_obj.with_context(active_test=False).search([('reference_id', '=', reference_id)])
+                        if reason:
+                            reason.write(values)
+                        else:
+                            reason_obj.create(values)
+                        sequence += 10
+                    unwanted_reasons = reason_obj.search([('reference_id', 'not in', reason_i360_ref_list)])
+                    if unwanted_reasons:
+                        unwanted_reasons.write({'active': False})
+                except IOError:
+                    error_msg = _("Something went wrong during GetAppointmentResultDetails API execution.")
+                    raise self.env['res.config.settings'].get_config_warning(error_msg)
     def action_sync_master_data(self, data={}):
         _logger.info('-------Starting: action_sync_master_data')
         for record in self.sudo().search([('api_type', '=', 'boomi')]):
-
             if record.sync_master_data_in_progress:
                 current_date = datetime.now()
                 time_after_last_execution = (current_date - record.write_date).total_seconds()
@@ -1474,7 +1548,7 @@ class TeamImproveitConfiguration(models.Model):
                     _logger.info('-------Not Executed: action_sync_master_data')
                     return {
                         'result': 'success',
-                        'message': "Master Data synchronized successfully"
+                        'message': "Master Data synchronized successfully",
                     }
             record.sudo().write({'sync_master_data_in_progress': True})
             record.env.cr.commit()
@@ -1500,12 +1574,14 @@ class TeamImproveitConfiguration(models.Model):
             record.sudo().get_special_pricing_api()
             _logger.info('-------Starting: get_promocode_api')
             record.sudo().get_promocode_api()
+            _logger.info('-------Starting: get_appointment_result_detail_api')
+            record.sudo().get_appointment_result_detail_api()
             record.sudo().write({'sync_master_data_in_progress': False})
             # record.env.cr.commit()
         _logger.info('-------Completed: action_sync_master_data')
         return {
             'result': 'success',
-            'message': "Master Data synchronized successfully"
+            'message': "Master Data synchronized successfully",
         }
 
 

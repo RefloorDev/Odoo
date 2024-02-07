@@ -10,6 +10,8 @@
                     <sheet>
                         <group col="4">
                             <field name="room_id" options="{'no_open':True,'no_create': True}"/>
+                            <field name="custom_room_name" string="Room Name" attrs="{'invisible': [('custom_room_measured', '!=', True)]}"/>
+                            <field name="custom_room_measured" invisible="1"/>
                             <field name="adjusted_area" string="Room Area"/>
                             <field name="color_up_charge_price"/>
                             <field name="color_up_charge_total"/>
@@ -145,7 +147,7 @@
 
 
         <record id="sale_contract_question_measurements_lines" model="ir.ui.view">
-            <field name="name">Contract Question Measurements Line</field>
+            <field name="name">sale.order.form.inherit</field>
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="priority" eval="20"/>
@@ -161,6 +163,7 @@
                         <field name="link_to_share" widget="url" readonly="1" attrs="{'invisible': [('link_to_share', '=', False)]}"/>
                         <field name="appointment_id" readonly="1" attrs="{'invisible': [('appointment_id', '=', False)]}"/>
                         <field name="quote_id" readonly="1" attrs="{'invisible': [('quote_id', '=', False)]}"/>
+                        <field name="excluded_quote_id" readonly="1" attrs="{'invisible': [('excluded_quote_id', '=', False)]}"/>
                         <field name="special_price_id" readonly="1" attrs="{'invisible': [('special_price_id', '=', False)]}"/>
                         <field name="stair_special_price_id" readonly="1" attrs="{'invisible': [('stair_special_price_id', '=', False)]}"/>
                         <field name="min_sale_price" readonly="1" groups="base.group_no_one"/>
@@ -186,6 +189,7 @@
                                    attrs="{'readonly': [('state', 'not in', ('draft'))]}">
                                 <tree>
                                     <field name="room_id" options="{'no_open':True,'no_create': True}"/>
+                                    <field name="room_name"/>
                                     <field name="question_id" options="{'no_open':True,'no_create': True}"/>
                                     <field name="answer_data"/>
                                     <field name="extra_price" sum="Total"/>
@@ -229,6 +233,7 @@
                                     <group col="4">
                                         <field name="question_id" options="{'no_open':True,'no_create': True}"/>
                                         <field name="room_id" options="{'no_open':True,'no_create': True}"/>
+                                        <field name="room_name"/>
                                         <field name="extra_price"/>
                                         <field name="answers">
                                             <tree editable="bottom">
@@ -244,6 +249,8 @@
                                    attrs="{'readonly': [('state', 'not in', ('draft'))]}">
                                 <tree>
                                     <field name="room_id" options="{'no_open':True,'no_create': True}"/>
+                                    <field name="custom_room_name" string="Room Name"/>
+                                    <field name="custom_room_measured" invisible="1"/>
                                     <field name="appointment_id" invisible="1"/>
                                     <field name="adjusted_area"  string="Room Area"/>
                                     <field name="room_perimeter"/>
@@ -395,6 +402,31 @@
                                     </form>
                                 </field>
                             </group>
+                        </page>
+                        <page string="Installation Dates">
+                            <field name="available_installation_line" nolabel="1" widget="one2many_list" mode="tree,kanban"
+                                   readonly="1">
+                                <tree editable="bottom" string="Installation Dates">
+                                    <field name="crew_id"/>
+                                    <field name="start_date"/>
+                                    <field name="end_date"/>
+                                    <field name="selected"/>
+                                </tree>
+                                <form string="Installation Dates">
+                                    <group>
+                                        <group>
+                                            <field name="start_date"/>
+                                            <field name="crew_id"/>
+                                            <field name="selected"/>
+                                        </group>
+                                        <group>
+                                            <field name="end_date"/>
+                                            <field name="project_i360_id" attrs="{'invisible':[('project_i360_id', '=', False)]}"/>
+                                            <field name="project_activity_i360_id" attrs="{'invisible':[('project_activity_i360_id', '=', False)]}"/>
+                                        </group>
+                                    </group>
+                                </form>
+                            </field>
                         </page>
                         <page string="Payment Info" name="payment_transaction" attrs="{'invisible': [('state', 'not in', ['sale', 'done'])]}">
                             <group>
