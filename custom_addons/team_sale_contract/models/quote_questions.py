@@ -33,6 +33,7 @@ class TeamQuoteQuestion(models.Model):
     description = fields.Html('Description', help="Use this field to add additional explanations about your question")
     room_ids = fields.Many2many('team.room.room', string="Rooms")
     product_category_ids = fields.Many2many('product.category', string='Product Categories')
+    max_allowed_limit = fields.Float(string="Max Allowed Limit")
     question_type = fields.Selection([
         ('textbox', 'Single Line Text Box'),
         ('numerical_box', 'Numerical Value'),
@@ -91,6 +92,7 @@ class TeamQuoteQuestion(models.Model):
     applicable_rooms = fields.Many2many('team.room.room', 'applicable_question_room_rel', 'question_id', 'room_id', string="Applicable Rooms")
     applicable_current_surface = fields.Char('Applicable Current Surface')
     exclude_from_promotion = fields.Boolean('Exclude From Promotion', default=False)
+    calculate_order_wise = fields.Boolean("Calculate Based on Order", default=False, help='If checked, amount should calculate based on total order not based on room.')
 
     _sql_constraints = [
         ('positive_len_min', 'CHECK (validation_length_min >= 0)', 'A length must be positive!'),

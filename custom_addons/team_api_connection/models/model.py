@@ -308,7 +308,8 @@ class ResUsers(models.Model):
     @api.model
     def cron_clear_user_tokens(self):
         for company in self.env['res.company'].search([('enable_auto_logout', '=', True)]):
-            logged_in_users = self.search([('token_name', '!=', ''), ('company_id', '=', company.id)])
+            #only fetching users having i360 ID.
+            logged_in_users = self.search([('token_name', '!=', ''), ('company_id', '=', company.id), ('improveit_user_id', '!=', '')])
             users_with_pending_sync = []
             for user in logged_in_users:
                 pending_appointments = self.env['team.customer.appointment'].search(
@@ -355,7 +356,7 @@ class ResCompany(models.Model):
     def get_pending_logout_users_list(self):
         result = []
         for company in self:
-            logged_in_users = self.env['res.users'].search([('token_name', '!=', ''), ('company_id', '=', company.id)])
+            logged_in_users = self.env['res.users'].search([('token_name', '!=', ''), ('company_id', '=', company.id), ('improveit_user_id', '!=', '')])
             for user in logged_in_users:
                 pending_appointments = self.env['team.customer.appointment'].search(
                     [('state', '=', 'scheduled'), ('user_id', '=', user.id)])
@@ -5193,6 +5194,23 @@ class SaleOrder(models.Model):
                                 })
                         if result.get('success', '') == 'true':
                             sale_order_vals.update({'other_files_uploaded': True})
+                    enable_additional_comment_api = eval(
+                        str(self.env['ir.config_parameter'].sudo().get_param('enable_additional_comment_api')))
+                    if enable_additional_comment_api and not sale_order.additional_comment_synced:
+                        result = sale_order.create_additional_comments_in_i360()
+                        if result.get('success', '') == 'true':
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'AddSaleComments',
+                            })
+                        else:
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'AddSaleComments',
+                            })
                     sale_order.write(sale_order_vals)
                     if sale_order.check_document_upload_completed():
                         sale_order.write({'is_data_upload_completed': True})

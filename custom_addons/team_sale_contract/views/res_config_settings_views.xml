@@ -167,6 +167,31 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-12 col-lg-6 o_setting_box" id="enable_api_queue_system_ncp_setting"
+                     groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Enable Additional Comments API</span>
+                        <div class="text-muted">
+                            Enable separate API to sync Additional Comments to i360.
+                        </div>
+                        <div class="row mt16">
+                            <label for="enable_additional_comment_api" string="Enable Additional Comments API" class="col-lg-4 o_light_label"/>
+                            <field name="enable_additional_comment_api" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6 o_setting_box" id="installer_date_range_limit_setting" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Installer Date Range</span>
+                        <div class="text-muted">
+                            Maximum number of days from the appointment date to fetch available installation date.
+                        </div>
+                        <div class="row mt16">
+                            <label for="installer_date_range_limit" string="Installer Date Range" class="col-lg-4 o_light_label"/>
+                            <field name="installer_date_range_limit" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
 
 
             </xpath>

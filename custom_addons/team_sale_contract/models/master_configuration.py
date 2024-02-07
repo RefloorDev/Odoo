@@ -57,6 +57,21 @@ class ResCompany(models.Model):
     auto_logout_time = fields.Float('Auto Logout Time (24 Hours Format)', help="Enter time in 24 Hrs format")
     logged_in_notify_user_ids = fields.Many2many('res.users', 'logged_in_notify_user_rel', 'company_id', 'user_id', string="Users to Notify")
     attachment_delete_day_limit = fields.Integer('Day limit for Deleting Old Attachments', default= 0)
+    versatile_user_id = fields.Many2one('res.users', string="Versatile User")
+    versatile_url = fields.Char("Versatile URL")
+    versatile_api_key = fields.Char("Versatile API Key")
+    versatile_entity_key = fields.Char("Versatile Entity Key")
+
+    def action_generate_versatile_user_token(self):
+        for record in self:
+            if record.versatile_user_id:
+                action = self.env.ref('team_sale_contract.action_generate_token').read()[0]
+                action['context'] = {
+                    "default_user_id": record.versatile_user_id.id,
+                    "default_token": record.versatile_user_id.token_name or "",
+                }
+                return action
+
 
     @api.onchange('auto_logout_time')
     def onchange_auto_logout_time(self):
@@ -320,6 +335,7 @@ class ProductProduct(models.Model):
     url = fields.Char("Url")
     color_up_charge_price = fields.Float('Color Up Charge Price')
     display_name_in_app = fields.Char(string="Display Name in App")
+    color_attachment_id = fields.Many2one('ir.attachment', string='Color Attachment Ref', copy=False)
 
 
 class LaborCost(models.Model):
@@ -550,12 +566,14 @@ class PaymentRestrictionRule(models.Model):
         ('amount', 'Order Total'),
         ('grade', 'Grade'),
         ('margin', 'Margin'),
+        ('promotions', 'Promotions'),
     ])
     min_order_total = fields.Integer("Minimum Order Total")
     grade = fields.Char('Grade')
     min_margin_amount = fields.Integer("Minimum Margin Amount")
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company.id)
     promotion_code_ids = fields.Many2many('otl.promotion.code', string='Restricted Promotions')
+    promos_ids = fields.Many2many('otl.promotion.code', relation='conditional_promotion_rel',column1='restriction_rule_id',column2='promotion_id', string='Promotions')
     discount_code_ids = fields.Many2many('team.monthly.promo', string='Restricted Discounts')
 
 

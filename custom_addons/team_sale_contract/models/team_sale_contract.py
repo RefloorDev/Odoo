@@ -61,7 +61,7 @@ class TeamContractQuestions(models.Model):
     def _compute_extra_price(self):
         for record in self:
             extra_price = 0
-            if record.question_id and record.room_measurement_id and record.answer_data:
+            if record.question_id and record.room_measurement_id and record.answer_data and not record.calculate_order_wise:
                 question = record.question_id
                 if question.code == 'CurrentCoveringType':
                     record.extra_price = 0
@@ -131,6 +131,8 @@ class TeamContractQuestions(models.Model):
     room_measurement_id = fields.Many2one('team.contract.room.measurement.line', 'Custom room measurement Id')
     extra_price = fields.Float('Extra Price Required', compute='_compute_extra_price')
     amount_included = fields.Float('Included Amount', help='It denotes the amount which already included in the quote')
+    calculate_order_wise = fields.Boolean("Calculate Based on Order", default=False,
+                                          help='If checked, amount should calculate based on total order not based on room.')
 
     @api.model
     def create(self, vals):
@@ -835,3 +837,66 @@ class TeamCreditApplication(models.Model):
         return True
 
 
+class VersatileCreditApplication(models.Model):
+    _name = 'otl.versatile.credit.application'
+    _description = "Versatile Credit Application"
+    _inherit = "mail.thread"
+    _order = "event_date desc"
+
+    @api.depends('approved_amount_cent')
+    def _compute_approved_amount(self):
+        for record in self:
+            approved_amount = 0
+            if record.approved_amount_cent:
+                approved_amount = record.approved_amount_cent/100.0
+            record.approved_amount = approved_amount
+
+
+    name = fields.Char("Reference", default='/', copy=False)
+    appointment_id = fields.Many2one('team.customer.appointment', string='Appointment', tracking=True)
+    webhook_event_id = fields.Char('Versatile Reference', tracking=True)
+    event_type = fields.Char('Event Type', tracking=True)
+    event_date = fields.Datetime("Event Time")
+    application_id = fields.Char('Application Reference', tracking=True)
+    account_id = fields.Char('Account ID')
+    provider = fields.Char("Provider")
+    session_id = fields.Char("Session ID")
+    provider_reference = fields.Char('Provider Reference Number')
+    status = fields.Char("Status")
+    submitted_date = fields.Datetime("Submitted Time")
+    approved_amount_cent = fields.Float("Approved Amount in Cents")
+    approved_amount = fields.Monetary("Approved Amount", compute='_compute_approved_amount', store=True)
+    ext_customer_id = fields.Char("External Customer ID")
+    applicant_first_name = fields.Char("Applicant First Name")
+    applicant_last_name = fields.Char("Applicant Last Name")
+    co_applicant_first_name = fields.Char("Co-Applicant First Name")
+    co_applicant_last_name = fields.Char("Co-Applicant Last Name")
+    error_line = fields.One2many('otl.versatile.error.line', 'credit_application_id', string="Errors")
+    company_id = fields.Many2one('res.company', string='Company', requires=True, default=lambda self: self.env.company)
+    user_id = fields.Many2one('res.users', string='Sales Person', related='appointment_id.user_id', store=True)
+    currency_id = fields.Many2one(related="company_id.currency_id", string="Currency", readonly=True, store=True)
+
+    @api.model
+    def create(self, vals):
+        if vals.get('name', '/') == '/':
+            seq_date = None
+            if 'submitted_date' in vals:
+                seq_date = fields.Datetime.context_timestamp(self,
+                                                             fields.Datetime.to_datetime(vals['event_date']))
+            if 'company_id' in vals:
+                vals['name'] = self.env['ir.sequence'].with_context(force_company=vals['company_id']).next_by_code(
+                    'versatile.credit.application', sequence_date=seq_date) or _('/')
+            else:
+                vals['name'] = self.env['ir.sequence'].next_by_code('versatile.credit.application',
+                                                                    sequence_date=seq_date) or _('/')
+
+        return super(VersatileCreditApplication, self).create(vals)
+
+
+class VersatileErrorLine(models.Model):
+    _name = 'otl.versatile.error.line'
+    _description = "Versatile Error Line"
+
+    name = fields.Char('Error')
+    credit_application_id = fields.Many2one('otl.versatile.credit.application', 'Versatile Credit Application',
+                                            ondelete='cascade')

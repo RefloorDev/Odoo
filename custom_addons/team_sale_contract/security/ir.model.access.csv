@@ -103,3 +103,10 @@ access_installation_crew_line_manager,access.installation.crew.user,model_otl_in
 access_otl_appointment_result_reason,access.otl.appointment.result.reason,model_otl_appointment_result_reason,base.group_user,1,0,0,0
 access_otl_appointment_result_reason_manager,access.otl.appointment.result.reason,model_otl_appointment_result_reason,sales_team.group_sale_manager,1,1,1,1
 access_otl_appointment_result_reason_user,access.otl.appointment.result.reason,model_otl_appointment_result_reason,sales_team.group_sale_salesman,1,1,0,0
+
+access_versatile_credit_application_user,versatile.credit.application.user,model_otl_versatile_credit_application,sales_team.group_sale_salesman,1,0,0,0
+access_versatile_credit_application_manager,versatile.credit.application.manager,model_otl_versatile_credit_application,sales_team.group_sale_salesman_all_leads,1,1,1,1
+
+access_versatile_error_line_user,versatile.error.line.user,model_otl_versatile_error_line,sales_team.group_sale_salesman,1,0,0,0
+access_versatile_error_line_manager,versatile.error.line.manager,model_otl_versatile_error_line,sales_team.group_sale_salesman_all_leads,1,1,1,1
+
