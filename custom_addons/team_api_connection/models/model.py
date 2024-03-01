@@ -715,9 +715,11 @@ class TeamCustomerAppointment(models.Model):
         what_happened_notes = data.get('what_happened_notes', '')
         whats_next_notes = data.get('whats_next_notes', '')
         appointment_id = data.get('appointment_id', '')
+        last_price_quoted_value = data.get('last_price_quoted_value') if 'last_price_quoted_value' in data else 0
         notes = {
             'whats_next_notes': whats_next_notes,
             'what_happened_notes': what_happened_notes,
+            'last_price_quoted_value': last_price_quoted_value,
         }
         sale_order = self.env['sale.order'].search([('appointment_id', '=', int(appointment_id))], limit=1)
         if sale_order and result:
@@ -747,6 +749,7 @@ class TeamCustomerAppointment(models.Model):
                     'state': 'done',
                     'what_happened_notes': what_happened_notes,
                     'whats_next_notes': whats_next_notes,
+                    'last_price_quoted_value': last_price_quoted_value, 
                 })
                 response_result = sale_order.set_appointment_result_api(status=result, notes=notes)
                 _logger.info('-------i360 SetAppointmentResult Response: %s' % (response_result))
@@ -837,6 +840,7 @@ class TeamCustomerAppointment(models.Model):
                     'state': 'done',
                     'what_happened_notes': what_happened_notes,
                     'whats_next_notes': whats_next_notes,
+                    'last_price_quoted_value': last_price_quoted_value,
                     'start_sync_to_i360': True,
                 })
                 response_result = sale_order_ref.set_appointment_result_api(status=result, notes=notes)

@@ -1650,11 +1650,10 @@ class SaleOrder(models.Model):
                             multi_part_data = MultipartEncoder(
                                 fields={
                                     "SaleID": quote_id or '',
-                                    "File": ('WorkOrder.pdf', open(full_path, 'rb'), document.mimetype),
+                                    "WorkOrderFile": ('WorkOrder.pdf', open(full_path, 'rb'), document.mimetype),
                                     "ContractDate": sale_order.date_order.strftime('%m/%d/%Y')
                                 }
                             )
-
                             headers = {
                                 'Content-type': multi_part_data.content_type,
 
@@ -1665,6 +1664,8 @@ class SaleOrder(models.Model):
                                                 timeout=TIMEOUT, verify=configurations.enable_ssl)
                             req.raise_for_status()
                             content = req.json()
+                            _logger.info('Document Upload-------content--%s', content)
+
                             _logger.error('Attaching Contract Document Finished of sale %s: %s' %(sale_order.id, content))
                             if content.get('Result', False) == 'Success':
                                 document.sudo().write({'improveit_id': content.get('Result', False)})
@@ -1677,6 +1678,55 @@ class SaleOrder(models.Model):
             # raise self.env['res.config.settings'].get_config_warning(error_msg)
             pass
             _logger.error("******--------Error in add_contract_document_file---------********")
+            result.update({"success": "false"})
+        return result
+
+    def action_sync_contract_doc_on_i360(self):
+        try:
+            for sale_order in self:
+                result = {
+                    "success": "true",
+                    "errors": []
+                }
+                if sale_order.quote_id or sale_order.excluded_quote_id:
+                    quote_id = sale_order.quote_id
+                    if not quote_id:
+                        quote_id = sale_order.excluded_quote_id
+                    configurations = self.env['team.improveit.configuration'].search(
+                        [('api_type', '=', 'zapier'), ('section', '=', 'SaleAddAttachment')], limit=1)
+                    
+                    request_url = configurations.token_url
+                    if sale_order.contract_doc_attachment_id:
+                        attachment = sale_order.contract_doc_attachment_id
+                        full_path = attachment._full_path(attachment.store_fname)
+                        multi_part_data = MultipartEncoder(
+                            fields={
+                                "SaleId": quote_id or '',
+                                "File": ('WorkOrder.pdf', open(full_path, 'rb'), attachment.mimetype)
+                            }
+                        )
+                        headers = {
+                            'Content-type': multi_part_data.content_type,
+
+                        }
+                        _logger.info(multi_part_data)
+                        req = requests.post(request_url, data=multi_part_data, headers=headers,
+                                            timeout=TIMEOUT, verify=configurations.enable_ssl)
+                        req.raise_for_status()
+                        content = req.json()
+                        if isinstance(content, str):
+                            content = json.loads(content)
+ 
+                        _logger.error('Uploading Contract Document Finished of sale %s: %s: %s' %(sale_order.id, content ,str(type(content))))
+                        if content.get('success', '') == "true":
+                            attachment.sudo().write({'improveit_id': content['id'] or ''})
+                            _logger.info("/n Contract Document uploaded Sucessfully")
+                        if content.get('success', '') == "false":
+                            _logger.error("/n Error during upload Contract Document")
+                            result.update({"success": "false"})
+        except Exception as e:
+            pass
+            _logger.error("******--------Error in add_contract_document_file---------********: %s",str(e))
             result.update({"success": "false"})
         return result
 
@@ -2508,6 +2558,7 @@ class SaleOrder(models.Model):
                             "WhatHappenedNotes": notes.get('what_happened_notes', ''),
                             "WhatsNextNotes": notes.get('whats_next_notes', ''),
                             "ResultDetail": notes.get('result_details', ''),
+                            "LastPriceQuotedValue": notes.get('last_price_quoted_value', 0),
                         })
                     headers = {
                         'Content-type': 'application/json',

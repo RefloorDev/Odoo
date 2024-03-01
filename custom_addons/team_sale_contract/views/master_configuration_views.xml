@@ -569,12 +569,20 @@
                                 <field name="name" required="True"/>
                             </h1>
                         </div>
-                        <group col="4">
-                            <field name="description"/>
-                            <field name="interest_rate" digits="[12,4]"/>
-                            <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
-                            <field name="active" invisible="1"/>
-                            <field name="down_payment_message"/>
+                        <button name="action_sync" string="Sync Data" type="object"/>
+                        <group>
+                            <group>
+                                <field name="description"/>
+                                <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                                <field name="active" invisible="1"/>
+                                <field name="down_payment_message"/>
+                                <field name="start_date" attrs="{'invisible': [('name', '=', 'Cash')]}"/>
+                                <field name="end_date" attrs="{'invisible': [('name', '=', 'Cash')]}"/>
+                            </group>
+
+                            <group>
+                                <field name="interest_rate" digits="[12,4]"/>
+                            </group>
                         </group>
                     </sheet>
                 </form>

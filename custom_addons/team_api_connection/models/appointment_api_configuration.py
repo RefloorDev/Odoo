@@ -913,7 +913,9 @@ class TeamImproveitConfiguration(models.Model):
                 for child_of_root in root:
                     finance_dict = {}
                     for child in child_of_root:
-                        finance_dict[child.tag] = child.text if child.text is not None else 'false'
+                        if child.text is not None:
+                            finance_dict[child.tag] = child.text
+                            
                     payment_list.append(finance_dict)
                 for payment_option in payment_list:
                     if payment_option.get('Name',False):
@@ -921,6 +923,12 @@ class TeamImproveitConfiguration(models.Model):
                         down_payment_message = payment_option.get('Down_Payment_Message__c', '')
                         if down_payment_message == 'false':
                             down_payment_message = ''
+                        start_date = payment_option.get('Start_Date__c') if payment_option.get('Start_Date__c') else False
+                        end_date = payment_option.get('End_Date__c') if payment_option.get('End_Date__c') else False
+                        if start_date:
+                            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                        if end_date:
+                            end_date = datetime.strptime(end_date, '%Y-%m-%d')
                         duplicate_payment_option = self.env['team.downpayment.option'].with_context(active_test=False).search([('name','=',payment_option.get('Name',False))],limit=1)
                         if not duplicate_payment_option:
                             payment_dict = {
@@ -933,10 +941,13 @@ class TeamImproveitConfiguration(models.Model):
                                     'balance_due':payment_option.get('Balance_Due__c', False),
                                     'sequence': payment_option.get('Display_Order__c', False),
                                     'payment_info': payment_option.get('Payment_Info__c', ''),
-                                    'down_payment_message': down_payment_message
+                                    'down_payment_message': down_payment_message,
+                                    'start_date': start_date,
+                                    'end_date': end_date,
                                 }
                             self.env['team.downpayment.option'].create(payment_dict)
                         if duplicate_payment_option and duplicate_payment_option.active == True:
+                            
                             payment_dict = {
                                 'name': payment_option.get('Name', False),
                                 'description': payment_option.get('Description__c', False),
@@ -947,7 +958,9 @@ class TeamImproveitConfiguration(models.Model):
                                 'balance_due': payment_option.get('Balance_Due__c', False),
                                 'payment_info': payment_option.get('Payment_Info__c', ''),
                                 'down_payment_message': down_payment_message,
-                                'sequence': payment_option.get('Display_Order__c', False)
+                                'sequence': payment_option.get('Display_Order__c', False),
+                                'start_date': start_date,
+                                'end_date': end_date,
                             }
                             duplicate_payment_option.write(payment_dict)
                         if duplicate_payment_option and duplicate_payment_option.active == False:
@@ -962,6 +975,8 @@ class TeamImproveitConfiguration(models.Model):
                                 'balance_due': payment_option.get('Balance_Due__c', False),
                                 'sequence': payment_option.get('Display_Order__c', False),
                                 'down_payment_message': down_payment_message,
+                                'start_date': start_date,
+                                'end_date': end_date,
                             }
                             duplicate_payment_option.write(payment_dict)
                 unused_payment_options = self.env['team.downpayment.option'].search([('name', 'not in', payment_options_list)])

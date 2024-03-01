@@ -631,6 +631,8 @@ class DownPaymentOption(models.Model):
                 'Payment_Info__c': payment_options.payment_info or '',
                 'sequence': payment_options.sequence or 0,
                 'down_payment_message': payment_options.down_payment_message or '',
+                'start_date': payment_options.start_date if payment_options.start_date else '',
+                'end_date': payment_options.end_date if payment_options.end_date else '',
             }
             payment_list.append(payment_options_dict)
         return payment_list

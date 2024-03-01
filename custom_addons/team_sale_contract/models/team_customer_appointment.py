@@ -175,6 +175,7 @@ class TeamCustomerAppointment(models.Model):
     app_version_id = fields.Many2one('otl.sales.app.version', 'App Version')
     make_payment_failure = fields.Boolean('Set Payment as Failure')
     resulting_reason_id = fields.Many2one('otl.appointment.result.reason', string="Appointment Result Details", copy=False)
+    last_price_quoted_value = fields.Float("Last Price Quoted Value", copy=False)
 
     @api.onchange('country_id')
     def _onchange_country_id(self):

@@ -252,6 +252,8 @@ class DownPaymentOption(models.Model):
     sequence = fields.Float(string="Display_Order__c")
     payment_info = fields.Text('Payment_Info__c')
     down_payment_message = fields.Char('Down Payment Message')
+    start_date = fields.Date("Start Date")
+    end_date = fields.Date("End Date")
 
 
 class TeamMonthlyPromo(models.Model):
