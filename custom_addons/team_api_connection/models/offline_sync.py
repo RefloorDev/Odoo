@@ -878,6 +878,7 @@ class TeamCustomerAppointment(models.Model):
                 'flexible_installation':  flexible_installation,
                 'timezone': data.get('timezone', ''),
                 'app_version_id':  app_version_id,
+                'last_price_quoted_value': data.get('last_price_quoted_value') if 'last_price_quoted_value' in data else 0,
             }
             if completed_date_utc:
                 vals.update({'completed_date': completed_date_utc})

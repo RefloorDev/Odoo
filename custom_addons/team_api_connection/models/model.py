@@ -4993,6 +4993,7 @@ class SaleOrder(models.Model):
                                 'what_happened_notes': appointment.what_happened_notes,
                                 'whats_next_notes': appointment.whats_next_notes,
                             }
+                        notes['last_price_quoted_value'] = appointment.last_price_quoted_value
                         if appointment.resulting_reason_id:
                             notes.update({
                                 'result_details': appointment.resulting_reason_id.name

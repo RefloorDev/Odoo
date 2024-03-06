@@ -569,7 +569,6 @@
                                 <field name="name" required="True"/>
                             </h1>
                         </div>
-                        <button name="action_sync" string="Sync Data" type="object"/>
                         <group>
                             <group>
                                 <field name="description"/>
