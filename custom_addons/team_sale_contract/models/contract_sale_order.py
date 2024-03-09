@@ -1765,6 +1765,8 @@ class SaleOrder(models.Model):
                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
                         req.raise_for_status()
                         content = req.json()
+                        if isinstance(content, str):
+                            content = json.loads(content)
                         _logger.error(
                             'Attaching Credit Card Document Finished of sale %s: %s' % (sale_order.id, content))
                         if content.get('success', '') == "true":
@@ -1833,6 +1835,8 @@ class SaleOrder(models.Model):
                                 req = requests.post(request_url, data=multi_part_data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
                                 req.raise_for_status()
                                 content = req.json()
+                                if isinstance(content, str):
+                                    content = json.loads(content)
                                 _logger.error('Attaching Room Shape Drawing Finished of sale %s: %s' %(sale_order.id, content))
                                 if content.get('success', '') == "true":
                                     attach.sudo().write({'improveit_id': content['id'] or ''})
@@ -1866,6 +1870,8 @@ class SaleOrder(models.Model):
                                                         timeout=TIMEOUT, verify=configurations.enable_ssl)
                                     req.raise_for_status()
                                     content = req.json()
+                                    if isinstance(content, str):
+                                        content = json.loads(content)
                                     _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
                                     if content.get('success', '') == "true":
                                         attachment.sudo().write({'improveit_id': content['id'] or ''})
@@ -1900,6 +1906,8 @@ class SaleOrder(models.Model):
                                                         timeout=TIMEOUT, verify=configurations.enable_ssl)
                                     req.raise_for_status()
                                     content = req.json()
+                                    if isinstance(content, str):
+                                        content = json.loads(content)
                                     _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
                                     if content.get('success', '') == "true":
                                         attachment.sudo().write({'improveit_id': content['id'] or ''})
@@ -1938,6 +1946,8 @@ class SaleOrder(models.Model):
                                                     timeout=TIMEOUT, verify=configurations.enable_ssl)
                                 req.raise_for_status()
                                 content = req.json()
+                                if isinstance(content, str):
+                                    content = json.loads(content)
                                 _logger.error('Attached Snapshot of sale %s: %s' %(sale_order.id, content))
                                 if content.get('success', '') == "true":
                                     attachment.sudo().write({'improveit_id': content['id'] or ''})

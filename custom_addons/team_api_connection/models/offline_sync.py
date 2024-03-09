@@ -1933,14 +1933,14 @@ class TeamCustomerAppointment(models.Model):
                                 sync_log.create({
                                     'appointment_id': appointment.id,
                                     'response': result,
-                                    'name': 'Contract Document',
+                                    'name': 'Send Contract Email To Customer',
                                 })
                             else:
                                 sync_log.create({
                                     'appointment_id': appointment.id,
                                     'response': result,
                                     'state': 'failed',
-                                    'name': 'Contract Document',
+                                    'name': 'Send Contract Email To Customer',
                                 })
                     if not sale_order.other_files_uploaded:
                         if sale_order.state in ['sale', 'done'] or sale_order.appointment_result == 'Sold':

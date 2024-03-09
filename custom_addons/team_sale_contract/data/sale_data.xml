@@ -3,7 +3,7 @@
     <data noupdate="1">
         <!-- Button in action menu -->
         <record id="model_action_sync_contract_doc_on_i360" model="ir.actions.server">
-            <field name="name">Contract document upload to i360</field>
+            <field name="name">Contract Document Upload To i360</field>
             <field name="model_id" ref="sale.model_sale_order"/>
             <field name="binding_model_id" ref="sale.model_sale_order"/>
             <field name="state">code</field>
@@ -11,7 +11,7 @@
         </record>
 
         <record id="model_action_send_mail_contarct_doc" model="ir.actions.server">
-            <field name="name">Send Contract email to customer</field>
+            <field name="name">Send Contract Email To Customer</field>
             <field name="model_id" ref="sale.model_sale_order"/>
             <field name="binding_model_id" ref="sale.model_sale_order"/>
             <field name="state">code</field>

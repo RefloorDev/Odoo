@@ -5149,20 +5149,22 @@ class SaleOrder(models.Model):
                                         {'contract_doc_attachment_id': contract_doc_attachment.id,
                                          'document_signed': True})
                         if contract_doc_attachment and not sale_order.contract_document_uploaded:
+                            contract_doc_upload_response = sale_order.action_sync_contract_doc_on_i360()
+                            _logger.info('-------i360 contract_doc_upload_response Response: %s' % (contract_doc_upload_response))
                             result = sale_order.add_contract_document_file()
                             if result.get('success', '') == 'true':
                                 sale_order_vals.update({'contract_document_uploaded': True})
                                 sync_log.create({
                                     'appointment_id': appointment.id,
                                     'response': result,
-                                    'name': 'Contract Document',
+                                    'name': 'Send Contract Email To Customer',
                                 })
                             else:
                                 sync_log.create({
                                     'appointment_id': appointment.id,
                                     'response': result,
                                     'state': 'failed',
-                                    'name': 'Contract Document',
+                                    'name': 'Send Contract Email To Customer',
                                 })
                     if not sale_order.other_files_uploaded:
                         if sale_order.state in ['sale', 'done'] or sale_order.appointment_result == 'Sold':
