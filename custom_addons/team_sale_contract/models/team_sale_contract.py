@@ -116,6 +116,23 @@ class TeamContractQuestions(models.Model):
                         else:
                             net_answer_data = (answer_data - amount_included) > 0 and answer_data - amount_included or 0
                             extra_price = net_answer_data * float(amount)
+                
+                if question.code == 'StairCoverRisers' and answer_data == 'White Risers':
+                    """
+                        This part is used for handle White Risers case.
+                    """
+                    answer_line = question.labels_ids.filtered(lambda x: x.value == answer_data)
+                    stair_count = 0
+                    if answer_line and answer_line.answer_score:
+                        stair_count_line = self.search([
+                            ('appointment_id', '=', record.appointment_id.id),
+                            ('question_id.code', '=', 'StairCount')
+                        ], limit=1)
+                        if stair_count_line:
+                            stair_count = int(stair_count_line.answer_data)  
+                    extra_price = answer_line.answer_score * stair_count
+                    
+
             record.extra_price = extra_price
 
     name = fields.Text('Description',required=False)
