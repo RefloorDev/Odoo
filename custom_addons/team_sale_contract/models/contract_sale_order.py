@@ -1682,6 +1682,7 @@ class SaleOrder(models.Model):
         return result
 
     def action_sync_contract_doc_on_i360(self):
+        sync_log = self.env['otl.appointment.sync.log']
         try:
             for sale_order in self:
                 result = {
@@ -1721,7 +1722,19 @@ class SaleOrder(models.Model):
                         if content.get('success', '') == "true":
                             attachment.sudo().write({'improveit_id': content['id'] or ''})
                             _logger.info("/n Contract Document uploaded Sucessfully")
+                            sync_log.create({
+                                    'appointment_id': sale_order.appointment_id.id,
+                                    'response': content,
+                                    'state': 'success',
+                                    'name': 'Contract Document Upload To i360 ',
+                                })
                         if content.get('success', '') == "false":
+                            sync_log.create({
+                                'appointment_id': sale_order.appointment_id.id,
+                                'response': content,
+                                'state': 'failed',
+                                'name': 'Contract Document Upload To i360 ',
+                            })
                             _logger.error("/n Error during upload Contract Document")
                             result.update({"success": "false"})
         except Exception as e:

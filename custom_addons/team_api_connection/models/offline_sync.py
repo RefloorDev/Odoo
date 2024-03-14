@@ -1927,6 +1927,8 @@ class TeamCustomerAppointment(models.Model):
                                         {'contract_doc_attachment_id': contract_doc_attachment.id,
                                          'document_signed': True})
                         if contract_doc_attachment and not sale_order.contract_document_uploaded:
+                            contract_doc_upload_response = sale_order.action_sync_contract_doc_on_i360()
+                            _logger.info('-------i360 salesapp call contract_doc_upload_response Response: %s' % (contract_doc_upload_response))
                             result = sale_order.add_contract_document_file()
                             if result.get('success', '') == 'true':
                                 sale_order_vals.update({'contract_document_uploaded': True})
