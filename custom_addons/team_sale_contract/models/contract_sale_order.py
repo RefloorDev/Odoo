@@ -295,6 +295,8 @@ class SaleOrder(models.Model):
     min_sale_price = fields.Float('Minimum Sale Price', default=0)
     available_installation_line = fields.One2many('otl.available.installation.line', 'order_id', string='Available Installtion Dates')
     additional_comment_synced = fields.Boolean("Synced Additional Comments", default=False)
+    email_sent = fields.Boolean('Email Sent', default=False)
+
 
     def write(self, vals):
         _logger.info('inside sale order-%s write: values -  %s'%(self and self[0].name or '', vals))
@@ -1629,6 +1631,26 @@ class SaleOrder(models.Model):
             _logger.error("******--------Error in add_quote_id_file---------********")
             result.update({"success": "false"})
         return result
+    
+    def action_send_contract_email(self):
+        sync_log = self.env['otl.appointment.sync.log']
+        for sale_order in self:
+            sale_order.email_sent = False
+            result = sale_order.add_contract_document_file()
+            if result.get('success', '') == 'true':
+                sync_log.create({
+                    'appointment_id': sale_order.appointment_id.id,
+                    'response': result,
+                    'name': 'Send Contract Email To Customer',
+                })
+            else:
+                sync_log.create({
+                    'appointment_id': sale_order.appointment_id.id,
+                    'response': result,
+                    'state': 'failed',
+                    'name': 'Send Contract Email To Customer',
+                })
+        return
 
     def add_contract_document_file(self):
         result = {
@@ -1645,7 +1667,7 @@ class SaleOrder(models.Model):
                     request_url = configurations.token_url
                     if sale_order.contract_doc_attachment_id:
                         document = sale_order.contract_doc_attachment_id
-                        if document and document.store_fname and not document.improveit_id:
+                        if document and document.store_fname and not sale_order.email_sent:
                             full_path = document._full_path(document.store_fname)
                             multi_part_data = MultipartEncoder(
                                 fields={
@@ -1668,7 +1690,8 @@ class SaleOrder(models.Model):
 
                             _logger.error('Attaching Contract Document Finished of sale %s: %s' %(sale_order.id, content))
                             if content.get('Result', False) == 'Success':
-                                document.sudo().write({'improveit_id': content.get('Result', False)})
+                                sale_order.write({'email_sent': True})
+                                #document.sudo().write({'improveit_id': content.get('Result', False)})
                             else:
                                 _logger.error("******--------Error in add_contract_document_file---------********")
                                 result.update({"success": "false"})

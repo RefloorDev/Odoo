@@ -1926,24 +1926,28 @@ class TeamCustomerAppointment(models.Model):
                                     sale_order.write(
                                         {'contract_doc_attachment_id': contract_doc_attachment.id,
                                          'document_signed': True})
-                        if contract_doc_attachment and not sale_order.contract_document_uploaded:
-                            contract_doc_upload_response = sale_order.action_sync_contract_doc_on_i360()
-                            _logger.info('-------i360 salesapp call contract_doc_upload_response Response: %s' % (contract_doc_upload_response))
-                            result = sale_order.add_contract_document_file()
-                            if result.get('success', '') == 'true':
-                                sale_order_vals.update({'contract_document_uploaded': True})
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': result,
-                                    'name': 'Send Contract Email To Customer',
-                                })
-                            else:
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': result,
-                                    'state': 'failed',
-                                    'name': 'Send Contract Email To Customer',
-                                })
+                        if contract_doc_attachment:
+                            if not sale_order.contract_document_uploaded or not contract_doc_attachment.improveit_id:
+                                result = sale_order.action_sync_contract_doc_on_i360()
+                                _logger.info('-------i360 salesapp call contract_doc_upload_response Response: %s' % (result))
+                                if result.get('success', '') == 'true':
+                                    sale_order_vals.update({'contract_document_uploaded': True})
+
+                            if not sale_order.email_sent:
+                                result = sale_order.add_contract_document_file()
+                                if result.get('success', '') == 'true':
+                                    sync_log.create({
+                                        'appointment_id': appointment.id,
+                                        'response': result,
+                                        'name': 'Send Contract Email To Customer',
+                                    })
+                                else:
+                                    sync_log.create({
+                                        'appointment_id': appointment.id,
+                                        'response': result,
+                                        'state': 'failed',
+                                        'name': 'Send Contract Email To Customer',
+                                    })
                     if not sale_order.other_files_uploaded:
                         if sale_order.state in ['sale', 'done'] or sale_order.appointment_result == 'Sold':
                             result = sale_order.add_sale_id_file()
