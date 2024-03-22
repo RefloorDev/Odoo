@@ -85,6 +85,20 @@
     text-align: center;
 //     margin-left: 10px; margin-right: 10px;
 }
+.o_sign_save_banner {
+
+    @include o-position-absolute($bottom: 0, $left: 0);
+    width: 100%;
+    padding: 10px;
+    height: 10%;
+
+
+    background-color: rgba(100, 100, 100, 0);
+    color: white;
+    font-size: 1.25em;
+    text-align: center;
+//     margin-left: 10px; margin-right: 10px;
+}
 
 .modal.o_sign_thank_you_dialog {
     border: none;

@@ -19,6 +19,8 @@ class ResConfigSettings(models.TransientModel):
     enable_api_queue_system = fields.Boolean('Enable API Queue System', default=False)
     enable_additional_comment_api = fields.Boolean('Enable Additional Comments API', default=False)
     installer_date_range_limit = fields.Integer("Installer Date Range Limit", default=30)
+    enable_geolocation = fields.Boolean('Enable Geolocation Tracking', default=False)
+    geolocation_radius_limit = fields.Integer("Geolocation Radius Limit")
 
     @api.model
     def get_values(self):
@@ -38,6 +40,8 @@ class ResConfigSettings(models.TransientModel):
         enable_api_queue_system = str(params.get_param('enable_api_queue_system', default=False))
         enable_additional_comment_api = str(params.get_param('enable_additional_comment_api', default=False))
         installer_date_range_limit = params.get_param('installer_date_range_limit',default=30)
+        enable_geolocation = str(params.get_param('enable_geolocation', default=False))
+        geolocation_radius_limit = params.get_param('geolocation_radius_limit', default=150)
 
 
         res.update({
@@ -53,7 +57,9 @@ class ResConfigSettings(models.TransientModel):
             'payment_plan_id': int(payment_plan_id),
             'enable_api_queue_system': eval(enable_api_queue_system),
             'enable_additional_comment_api': eval(enable_additional_comment_api),
-            'installer_date_range_limit':int(installer_date_range_limit),
+            'installer_date_range_limit': int(installer_date_range_limit),
+            'enable_geolocation': eval(enable_geolocation),
+            'geolocation_radius_limit': int(geolocation_radius_limit),
         })
         return res
 
@@ -72,4 +78,6 @@ class ResConfigSettings(models.TransientModel):
         self.env['ir.config_parameter'].sudo().set_param("enable_api_queue_system", self.enable_api_queue_system or 'False')
         self.env['ir.config_parameter'].sudo().set_param("enable_additional_comment_api", self.enable_additional_comment_api or 'False')
         self.env['ir.config_parameter'].sudo().set_param("installer_date_range_limit",self.installer_date_range_limit)
+        self.env['ir.config_parameter'].sudo().set_param("enable_geolocation", self.enable_geolocation or 'False')
+        self.env['ir.config_parameter'].sudo().set_param("geolocation_radius_limit",self.geolocation_radius_limit)
 

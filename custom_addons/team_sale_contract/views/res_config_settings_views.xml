@@ -192,7 +192,31 @@
                         </div>
                     </div>
                 </div>
-
+                <div class="col-12 col-lg-6 o_setting_box" id="geolocation_radius_limit_setting" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Geolocation Radius</span>
+                        <div class="text-muted">
+                            Geolocation radius limit to determine arrival and departure time from the appointment venue.
+                        </div>
+                        <div class="row mt16">
+                            <label for="geolocation_radius_limit" string="Geolocation Radius" class="col-lg-4 o_light_label"/>
+                            <field name="geolocation_radius_limit" class="oe_inline"/> Meters
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6 o_setting_box" id="enable_geolocation_setting"
+                     groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Enable Geolocation Tracking</span>
+                        <div class="text-muted">
+                            Enable geolocation tracking to get saleperson arrival and departure time in appointment venue.
+                        </div>
+                        <div class="row mt16">
+                            <label for="enable_geolocation" string="Enable Geolocation Tracking" class="col-lg-4 o_light_label"/>
+                            <field name="enable_geolocation" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
 
             </xpath>
         </field>

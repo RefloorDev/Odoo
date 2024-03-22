@@ -29,7 +29,7 @@ class SignLog(models.Model):
 
     latitude = fields.Float(digits=(10, 7), groups="otl_document_sign.group_sign_manager")
     longitude = fields.Float(digits=(10, 7), groups="otl_document_sign.group_sign_manager")
-    ip = fields.Char("IP address of the visitor", required=True, groups="otl_document_sign.group_sign_manager")
+    ip = fields.Char("IP address of the visitor", required=False, groups="otl_document_sign.group_sign_manager")
     log_hash = fields.Char(string="Inalterability Hash", readonly=True, copy=False)
     token = fields.Char(string="User token")
 

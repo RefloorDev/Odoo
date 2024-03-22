@@ -61,16 +61,9 @@ class ResCompany(models.Model):
     versatile_url = fields.Char("Versatile URL")
     versatile_api_key = fields.Char("Versatile API Key")
     versatile_entity_key = fields.Char("Versatile Entity Key")
+    external_application_line = fields.One2many('otl.external.application.credentials', 'company_id', string="External Application Credentials")
 
-    def action_generate_versatile_user_token(self):
-        for record in self:
-            if record.versatile_user_id:
-                action = self.env.ref('team_sale_contract.action_generate_token').read()[0]
-                action['context'] = {
-                    "default_user_id": record.versatile_user_id.id,
-                    "default_token": record.versatile_user_id.token_name or "",
-                }
-                return action
+
 
 
     @api.onchange('auto_logout_time')
@@ -136,6 +129,30 @@ class ResCompany(models.Model):
                         if room_measure.shape_image_id:
                             room_measure.shape_image_id.unlink()
             self.env['ir.autovacuum'].sudo().power_on()
+
+
+class ExternalApplicationCredentials(models.Model):
+    _name = 'otl.external.application.credentials'
+    _description = 'External Application Credentials'
+
+    name = fields.Char("Reference")
+    user_id = fields.Many2one('res.users', string="User")
+    company_id = fields.Many2one('res.company', string="Company")
+    url = fields.Char("URL")
+    api_key = fields.Char("API Key")
+    entity_key = fields.Char("Entity Key")
+    provider = fields.Selection([('versatile', 'Versatile'), ('hunter', 'Hunter')], string='Provider',
+                                        default='versatile', required=True)
+
+    def action_generate_versatile_user_token(self):
+        for record in self:
+            if record.user_id:
+                action = self.env.ref('team_sale_contract.action_generate_token').read()[0]
+                action['context'] = {
+                    "default_user_id": record.user_id.id,
+                    "default_token": record.user_id.token_name or "",
+                }
+                return action
 
 
 class FloorColor(models.Model):
@@ -252,6 +269,8 @@ class DownPaymentOption(models.Model):
     sequence = fields.Float(string="Display_Order__c")
     payment_info = fields.Text('Payment_Info__c')
     down_payment_message = fields.Char('Down Payment Message')
+    start_date = fields.Date("Start Date")
+    end_date = fields.Date("End Date")
 
 
 class TeamMonthlyPromo(models.Model):
