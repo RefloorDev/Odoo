@@ -116,6 +116,23 @@ class TeamContractQuestions(models.Model):
                         else:
                             net_answer_data = (answer_data - amount_included) > 0 and answer_data - amount_included or 0
                             extra_price = net_answer_data * float(amount)
+                
+                if question.code == 'StairCoverRisers' and answer_data == 'White Risers':
+                    """
+                        This part is used for handle White Risers case.
+                    """
+                    answer_line = question.labels_ids.filtered(lambda x: x.value == answer_data)
+                    stair_count = 0
+                    if answer_line and answer_line.answer_score:
+                        stair_count_line = self.search([
+                            ('appointment_id', '=', record.appointment_id.id),
+                            ('question_id.code', '=', 'StairCount')
+                        ], limit=1)
+                        if stair_count_line:
+                            stair_count = int(stair_count_line.answer_data)  
+                    extra_price = answer_line.answer_score * stair_count
+                    
+
             record.extra_price = extra_price
 
     name = fields.Text('Description',required=False)
@@ -837,9 +854,9 @@ class TeamCreditApplication(models.Model):
         return True
 
 
-class VersatileCreditApplication(models.Model):
+class ExternalCreditApplication(models.Model):
     _name = 'otl.versatile.credit.application'
-    _description = "Versatile Credit Application"
+    _description = "External Credit Application"
     _inherit = "mail.thread"
     _order = "event_date desc"
 
@@ -854,7 +871,7 @@ class VersatileCreditApplication(models.Model):
 
     name = fields.Char("Reference", default='/', copy=False)
     appointment_id = fields.Many2one('team.customer.appointment', string='Appointment', tracking=True)
-    webhook_event_id = fields.Char('Versatile Reference', tracking=True)
+    webhook_event_id = fields.Char('Reference', tracking=True)
     event_type = fields.Char('Event Type', tracking=True)
     event_date = fields.Datetime("Event Time")
     application_id = fields.Char('Application Reference', tracking=True)
@@ -872,9 +889,11 @@ class VersatileCreditApplication(models.Model):
     co_applicant_first_name = fields.Char("Co-Applicant First Name")
     co_applicant_last_name = fields.Char("Co-Applicant Last Name")
     error_line = fields.One2many('otl.versatile.error.line', 'credit_application_id', string="Errors")
-    company_id = fields.Many2one('res.company', string='Company', requires=True, default=lambda self: self.env.company)
+    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     user_id = fields.Many2one('res.users', string='Sales Person', related='appointment_id.user_id', store=True)
     currency_id = fields.Many2one(related="company_id.currency_id", string="Currency", readonly=True, store=True)
+    finance_provider = fields.Selection([('versatile', 'Versatile'), ('hunter', 'Hunter')], string='Finance Provider',
+                                        default='versatile', required=True)
 
     @api.model
     def create(self, vals):
@@ -890,7 +909,7 @@ class VersatileCreditApplication(models.Model):
                 vals['name'] = self.env['ir.sequence'].next_by_code('versatile.credit.application',
                                                                     sequence_date=seq_date) or _('/')
 
-        return super(VersatileCreditApplication, self).create(vals)
+        return super(ExternalCreditApplication, self).create(vals)
 
 
 class VersatileErrorLine(models.Model):
@@ -898,5 +917,5 @@ class VersatileErrorLine(models.Model):
     _description = "Versatile Error Line"
 
     name = fields.Char('Error')
-    credit_application_id = fields.Many2one('otl.versatile.credit.application', 'Versatile Credit Application',
+    credit_application_id = fields.Many2one('otl.versatile.credit.application', 'External Credit Application',
                                             ondelete='cascade')

@@ -52,6 +52,59 @@ class TeamCustomerAppointment(models.Model):
             vals.update({'customer_name': customer_name})
         return super(TeamCustomerAppointment, self).write(vals)
 
+    def update_arrival_departure_time_in_i360(self):
+        result = {
+            "success": "true",
+            "errors": []
+        }
+        try:
+            configurations = self.env['team.improveit.configuration'].search(
+                [('api_type', '=', 'boomi')], limit=1)
+            _logger.info('--------Starting SalesRepArrivalDeparture API---------')
+            for appointment in self:
+                _logger.info('--------Appointment ID---------: %s' % (appointment))
+                if appointment.improveit_appointment_id and appointment.arrival_date and appointment.departure_date:
+                    if appointment.arrival_departure_synced:
+                        return {
+                            "success": "false",
+                            "errors": [{"message": "It is already synced to i360."}]
+                        }
+                    data = {
+                        'AppointmentID': appointment.improveit_appointment_id or '',
+                        'SalesRepArrivalTime': appointment.arrival_date.strftime('%Y-%m-%dT%H:%M:%S'),
+                        'SalesRepDepartureTime': appointment.departure_date.strftime('%Y-%m-%dT%H:%M:%S'),
+                    }
+                    headers = {
+                        'Content-type': 'application/json',
+                    }
+                    end_point_url = configurations.token_url
+                    client_token = configurations.client_token
+                    _logger.info(data)
+                    if end_point_url and client_token:
+                        request_url = end_point_url + 'SalesRepArrivalDeparture' + client_token
+                    req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
+                                        verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    if isinstance(content, str):
+                        content = json.loads(content)
+                    _logger.error('SalesRepArrivalDeparture API Response of Appointment %s :%s' % (
+                    appointment.id, content))
+                    if content.get('Result', '') == "Success":
+                        appointment.write({
+                            'arrival_departure_synced': True,
+                        })
+                    if content.get('success', '') == "false":
+                        return content
+                    elif "Errors" in content:
+                        return content.get('Errors', {})
+
+        except IOError:
+            pass
+            _logger.error("******--------Error in update_arrival_departure_time_in_i360 API---------********")
+            result.update({"success": "false"})
+        return result
+
 
 class SignRequest(models.Model):
     _inherit = "otl_document_sign.request"
@@ -295,6 +348,8 @@ class SaleOrder(models.Model):
     min_sale_price = fields.Float('Minimum Sale Price', default=0)
     available_installation_line = fields.One2many('otl.available.installation.line', 'order_id', string='Available Installtion Dates')
     additional_comment_synced = fields.Boolean("Synced Additional Comments", default=False)
+    email_sent = fields.Boolean('Email Sent', default=False)
+
 
     def write(self, vals):
         _logger.info('inside sale order-%s write: values -  %s'%(self and self[0].name or '', vals))
@@ -711,7 +766,7 @@ class SaleOrder(models.Model):
                 round_off_mismatched_amount = round(measurement_price+additional_cost+stair_price+promotion_amount) - (measurement_price+additional_cost+stair_price+promotion_amount)
                 # round_off_mismatched_amount += round(adjustment) - adjustment
                 round_off_mismatched_amount += round(monthly_promo) - monthly_promo
-                net_amount = measurement_price + additional_cost + stair_price - round(adjustment) - monthly_promo - promotion_amount
+                net_amount = measurement_price + additional_cost + stair_price - adjustment - monthly_promo - promotion_amount
                 if min_sale_price and net_amount < min_sale_price:
                     round_off_amount = min_sale_price - net_amount + round_off_mismatched_amount
                 else:
@@ -742,7 +797,7 @@ class SaleOrder(models.Model):
                         'product_uom_qty': 1,
                         'name': adjustment_product.name,
                         'order_id': record.id,
-                        'price_unit': -round(adjustment),
+                        'price_unit': -adjustment,
                         'discount':  0
                     }
                     obj.create(vals)
@@ -1629,6 +1684,26 @@ class SaleOrder(models.Model):
             _logger.error("******--------Error in add_quote_id_file---------********")
             result.update({"success": "false"})
         return result
+    
+    def action_send_contract_email(self):
+        sync_log = self.env['otl.appointment.sync.log']
+        for sale_order in self:
+            sale_order.email_sent = False
+            result = sale_order.add_contract_document_file()
+            if result.get('success', '') == 'true':
+                sync_log.create({
+                    'appointment_id': sale_order.appointment_id.id,
+                    'response': result,
+                    'name': 'Send Contract Email To Customer',
+                })
+            else:
+                sync_log.create({
+                    'appointment_id': sale_order.appointment_id.id,
+                    'response': result,
+                    'state': 'failed',
+                    'name': 'Send Contract Email To Customer',
+                })
+        return
 
     def add_contract_document_file(self):
         result = {
@@ -1645,16 +1720,15 @@ class SaleOrder(models.Model):
                     request_url = configurations.token_url
                     if sale_order.contract_doc_attachment_id:
                         document = sale_order.contract_doc_attachment_id
-                        if document and document.store_fname and not document.improveit_id:
+                        if document and document.store_fname and not sale_order.email_sent:
                             full_path = document._full_path(document.store_fname)
                             multi_part_data = MultipartEncoder(
                                 fields={
                                     "SaleID": quote_id or '',
-                                    "File": ('WorkOrder.pdf', open(full_path, 'rb'), document.mimetype),
+                                    "WorkOrderFile": ('WorkOrder.pdf', open(full_path, 'rb'), document.mimetype),
                                     "ContractDate": sale_order.date_order.strftime('%m/%d/%Y')
                                 }
                             )
-
                             headers = {
                                 'Content-type': multi_part_data.content_type,
 
@@ -1665,9 +1739,12 @@ class SaleOrder(models.Model):
                                                 timeout=TIMEOUT, verify=configurations.enable_ssl)
                             req.raise_for_status()
                             content = req.json()
+                            _logger.info('Document Upload-------content--%s', content)
+
                             _logger.error('Attaching Contract Document Finished of sale %s: %s' %(sale_order.id, content))
                             if content.get('Result', False) == 'Success':
-                                document.sudo().write({'improveit_id': content.get('Result', False)})
+                                sale_order.write({'email_sent': True})
+                                #document.sudo().write({'improveit_id': content.get('Result', False)})
                             else:
                                 _logger.error("******--------Error in add_contract_document_file---------********")
                                 result.update({"success": "false"})
@@ -1677,6 +1754,68 @@ class SaleOrder(models.Model):
             # raise self.env['res.config.settings'].get_config_warning(error_msg)
             pass
             _logger.error("******--------Error in add_contract_document_file---------********")
+            result.update({"success": "false"})
+        return result
+
+    def action_sync_contract_doc_on_i360(self):
+        sync_log = self.env['otl.appointment.sync.log']
+        try:
+            for sale_order in self:
+                result = {
+                    "success": "true",
+                    "errors": []
+                }
+                if sale_order.quote_id or sale_order.excluded_quote_id:
+                    quote_id = sale_order.quote_id
+                    if not quote_id:
+                        quote_id = sale_order.excluded_quote_id
+                    configurations = self.env['team.improveit.configuration'].search(
+                        [('api_type', '=', 'zapier'), ('section', '=', 'SaleAddAttachment')], limit=1)
+                    
+                    request_url = configurations.token_url
+                    if sale_order.contract_doc_attachment_id:
+                        attachment = sale_order.contract_doc_attachment_id
+                        full_path = attachment._full_path(attachment.store_fname)
+                        multi_part_data = MultipartEncoder(
+                            fields={
+                                "SaleId": quote_id or '',
+                                "File": ('WorkOrder.pdf', open(full_path, 'rb'), attachment.mimetype)
+                            }
+                        )
+                        headers = {
+                            'Content-type': multi_part_data.content_type,
+
+                        }
+                        _logger.info(multi_part_data)
+                        req = requests.post(request_url, data=multi_part_data, headers=headers,
+                                            timeout=TIMEOUT, verify=configurations.enable_ssl)
+                        req.raise_for_status()
+                        content = req.json()
+                        if isinstance(content, str):
+                            content = json.loads(content)
+ 
+                        _logger.error('Uploading Contract Document Finished of sale %s: %s: %s' %(sale_order.id, content ,str(type(content))))
+                        if content.get('success', '') == "true":
+                            attachment.sudo().write({'improveit_id': content['id'] or ''})
+                            _logger.info("/n Contract Document uploaded Sucessfully")
+                            sync_log.create({
+                                    'appointment_id': sale_order.appointment_id.id,
+                                    'response': content,
+                                    'state': 'success',
+                                    'name': 'Contract Document Upload To i360 ',
+                                })
+                        if content.get('success', '') == "false":
+                            sync_log.create({
+                                'appointment_id': sale_order.appointment_id.id,
+                                'response': content,
+                                'state': 'failed',
+                                'name': 'Contract Document Upload To i360 ',
+                            })
+                            _logger.error("/n Error during upload Contract Document")
+                            result.update({"success": "false"})
+        except Exception as e:
+            pass
+            _logger.error("******--------Error in add_contract_document_file---------********: %s",str(e))
             result.update({"success": "false"})
         return result
 
@@ -1715,6 +1854,8 @@ class SaleOrder(models.Model):
                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
                         req.raise_for_status()
                         content = req.json()
+                        if isinstance(content, str):
+                            content = json.loads(content)
                         _logger.error(
                             'Attaching Credit Card Document Finished of sale %s: %s' % (sale_order.id, content))
                         if content.get('success', '') == "true":
@@ -1783,6 +1924,8 @@ class SaleOrder(models.Model):
                                 req = requests.post(request_url, data=multi_part_data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
                                 req.raise_for_status()
                                 content = req.json()
+                                if isinstance(content, str):
+                                    content = json.loads(content)
                                 _logger.error('Attaching Room Shape Drawing Finished of sale %s: %s' %(sale_order.id, content))
                                 if content.get('success', '') == "true":
                                     attach.sudo().write({'improveit_id': content['id'] or ''})
@@ -1816,6 +1959,8 @@ class SaleOrder(models.Model):
                                                         timeout=TIMEOUT, verify=configurations.enable_ssl)
                                     req.raise_for_status()
                                     content = req.json()
+                                    if isinstance(content, str):
+                                        content = json.loads(content)
                                     _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
                                     if content.get('success', '') == "true":
                                         attachment.sudo().write({'improveit_id': content['id'] or ''})
@@ -1850,6 +1995,8 @@ class SaleOrder(models.Model):
                                                         timeout=TIMEOUT, verify=configurations.enable_ssl)
                                     req.raise_for_status()
                                     content = req.json()
+                                    if isinstance(content, str):
+                                        content = json.loads(content)
                                     _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
                                     if content.get('success', '') == "true":
                                         attachment.sudo().write({'improveit_id': content['id'] or ''})
@@ -1888,6 +2035,8 @@ class SaleOrder(models.Model):
                                                     timeout=TIMEOUT, verify=configurations.enable_ssl)
                                 req.raise_for_status()
                                 content = req.json()
+                                if isinstance(content, str):
+                                    content = json.loads(content)
                                 _logger.error('Attached Snapshot of sale %s: %s' %(sale_order.id, content))
                                 if content.get('success', '') == "true":
                                     attachment.sudo().write({'improveit_id': content['id'] or ''})
@@ -2508,6 +2657,7 @@ class SaleOrder(models.Model):
                             "WhatHappenedNotes": notes.get('what_happened_notes', ''),
                             "WhatsNextNotes": notes.get('whats_next_notes', ''),
                             "ResultDetail": notes.get('result_details', ''),
+                            "LastPriceQuotedValue": notes.get('last_price_quoted_value', 0),
                         })
                     headers = {
                         'Content-type': 'application/json',
@@ -3091,6 +3241,7 @@ class SaleOrder(models.Model):
                     data = {
                         'SaleId': sale_order.quote_id or '',
                         'StartDate': selected_installation.start_date.strftime(DEFAULT_SERVER_DATE_FORMAT),
+                        'AssignedTo': selected_installation.crew_id.improveit_id,
                     }
                     headers = {
                         'Content-type': 'application/json',
