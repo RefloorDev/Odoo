@@ -64,6 +64,9 @@
         </div>
 
         <iframe t-if="widget.isPDF" class="o_sign_pdf_iframe"/>
+        <div t-if="!widget.has_sign_requests" class="o_sign_save_banner">
+            <button type="button" class="btn btn-primary o_save_template_button"> Save Template</button>
+        </div>
     </t>
 
     <t t-name="otl_document_sign.type_buttons">

@@ -238,6 +238,9 @@ class ResUsers(models.Model):
                     can_view_phone_number = True
                     if not eval(content.get('ShowCustomerPhone', 'False')):
                         can_view_phone_number = False
+                    restrict_geolocation = False
+                    if eval(content.get('RestrictGeolocationTracking', 'False')):
+                        restrict_geolocation = True
                     if not users:
                         users = self.env['res.users'].sudo().with_context(no_reset_password=True, create_mode=False,
                                                                           mail_create_nosubscribe=True,
@@ -247,6 +250,7 @@ class ResUsers(models.Model):
                             'email': username,
                             'password': password,
                             'can_view_phone_number': can_view_phone_number,
+                            'restrict_geolocation': restrict_geolocation,
                             'groups_id': [(6, 0, [self.env.ref('sales_team.group_sale_salesman').id,
                                                   self.env.ref('base.group_partner_manager').id,
                                                   self.env.ref('account.group_account_invoice').id])],
@@ -260,6 +264,7 @@ class ResUsers(models.Model):
                             vals = {
                                 'password': password,
                                 'can_view_phone_number': can_view_phone_number,
+                                'restrict_geolocation': restrict_geolocation,
                             }
                             if content.get('SalespersonID', ''):
                                 vals.update({'improveit_user_id': content.get('SalespersonID', '')})
@@ -715,9 +720,11 @@ class TeamCustomerAppointment(models.Model):
         what_happened_notes = data.get('what_happened_notes', '')
         whats_next_notes = data.get('whats_next_notes', '')
         appointment_id = data.get('appointment_id', '')
+        last_price_quoted_value = data.get('last_price_quoted_value') if 'last_price_quoted_value' in data else 0
         notes = {
             'whats_next_notes': whats_next_notes,
             'what_happened_notes': what_happened_notes,
+            'last_price_quoted_value': last_price_quoted_value,
         }
         sale_order = self.env['sale.order'].search([('appointment_id', '=', int(appointment_id))], limit=1)
         if sale_order and result:
@@ -747,6 +754,7 @@ class TeamCustomerAppointment(models.Model):
                     'state': 'done',
                     'what_happened_notes': what_happened_notes,
                     'whats_next_notes': whats_next_notes,
+                    'last_price_quoted_value': last_price_quoted_value, 
                 })
                 response_result = sale_order.set_appointment_result_api(status=result, notes=notes)
                 _logger.info('-------i360 SetAppointmentResult Response: %s' % (response_result))
@@ -837,6 +845,7 @@ class TeamCustomerAppointment(models.Model):
                     'state': 'done',
                     'what_happened_notes': what_happened_notes,
                     'whats_next_notes': whats_next_notes,
+                    'last_price_quoted_value': last_price_quoted_value,
                     'start_sync_to_i360': True,
                 })
                 response_result = sale_order_ref.set_appointment_result_api(status=result, notes=notes)
@@ -3213,6 +3222,8 @@ class SaleOrder(models.Model):
                 is_data_upload_completed = False
             if record.appointment_result == 'Sold' and not record.contract_document_uploaded:
                 is_data_upload_completed = False
+            if record.appointment_result == 'Sold' and not record.email_sent:
+                is_data_upload_completed = False
             if not record.other_files_uploaded:
                 is_data_upload_completed = False
             if record.appointment_result == 'Sold':
@@ -4965,6 +4976,23 @@ class SaleOrder(models.Model):
         for sale_order in orders:
             appointment = sale_order.appointment_id
             if appointment and appointment.start_sync_to_i360:
+                if not appointment.arrival_departure_synced:
+                    result = appointment.update_arrival_departure_time_in_i360()
+                    if result.get('success', '') == 'true':
+                        _logger.info("------ SalesRepArrivalDeparture Success-------------")
+                        sync_log.create({
+                            'appointment_id': appointment.id,
+                            'response': result,
+                            'name': 'SalesRepArrivalDeparture',
+                        })
+                    else:
+                        _logger.info("------ SalesRepArrivalDeparture Failed-------------")
+                        sync_log.create({
+                            'appointment_id': appointment.id,
+                            'response': result,
+                            'state': 'failed',
+                            'name': 'SalesRepArrivalDeparture',
+                        })
                 if sale_order.appointment_result:
                     if not appointment.prospect_info_updated:
                         result = appointment.update_appointment_to_boomi()
@@ -4983,12 +5011,14 @@ class SaleOrder(models.Model):
                                 'name': 'UpdateAppointmentProspect',
                             })
                     if not appointment.status_updated_to_i360:
-                        notes = {}
+                        notes = {
+                            'last_price_quoted_value': appointment.last_price_quoted_value or 0
+                        }
                         if appointment.what_happened_notes and appointment.whats_next_notes:
-                            notes = {
+                            notes.update({
                                 'what_happened_notes': appointment.what_happened_notes,
                                 'whats_next_notes': appointment.whats_next_notes,
-                            }
+                            })
                         if appointment.resulting_reason_id:
                             notes.update({
                                 'result_details': appointment.resulting_reason_id.name
@@ -5143,22 +5173,28 @@ class SaleOrder(models.Model):
                                     sale_order.write(
                                         {'contract_doc_attachment_id': contract_doc_attachment.id,
                                          'document_signed': True})
-                        if contract_doc_attachment and not sale_order.contract_document_uploaded:
-                            result = sale_order.add_contract_document_file()
-                            if result.get('success', '') == 'true':
-                                sale_order_vals.update({'contract_document_uploaded': True})
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': result,
-                                    'name': 'Contract Document',
-                                })
-                            else:
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': result,
-                                    'state': 'failed',
-                                    'name': 'Contract Document',
-                                })
+                        if contract_doc_attachment: 
+                            if not sale_order.contract_document_uploaded or not contract_doc_attachment.improveit_id:
+                                result = sale_order.action_sync_contract_doc_on_i360()
+                                _logger.info('-------i360 contract_doc_upload_response Response: %s' % (result))
+                                if result.get('success', '') == 'true':
+                                    sale_order_vals.update({'contract_document_uploaded': True})
+                            
+                            if not sale_order.email_sent:
+                                result = sale_order.add_contract_document_file()
+                                if result.get('success', '') == 'true':
+                                    sync_log.create({
+                                        'appointment_id': appointment.id,
+                                        'response': result,
+                                        'name': 'Send Contract Email To Customer',
+                                    })
+                                else:
+                                    sync_log.create({
+                                        'appointment_id': appointment.id,
+                                        'response': result,
+                                        'state': 'failed',
+                                        'name': 'Send Contract Email To Customer',
+                                    })
                     if not sale_order.other_files_uploaded:
                         if sale_order.state in ['sale', 'done'] or sale_order.appointment_result == 'Sold':
                             result = sale_order.add_sale_id_file()

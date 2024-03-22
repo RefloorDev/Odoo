@@ -200,6 +200,7 @@ class ResUsers(models.Model):
                     'posY': value.posY or '',
                     'width': value.width or '',
                     'height': value.height or '',
+                    'required': value.required and 1 or 0,
                 })
             app_dict.append({
                 'template_id': contract_template.id,
@@ -226,6 +227,7 @@ class ResUsers(models.Model):
                     'posY': value.posY or '',
                     'width': value.width or '',
                     'height': value.height or '',
+                    'required': value.required and 1 or 0,
                 })
             app_dict.append({'template_id': contract_template_non_co.id,
                              'document_url': contract_template_url_non_co_applicant,
@@ -234,6 +236,18 @@ class ResUsers(models.Model):
                              'fields': non_applicant_list})
 
         return app_dict
+
+    def get_external_application_credentials(self):
+        credential_list = []
+        applications = self.env['otl.external.application.credentials'].search([])
+        for application in applications:
+            credential_list.append({
+                'url': application.url or '',
+                'api_key': application.api_key or '',
+                'entity_key': application.entity_key or '',
+                'provider': application.provider or '',
+            })
+        return credential_list
 
 
     @api.model
@@ -261,6 +275,7 @@ class ResUsers(models.Model):
         rules = self.get_restriction_rules_api()
         reasons_list = self.get_appointment_result_reasons_api()
         templates = self.sudo().get_dynamic_contract_vals_api()
+        credential_list = self.sudo().get_external_application_credentials()
         auto_logout_time = ''
         if self.env.user.company_id.enable_auto_logout:
             logout_time = self.env.user.company_id.auto_logout_time or 0
@@ -299,6 +314,9 @@ class ResUsers(models.Model):
             'versatile_url': company.versatile_url or '',
             'versatile_api_key': company.versatile_api_key or '',
             'versatile_entity_key': company.versatile_entity_key or '',
+            'enable_geolocation': eval(str(self.env['ir.config_parameter'].sudo().get_param('enable_geolocation'))) or False,
+            'geolocation_radius_limit': int(self.env['ir.config_parameter'].sudo().get_param('geolocation_radius_limit')) or 0,
+            'external_credentials': credential_list,
         })
         # except:
         #     result = {
@@ -402,6 +420,10 @@ class ResUsers(models.Model):
 
                                 }
                                 appointment_obj = self.env['team.customer.appointment'].create(appointment_values)
+                                try:
+                                    appointment_obj.geo_localize()
+                                except:
+                                    continue
                                 if market_segment and not office_location_id:
                                     appointment_obj.message_post(body='Office Location is not found for Market Segment %s'%(market_segment))
                             elif appointments and update_existing_record:
@@ -427,6 +449,10 @@ class ResUsers(models.Model):
                                     # 'attachment_ids': [(6, 0, [])],
                                 }
                                 appointments.write(appointment_values)
+                                try:
+                                    appointments.geo_localize()
+                                except:
+                                    continue
                                 if market_segment and not office_location_id:
                                     appointments.message_post(body='Office Location is not found for Market Segment %s'%(market_segment))
                     # if improveit_appointment_ids:
@@ -476,6 +502,16 @@ class ResUsers(models.Model):
         _logger.info("Authentication log created successfully----. Vals: %s, Record: %s"%(vals, log.id))
         return True
 
+
+    @api.model
+    def get_user_details(self, uid):
+        result = super(ResUsers, self).get_user_details(uid)
+        user = self.env['res.users'].search([('id', '=', uid)])
+        if user:
+            result.update({
+                "restrict_geolocation": user.restrict_geolocation and 1 or 0,
+            })
+        return result
 
 
 class TeamQuoteQuestion(models.Model):
@@ -631,6 +667,8 @@ class DownPaymentOption(models.Model):
                 'Payment_Info__c': payment_options.payment_info or '',
                 'sequence': payment_options.sequence or 0,
                 'down_payment_message': payment_options.down_payment_message or '',
+                'start_date': payment_options.start_date if payment_options.start_date else '',
+                'end_date': payment_options.end_date if payment_options.end_date else '',
             }
             payment_list.append(payment_options_dict)
         return payment_list
@@ -736,7 +774,7 @@ class TeamCustomerAppointment(models.Model):
     prospect_info_updated = fields.Boolean('Prospect Info Updated to i360', default=False, copy=False)
     completed_date = fields.Datetime('Appointment Completed Date')
     sync_initiated_date = fields.Datetime('Sync Initiated Time', copy=False)
-    timezone = fields.Char('Timezone', default='EST')
+    timezone = fields.Char('Timezone', default='US/Eastern')
 
     @api.model
     def action_get_appointment_data(self, user_id):
@@ -876,6 +914,7 @@ class TeamCustomerAppointment(models.Model):
                 'flexible_installation':  flexible_installation,
                 'timezone': data.get('timezone', ''),
                 'app_version_id':  app_version_id,
+                'last_price_quoted_value': data.get('last_price_quoted_value') if 'last_price_quoted_value' in data else 0,
             }
             if completed_date_utc:
                 vals.update({'completed_date': completed_date_utc})
@@ -1709,15 +1748,17 @@ class TeamCustomerAppointment(models.Model):
         if sale_order and appointment:
             if sale_order.appointment_result:
                 if not appointment.status_updated_to_i360:
-                    notes = {}
+                    notes = {
+                        'last_price_quoted_value': appointment.last_price_quoted_value or 0
+                    }
                     if appointment.what_happened_notes and appointment.whats_next_notes:
-                        notes = {
+                        notes.update({
                             'what_happened_notes': appointment.what_happened_notes,
                             'whats_next_notes': appointment.whats_next_notes,
-                        }
+                        })
                     if appointment.resulting_reason_id:
                         notes.update({
-                            'result_details': appointment.resulting_reason_id.name
+                            'result_details': appointment.resulting_reason_id.name,
                         })
                     response_result = sale_order.set_appointment_result_api(sale_order.appointment_result, notes=notes)
                     _logger.info('-------i360 SetAppointmentResult Response: %s' % (response_result))
@@ -1923,22 +1964,28 @@ class TeamCustomerAppointment(models.Model):
                                     sale_order.write(
                                         {'contract_doc_attachment_id': contract_doc_attachment.id,
                                          'document_signed': True})
-                        if contract_doc_attachment and not sale_order.contract_document_uploaded:
-                            result = sale_order.add_contract_document_file()
-                            if result.get('success', '') == 'true':
-                                sale_order_vals.update({'contract_document_uploaded': True})
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': result,
-                                    'name': 'Contract Document',
-                                })
-                            else:
-                                sync_log.create({
-                                    'appointment_id': appointment.id,
-                                    'response': result,
-                                    'state': 'failed',
-                                    'name': 'Contract Document',
-                                })
+                        if contract_doc_attachment:
+                            if not sale_order.contract_document_uploaded or not contract_doc_attachment.improveit_id:
+                                result = sale_order.action_sync_contract_doc_on_i360()
+                                _logger.info('-------i360 salesapp call contract_doc_upload_response Response: %s' % (result))
+                                if result.get('success', '') == 'true':
+                                    sale_order_vals.update({'contract_document_uploaded': True})
+
+                            if not sale_order.email_sent:
+                                result = sale_order.add_contract_document_file()
+                                if result.get('success', '') == 'true':
+                                    sync_log.create({
+                                        'appointment_id': appointment.id,
+                                        'response': result,
+                                        'name': 'Send Contract Email To Customer',
+                                    })
+                                else:
+                                    sync_log.create({
+                                        'appointment_id': appointment.id,
+                                        'response': result,
+                                        'state': 'failed',
+                                        'name': 'Send Contract Email To Customer',
+                                    })
                     if not sale_order.other_files_uploaded:
                         if sale_order.state in ['sale', 'done'] or sale_order.appointment_result == 'Sold':
                             result = sale_order.add_sale_id_file()
@@ -3100,7 +3147,7 @@ class TeamCustomerAppointment(models.Model):
             if appointment_id:
                 appointment = self.env['team.customer.appointment'].browse(appointment_id)
                 if appointment.exists():
-                    if loan_type == 'versatile':
+                    if loan_type in ['versatile', 'hunter']:
                         versatile_application = self.env['otl.versatile.credit.application'].search([('appointment_id', '=', appointment_id)], limit=1)
                         if not versatile_application:
                             result = {
@@ -3116,6 +3163,7 @@ class TeamCustomerAppointment(models.Model):
                                     "provider_reference": versatile_application.provider_reference or "",
                                     "status": versatile_application.status or "",
                                     "approved_amount": versatile_application.approved_amount or 0,
+                                    "finance_provider": versatile_application.finance_provider or "",
                                 }
                             }
                     else:
@@ -3143,6 +3191,95 @@ class TeamCustomerAppointment(models.Model):
                 'result': 'Failed'
             }
         _logger.info("------action_get_credit_application_status result: %s-------------" % (result))
+        return result
+
+    def action_start_sync_arrival_departure_time_to_i360(self, appointment_id):
+        with api.Environment.manage():
+            # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            sync_log = self.env['otl.appointment.sync.log']
+            _logger.info('------Starting action_start_sync_arrival_departure_time_to_i360------: %s'%(appointment_id))
+            appointment = self.env['team.customer.appointment'].browse(int(appointment_id))
+            result = appointment.update_arrival_departure_time_in_i360()
+            if result.get('success', '') == 'true':
+                _logger.info("------ SalesRepArrivalDeparture Success-------------")
+                sync_log.create({
+                    'appointment_id': appointment.id,
+                    'response': result,
+                    'name': 'SalesRepArrivalDeparture',
+                })
+            else:
+                _logger.info("------ SalesRepArrivalDeparture Failed-------------")
+                sync_log.create({
+                    'appointment_id': appointment.id,
+                    'response': result,
+                    'state': 'failed',
+                    'name': 'SalesRepArrivalDeparture',
+                })
+            self.env.cr.commit()
+            new_cr.close()
+            _logger.info('------End of action_start_sync_arrival_departure_time_to_i360------: %s' % (appointment_id))
+
+        return True
+
+    @api.model
+    def action_update_arrival_departure_time(self, data):
+        result = {
+            'message': 'Something went wrong updating the appointment',
+            'result': 'Failed'
+        }
+        _logger.info("------action_update_arrival_departure_time data: %s-------------" % (data))
+        try:
+            appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
+            arrival_date = data.get('arrival_date', False)
+            departure_date = data.get('departure_date', False)
+            timezone = data.get('timezone', 'US/Eastern')
+            arrival_date_utc = False
+            departure_date_utc = False
+            if appointment_id:
+                appointment = self.env['team.customer.appointment'].browse(appointment_id)
+                if appointment.exists():
+                    if arrival_date:
+                        arrival_date_utc = arrival_date
+                        if arrival_date and timezone:
+                            arrival_date_utc = self.get_timezone_based_time(arrival_date, timezone)
+                    if departure_date:
+                        departure_date_utc = departure_date
+                        if departure_date and timezone:
+                            departure_date_utc = self.get_timezone_based_time(departure_date, timezone)
+                    appointment.write({
+                        'arrival_date': arrival_date_utc,
+                        'departure_date': departure_date_utc,
+                        'timezone': timezone,
+                    })
+                    result = {
+                        'message': 'Data Updated Successfully',
+                        'result': 'Success',
+                    }
+                    _logger.info("------Data Updated Successfully-------------")
+                    t1 = threading.Thread(target=self.action_start_sync_arrival_departure_time_to_i360, args=(appointment.id,))
+                    t1.start()
+                    _logger.info("thread %s started!" % t1)
+                else:
+                    _logger.info("------Wrong Appointment Id-------------")
+                    result = {
+                        'message': 'Wrong Appointment Id',
+                        'result': 'Failed'
+                    }
+
+            else:
+                _logger.info("------Empty Appointment Id-------------")
+                result = {
+                    'message': 'Empty Appointment Id',
+                    'result': 'Failed'
+                }
+        except:
+            result = {
+                'message': 'Something Went Wrong.',
+                'result': 'Failed'
+            }
+        _logger.info("------action_update_arrival_departure_time result: %s-------------" % (result))
         return result
 
 
@@ -4356,6 +4493,7 @@ class VersatileCreditApplication(models.Model):
         event_date = versatile_payload.get('dateTime', "")
         application_id = data.get("applicationId", "")
         ext_customer_id = data.get("externalCustomerId", "")
+        finance_provider = data.get("financeProvider", "versatile")
         if not ext_customer_id:
             return {"result": "Failed", "message": "externalCustomerId is missing"}
         appointment = self.env['team.customer.appointment'].search([('improveit_appointment_id', '=', ext_customer_id)], limit=1)
@@ -4405,6 +4543,7 @@ class VersatileCreditApplication(models.Model):
             "applicant_last_name": applicant_last_name,
             "co_applicant_first_name": co_applicant_first_name,
             "co_applicant_last_name": co_applicant_last_name,
+            "finance_provider": finance_provider,
             "error_line": [(0, 0, {"name": error}) for error in error_list],
         }
         if credit_application:

@@ -51,6 +51,7 @@ class APIHomes(API_Homes):
         self.create_order_and_update_measurements_api_queue = dict()
         self.generate_contract_document_api_queue = dict()
         self.update_additional_appointment_data_api_queue = dict()
+        self.update_arrival_departure_time_api_queue = dict()
         self.get_credit_application_status_api_queue = dict()
         self.initiate_i360_sync_api_queue = dict()
         self.image_sync_api_queue = dict()
@@ -2304,4 +2305,75 @@ class APIHomes(API_Homes):
             self.get_credit_application_status_api_queue.pop(appointment_id, '')
             _logger.info('get_credit_application_status_api_queue Data - Ending--:%s' % (
                 self.get_credit_application_status_api_queue))
+        return json.dumps(result)
+
+    @route('/api/<version>/update_arrival_departure_time', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
+    def action_update_arrival_departure_time(self, version='v1', **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.params.copy()
+        token = params.get('token', '')
+        appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
+        arrival_date = params.get('arrival_date', False)
+        departure_date = params.get('departure_date', False)
+        timezone = params.get('timezone', False)
+
+        _logger.info("------------update_arrival_departure_time params: %s------------------" % (params))
+        result = {}
+        if not token:
+            _logger.info("------------Token Missing in update_arrival_departure_time------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in update_arrival_departure_time-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in update_arrival_departure_time-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        if status:
+            if version == 'v1':
+                data = {
+                    'appointment_id': int(appointment_id),
+                    'arrival_date': arrival_date,
+                    'departure_date': departure_date,
+                    'timezone': timezone
+                }
+                if enable_api_queue_system:
+                    _logger.info('update_arrival_departure_time_api_queue Data - Starting--:%s - Appointment ID: %s' % (
+                            self.update_arrival_departure_time_api_queue, appointment_id))
+                    time = datetime.now()
+                    if appointment_id in self.update_arrival_departure_time_api_queue:
+                        queue_time = self.update_arrival_departure_time_api_queue.get(appointment_id, {})
+                        time_difference = (time - queue_time).total_seconds()
+                        if int(time_difference) < 60:
+                            _logger.info('update_arrival_departure_time_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
+                                self.update_arrival_departure_time_api_queue, appointment_id))
+                            result = {'override_json_result': 1, 'result': 'Failed',
+                                      'message': 'Execution is already in progress'}
+                            request.env['otl.api.sync.log'].sudo().create_api_log(
+                                '/api/%s/update_arrival_departure_time'%(version), data, uid,
+                                result)
+                            return result
+                    self.update_arrival_departure_time_api_queue.update({
+                        appointment_id: time
+                    })
+                    _logger.info('update_arrival_departure_time_api_queue Data - Added--:%s' % (
+                        self.update_arrival_departure_time_api_queue))
+
+                result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment', 'action_update_arrival_departure_time',
+                                           [data])
+            else:
+                result= {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_arrival_departure_time'%(version), params, uid,
+                                                              result)
+        result.update({'override_json_result': 1})
+        if enable_api_queue_system:
+            self.update_arrival_departure_time_api_queue.pop(appointment_id, '')
+            _logger.info('update_arrival_departure_time_api_queue Data - Ending--:%s' % (
+                self.update_arrival_departure_time_api_queue))
         return json.dumps(result)

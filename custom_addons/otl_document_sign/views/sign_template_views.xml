@@ -67,7 +67,7 @@
         <field name="name">otl_document_sign.template.tree</field>
         <field name="model">otl_document_sign.template</field>
         <field name="arch" type="xml">
-            <tree create="false">
+            <tree>
                 <field name="attachment_id"/>
                 <field name="create_date"/>
                 <field name="sign_item_ids"/>

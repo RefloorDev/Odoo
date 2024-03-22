@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 import time
 from datetime import timedelta
 
@@ -175,6 +175,10 @@ class TeamCustomerAppointment(models.Model):
     app_version_id = fields.Many2one('otl.sales.app.version', 'App Version')
     make_payment_failure = fields.Boolean('Set Payment as Failure')
     resulting_reason_id = fields.Many2one('otl.appointment.result.reason', string="Appointment Result Details", copy=False)
+    arrival_date = fields.Datetime("Arrival Time", copy=False)
+    departure_date = fields.Datetime("Departure Time", copy=False)
+    arrival_departure_synced = fields.Boolean("Arrival Departure Time Synced", default=False, copy=False)
+    last_price_quoted_value = fields.Float("Last Price Quoted Value", copy=False)
 
     @api.onchange('country_id')
     def _onchange_country_id(self):
@@ -350,3 +354,4 @@ class AppScreenLog(models.Model):
     appointment_id = fields.Many2one('team.customer.appointment', 'Appointment')
     user_id = fields.Many2one('res.users', 'User', default=lambda self: self.env.uid)
     name = fields.Char('Screen Name')
+

@@ -321,7 +321,7 @@ odoo.define('otl_document_sign.template', function(require) {
             this.events = _.extend(this.events || {}, {
                 'itemChange .o_sign_sign_item': function (e) {
                     this.updateSignItem($(e.target));
-                    this.$iframe.trigger('templateChange');
+//                    this.$iframe.trigger('templateChange');
                 },
 
                 'itemDelete .o_sign_sign_item': function (e) {
@@ -349,7 +349,7 @@ odoo.define('otl_document_sign.template', function(require) {
 
                     this.deleteSignItem($target);
                     this.refreshSignItems();
-                    this.$iframe.trigger('templateChange');
+//                    this.$iframe.trigger('templateChange');
                 },
             });
         },
@@ -430,7 +430,6 @@ odoo.define('otl_document_sign.template', function(require) {
 
                                 var $parent = $(e.target);
                                 var pageNo = parseInt($parent.prop('id').substr('pageContainer'.length));
-
                                 ui.helper.removeClass('o_sign_sign_item_to_add');
                                 var $signatureItem = ui.helper.clone(true).removeClass().addClass('o_sign_sign_item o_sign_sign_item_required');
                                 var posX = (ui.offset.left - $parent.find('.textLayer').offset().left) / $parent.innerWidth();
@@ -442,7 +441,7 @@ odoo.define('otl_document_sign.template', function(require) {
                                 self.updateSignItem($signatureItem);
                                 self.enableCustom($signatureItem);
 
-                                self.$iframe.trigger('templateChange');
+//                                self.$iframe.trigger('templateChange');
 
                                 if(self.types[$signatureItem.data('type')].item_type === 'initial') {
                                     (new InitialAllPagesDialog(self, self.parties)).open($signatureItem);
@@ -470,7 +469,7 @@ odoo.define('otl_document_sign.template', function(require) {
                                      document.getElementById(popovers[i].id).remove();
                                 }
                             });
-                            self.$iframe.trigger('templateChange');
+//                            self.$iframe.trigger('templateChange');
                         });
                     }
 
@@ -544,7 +543,7 @@ odoo.define('otl_document_sign.template', function(require) {
 
             $signatureItem.on('dragstop resizestop', function(e, ui) {
                 self.updateSignItem($signatureItem);
-                self.$iframe.trigger('templateChange');
+//                self.$iframe.trigger('templateChange');
                 $signatureItem.removeClass('ui-selected');
             });
 
@@ -646,6 +645,9 @@ odoo.define('otl_document_sign.template', function(require) {
 
             'click .o_sign_duplicate_sign_template': function(e) {
                 this.saveTemplate(true);
+            },
+            'click .o_save_template_button': function(e) {
+                this.saveTemplate();
             },
         },
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Button in action menu -->
+        <record id="model_action_sync_contract_doc_on_i360" model="ir.actions.server">
+            <field name="name">Contract Document Upload To i360</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">records.action_sync_contract_doc_on_i360()</field>
+        </record>
+
+        <record id="model_action_send_mail_contarct_doc" model="ir.actions.server">
+            <field name="name">Send Contract Email To Customer</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">records.action_send_contract_email()</field>
+        </record>
+    </data>
+</odoo>

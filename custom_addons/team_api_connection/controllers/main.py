@@ -3376,6 +3376,9 @@ class API_Homes(http.Controller):
         if not what_happened_notes:
             _logger.info("------------What Happened Notes Missing in main submit_appointment_result api------------------")
             return json.dumps({'result': 'Failed', 'message': 'Empty  Value for What Happened Notes'})
+        if not params.get('last_price_quoted_value'):
+            _logger.info("------------Whats Next Notes Missing in main submit_appointment_result api------------------")
+            return json.dumps({'result': 'Failed', 'message': 'Empty  Value for Last Price Quoted Value'})
         if not whats_next_notes:
             _logger.info("------------Whats Next Notes Missing in main submit_appointment_result api------------------")
             return json.dumps({'result': 'Failed', 'message': 'Empty  Value for Whats Next Notes'})
@@ -3395,7 +3398,8 @@ class API_Homes(http.Controller):
                 'result': result,
                 'what_happened_notes': what_happened_notes,
                 'whats_next_notes': whats_next_notes,
-                'appointment_id': appointment_id
+                'appointment_id': appointment_id,
+                'last_price_quoted_value': params.get('last_price_quoted_value') if 'last_price_quoted_value' in params else 0,
             }
             result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
                                        'submit_appointment_result_without_upload',
