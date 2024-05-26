@@ -48,13 +48,32 @@
                                 <group>
                                     <field name="name" required="1"/>
                                     <field name="url" widget="url" required="1"/>
-                                    <field name="entity_key" required="1"/>
+                                    <field name="location_based"/>
+                                    <field name="entity_key" attrs="{'required':[('location_based', '=', False)], 'invisible':[('location_based', '!=', False)]}"/>
                                 </group>
                                 <group>
                                     <field name="provider" required="1"/>
                                     <field name="api_key" required="1"/>
                                     <field name="user_id" options="{'no_create_edit': True, 'no_open':True,'no_create': True}" domain="[('improveit_user_id', '=', False)]" required="1"/>
                                 </group>
+                            </group>
+                            <group string="Location Based Entity Key" attrs="{'invisible':[('location_based', '=', False)]}">
+                                <field name="location_entity_line" nolabel="1">
+                                    <tree editable="bottom">
+                                        <field name="office_location_id" required="1" options="{'no_create_edit': True, 'no_open':True,'no_create': True}"/>
+                                        <field name="entity_key" required="1"/>
+                                    </tree>
+                                    <form>
+                                        <group>
+                                            <group>
+                                                <field name="office_location_id" required="1" options="{'no_create_edit': True, 'no_open':True,'no_create': True}"/>
+                                            </group>
+                                            <group>
+                                                <field name="entity_key" required="1"/>
+                                            </group>
+                                        </group>
+                                    </form>
+                                </field>
                             </group>
 
                         </form>
@@ -64,6 +83,7 @@
             <field name="favicon" position="after">
                 <field name="recision_date"/>
                 <field name="attachment_delete_day_limit"/>
+                <field name="pending_order_sync_notify_limit"/>
             </field>
         </field>
     </record>
