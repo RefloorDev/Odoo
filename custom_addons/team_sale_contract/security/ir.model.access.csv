@@ -113,3 +113,6 @@ access_versatile_error_line_manager,versatile.error.line.manager,model_otl_versa
 access_external_application_credentials_user,external.application.credentials.user,model_otl_external_application_credentials,sales_team.group_sale_salesman,1,0,0,0
 access_external_application_credentials_manager,external.application.credentials.manager,model_otl_external_application_credentials,base.group_system,1,1,1,1
 
+access_location_entity_key_line_user,location.entity.key.line.user,model_otl_location_entity_key_line,sales_team.group_sale_salesman,1,0,0,0
+access_location_entity_key_line_manager,location.entity.key.line.manager,model_otl_location_entity_key_line,base.group_system,1,1,1,1
+

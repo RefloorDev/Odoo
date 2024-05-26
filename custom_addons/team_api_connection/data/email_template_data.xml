@@ -15,33 +15,84 @@
 <div style="margin: 0px; padding: 0px;">
     <p style="margin: 0px; padding: 0px; font-size: 13px;">
         Hi, <br/><br/>
-        Following users are pending to logout from the system due to incomplete appointments.
+        % set pending_users = object.get_pending_logout_users_list()
+        % if not pending_users:
+            <p> All Users and logout successfully.</p>
+        %else:
+            Following users are pending to logout from the system due to incomplete appointments.
+            <br /><br />
+
+            <table  border="1" width="90%">
+                <thead>
+                    <tr align="center">
+                        <th>User Name</th>
+                        <th>Login</th>
+                        <th>Pending Appointments</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    % for data in pending_users:
+                        <tr>
+                            <td><p style="padding-left: 10px;">${data.get('name', '')}</p></td>
+                            <td><p style="padding-left: 10px;">${data.get('login', '')}</p></td>
+                            <td>
+                                % for appointment in data.get('appointments', []):
+                                    <p style="padding-left: 10px;">${appointment}</p>
+                                % endfor
+                            </td>
+
+                        </tr>
+                    % endfor
+                </tbody>
+            </table>
+        % endif
         <br /><br />
 
-        <table  border="1" width="90%">
-            <thead>
-                <tr align="center">
-                    <th>User Name</th>
-                    <th>Login</th>
-                    <th>Pending Appointments</th>
-                </tr>
-            </thead>
-            <tbody>
-                % for data in object.get_pending_logout_users_list():
-                    <tr>
-                        <td><p style="padding-left: 10px;">${data.get('name', '')}</p></td>
-                        <td><p style="padding-left: 10px;">${data.get('login', '')}</p></td>
-                        <td>
-                            % for appointment in data.get('appointments', []):
-                                <p style="padding-left: 10px;">${appointment}</p>
-                            % endfor
-                        </td>
+    </p>
+</div>
+            </field>
+            <field name="user_signature" eval="False"/>
+            <field name="auto_delete" eval="False"/>
+        </record>
 
+        <record id="email_template_pending_orders_to_sync" model="mail.template">
+            <field name="name">Orders Pending to Sync</field>
+            <field name="model_id" ref="base.model_res_company"/>
+            <field name="email_from">${(object.email) |safe}</field>
+            <field name="email_to">${object.get_logged_in_notify_user_ids()}</field>
+            <field name="subject">${object.name} Pending Orders to Sync</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Hi, <br/><br/>
+        % set pending_orders = object.get_pending_sync_orders_list()
+        % if not pending_orders:
+            <p> All orders are synced successfully.</p>
+        %else:
+            Following orders are pending to sync to i360 from the Odoo:
+            <br /><br />
+
+            <table  border="1" width="90%">
+                <thead>
+                    <tr align="center">
+                        <th>Order</th>
+                        <th>Appointment Date</th>
+                        <th>Appointment</th>
+                        <th>Salesperson</th>
                     </tr>
-                % endfor
-            </tbody>
-        </table>
-
+                </thead>
+                <tbody>
+                    % for data in object.get_pending_sync_orders_list():
+                        <tr>
+                            <td><p style="padding-left: 10px;">${data.get('sale_order', '')}</p></td>
+                            <td><p style="padding-left: 10px;">${data.get('appointment_date', '')}</p></td>
+                            <td><p style="padding-left: 10px;">${data.get('appointment', '')}</p></td>
+                            <td><p style="padding-left: 10px;">${data.get('user', '')}</p></td>
+                        </tr>
+                    % endfor
+                </tbody>
+            </table>
+        % endif
         <br /><br />
 
     </p>
