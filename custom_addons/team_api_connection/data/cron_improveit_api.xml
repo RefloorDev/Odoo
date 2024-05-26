@@ -227,6 +227,19 @@
             <field name="code">model.cron_clear_user_tokens()</field>
         </record>
 
+        <record forcecreate="True" id="ir_cron_send_pending_sync_order_details" model="ir.cron">
+            <field name="name">Send Pending Sync Orders List</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="base.model_res_users"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_send_pending_sync_order_details()</field>
+        </record>
+
 <!--        <record forcecreate="True" id="ir_get_sales_appointment_api_sync" model="ir.cron">-->
 <!--            <field name="name">Sales Appointment</field>-->
 <!--            <field eval="True" name="active"/>-->

@@ -342,6 +342,18 @@ class ResUsers(models.Model):
                     template_id.send_mail(company.id, force_send=True, raise_exception=False)
         return True
 
+    @api.model
+    def cron_send_pending_sync_order_details(self):
+        for company in self.env['res.company'].search([('pending_order_sync_notify_limit', '>', 0)]):
+            try:
+                # Get the template id corresponding to the email template
+                template_id = self.env.ref('team_api_connection.email_template_pending_orders_to_sync')
+            except ValueError:
+                template_id = False
+            if template_id:
+                template_id.send_mail(company.id, force_send=True, raise_exception=False)
+        return True
+
 
 class ResCompany(models.Model):
     _inherit = 'res.company'
@@ -375,6 +387,23 @@ class ResCompany(models.Model):
                 })
         return result
 
+    def get_pending_sync_orders_list(self):
+        result = []
+        for company in self:
+            day_check_limit = datetime.now() - relativedelta(days=company.pending_order_sync_notify_limit)
+            orders = self.env['sale.order'].search([('is_data_upload_completed', '=', False), ('quote_id', '!=', False),
+                                  ('appointment_id.sync_initiated_date', '<=', day_check_limit), ('company_id', '=', company.id)])
+            tz = self.env.user and self.env.user.tz or self._context.get('tz') or 'UTC'
+            for sale_order in orders:
+                appointment = sale_order.appointment_id
+                if appointment:
+                    result.append({
+                        'sale_order': sale_order.name,
+                        'appointment_date': appointment.appointment_date and utc_2_local(appointment.appointment_date, tz).strftime('%m-%d-%Y %H:%M:%S'),
+                        'appointment': appointment.name,
+                        'user': appointment.user_id.name,
+                    })
+        return result
 
 class TeamRoomRoom(models.Model):
     _inherit = 'team.room.room'
@@ -3226,6 +3255,11 @@ class SaleOrder(models.Model):
                 is_data_upload_completed = False
             if not record.other_files_uploaded:
                 is_data_upload_completed = False
+            if record.appointment_id:
+                appointment = record.appointment_id
+                if (not appointment.arrival_departure_synced) and (
+                        appointment.arrival_date or appointment.departure_date):
+                    is_data_upload_completed = False
             if record.appointment_result == 'Sold':
                 if not record.quote_id:
                     is_data_upload_completed = False
@@ -4976,7 +5010,7 @@ class SaleOrder(models.Model):
         for sale_order in orders:
             appointment = sale_order.appointment_id
             if appointment and appointment.start_sync_to_i360:
-                if not appointment.arrival_departure_synced:
+                if (not appointment.arrival_departure_synced) and (appointment.arrival_date or appointment.departure_date):
                     result = appointment.update_arrival_departure_time_in_i360()
                     if result.get('success', '') == 'true':
                         _logger.info("------ SalesRepArrivalDeparture Success-------------")
@@ -5105,6 +5139,25 @@ class SaleOrder(models.Model):
                                 'state': 'failed',
                                 'name': 'AddCreditApplication',
                             })
+                    ext_credit_application = self.env['otl.versatile.credit.application'].search(
+                        [('appointment_id', '=', int(appointment.id)), ('status', '=ilike', 'approved')], limit=1)
+                    if ext_credit_application and not ext_credit_application.improveit_id:
+                        result = sale_order.action_sync_ext_loan_data_to_i360(ext_credit_application)
+                        if result.get('success', '') == 'true':
+                            _logger.info("------ SyncLoanData Create,Update Success-------------")
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'SyncLoanData',
+                            })
+                        else:
+                            _logger.info("------ SyncLoanData Create,Update Failed-------------")
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'SyncLoanData',
+                            })
                     sale_order_vals = {}
                     room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
                         lambda x: not x.exclude_from_calculation and not x.improveit_id)
@@ -5232,7 +5285,7 @@ class SaleOrder(models.Model):
                             sale_order_vals.update({'other_files_uploaded': True})
                     enable_additional_comment_api = eval(
                         str(self.env['ir.config_parameter'].sudo().get_param('enable_additional_comment_api')))
-                    if enable_additional_comment_api and not sale_order.additional_comment_synced:
+                    if sale_order.appointment_result == 'Sold' and enable_additional_comment_api and not sale_order.additional_comment_synced:
                         result = sale_order.create_additional_comments_in_i360()
                         if result.get('success', '') == 'true':
                             sync_log.create({

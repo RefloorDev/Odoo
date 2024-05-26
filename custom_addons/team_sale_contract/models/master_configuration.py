@@ -62,7 +62,7 @@ class ResCompany(models.Model):
     versatile_api_key = fields.Char("Versatile API Key")
     versatile_entity_key = fields.Char("Versatile Entity Key")
     external_application_line = fields.One2many('otl.external.application.credentials', 'company_id', string="External Application Credentials")
-
+    pending_order_sync_notify_limit = fields.Integer("Day Limit for Notify Pending Order to Sync")
 
 
 
@@ -143,6 +143,8 @@ class ExternalApplicationCredentials(models.Model):
     entity_key = fields.Char("Entity Key")
     provider = fields.Selection([('versatile', 'Versatile'), ('hunter', 'Hunter')], string='Provider',
                                         default='versatile', required=True)
+    location_based = fields.Boolean("Location Based Entity Key",default=False)
+    location_entity_line = fields.One2many('otl.location.entity.key.line', 'external_application_id', string="Location Based Entity Key")
 
     def action_generate_versatile_user_token(self):
         for record in self:
@@ -153,6 +155,15 @@ class ExternalApplicationCredentials(models.Model):
                     "default_token": record.user_id.token_name or "",
                 }
                 return action
+
+
+class LocationEntityKeyLine(models.Model):
+    _name = 'otl.location.entity.key.line'
+    _description = 'Location Based Entity Key'
+
+    external_application_id = fields.Many2one('otl.external.application.credentials', string='External Application', ondelete='cascade')
+    office_location_id = fields.Many2one('otl.office.location', string='Location')
+    entity_key = fields.Char("Entity Key")
 
 
 class FloorColor(models.Model):

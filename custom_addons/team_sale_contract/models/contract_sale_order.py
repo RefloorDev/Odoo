@@ -345,6 +345,7 @@ class SaleOrder(models.Model):
     stair_calc_based_on = fields.Selection([('list_price', 'Sale Price'), ('msrp', 'MSRP')], string='Stair Calculation Based On',
                                      default='list_price')
     excluded_amount_promotion = fields.Float('Excluded Amount From Promotion')
+    final_sale_price = fields.Float('Finalized Sale Price')
     min_sale_price = fields.Float('Minimum Sale Price', default=0)
     available_installation_line = fields.One2many('otl.available.installation.line', 'order_id', string='Available Installtion Dates')
     additional_comment_synced = fields.Boolean("Synced Additional Comments", default=False)
@@ -691,7 +692,7 @@ class SaleOrder(models.Model):
 
         return transaction
 
-    def add_payment_line(self, discount, adjustment, additional_cost, monthly_promo, admin_fee):
+    def add_payment_line(self, discount, adjustment, additional_cost, monthly_promo, admin_fee, final_sale_price=0):
         min_sale_price = float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0
         obj = self.env['sale.order.line']
         for record in self:
@@ -763,14 +764,17 @@ class SaleOrder(models.Model):
                         else:
                             promotion_amount = record.promotion_code_id.discount or 0
                 measurement_price = record.total_area * list_price
-                round_off_mismatched_amount = round(measurement_price+additional_cost+stair_price+promotion_amount) - (measurement_price+additional_cost+stair_price+promotion_amount)
-                # round_off_mismatched_amount += round(adjustment) - adjustment
-                round_off_mismatched_amount += round(monthly_promo) - monthly_promo
                 net_amount = measurement_price + additional_cost + stair_price - adjustment - monthly_promo - promotion_amount
-                if min_sale_price and net_amount < min_sale_price:
-                    round_off_amount = min_sale_price - net_amount + round_off_mismatched_amount
+                if final_sale_price:
+                    round_off_amount = final_sale_price - net_amount
                 else:
-                    round_off_amount = round_off_mismatched_amount
+                    round_off_mismatched_amount = round(measurement_price+additional_cost+stair_price+promotion_amount) - (measurement_price+additional_cost+stair_price+promotion_amount)
+                    # round_off_mismatched_amount += round(adjustment) - adjustment
+                    round_off_mismatched_amount += round(monthly_promo) - monthly_promo
+                    if min_sale_price and net_amount < min_sale_price:
+                        round_off_amount = min_sale_price - net_amount + round_off_mismatched_amount
+                    else:
+                        round_off_amount = round_off_mismatched_amount
                 if round_off_amount and quote_round_off_product:
                     vals = {
                         'product_id': quote_round_off_product.id,
@@ -2136,11 +2140,18 @@ class SaleOrder(models.Model):
                                     "Category": stair_category_name,
                                 })
                                 stair_count = 0
-                                contract_questions = self.env['team.contract.question.line'].search([
-                                    ('room_id', '=', room_line.room_id.id),
-                                    ('appointment_id', '=', sale_order.appointment_id.id),
-                                    ('question_id.code', '=', 'StairCount')
-                                ], limit=1)
+                                if room_line.custom_room_name:
+                                    contract_questions = self.env['team.contract.question.line'].search([
+                                        ('room_name', '=', room_line.custom_room_name),
+                                        ('appointment_id', '=', sale_order.appointment_id.id),
+                                        ('question_id.code', '=', 'StairCount')
+                                    ], limit=1)
+                                else:
+                                    contract_questions = self.env['team.contract.question.line'].search([
+                                        ('room_id', '=', room_line.room_id.id),
+                                        ('appointment_id', '=', sale_order.appointment_id.id),
+                                        ('question_id.code', '=', 'StairCount')
+                                    ], limit=1)
                                 if contract_questions:
                                     for answer_obj in contract_questions.answers:
                                         stair_count = float(answer_obj.answer)
@@ -2166,7 +2177,7 @@ class SaleOrder(models.Model):
                                 room_cost = 0
                                 if floor_type:
                                     room_cost = room_line.adjusted_area * floor_type.flooring_cost
-                            unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price
+                            unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price + removal_cost
                             # discount = sale_order.adjustment or 0
                             discounted_unit_price = unit_price
                             data.update({"Description": room_line.custom_room_name and room_line.custom_room_name or room_line.room_id.name})
@@ -2186,9 +2197,7 @@ class SaleOrder(models.Model):
                                 if attribute.attribute_id.name == 'colour':
                                     material_colour = attribute.name
                             data.update({"ProductSelected": material_colour})
-                            transitions = self.env['team.contract.transition.line'].search(
-                                [('room_id', '=', room_line.room_id.id),
-                                 ('appointment_id', '=', sale_order.appointment_id.id)])
+                            transitions = room_line.transition_line_id or []
                             count = 1
                             for transition in transitions:
                                 transitions_key1 = 'Transition' + str(count)
@@ -2205,8 +2214,12 @@ class SaleOrder(models.Model):
                                 })
                                 count = count + 1
                             _logger.error('Add Quote Items API Adding Room Transitions')
-                            contract_questions = self.env['team.contract.question.line'].search(
-                                [('room_id', '=', room_line.room_id.id), ('order_id', '=', sale_order.id)])
+                            if room_line.custom_room_name:
+                                contract_questions = self.env['team.contract.question.line'].search(
+                                    [('room_name', '=', room_line.custom_room_name), ('order_id', '=', sale_order.id)])
+                            else:
+                                contract_questions = self.env['team.contract.question.line'].search(
+                                    [('room_id', '=', room_line.room_id.id), ('order_id', '=', sale_order.id)])
                             for contract_question in contract_questions:
                                 question = contract_question.question_id.code
                                 answer = ""
@@ -2215,10 +2228,11 @@ class SaleOrder(models.Model):
                                         answer = eval(contract_question_answer.answer)
                                     else:
                                         answer = contract_question_answer.answer
-                                    if answer == 'Yes':
-                                        answer = True
-                                    elif answer == 'No':
-                                        answer = False
+                                    if question != 'StairCoverRisers':
+                                        if answer == 'Yes':
+                                            answer = True
+                                        elif answer == 'No':
+                                            answer = False
 
                                 data.update({question: answer})
                             _logger.error('Add Quote Items API Adding Contract Questions')
@@ -2304,11 +2318,18 @@ class SaleOrder(models.Model):
                                     "Category": stair_category_name,
                                 })
                                 stair_count = 0
-                                contract_questions = self.env['team.contract.question.line'].search([
-                                    ('room_id', '=', room_line.room_id.id),
-                                    ('appointment_id', '=', sale_order.appointment_id.id),
-                                    ('question_id.code', '=', 'StairCount')
-                                ], limit=1)
+                                if room_line.custom_room_name:
+                                    contract_questions = self.env['team.contract.question.line'].search([
+                                        ('room_name', '=', room_line.custom_room_name),
+                                        ('appointment_id', '=', sale_order.appointment_id.id),
+                                        ('question_id.code', '=', 'StairCount')
+                                    ], limit=1)
+                                else:
+                                    contract_questions = self.env['team.contract.question.line'].search([
+                                        ('room_id', '=', room_line.room_id.id),
+                                        ('appointment_id', '=', sale_order.appointment_id.id),
+                                        ('question_id.code', '=', 'StairCount')
+                                    ], limit=1)
                                 if contract_questions:
                                     for answer_obj in contract_questions.answers:
                                         stair_count = float(answer_obj.answer)
@@ -2334,7 +2355,7 @@ class SaleOrder(models.Model):
                                 room_cost = 0
                                 if floor_type:
                                     room_cost = room_line.adjusted_area * floor_type.flooring_cost
-                            unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price
+                            unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price + removal_cost
                             # discount = sale_order.adjustment or 0
                             discounted_unit_price = unit_price
                             data.update({
@@ -2356,9 +2377,7 @@ class SaleOrder(models.Model):
                                 if attribute.attribute_id.name == 'colour':
                                     material_colour = attribute.name
                             data.update({"ProductSelected": material_colour})
-                            transitions = self.env['team.contract.transition.line'].search(
-                                [('room_id', '=', room_line.room_id.id),
-                                 ('appointment_id', '=', sale_order.appointment_id.id)])
+                            transitions = room_line.transition_line_id or []
                             count = 1
                             for transition in transitions:
                                 transitions_key1 = 'Transition' + str(count)
@@ -2375,8 +2394,12 @@ class SaleOrder(models.Model):
                                 })
                                 count = count + 1
                             _logger.error('Add Quote Items API Adding Room Transitions')
-                            contract_questions = self.env['team.contract.question.line'].search(
-                                [('room_id', '=', room_line.room_id.id), ('order_id', '=', sale_order.id)])
+                            if room_line.custom_room_name:
+                                contract_questions = self.env['team.contract.question.line'].search(
+                                    [('room_name', '=', room_line.custom_room_name), ('order_id', '=', sale_order.id)])
+                            else:
+                                contract_questions = self.env['team.contract.question.line'].search(
+                                    [('room_id', '=', room_line.room_id.id), ('order_id', '=', sale_order.id)])
                             for contract_question in contract_questions:
                                 question = contract_question.question_id.code
                                 answer = ""
@@ -2502,11 +2525,18 @@ class SaleOrder(models.Model):
                                 "Category": stair_category_name,
                             })
                             stair_count = 0
-                            contract_questions = self.env['team.contract.question.line'].search([
-                                ('room_id', '=', room_line.room_id.id),
-                                ('appointment_id', '=', sale_order.appointment_id.id),
-                                ('question_id.code', '=', 'StairCount')
-                            ], limit=1)
+                            if room_line.custom_room_name:
+                                contract_questions = self.env['team.contract.question.line'].search([
+                                    ('room_name', '=', room_line.custom_room_name),
+                                    ('appointment_id', '=', sale_order.appointment_id.id),
+                                    ('question_id.code', '=', 'StairCount')
+                                ], limit=1)
+                            else:
+                                contract_questions = self.env['team.contract.question.line'].search([
+                                    ('room_id', '=', room_line.room_id.id),
+                                    ('appointment_id', '=', sale_order.appointment_id.id),
+                                    ('question_id.code', '=', 'StairCount')
+                                ], limit=1)
                             if contract_questions:
                                 for answer_obj in contract_questions.answers:
                                     stair_count = float(answer_obj.answer)
@@ -2530,7 +2560,7 @@ class SaleOrder(models.Model):
                                     if questions.question_id.code == 'RemoveCurrentCovering':
                                         removal_cost = questions.extra_price or 0
                             room_cost = room_line.adjusted_area * sale_order.floor_type.flooring_cost
-                        unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price
+                        unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price + removal_cost
                         discount = sale_order.adjustment or 0
                         discounted_unit_price = unit_price
                         data.update({'Description': room_line.custom_room_name and room_line.custom_room_name or room_line.room_id.name})
@@ -2550,9 +2580,7 @@ class SaleOrder(models.Model):
                             if attribute.attribute_id.name == 'colour':
                                 material_colour = attribute.name
                         data.update({'ProductSelected': material_colour})
-                        transitions = self.env['team.contract.transition.line'].search(
-                            [('room_id', '=', room_line.room_id.id),
-                             ('appointment_id', '=', sale_order.appointment_id.id)])
+                        transitions = room_line.transition_line_id or []
                         count = 1
                         for transition in transitions:
                             transitions_key1 = 'Transition' + str(count)
@@ -2569,8 +2597,12 @@ class SaleOrder(models.Model):
                             })
                             count = count + 1
                         _logger.error('Add Sale Items API Adding Room Transitions')
-                        contract_questions = self.env['team.contract.question.line'].search(
-                            [('room_id', '=', room_line.room_id.id), ('order_id', '=', sale_order.id)])
+                        if room_line.custom_room_name:
+                            contract_questions = self.env['team.contract.question.line'].search(
+                                [('room_name', '=', room_line.custom_room_name), ('order_id', '=', sale_order.id)])
+                        else:
+                            contract_questions = self.env['team.contract.question.line'].search(
+                                [('room_id', '=', room_line.room_id.id), ('order_id', '=', sale_order.id)])
                         for contract_question in contract_questions:
                             question = contract_question.question_id.code
                             answer = ""
@@ -2579,10 +2611,11 @@ class SaleOrder(models.Model):
                                     answer = eval(contract_question_answer.answer)
                                 else:
                                     answer = contract_question_answer.answer
-                                if answer == 'Yes':
-                                    answer = True
-                                elif answer == 'No':
-                                    answer = False
+                                if question != 'StairCoverRisers':
+                                    if answer == 'Yes':
+                                        answer = True
+                                    elif answer == 'No':
+                                        answer = False
                             data.update({question: answer})
                         _logger.error('Add Sale Items API Adding Contract Questions')
                         _logger.info('-----------------------------------')
@@ -3372,6 +3405,54 @@ class SaleOrder(models.Model):
         except IOError:
             pass
             _logger.error("******--------Error in create_additional_comments_in_i360 API---------********")
+            result.update({"success": "false"})
+        return result
+
+    def action_sync_ext_loan_data_to_i360(self, ext_credit_application):
+        result = {
+            "success": "true",
+            "errors": []
+        }
+        try:
+            configurations = self.env['team.improveit.configuration'].search(
+                [('api_type', '=', 'boomi')], limit=1)
+            _logger.info('--------Starting SyncLoanData API---------')
+            for sale_order in self:
+                appointment = sale_order.appointment_id
+                _logger.info('--------Appointment ID---------: %s' % (sale_order.appointment_id))
+                if sale_order.quote_id and appointment:
+                    data = {
+                        'Id': sale_order.quote_id or '',
+                        'Provider': ext_credit_application.provider or "",
+                        "ProviderRefNumber": ext_credit_application.provider_reference or "",
+                        "ApprovedAmount": ext_credit_application.approved_amount or 0
+                    }
+                    headers = {
+                        'Content-type': 'application/json',
+                    }
+                    end_point_url = configurations.token_url
+                    client_token = configurations.client_token
+                    _logger.info(data)
+                    if end_point_url and client_token:
+                        request_url = end_point_url + 'SyncLoanData' + client_token
+                    req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
+                                        verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    _logger.error('SyncLoanData API Response of Appointment %s :%s' % (
+                        appointment.id, content))
+                    if content.get('success', '') == "true":
+                        ext_credit_application.write({
+                            'improveit_id': content.get('id', ''),
+                        })
+                    if content.get('success', '') == "false":
+                        return content
+                    elif "Errors" in content:
+                        return content.get('Errors', {})
+
+        except IOError:
+            pass
+            _logger.error("******--------Error in action_sync_ext_loan_data_to_i360 API---------********")
             result.update({"success": "false"})
         return result
 

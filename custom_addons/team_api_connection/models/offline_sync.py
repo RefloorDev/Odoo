@@ -807,6 +807,19 @@ class TeamCustomerAppointment(models.Model):
                 appointment_datetime = ''
                 if appointment_date:
                     appointment_datetime = appointment_date.strftime('%d %b %I:%M %p')
+                external_entity_keys = []
+                if data.office_location_id:
+                    location_entity_keys = self.env['otl.location.entity.key.line'].search([
+                        ('office_location_id', '=', data.office_location_id.id),
+                        ('external_application_id.provider', '=', 'versatile')
+                    ])
+                    if location_entity_keys:
+                        for location_entity_key in location_entity_keys:
+                            application = location_entity_key.external_application_id
+                            external_entity_keys.append({
+                                'entity_key': location_entity_key.entity_key or '',
+                                'provider': application.provider or '',
+                            })
                 vals = {
                     'id': data.id,
                     'improveit_appointment_id': data.improveit_appointment_id or '',
@@ -851,7 +864,8 @@ class TeamCustomerAppointment(models.Model):
                     'partner_latitude': data.partner_latitude or 0,
                     'partner_longitude': data.partner_longitude or 0,
                     'recision_date': self.env.user.company_id.recision_date and self.env.user.company_id.recision_date.strftime(
-                        DEFAULT_SERVER_DATE_FORMAT) or ''
+                        DEFAULT_SERVER_DATE_FORMAT) or '',
+                    'external_entity_keys': external_entity_keys
                 }
                 list.append(vals)
 
@@ -1298,6 +1312,7 @@ class TeamCustomerAppointment(models.Model):
             msrp = float(data.get('msrp', 0))
             savings_amount = float(data.get('savings', 0))
             excluded_amount_promotion = float(data.get('excluded_amount_promotion', 0))
+            final_sale_price = float(data.get('price', 0))
             adjustment = float(data.get('adjustment', 0))
             additional_cost = float(data.get('additional_cost', 0))
             down_payment_amount = float(data.get('down_payment_amount', 0))
@@ -1479,6 +1494,7 @@ class TeamCustomerAppointment(models.Model):
                 'msrp_amount': msrp,
                 'savings_amount': savings_amount,
                 'excluded_amount_promotion': excluded_amount_promotion,
+                'final_sale_price': final_sale_price,
                 'one_year_price': msrp+additional_cost,
                 'coapplicant_skip': True if coapplicant_skip == 1 else False,
                 'applicant_inititals': initials or '',
@@ -1531,7 +1547,7 @@ class TeamCustomerAppointment(models.Model):
                     room_transition_obj.write({'order_id': sale_order.id})
 
                 _logger.info("------Sale Order updated------------")
-                sale_order.add_payment_line(discount, adjustment, additional_cost, plan.monthly_promo, 0)
+                sale_order.add_payment_line(discount, adjustment, additional_cost, plan.monthly_promo, 0, final_sale_price)
 
             status = {
                 'message': ' Payment plan details are updated successfully',
@@ -1928,6 +1944,25 @@ class TeamCustomerAppointment(models.Model):
                                 'state': 'failed',
                                 'name': 'AddCreditApplication',
                             })
+                    ext_credit_application = self.env['otl.versatile.credit.application'].search(
+                        [('appointment_id', '=', int(appointment_id)), ('status', '=ilike', 'approved')], limit=1)
+                    if ext_credit_application and not ext_credit_application.improveit_id:
+                        result = sale_order.action_sync_ext_loan_data_to_i360(ext_credit_application)
+                        if result.get('success', '') == 'true':
+                            _logger.info("------ SyncLoanData Create,Update Success-------------")
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'SyncLoanData',
+                            })
+                        else:
+                            _logger.info("------ SyncLoanData Create,Update Failed-------------")
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'SyncLoanData',
+                            })
                     sale_order_vals = {}
                     if sale_order.appointment_result == 'Sold':
                         if appointment.card_transaction_log_line.filtered(
@@ -2023,7 +2058,7 @@ class TeamCustomerAppointment(models.Model):
                             sale_order_vals.update({'other_files_uploaded': True})
                     enable_additional_comment_api = eval(
                         str(self.env['ir.config_parameter'].sudo().get_param('enable_additional_comment_api')))
-                    if enable_additional_comment_api and not sale_order.additional_comment_synced:
+                    if sale_order.appointment_result == 'Sold' and enable_additional_comment_api and not sale_order.additional_comment_synced:
                         result = sale_order.create_additional_comments_in_i360()
                         if result.get('success', '') == 'true':
                             sync_log.create({
@@ -2269,7 +2304,7 @@ class TeamCustomerAppointment(models.Model):
                 if order.state != 'draft':
                     order.write({'state': 'draft'})
                 if order.floor_type:
-                    order.add_payment_line(order.discount, order.adjustment, order.additional_cost, 0, 0)
+                    order.add_payment_line(order.discount, order.adjustment, order.additional_cost, 0, 0, order.final_sale_price)
                 for room_data in room_list:
                     room_id = room_data.get('room_id', False)
                     room_measurement_line = order.room_measurement_line.filtered(
@@ -2375,8 +2410,17 @@ class TeamCustomerAppointment(models.Model):
                                             return credit_application_result
                                 if order.state != 'draft':
                                     order.write({'state': 'draft'})
-                                if rooms_list and not order.room_measurement_line:
-                                    room_measure_result = appointment.action_update_room_measurements(rooms_list, order)
+                                room_measure_result = {}
+                                if rooms_list:
+                                    all_room_updated = True
+                                    if not order.room_measurement_line:
+                                        all_room_updated = False
+                                    else:
+                                        for room_data in rooms_list:
+                                            if not order.room_measurement_line.filtered(lambda x: x.custom_room_name == room_data.get('room_name', '') or (room_data.get('room_id') and x.room_id.id == int(room_data.get('room_id')) or False)):
+                                                all_room_updated= False
+                                    if not all_room_updated:
+                                        room_measure_result = appointment.action_update_room_measurements(rooms_list, order)
                                     if room_measure_result.get('result', False) == 'Failed':
                                         room_measure_result.update({
                                             'payment_status': payment_status,
@@ -2394,7 +2438,7 @@ class TeamCustomerAppointment(models.Model):
                                 if order.floor_type:
                                     monthly_promo = order.floor_type and order.floor_type.monthly_promo or 0
                                     order.add_payment_line(order.discount, order.adjustment, order.additional_cost,
-                                                       monthly_promo, 0)
+                                                       monthly_promo, 0, order.final_sale_price)
                                 if order.down_payment_amount and data.get('paymentmethod', {}) and not order.payment_method:
                                     payment_result = order.action_update_payment_data(data.get('paymentmethod', {}), existing_auth_transaction_id, card_type)
                                     payment_status = payment_result.get('result', '')
@@ -2504,7 +2548,7 @@ class TeamCustomerAppointment(models.Model):
                                     return room_quesionnaire_result
                             if order.floor_type:
                                 monthly_promo = order.floor_type and order.floor_type.monthly_promo or 0
-                                order.add_payment_line(order.discount, order.adjustment, order.additional_cost, monthly_promo, 0)
+                                order.add_payment_line(order.discount, order.adjustment, order.additional_cost, monthly_promo, 0, order.final_sale_price)
                         if order.down_payment_amount:
                             if data.get('paymentmethod', {}):
                                 payment_result = order.action_update_payment_data(data.get('paymentmethod', {}))
@@ -3138,56 +3182,55 @@ class TeamCustomerAppointment(models.Model):
         _logger.info("------action_get_credit_application_status data: %s-------------" % (data))
         try:
             appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
+            improveit_appointment_id = data.get('improveit_appointment_id', '') and data.get('improveit_appointment_id', '') or ''
             loan_type = data.get('loan_type', '')
             if not loan_type:
                 return {
                     'message': 'Empty Loan Type',
                     'result': 'Failed'
                 }
-            if appointment_id:
+            if loan_type not in ['versatile', 'hunter']:
+                return {
+                    'message': 'Wrong Loan Type',
+                    'result': 'Failed'
+                }
+            appointment = False
+            versatile_application = False
+            if improveit_appointment_id:
+                appointment = self.env['team.customer.appointment'].search([('improveit_appointment_id', '=', improveit_appointment_id)], limit=1)
+                versatile_application = self.env['otl.versatile.credit.application'].search(
+                    [('ext_customer_id', '=', improveit_appointment_id), ('finance_provider', '=', loan_type)], limit=1)
+            elif appointment_id:
                 appointment = self.env['team.customer.appointment'].browse(appointment_id)
-                if appointment.exists():
-                    if loan_type in ['versatile', 'hunter']:
-                        versatile_application = self.env['otl.versatile.credit.application'].search([('appointment_id', '=', appointment_id)], limit=1)
-                        if not versatile_application:
-                            result = {
-                                'message': 'Credit application is not existing',
-                                'result': 'Failed'
-                            }
-                        else:
-                            result = {
-                                "result": "Success",
-                                "data": {
-                                    "application_id": versatile_application.application_id or "",
-                                    "provider": versatile_application.provider or "",
-                                    "provider_reference": versatile_application.provider_reference or "",
-                                    "status": versatile_application.status or "",
-                                    "approved_amount": versatile_application.approved_amount or 0,
-                                    "finance_provider": versatile_application.finance_provider or "",
-                                }
-                            }
-                    else:
+                versatile_application = self.env['otl.versatile.credit.application'].search(
+                    [('appointment_id', '=', appointment_id), ('finance_provider', '=', loan_type)], limit=1)
+            if appointment and appointment.exists():
+                    if not versatile_application:
                         result = {
-                            'message': 'Wrong Loan Type',
+                            'message': 'Credit application is not existing',
                             'result': 'Failed'
                         }
-
-                else:
-                    _logger.info("------Wrong Appointment Id-------------")
-                    result = {
-                        'message': 'Wrong Appointment Id',
-                        'result': 'Failed'
-                    }
-
+                    else:
+                        result = {
+                            "result": "Success",
+                            "data": {
+                                "application_id": versatile_application.application_id or "",
+                                "provider": versatile_application.provider or "",
+                                "provider_reference": versatile_application.provider_reference or "",
+                                "status": versatile_application.status or "",
+                                "approved_amount": versatile_application.approved_amount or 0,
+                                "finance_provider": versatile_application.finance_provider or "",
+                            }
+                        }
             else:
-                _logger.info("------Empty Appointment Id-------------")
+                _logger.info("------Wrong Appointment Id-------------")
                 result = {
-                    'message': 'Empty Appointment Id',
+                    'message': 'Wrong Appointment Id',
                     'result': 'Failed'
                 }
         except:
             result = {
-                'message': 'Something Went Wrong.',
+                'message': 'Something went wrong while fetching application status.',
                 'result': 'Failed'
             }
         _logger.info("------action_get_credit_application_status result: %s-------------" % (result))
@@ -3201,22 +3244,25 @@ class TeamCustomerAppointment(models.Model):
             sync_log = self.env['otl.appointment.sync.log']
             _logger.info('------Starting action_start_sync_arrival_departure_time_to_i360------: %s'%(appointment_id))
             appointment = self.env['team.customer.appointment'].browse(int(appointment_id))
-            result = appointment.update_arrival_departure_time_in_i360()
-            if result.get('success', '') == 'true':
-                _logger.info("------ SalesRepArrivalDeparture Success-------------")
-                sync_log.create({
-                    'appointment_id': appointment.id,
-                    'response': result,
-                    'name': 'SalesRepArrivalDeparture',
-                })
+            if appointment.arrival_date or appointment.departure_date:
+                result = appointment.update_arrival_departure_time_in_i360()
+                if result.get('success', '') == 'true':
+                    _logger.info("------ SalesRepArrivalDeparture Success-------------")
+                    sync_log.create({
+                        'appointment_id': appointment.id,
+                        'response': result,
+                        'name': 'SalesRepArrivalDeparture',
+                    })
+                else:
+                    _logger.info("------ SalesRepArrivalDeparture Failed-------------")
+                    sync_log.create({
+                        'appointment_id': appointment.id,
+                        'response': result,
+                        'state': 'failed',
+                        'name': 'SalesRepArrivalDeparture',
+                    })
             else:
-                _logger.info("------ SalesRepArrivalDeparture Failed-------------")
-                sync_log.create({
-                    'appointment_id': appointment.id,
-                    'response': result,
-                    'state': 'failed',
-                    'name': 'SalesRepArrivalDeparture',
-                })
+                _logger.info('-----No Arrival & Departure Time in appointment----')
             self.env.cr.commit()
             new_cr.close()
             _logger.info('------End of action_start_sync_arrival_departure_time_to_i360------: %s' % (appointment_id))
@@ -4501,7 +4547,7 @@ class VersatileCreditApplication(models.Model):
             return {"result": "Failed", "message": "Appointment is not found related to the External Customer ID '%s'."%(ext_customer_id)}
         if event_date:
             event_date = self.convert_date_to_utc(event_date, tz)
-        credit_application = self.search([('webhook_event_id', '=', webhook_event_id)], limit=1)
+        credit_application = self.search([('appointment_id', '=', appointment.id)], limit=1)
 
         account_id = data.get("accountId", "")
         provider = data.get("providerId", "")
