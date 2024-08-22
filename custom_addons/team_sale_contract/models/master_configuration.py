@@ -7,8 +7,11 @@ from odoo.osv import expression
 from odoo.exceptions import ValidationError
 from odoo.addons.resource.models.resource import float_to_time
 import pytz
+from google.oauth2 import service_account
+from google.cloud import storage
 from dateutil.relativedelta import relativedelta
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT
+import os
 
 import logging
 
@@ -129,6 +132,132 @@ class ResCompany(models.Model):
                         if room_measure.shape_image_id:
                             room_measure.shape_image_id.unlink()
             self.env['ir.autovacuum'].sudo().power_on()
+
+    def get_attachment_file_path(self, attachment_id):
+        file_path = ''
+        attachment = self.env['ir.attachment'].browse(int(attachment_id))
+        if attachment and attachment.store_fname:
+            file_path = attachment._full_path(attachment.store_fname)
+        return file_path
+
+    def action_upload_file_to_cloud_storage(self, attachment, bucket, destination_blob_name):
+        source_file_path = self.get_attachment_file_path(attachment.id)
+        _logger.info('Source File %s'%(source_file_path))
+        if source_file_path and os.path.exists(source_file_path):
+            _logger.info('Cloud File Upload starting: %s' % (source_file_path))
+            blob = bucket.blob(destination_blob_name)
+            blob.upload_from_filename(source_file_path)
+            blob.make_public()
+            url = blob.public_url
+            if url:
+                attachment.write({
+                    'datas': False,
+                    'type': 'url',
+                    'url': url
+                })
+            attachment._file_delete(source_file_path)
+        return True
+
+    @api.model
+    def cron_upload_attachments_to_cloud_storage(self):
+        google_auth_attachment_id = self.env['ir.config_parameter'].sudo().get_param(
+                    'google_auth_attachment_id') or False
+        google_bucket_name = self.env['ir.config_parameter'].sudo().get_param(
+                    'google_bucket_name') or ''
+        signature_path = '{date}/{appointment}/Sign'
+        snapshot_path = '{date}/{appointment}/Snapshot'
+        document_path = '{date}/{appointment}/Documents'
+        room_path = '{date}/{appointment}/Rooms/{room_name}/Images'
+        room_measurement_path = '{date}/{appointment}/Rooms/{room_name}/Measurements'
+        room_anomaly_path = '{date}/{appointment}/Rooms/{room_name}/Anomaly'
+        if google_auth_attachment_id:
+            google_auth_file_path = self.get_attachment_file_path(google_auth_attachment_id)
+            if google_auth_file_path:
+                credentials = service_account.Credentials.from_service_account_file(google_auth_file_path)
+                storage_client = storage.Client(credentials=credentials)
+
+                # Get the bucket
+                bucket = storage_client.bucket(google_bucket_name)
+                for company in self.search([]):
+                    orders = self.env['sale.order'].search([
+                        ('synced_to_cloud_storage', '=', False),
+                        ('is_data_upload_completed', '=', True),
+                        ('company_id', '=', company.id)
+                    ])
+                    for order in orders:
+                        appointment = order.appointment_id or False
+                        if appointment:
+                            appointment_date = appointment.appointment_date.strftime('%d%b%Y')
+                            appointment_name = appointment.improveit_appointment_id or appointment.name
+                            _logger.info('Start Processing Cloud Upload. Appointment:%s, Sale Order: %s'%(appointment_name, order.name))
+                            for attachment in appointment.attachment_ids:
+                                destination_blob_name = snapshot_path.format(date=appointment_date, appointment=appointment_name) + '/%s'%attachment.name
+                                self.action_upload_file_to_cloud_storage(attachment, bucket, destination_blob_name=destination_blob_name)
+                            if appointment.applicant_signature_id:
+                                destination_blob_name = signature_path.format(date=appointment_date,
+                                                                             appointment=appointment_name) + '/%s' % appointment.applicant_signature_id.name
+                                self.action_upload_file_to_cloud_storage(appointment.applicant_signature_id, bucket,
+                                                                         destination_blob_name=destination_blob_name)
+                            if appointment.applicant_initial_id:
+                                destination_blob_name = signature_path.format(date=appointment_date,
+                                                                             appointment=appointment_name) + '/%s' % appointment.applicant_initial_id.name
+                                self.action_upload_file_to_cloud_storage(appointment.applicant_initial_id, bucket,
+                                                                         destination_blob_name=destination_blob_name)
+                            if appointment.co_applicant_signature_id:
+                                destination_blob_name = signature_path.format(date=appointment_date,
+                                                                             appointment=appointment_name) + '/%s' % appointment.co_applicant_signature_id.name
+                                self.action_upload_file_to_cloud_storage(appointment.co_applicant_signature_id, bucket,
+                                                                         destination_blob_name=destination_blob_name)
+                            if appointment.co_applicant_initial_id:
+                                destination_blob_name = signature_path.format(date=appointment_date,
+                                                                             appointment=appointment_name) + '/%s' % appointment.co_applicant_initial_id.name
+                                self.action_upload_file_to_cloud_storage(appointment.co_applicant_initial_id, bucket,
+                                                                        destination_blob_name=destination_blob_name)
+                            credit_applications = self.env['team.credit.application'].search(
+                                [('appointment_id', '=', appointment.id)])
+                            for credit_application in credit_applications:
+                                if credit_application.attachment_id:
+                                    destination_blob_name = document_path.format(date=appointment_date,
+                                                                                  appointment=appointment_name) + '/%s' % credit_application.attachment_id.name
+                                    self.action_upload_file_to_cloud_storage(credit_application.attachment_id,
+                                                                             bucket,
+                                                                             destination_blob_name=destination_blob_name)
+                            if order.contract_doc_attachment_id:
+                                _logger.info('Starting Contract Document Cloud Upload. Appointment:%s, Sale Order: %s' % (appointment_name, order.name))
+                                destination_blob_name = document_path.format(date=appointment_date,
+                                                                             appointment=appointment_name) + '/%s' % order.contract_doc_attachment_id.name
+                                self.action_upload_file_to_cloud_storage(order.contract_doc_attachment_id,
+                                                                         bucket,
+                                                                         destination_blob_name=destination_blob_name)
+                            for room_measure in order.room_measurement_line:
+                                room_name = room_measure.custom_room_name and room_measure.custom_room_name or room_measure.room_id.name
+                                room_name = room_name.replace(' ', '')
+                                _logger.info(
+                                    'Starting Room %s Cloud Upload. Appointment:%s, Sale Order: %s' % (
+                                    room_name, appointment_name, order.name))
+                                if room_measure.attachment_ids:
+                                    for attachment in room_measure.attachment_ids:
+                                        destination_blob_name = room_path.format(date=appointment_date, room_name= room_name,
+                                                                                     appointment=appointment_name) + '/%s' % attachment.name
+                                        self.action_upload_file_to_cloud_storage(attachment, bucket,
+                                                                                 destination_blob_name=destination_blob_name)
+
+                                if room_measure.protrusion_image_ids:
+                                    for attachment in room_measure.protrusion_image_ids:
+                                        destination_blob_name = room_anomaly_path.format(date=appointment_date,
+                                                                                         room_name=room_name,
+                                                                                         appointment=appointment_name) + '/%s' % attachment.name
+                                        self.action_upload_file_to_cloud_storage(attachment, bucket,
+                                                                                 destination_blob_name=destination_blob_name)
+                                if room_measure.shape_image_id:
+                                    destination_blob_name = room_measurement_path.format(date=appointment_date, room_name=room_name,
+                                                                             appointment=appointment_name) + '/%s' % room_measure.shape_image_id.name
+                                    self.action_upload_file_to_cloud_storage(room_measure.shape_image_id, bucket,
+                                                                             destination_blob_name=destination_blob_name)
+                        order.write({'synced_to_cloud_storage': True})
+                        _logger.info('Completed Processing Cloud Upload. Appointment:%s, Sale Order: %s'%(appointment_name, order.name))
+        self.env['ir.autovacuum'].sudo().power_on()
+        return True
 
 
 class ExternalApplicationCredentials(models.Model):
@@ -513,7 +642,7 @@ class SalesAppVersion(models.Model):
 
     name = fields.Char('App Version', required=True)
     date = fields.Date('Release Date', required=True, default=fields.Date.context_today)
-    description = fields.Char('Description')
+    description = fields.Text('Description')
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     sale_contract_tmpl_id = fields.Many2one('otl_document_sign.template', string='Sign Template')
     sale_contract_tmpl_id_ncp = fields.Many2one('otl_document_sign.template',
@@ -571,6 +700,9 @@ class UserAuthenticationLog(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=False, default=lambda self: self.env.company)
     action_done = fields.Selection([('user', 'User'), ('admin', 'Admin'), ('automated', 'Automated')],
                                    string='Action Done By', default='user', required=True)
+    device_name = fields.Char(string='Device Name')
+    device_os = fields.Char(string='Device OS')
+    app_version = fields.Char(string='App Version')
 
 
 class Weekdays(models.Model):

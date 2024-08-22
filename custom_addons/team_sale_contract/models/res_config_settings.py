@@ -10,6 +10,7 @@ class ResConfigSettings(models.TransientModel):
     sale_contract_tmpl_id_ncp = fields.Many2one('otl_document_sign.template',string='Sign Template Without Co-Applicant')
     credit_application_tmpl_id = fields.Many2one('otl_document_sign.template', string='Credit Application Template')
     credit_application_tmpl_id_ncp = fields.Many2one('otl_document_sign.template', string='Credit Application Template Without Co-Applicant')
+    google_auth_attachment_id = fields.Many2one('ir.attachment', string='Google Service Auth File')
     admin_fee = fields.Float("Admin Fee")
     min_sale_price = fields.Float("Minimum Sale Price")
     max_no_transitions = fields.Integer("Maximum No. of Transitions Allowed")
@@ -21,6 +22,7 @@ class ResConfigSettings(models.TransientModel):
     installer_date_range_limit = fields.Integer("Installer Date Range Limit", default=30)
     enable_geolocation = fields.Boolean('Enable Geolocation Tracking', default=False)
     geolocation_radius_limit = fields.Integer("Geolocation Radius Limit")
+    google_bucket_name = fields.Char("Google Bucket Name")
 
     @api.model
     def get_values(self):
@@ -31,6 +33,7 @@ class ResConfigSettings(models.TransientModel):
         sale_contract_tmpl_id_ncp = params.get_param('sale_contract_tmpl_id_ncp', default=False)
         credit_application_tmpl_id = params.get_param('credit_application_tmpl_id',default=False)
         credit_application_tmpl_id_ncp = params.get_param('credit_application_tmpl_id_ncp', default=False)
+        google_auth_attachment_id = params.get_param('google_auth_attachment_id', default=False)
         admin_fee = params.get_param('admin_fee',default=0.0)
         min_sale_price = params.get_param('min_sale_price',default=0.0)
         max_no_transitions = params.get_param('max_no_transitions',default=0)
@@ -42,6 +45,7 @@ class ResConfigSettings(models.TransientModel):
         installer_date_range_limit = params.get_param('installer_date_range_limit',default=30)
         enable_geolocation = str(params.get_param('enable_geolocation', default=False))
         geolocation_radius_limit = params.get_param('geolocation_radius_limit', default=150)
+        google_bucket_name = params.get_param('google_bucket_name', default='')
 
 
         res.update({
@@ -49,6 +53,7 @@ class ResConfigSettings(models.TransientModel):
             'sale_contract_tmpl_id_ncp':int(sale_contract_tmpl_id_ncp),
             'credit_application_tmpl_id':int(credit_application_tmpl_id),
             'credit_application_tmpl_id_ncp':int(credit_application_tmpl_id_ncp),
+            'google_auth_attachment_id':int(google_auth_attachment_id),
             'admin_fee':float(admin_fee),
             'min_sale_price':float(min_sale_price),
             'max_no_transitions':int(max_no_transitions),
@@ -60,6 +65,7 @@ class ResConfigSettings(models.TransientModel):
             'installer_date_range_limit': int(installer_date_range_limit),
             'enable_geolocation': eval(enable_geolocation),
             'geolocation_radius_limit': int(geolocation_radius_limit),
+            'google_bucket_name': str(google_bucket_name),
         })
         return res
 
@@ -69,6 +75,7 @@ class ResConfigSettings(models.TransientModel):
         self.env['ir.config_parameter'].sudo().set_param("sale_contract_tmpl_id_ncp", self.sale_contract_tmpl_id_ncp.id)
         self.env['ir.config_parameter'].sudo().set_param("credit_application_tmpl_id", self.credit_application_tmpl_id.id)
         self.env['ir.config_parameter'].sudo().set_param("credit_application_tmpl_id_ncp",self.credit_application_tmpl_id_ncp.id)
+        self.env['ir.config_parameter'].sudo().set_param("google_auth_attachment_id",self.google_auth_attachment_id.id)
         self.env['ir.config_parameter'].sudo().set_param("admin_fee",self.admin_fee)
         self.env['ir.config_parameter'].sudo().set_param("min_sale_price",self.min_sale_price)
         self.env['ir.config_parameter'].sudo().set_param("max_no_transitions",self.max_no_transitions)
@@ -80,4 +87,5 @@ class ResConfigSettings(models.TransientModel):
         self.env['ir.config_parameter'].sudo().set_param("installer_date_range_limit",self.installer_date_range_limit)
         self.env['ir.config_parameter'].sudo().set_param("enable_geolocation", self.enable_geolocation or 'False')
         self.env['ir.config_parameter'].sudo().set_param("geolocation_radius_limit",self.geolocation_radius_limit)
+        self.env['ir.config_parameter'].sudo().set_param("google_bucket_name",self.google_bucket_name)
 

@@ -111,13 +111,14 @@ class API_Homes(http.Controller):
             user_id = int(user_id)
         return user_id, password
 
-    def authenticate_user(self, username, password, registered_id=False, restrict_multi_login= 0):
+    def authenticate_user(self, username, password, user_values={}, restrict_multi_login=0):
         uid = False
         token = ''
         result = {}
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         if username and password and DB:
             uid = common.authenticate(DB, username, password, {})
+            registered_id = user_values.get('device_reg_id', '')
             if uid:
                 user = request.env['res.users'].browse(uid)
                 if restrict_multi_login and user.token_name and user.device_reg_id and user.device_reg_id != registered_id:
@@ -146,16 +147,16 @@ class API_Homes(http.Controller):
                     'user_id': uid,
                     'token': token,
                 })
-                request.env['res.users'].action_log_user_authentication(uid, 'login', token)
+                request.env['res.users'].action_log_user_authentication(uid, 'login', token, user_values)
                 result.update({
                     'result': 'Success',
                     'values': [user_details],
                     'message': '',
                 })
-                if registered_id:
-                    values = {'login': username, 'registered_id': registered_id}
+                if user_values:
+                    user_values.update({'login': username})
                     data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'update_device_id',
-                                             [values])
+                                             [user_values])
                     return result
             else:
                 _logger.info("------------Invalid Credentials-------------------")
@@ -313,6 +314,9 @@ class API_Homes(http.Controller):
         username = values.get('login', False)
         password = values.get('password', False)
         registered_id = values.get('device_reg_id', False)
+        device_name = values.get('device_name', '')
+        device_os = values.get('device_os', '')
+        app_version = values.get('app_version', '')
         restrict_multi_login = int(values.get('restrict_multi_login', 0))
         if not username:
             _logger.info("--------:----Empty username-------------------")
@@ -326,7 +330,13 @@ class API_Homes(http.Controller):
         data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'authenticate_salesperson_user',
                                      [{'username': username, 'password': password}])
         if data.get('result', '') == 'Success':
-            message = self.authenticate_user(username, password, registered_id, restrict_multi_login)
+            user_vals = {
+                'device_reg_id': registered_id,
+                'device_name': device_name,
+                'device_os': device_os,
+                'app_version': app_version,
+            }
+            message = self.authenticate_user(username, password, user_vals, restrict_multi_login)
             _logger.info("------------Authenticating User------------------")
             return json.dumps(message)
         else:

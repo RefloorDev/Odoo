@@ -2,6 +2,7 @@
 
 
 ## Properties
+
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **str** |  | [optional] 
@@ -36,8 +37,24 @@ Name | Type | Description | Notes
 **leveling_sqft** | **int** |  | [optional] 
 **grade** | **str** |  | [optional] 
 **slot** | [**ProposedSlot**](ProposedSlot.md) |  | [optional] 
-**any string name** | **bool, date, datetime, dict, float, int, list, str, none_type** | any string name can be used but the value must be the correct type | [optional]
 
+## Example
+
+```python
+from fusion_refloor.models.proposed_crew import ProposedCrew
+
+# TODO update the JSON string below
+json = "{}"
+# create an instance of ProposedCrew from a JSON string
+proposed_crew_instance = ProposedCrew.from_json(json)
+# print the JSON string representation of the object
+print(ProposedCrew.to_json())
+
+# convert the object into a dict
+proposed_crew_dict = proposed_crew_instance.to_dict()
+# create an instance of ProposedCrew from a dict
+proposed_crew_from_dict = ProposedCrew.from_dict(proposed_crew_dict)
+```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 
 

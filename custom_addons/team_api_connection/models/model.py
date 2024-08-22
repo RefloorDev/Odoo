@@ -288,9 +288,9 @@ class ResUsers(models.Model):
                     status = {'message': 'Authenticating User Failed', 'result': 'Failed'}
                     return status
 
-            except requests.HTTPError:
-                _logger.info("------Authenticating User Failed-------------")
-                status = {'message': 'Authentication API Failed.', 'result': 'Failed'}
+            except Exception as e:
+                _logger.error("------Error in  authenticate_salesperson_user: %s"%e)
+                status = {'message': 'An error occurred during the authentication process.', 'result': 'Failed'}
                 return status
         else:
             status = {'message': 'Url Endpoint Not Configured', 'result': 'Failed'}
@@ -1070,7 +1070,7 @@ class TeamCustomerAppointment(models.Model):
                         _logger.info(update_prospects_vals)
                         req = requests.post(url, data=json.dumps(update_prospects_vals), headers=headers,
                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
-                        _logger.error('UpdateAppointmentProspect API Response of Appointment %s : %s' % (
+                        _logger.info('UpdateAppointmentProspect API Response of Appointment %s : %s' % (
                         appointment.id, str(req.content)))
                         req.raise_for_status()
                         try:
@@ -1100,7 +1100,7 @@ class TeamCustomerAppointment(models.Model):
                         return content
                     except IOError:
                         status = {'message': 'Appointment Update API Error', 'result': False}
-                        _logger.info(status)
+                        _logger.error(status)
                         return status
         return True
 
@@ -3258,7 +3258,7 @@ class SaleOrder(models.Model):
             if record.appointment_id:
                 appointment = record.appointment_id
                 if (not appointment.arrival_departure_synced) and (
-                        appointment.arrival_date or appointment.departure_date):
+                        appointment.arrival_date and appointment.departure_date):
                     is_data_upload_completed = False
             if record.appointment_result == 'Sold':
                 if not record.quote_id:
@@ -5003,14 +5003,17 @@ class SaleOrder(models.Model):
         # ----------------------------------------------------
         # i360 sync operation is split into 2 cron job. Here we sync sale & update prospect info & appointment result
         # -----------------------------------------------------
-        orders = self.search(
-            [('is_data_upload_completed', '=', False), ('appointment_id.start_sync_to_i360', '=', True)])
+        sync_start_allow_time = datetime.now() - relativedelta(minutes=10)
+        orders = self.search([
+            ('is_data_upload_completed', '=', False),
+            ('appointment_id.start_sync_to_i360', '=', True),
+            ('appointment_id.sync_initiated_date', '<=', sync_start_allow_time)])
         sync_log = self.env['otl.appointment.sync.log']
         model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
         for sale_order in orders:
             appointment = sale_order.appointment_id
             if appointment and appointment.start_sync_to_i360:
-                if (not appointment.arrival_departure_synced) and (appointment.arrival_date or appointment.departure_date):
+                if (not appointment.arrival_departure_synced) and (appointment.arrival_date and appointment.departure_date):
                     result = appointment.update_arrival_departure_time_in_i360()
                     if result.get('success', '') == 'true':
                         _logger.info("------ SalesRepArrivalDeparture Success-------------")
@@ -5160,7 +5163,7 @@ class SaleOrder(models.Model):
                             })
                     sale_order_vals = {}
                     room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
-                        lambda x: not x.exclude_from_calculation and not x.improveit_id)
+                        lambda x: not x.improveit_id)
                     if room_measurement_lines_to_sync:
                         if sale_order.appointment_result == 'Sold':
                             response_result = sale_order.add_sale_items_api()
@@ -5300,9 +5303,14 @@ class SaleOrder(models.Model):
                                 'state': 'failed',
                                 'name': 'AddSaleComments',
                             })
-                    sale_order.write(sale_order_vals)
                     if sale_order.check_document_upload_completed():
-                        sale_order.write({'is_data_upload_completed': True})
+                        sale_order_vals.update({'is_data_upload_completed': True})
+                    if sale_order_vals:
+                        sale_order_vals.update({
+                            'write_uid': self.env.user and self.env.user.id or 1,
+                            'write_date': datetime.now().replace(tzinfo=pytz.utc)
+                        })
+                        sale_order.write(sale_order_vals)
                     self.env.cr.commit()
         return True
 

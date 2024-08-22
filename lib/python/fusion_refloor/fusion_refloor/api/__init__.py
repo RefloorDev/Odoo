@@ -1,3 +1,6 @@
-# do not import all apis into this module because that uses a lot of memory and stack frames
-# if you need the ability to import all apis from one package, import them with
-# from fusion_refloor.apis import SchedulingServicesApi
+# flake8: noqa
+
+# import apis into api package
+from fusion_refloor.api.commissions_services_api import CommissionsServicesApi
+from fusion_refloor.api.scheduling_services_api import SchedulingServicesApi
+

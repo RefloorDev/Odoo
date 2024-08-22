@@ -13,5 +13,29 @@
             <field name="code">model.cron_delete_ild_attachments()</field>
         </record>
 
+        <record id="attachment_sync_to_cloud_storage_cron" forcecreate='True' model="ir.cron">
+            <field name="name">Upload Files to Cloud Storage Bucket</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="model_id" ref="base.model_res_company"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_upload_attachments_to_cloud_storage()</field>
+        </record>
+
+        <record id="daily_sync_status_report_cron" forcecreate='True' model="ir.cron">
+            <field name="name">Send Daily Sync Report</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="model_id" ref="team_sale_contract.model_otl_day_wise_sync_status_report"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_send_daily_sync_status_report()</field>
+        </record>
+
     </data>
 </odoo>

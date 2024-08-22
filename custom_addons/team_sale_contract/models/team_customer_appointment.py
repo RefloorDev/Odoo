@@ -1,6 +1,7 @@
 from odoo import models, fields, api, _
 import time
-from datetime import timedelta
+from datetime import timedelta, datetime
+import pytz
 
 _STATES = [
     ('draft', 'New'),
@@ -265,7 +266,9 @@ class TeamCustomerAppointment(models.Model):
                 partner.write({
                     'partner_latitude': result[0],
                     'partner_longitude': result[1],
-                    'date_localization': fields.Date.context_today(partner)
+                    'date_localization': fields.Date.context_today(partner),
+                    'write_uid': self.env.user.id,
+                    'write_date': datetime.now().replace(tzinfo=pytz.utc)
                 })
         return True
 
@@ -305,8 +308,9 @@ class APISyncLog(models.Model):
     response = fields.Text('Sync Response')
     data = fields.Text('API Data')
     name = fields.Char('API')
+    network_strength = fields.Char('Network Strength')
 
-    def create_api_log(self, url, data, uid, result):
+    def create_api_log(self, url, data, uid, result, network_strength=''):
         appointment_id = data.get('appointment_id', False)
         sale_order_id = data.get('sale_order_id', False)
         if sale_order_id and not appointment_id:
@@ -324,10 +328,11 @@ class APISyncLog(models.Model):
                 'data': data,
                 'response': result,
                 'state': state,
+                'network_strength': network_strength,
             })
         return True
 
-    def store_database_raw_data(self, url, data, uid, appointment_id):
+    def store_database_raw_data(self, url, data, uid, appointment_id, network_strength=''):
         result = {'result': 'Failed', 'message': 'Something went wrong while storing data'}
         state = 'success'
         if uid and appointment_id and self.env['team.customer.appointment'].browse(int(appointment_id)).exists():
@@ -339,6 +344,7 @@ class APISyncLog(models.Model):
                 'data': data,
                 'response': result,
                 'state': state,
+                'network_strength': network_strength,
             })
         else:
             result = {'result': 'Failed', 'message': 'Appointment is not existing'}

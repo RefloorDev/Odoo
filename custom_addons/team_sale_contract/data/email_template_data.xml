@@ -1,0 +1,27 @@
+<?xml version="1.0" ?>
+<odoo>
+
+    <!-- Mail template are declared in a NOUPDATE block
+         so users can freely customize/delete them -->
+    <data noupdate="1">
+
+        <record id="email_template_daily_sync_report" model="mail.template">
+            <field name="name">Daily Sync Status Report</field>
+            <field name="model_id" ref="team_sale_contract.model_otl_day_wise_sync_status_report"/>
+            <field name="email_from">${(object.company_id.email) |safe}</field>
+            <field name="email_to">${object.company_id.get_logged_in_notify_user_ids()}</field>
+            <field name="subject">${object.company_id.name} Daily Sync Status</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Hi, <br/><br/>
+        Daily sync status report is attached herewith.
+
+    </p>
+</div>
+            </field>
+            <field name="user_signature" eval="False"/>
+            <field name="auto_delete" eval="False"/>
+        </record>
+    </data>
+</odoo>

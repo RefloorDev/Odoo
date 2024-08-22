@@ -11,7 +11,7 @@
     'application': False,
     'installable': True,
     'depends': [
-        'base',
+        'base', 'base_setup'
     ],
     'data': [
         'views/res_config_settings_view.xml',

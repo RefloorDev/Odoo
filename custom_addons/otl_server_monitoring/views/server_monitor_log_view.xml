@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <record model="ir.ui.view" id="server_monitoring_log_search">
+            <field name="name">server.monitoring.log.search</field>
+            <field name="model">otl.server.monitoring.log</field>
+            <field name="arch" type="xml">
+                <search string="Search Authentication Logs">
+                     <field name="name"/>
+                     <field name="date"/>
+                     <field name="instance_status"/>
+                    <filter name="date_filter" string="Today's Logs" domain="[('date', '&gt;=', datetime.datetime.now().strftime('%Y-%m-%d 00:00:00')),('date', '&lt;=',datetime.datetime.now().strftime('%Y-%m-%d 23:23:59'))]"/>
+                    <separator/>
+                    <separator/>
+                    <group expand="1" string="Group By">
+                        <filter string="Status" name="instance_status" domain="[]" context="{'group_by': 'instance_status'}"/>
+                        <filter string="Date" name="date" domain="[]" context="{'group_by': 'date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_server_monitoring_log_form" model="ir.ui.view">
+            <field name="name">otl.server.monitoring.log.form</field>
+            <field name="model">otl.server.monitoring.log</field>
+            <field name="arch" type="xml">
+                <form create="0" delete="0" copy="0" edit="0">
+                    <sheet>
+                        <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                        <group>
+                            <group name="left">
+                                <field name="instance_status"/>
+                                <field name="db_connection"/>
+                            </group>
+                            <group name="right">
+                                <field name="date"/>
+                                <field name="cpu_usage_percent"/>
+                            </group>
+                        </group>
+                        <group string="Memory">
+                            <field name="memory_usage_line" nolabel="1">
+                                <tree  editable="bottom">
+                                    <field name="total"/>
+                                    <field name="used"/>
+                                    <field name="available"/>
+                                    <field name="free"/>
+                                    <field name="percentage"/>
+                                </tree>
+                                <form>
+                                    <group>
+                                        <group>
+                                            <field name="total"/>
+                                            <field name="used"/>
+                                            <field name="percentage" widget="percentpie"/>
+                                        </group>
+                                        <group>
+                                            <field name="available"/>
+                                            <field name="free"/>
+                                        </group>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+                        <group string="Disk">
+                            <field name="disk_usage_line" nolabel="1">
+                                <tree  editable="bottom">
+                                    <field name="total"/>
+                                    <field name="used"/>
+                                    <field name="free"/>
+                                    <field name="percentage"/>
+                                </tree>
+                                <form>
+                                    <group>
+                                        <group>
+                                            <field name="total"/>
+                                            <field name="used"/>
+                                        </group>
+                                        <group>
+                                            <field name="free"/>
+                                            <field name="percentage" widget="percentpie"/>
+                                        </group>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_server_monitoring_log_tree" model="ir.ui.view">
+            <field name="name">otl.server.monitoring.log.tree</field>
+            <field name="model">otl.server.monitoring.log</field>
+            <field name="arch" type="xml">
+                <tree create="0" delete="0">
+                    <field name="date"/>
+                    <field name="instance_status"/>
+                    <field name="cpu_usage_percent"/>
+                    <field name="memory_usage"/>
+                    <field name="disk_usage"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_server_monitoring_log" model="ir.actions.act_window">
+            <field name="name">Server Monitoring Logs</field>
+            <field name="res_model">otl.server.monitoring.log</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+
+                </p>
+            </field>
+        </record>
+
+        <menuitem name="Server Logs" parent="base.menu_custom" id="menu_server_monitoring_log_root" groups="base.group_erp_manager"/>
+        <menuitem name="Server Monitoring Logs" parent="menu_server_monitoring_log_root" id="menu_server_monitoring_log" action="action_server_monitoring_log" groups="base.group_erp_manager"/>
+
+
+
+    </data>
+</odoo>
