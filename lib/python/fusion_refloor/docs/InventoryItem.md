@@ -2,6 +2,7 @@
 
 
 ## Properties
+
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **str** |  | [optional] 
@@ -13,8 +14,24 @@ Name | Type | Description | Notes
 **qoh** | **float** |  | [optional] 
 **location_code** | **str** |  | [optional] 
 **linear_ft_per_unit** | **float** |  | [optional] 
-**any string name** | **bool, date, datetime, dict, float, int, list, str, none_type** | any string name can be used but the value must be the correct type | [optional]
 
+## Example
+
+```python
+from fusion_refloor.models.inventory_item import InventoryItem
+
+# TODO update the JSON string below
+json = "{}"
+# create an instance of InventoryItem from a JSON string
+inventory_item_instance = InventoryItem.from_json(json)
+# print the JSON string representation of the object
+print(InventoryItem.to_json())
+
+# convert the object into a dict
+inventory_item_dict = inventory_item_instance.to_dict()
+# create an instance of InventoryItem from a dict
+inventory_item_from_dict = InventoryItem.from_dict(inventory_item_dict)
+```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 
 

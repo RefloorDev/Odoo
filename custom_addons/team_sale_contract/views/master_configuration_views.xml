@@ -1128,10 +1128,13 @@
                             <group name="left">
                                 <field name="user_id"/>
                                 <field name="action"/>
+                                <field name="device_name"/>
+                                <field name="device_os"/>
                             </group>
                             <group name="right">
                                 <field name="date"/>
                                 <field name="action_done"/>
+                                <field name="app_version"/>
                                 <field name="company_id" options="{'no_create': True}"
                                        groups="base.group_multi_company"/>
                             </group>
@@ -1153,6 +1156,9 @@
                     <field name="date"/>
                     <field name="action"/>
                     <field name="action_done"/>
+                    <field name="device_name"/>
+                    <field name="device_os"/>
+                    <field name="app_version"/>
                     <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
                 </tree>
             </field>

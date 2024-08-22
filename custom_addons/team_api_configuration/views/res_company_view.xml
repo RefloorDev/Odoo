@@ -12,6 +12,10 @@
                         <group string="Firebase API Key">
                             <field name="push_api_key_id" nolabel="1"/>
                         </group>
+                        <group>
+                            <field name="push_api_auth_attachment_id"/>
+                            <field name="push_project_id"/>
+                        </group>
                     </page>
                 </xpath>
             </field>

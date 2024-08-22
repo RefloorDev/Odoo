@@ -6,11 +6,11 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**schedule_existing_order**](SchedulingServicesApi.md#schedule_existing_order) | **POST** /scheduling/{saleId} | Schedule crews using existing order
 [**schedule_new_order**](SchedulingServicesApi.md#schedule_new_order) | **POST** /scheduling | Schedule crews using populated order
-[**scheduling_sale_id_get**](SchedulingServicesApi.md#scheduling_sale_id_get) | **GET** /scheduling/{saleId} | Get an existing order
+[**schedule_resource_get_order**](SchedulingServicesApi.md#schedule_resource_get_order) | **GET** /scheduling/{saleId} | Get an existing order
 
 
 # **schedule_existing_order**
-> ScheduleResponse schedule_existing_order(sale_id)
+> ScheduleResponse schedule_existing_order(sale_id, schedule_request=schedule_request)
 
 Schedule crews using existing order
 
@@ -19,12 +19,12 @@ Schedule crews using existing order
 * Bearer (Opaque) Authentication (SecurityScheme):
 
 ```python
-import time
 import fusion_refloor
-from fusion_refloor.api import scheduling_services_api
-from fusion_refloor.model.schedule_response import ScheduleResponse
-from fusion_refloor.model.schedule_request import ScheduleRequest
+from fusion_refloor.models.schedule_request import ScheduleRequest
+from fusion_refloor.models.schedule_response import ScheduleResponse
+from fusion_refloor.rest import ApiException
 from pprint import pprint
+
 # Defining the host is optional and defaults to http://localhost:8080
 # See configuration.py for a list of all supported configuration parameters.
 configuration = fusion_refloor.Configuration(
@@ -38,78 +38,34 @@ configuration = fusion_refloor.Configuration(
 
 # Configure Bearer authorization (Opaque): SecurityScheme
 configuration = fusion_refloor.Configuration(
-    access_token = 'YOUR_BEARER_TOKEN'
+    access_token = os.environ["BEARER_TOKEN"]
 )
 
 # Enter a context with an instance of the API client
 with fusion_refloor.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = scheduling_services_api.SchedulingServicesApi(api_client)
-    sale_id = "saleId_example" # str | 
-    schedule_request = ScheduleRequest(
-        id="id_example",
-        sale_id="sale_id_example",
-        sold_price=1,
-        total_sqft=1,
-        market_segment="market_segment_example",
-        sale_order_items=[
-            OrderItem(
-                id="id_example",
-                appliance_count=1,
-                move_piano_pool_table="move_piano_pool_table_example",
-                multiple_layers=1,
-                open_stair_count=1,
-                patch_leveling_required=True,
-                pedestal_sink_rr=True,
-                plywood_half_inch_sheets=1,
-                plywood_quarter_inch_sheets=1,
-                plywood_three_quarter_inch_sheets=1,
-                primer_type="primer_type_example",
-                room_sq_ft=1,
-                stair_count=1,
-                toilet_rr=True,
-                true_self_leveling_required=True,
-                vapor_barrier=1,
-                sale="sale_example",
-                bifold_door_count=1,
-                build_up_leveling_required=1,
-                product_selected="product_selected_example",
-                bcid="bcid_example",
-                molding_type="molding_type_example",
-                current_covering_type="current_covering_type_example",
-                remove_current_surface=True,
-                available=True,
-            ),
-        ],
-        proposed_start_date=dateutil_parser('Wed Mar 09 19:00:00 EST 2022').date(),
-        proposed_end_date=dateutil_parser('Wed Mar 09 19:00:00 EST 2022').date(),
-    ) # ScheduleRequest |  (optional)
+    api_instance = fusion_refloor.SchedulingServicesApi(api_client)
+    sale_id = 'sale_id_example' # str | 
+    schedule_request = fusion_refloor.ScheduleRequest() # ScheduleRequest |  (optional)
 
-    # example passing only required values which don't have defaults set
-    try:
-        # Schedule crews using existing order
-        api_response = api_instance.schedule_existing_order(sale_id)
-        pprint(api_response)
-    except fusion_refloor.ApiException as e:
-        print("Exception when calling SchedulingServicesApi->schedule_existing_order: %s\n" % e)
-
-    # example passing only required values which don't have defaults set
-    # and optional values
     try:
         # Schedule crews using existing order
         api_response = api_instance.schedule_existing_order(sale_id, schedule_request=schedule_request)
+        print("The response of SchedulingServicesApi->schedule_existing_order:\n")
         pprint(api_response)
-    except fusion_refloor.ApiException as e:
+    except Exception as e:
         print("Exception when calling SchedulingServicesApi->schedule_existing_order: %s\n" % e)
 ```
 
 
+
 ### Parameters
+
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **sale_id** | **str**|  |
- **schedule_request** | [**ScheduleRequest**](ScheduleRequest.md)|  | [optional]
+ **sale_id** | **str**|  | 
+ **schedule_request** | [**ScheduleRequest**](ScheduleRequest.md)|  | [optional] 
 
 ### Return type
 
@@ -123,7 +79,6 @@ Name | Type | Description  | Notes
 
  - **Content-Type**: application/json
  - **Accept**: application/json
-
 
 ### HTTP response details
 
@@ -136,7 +91,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **schedule_new_order**
-> ScheduleResponse schedule_new_order()
+> ScheduleResponse schedule_new_order(schedule_request=schedule_request)
 
 Schedule crews using populated order
 
@@ -145,12 +100,12 @@ Schedule crews using populated order
 * Bearer (Opaque) Authentication (SecurityScheme):
 
 ```python
-import time
 import fusion_refloor
-from fusion_refloor.api import scheduling_services_api
-from fusion_refloor.model.schedule_response import ScheduleResponse
-from fusion_refloor.model.schedule_request import ScheduleRequest
+from fusion_refloor.models.schedule_request import ScheduleRequest
+from fusion_refloor.models.schedule_response import ScheduleResponse
+from fusion_refloor.rest import ApiException
 from pprint import pprint
+
 # Defining the host is optional and defaults to http://localhost:8080
 # See configuration.py for a list of all supported configuration parameters.
 configuration = fusion_refloor.Configuration(
@@ -164,68 +119,32 @@ configuration = fusion_refloor.Configuration(
 
 # Configure Bearer authorization (Opaque): SecurityScheme
 configuration = fusion_refloor.Configuration(
-    access_token = 'YOUR_BEARER_TOKEN'
+    access_token = os.environ["BEARER_TOKEN"]
 )
 
 # Enter a context with an instance of the API client
 with fusion_refloor.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = scheduling_services_api.SchedulingServicesApi(api_client)
-    schedule_request = ScheduleRequest(
-        id="id_example",
-        sale_id="sale_id_example",
-        sold_price=1,
-        total_sqft=1,
-        market_segment="market_segment_example",
-        sale_order_items=[
-            OrderItem(
-                id="id_example",
-                appliance_count=1,
-                move_piano_pool_table="move_piano_pool_table_example",
-                multiple_layers=1,
-                open_stair_count=1,
-                patch_leveling_required=True,
-                pedestal_sink_rr=True,
-                plywood_half_inch_sheets=1,
-                plywood_quarter_inch_sheets=1,
-                plywood_three_quarter_inch_sheets=1,
-                primer_type="primer_type_example",
-                room_sq_ft=1,
-                stair_count=1,
-                toilet_rr=True,
-                true_self_leveling_required=True,
-                vapor_barrier=1,
-                sale="sale_example",
-                bifold_door_count=1,
-                build_up_leveling_required=1,
-                product_selected="product_selected_example",
-                bcid="bcid_example",
-                molding_type="molding_type_example",
-                current_covering_type="current_covering_type_example",
-                remove_current_surface=True,
-                available=True,
-            ),
-        ],
-        proposed_start_date=dateutil_parser('Wed Mar 09 19:00:00 EST 2022').date(),
-        proposed_end_date=dateutil_parser('Wed Mar 09 19:00:00 EST 2022').date(),
-    ) # ScheduleRequest |  (optional)
+    api_instance = fusion_refloor.SchedulingServicesApi(api_client)
+    schedule_request = fusion_refloor.ScheduleRequest() # ScheduleRequest |  (optional)
 
-    # example passing only required values which don't have defaults set
-    # and optional values
     try:
         # Schedule crews using populated order
         api_response = api_instance.schedule_new_order(schedule_request=schedule_request)
+        print("The response of SchedulingServicesApi->schedule_new_order:\n")
         pprint(api_response)
-    except fusion_refloor.ApiException as e:
+    except Exception as e:
         print("Exception when calling SchedulingServicesApi->schedule_new_order: %s\n" % e)
 ```
 
 
+
 ### Parameters
+
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **schedule_request** | [**ScheduleRequest**](ScheduleRequest.md)|  | [optional]
+ **schedule_request** | [**ScheduleRequest**](ScheduleRequest.md)|  | [optional] 
 
 ### Return type
 
@@ -240,7 +159,6 @@ Name | Type | Description  | Notes
  - **Content-Type**: application/json
  - **Accept**: application/json
 
-
 ### HTTP response details
 
 | Status code | Description | Response headers |
@@ -251,8 +169,8 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **scheduling_sale_id_get**
-> ScheduleModel scheduling_sale_id_get(sale_id)
+# **schedule_resource_get_order**
+> ScheduleModel schedule_resource_get_order(sale_id)
 
 Get an existing order
 
@@ -261,11 +179,11 @@ Get an existing order
 * Bearer (Opaque) Authentication (SecurityScheme):
 
 ```python
-import time
 import fusion_refloor
-from fusion_refloor.api import scheduling_services_api
-from fusion_refloor.model.schedule_model import ScheduleModel
+from fusion_refloor.models.schedule_model import ScheduleModel
+from fusion_refloor.rest import ApiException
 from pprint import pprint
+
 # Defining the host is optional and defaults to http://localhost:8080
 # See configuration.py for a list of all supported configuration parameters.
 configuration = fusion_refloor.Configuration(
@@ -279,30 +197,32 @@ configuration = fusion_refloor.Configuration(
 
 # Configure Bearer authorization (Opaque): SecurityScheme
 configuration = fusion_refloor.Configuration(
-    access_token = 'YOUR_BEARER_TOKEN'
+    access_token = os.environ["BEARER_TOKEN"]
 )
 
 # Enter a context with an instance of the API client
 with fusion_refloor.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = scheduling_services_api.SchedulingServicesApi(api_client)
-    sale_id = "saleId_example" # str | 
+    api_instance = fusion_refloor.SchedulingServicesApi(api_client)
+    sale_id = 'sale_id_example' # str | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Get an existing order
-        api_response = api_instance.scheduling_sale_id_get(sale_id)
+        api_response = api_instance.schedule_resource_get_order(sale_id)
+        print("The response of SchedulingServicesApi->schedule_resource_get_order:\n")
         pprint(api_response)
-    except fusion_refloor.ApiException as e:
-        print("Exception when calling SchedulingServicesApi->scheduling_sale_id_get: %s\n" % e)
+    except Exception as e:
+        print("Exception when calling SchedulingServicesApi->schedule_resource_get_order: %s\n" % e)
 ```
+
 
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **sale_id** | **str**|  |
+ **sale_id** | **str**|  | 
 
 ### Return type
 
@@ -316,7 +236,6 @@ Name | Type | Description  | Notes
 
  - **Content-Type**: Not defined
  - **Accept**: application/json
-
 
 ### HTTP response details
 

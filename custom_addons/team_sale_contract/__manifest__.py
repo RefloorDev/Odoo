@@ -20,6 +20,7 @@ This module customizing sale module to create a sale contract & followups.
         'data/cron_data.xml',
         'data/master_configuration_data.xml',
         'data/sale_data.xml',
+        'data/email_template_data.xml',
         'views/master_configuration_views.xml',
         'views/quote_question_views.xml',
         'views/team_customer_appointment_view.xml',
@@ -27,6 +28,7 @@ This module customizing sale module to create a sale contract & followups.
         'views/sale_order_contract_views.xml',
         'views/res_config_settings_views.xml',
         'wizard/generate_token_wizard_view.xml',
+        'wizard/day_wise_report_wizrd_view.xml',
     ],
     
     'installable': True,

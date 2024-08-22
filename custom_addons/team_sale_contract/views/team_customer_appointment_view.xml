@@ -211,6 +211,7 @@
                                     <field name="name"/>
                                     <field name="created_date"/>
                                     <field name="user_id" options="{'no_open':True,'no_create': True}"/>
+                                    <field name="network_strength"/>
                                     <field name="state"/>
                                 </tree>
                                 <form string="Sync Log">
@@ -218,6 +219,7 @@
                                         <group>
                                             <field name="name"/>
                                             <field name="user_id" options="{'no_open':True,'no_create': True}"/>
+                                            <field name="network_strength"/>
                                         </group>
                                         <group>
                                             <field name="created_date"/>

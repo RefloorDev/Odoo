@@ -2,6 +2,7 @@
 
 
 ## Properties
+
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **str** |  | [optional] 
@@ -35,8 +36,24 @@ Name | Type | Description | Notes
 **stairs_per_day** | **int** |  | [optional] 
 **leveling_sqft** | **int** |  | [optional] 
 **grade** | **str** |  | [optional] 
-**any string name** | **bool, date, datetime, dict, float, int, list, str, none_type** | any string name can be used but the value must be the correct type | [optional]
 
+## Example
+
+```python
+from fusion_refloor.models.crew import Crew
+
+# TODO update the JSON string below
+json = "{}"
+# create an instance of Crew from a JSON string
+crew_instance = Crew.from_json(json)
+# print the JSON string representation of the object
+print(Crew.to_json())
+
+# convert the object into a dict
+crew_dict = crew_instance.to_dict()
+# create an instance of Crew from a dict
+crew_from_dict = Crew.from_dict(crew_dict)
+```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 
 

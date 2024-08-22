@@ -4,8 +4,11 @@
 from odoo import models, fields, api
 import logging
 import pytz
-from odoo.addons.team_api_configuration.pyfcm.fcm import FCMNotification
 
+from google.oauth2 import service_account
+import google.auth.transport.requests
+import json
+import requests
 
 _logger = logging.getLogger(__name__)
 
@@ -76,19 +79,72 @@ class MobileNotifications(models.Model):
         
         return result
 
-    def push_pyfcm_single(self, company, device_id, message_title, message_body, extra_data=False, device_type=False):
+    def _get_access_token(self, service_account_file):
+        """
+        Generates access token from credentials.
+        If token expires then new access token is generated.
+        Returns:
+             str: Access token
+        """
+        token = ''
+        # get OAuth 2.0 access token
+        try:
+            if service_account_file:
+                credentials = service_account.Credentials.from_service_account_file(
+                    service_account_file,
+                    scopes=["https://www.googleapis.com/auth/firebase.messaging"],
+                )
+            request = google.auth.transport.requests.Request()
+            credentials.refresh(request)
+            token = credentials.token
+        except Exception as e:
+            _logger.error('Error while generating push access token: %s' %e)
+        return token
+
+    def push_pyfcm_single(self, company, device_id, message_title, message_body, extra_data={}):
         """
             Send push
         """
-        api_key = company.sudo().push_api_key_id
+        api_auth_file_path = company.sudo().get_push_api_auth_file_path()
+        push_project_id = company.sudo().push_project_id
         result = False
-        if api_key:
-            push_service = FCMNotification(api_key=api_key)
+        if api_auth_file_path and push_project_id:
+
+            push_url = 'https://fcm.googleapis.com/v1/projects/%s/messages:send'%(push_project_id)
+            push_access_token = self._get_access_token(api_auth_file_path)
+            headers = {
+                'Authorization': "Bearer %s"%push_access_token,
+                'Content-Type': 'application/json'
+            }
+
+            payload = {
+                "message": {
+                    "token": device_id,
+                    "data": extra_data,
+                    "apns": {
+                        "headers": {
+                            "apns-priority": "10"
+                        },
+                        "payload": {
+                            "aps": {
+                                "alert": {
+                                    "title": message_title,
+                                    "body": message_body
+                                },
+                                "sound": "default"
+                            }
+                        }
+                    }
+                }
+            }
             try:
-                result = push_service.notify_single_device(registration_id=device_id, message_title=message_title,
-                                                           message_body=message_body, extra_data=extra_data,
-                                                           device_type=device_type)
-                _logger.info("Push Sent Successfully===="+str(result))
+                _logger.info('Push Payload--------%s'%(payload))
+                response = requests.post(push_url, headers=headers, data=json.dumps(payload))
+                result = {
+                    'success': True,
+                    'result': str(response.text)
+                }
+                _logger.info("Push Sent Successfully====" + str(result))
             except:
                 self.status = 'failed'
                 _logger.info("Push Sent Failed====" + str(result))

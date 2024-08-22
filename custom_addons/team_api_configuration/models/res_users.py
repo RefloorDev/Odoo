@@ -142,8 +142,8 @@ class ResUsers(models.Model):
 
     @api.model
     def update_device_id(self, values):
-        login = values.get('login', False)
-        registered_id = values.get('registered_id', False)
+        login = values.pop('login', False)
+        registered_id = values.get('device_reg_id', False)
         user = self.search([('login', '=ilike', login)
                             ])
         users_with_same_device_id = self.search([('device_reg_id', '=', registered_id)
@@ -151,7 +151,7 @@ class ResUsers(models.Model):
         for same_id_user in users_with_same_device_id:
             same_id_user.write({'device_reg_id': ''})
         if user:
-            res = user.write({'device_reg_id': registered_id})
+            res = user.write(values)
             return res
 
     @api.model
@@ -246,5 +246,17 @@ class ResCompany(models.Model):
     _inherit = 'res.company'
 
     push_api_key_id = fields.Char(string='Firebase API key')
+    push_api_auth_attachment_id = fields.Many2one('ir.attachment', string='Push API Auth File')
+    push_project_id = fields.Char('Push Project ID')
+
+
+    def get_push_api_auth_file_path(self):
+        file_path = ''
+        for record in self:
+          if record.push_api_auth_attachment_id:
+              attachment = record.push_api_auth_attachment_id
+              if attachment.store_fname:
+                file_path = attachment._full_path(attachment.store_fname)
+        return file_path
 
 

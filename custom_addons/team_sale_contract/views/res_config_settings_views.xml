@@ -217,7 +217,34 @@
                         </div>
                     </div>
                 </div>
-
+                <div class="col-12 col-lg-6 o_setting_box" id="google_auth_attachment_id_setting"
+                     groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Google Service Authentication</span>
+                        <div class="text-muted">
+                            File for Google service authentication for cloud storage
+                        </div>
+                        <div class="row mt16">
+                            <label for="google_auth_attachment_id" string="Auth File"
+                                   class="col-lg-4 o_light_label"/>
+                            <field name="google_auth_attachment_id" class="oe_inline"
+                                   options="{'no_create_edit': True}"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6 o_setting_box" id="google_bucket_name_setting2" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Google Storage</span>
+                        <div class="text-muted">
+                            Google Storage Bucket Name
+                        </div>
+                        <div class="row mt16">
+                            <label for="google_bucket_name" string="Bucket Name"
+                                   class="col-lg-4 o_light_label"/>
+                            <field name="google_bucket_name" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
             </xpath>
         </field>
     </record>
