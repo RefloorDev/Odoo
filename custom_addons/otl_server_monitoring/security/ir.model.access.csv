@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_server_monitoring_log_user,server.monitoring.log.user,model_otl_server_monitoring_log,base.group_user,1,0,0,0
+access_server_memory_usage_line_user,server.memory.usage.line.user,model_otl_server_memory_usage_line,base.group_user,1,0,0,0
+access_server_disk_usage_line_user,server.disk.usage.line.user,model_otl_server_disk_usage_line,base.group_user,1,0,0,0
+
+access_server_monitoring_log_manager,server.monitoring.log.manager,model_otl_server_monitoring_log,base.group_erp_manager,1,1,1,1
+access_server_memory_usage_line_manager,server.memory.usage.line.manager,model_otl_server_memory_usage_line,base.group_erp_manager,1,1,1,1
+access_server_disk_usage_line_manager,server.disk.usage.line.manager,model_otl_server_disk_usage_line,base.group_erp_manager,1,1,1,1

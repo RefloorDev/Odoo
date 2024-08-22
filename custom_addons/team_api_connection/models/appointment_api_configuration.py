@@ -1408,7 +1408,7 @@ class TeamImproveitConfiguration(models.Model):
                         price = special_price.get('Price', 0)
                         msrp = special_price.get('MSRP', 0)
                         max_discount = special_price.get('MaxDiscount', 0)
-                        office_location = self.env['otl.office.location'].with_context(active_test=False).search([('improveit_id', '=', office_location_improveit_id)], limit=1)
+                        office_location = self.env['otl.office.location'].with_context(active_test=False).search(['|', ('name', '=', office_location_name), ('improveit_id', '=', office_location_improveit_id)], limit=1)
                         if not office_location:
                             office_location = self.env['otl.office.location'].create({
                                 'name': office_location_name,
@@ -1607,10 +1607,17 @@ class TeamCustomerAppointment(models.Model):
 
     improveit_appointment_id = fields.Char(string='i360 Appointment ID')
 
+    _sql_constraints = [
+        ('i360_id_uniq', 'unique (improveit_appointment_id)', "i360 Reference must be unique!"),
+    ]
+
 class Users(models.Model):
     _inherit = 'res.users'
 
     improveit_user_id = fields.Char(string='i360 Salesperson ID')
     restrict_geolocation = fields.Boolean('Restrict Geolocation Tracking', default=False)
+    device_name = fields.Char(string='Device Name')
+    device_os = fields.Char(string='Device OS')
+    app_version = fields.Char(string='App Version')
 
 

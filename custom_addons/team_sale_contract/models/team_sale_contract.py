@@ -12,6 +12,9 @@ from odoo.addons.team_api_configuration.jwt.api_jws import encode as JWT_ENCODE
 from odoo.addons.team_api_configuration.jwt.api_jws import decode as JWT_DECODE
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
 import ast
+import logging
+_logger = logging.getLogger(__name__)
+
 
 JWT_SECRET = 'secretXXXY'
 JWT_ALGORITHM = 'HS256'
@@ -143,7 +146,7 @@ class TeamContractQuestions(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     appointment_id = fields.Many2one('team.customer.appointment', 'Appointment',required=True)
     answers = fields.One2many('team.contract.answer.line','question_id', string='Answers', copy=True, ondelete='cascade')
-    order_id = fields.Many2one('sale.order',string="Sale Contract")
+    order_id = fields.Many2one('sale.order', string="Sale Order", ondelete='cascade')
     answer_data = fields.Char('Answer', compute='_compute_answers')
     room_measurement_id = fields.Many2one('team.contract.room.measurement.line', 'Custom room measurement Id')
     extra_price = fields.Float('Extra Price Required', compute='_compute_extra_price')
@@ -169,7 +172,7 @@ class TeamContractAnswers(models.Model):
     _name = 'team.contract.answer.line'
     _description = "Team Contract Answer Line"
 
-    question_id = fields.Many2one('team.contract.question.line',string='Question Line',required=True)
+    question_id = fields.Many2one('team.contract.question.line',string='Question Line',required=True, ondelete='cascade')
     answer = fields.Char('Answer')
 
 
@@ -210,7 +213,7 @@ class TeamContractRoomMeasurement(models.Model):
     appointment_id = fields.Many2one('team.customer.appointment', 'Appointment', required=True)
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     room_area = fields.Float(string="Room Area")
-    order_id = fields.Many2one('sale.order',string= "Sale Contract")
+    order_id = fields.Many2one('sale.order', string="Sale Order", ondelete='cascade')
     comments = fields.Char(string = "Comments")
     exclude_from_calculation = fields.Boolean(string = "Excluded from Calculation",default=False)
     attachment_ids = fields.Many2many('ir.attachment', string="Room Images")
@@ -232,6 +235,9 @@ class TeamContractRoomMeasurement(models.Model):
     molding_unit_price = fields.Float('Molding Unit Price')
     molding_total_price = fields.Float('Molding Total Amount', compute='_compute_molding_total_price', store=True)
 
+    def write(self, vals):
+        _logger.info('ContractRoomMeasurement ID: %s, vals: %s'%(self.ids, vals))
+        return super(TeamContractRoomMeasurement, self).write(vals)
 
 
 class TeamPaymentTransaction(models.Model):

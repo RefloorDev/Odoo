@@ -60,9 +60,8 @@ class TeamCustomerAppointment(models.Model):
         try:
             configurations = self.env['team.improveit.configuration'].search(
                 [('api_type', '=', 'boomi')], limit=1)
-            _logger.info('--------Starting SalesRepArrivalDeparture API---------')
             for appointment in self:
-                _logger.info('--------Appointment ID---------: %s' % (appointment))
+                _logger.info('--------Starting SalesRepArrivalDeparture API Appointment ID---------: %s' % (appointment.id))
                 if appointment.improveit_appointment_id and appointment.arrival_date and appointment.departure_date:
                     if appointment.arrival_departure_synced:
                         return {
@@ -79,7 +78,8 @@ class TeamCustomerAppointment(models.Model):
                     }
                     end_point_url = configurations.token_url
                     client_token = configurations.client_token
-                    _logger.info(data)
+                    _logger.info('SalesRepArrivalDeparture API Input Payload of Appointment %s :%s' % (
+                        appointment.id, data))
                     if end_point_url and client_token:
                         request_url = end_point_url + 'SalesRepArrivalDeparture' + client_token
                     req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
@@ -88,11 +88,13 @@ class TeamCustomerAppointment(models.Model):
                     content = req.json()
                     if isinstance(content, str):
                         content = json.loads(content)
-                    _logger.error('SalesRepArrivalDeparture API Response of Appointment %s :%s' % (
+                    _logger.info('SalesRepArrivalDeparture API Response of Appointment %s :%s' % (
                     appointment.id, content))
                     if content.get('Result', '') == "Success":
                         appointment.write({
                             'arrival_departure_synced': True,
+                            'write_uid': self.env.user.id,
+                            'write_date': datetime.now().replace(tzinfo=pytz.utc)
                         })
                     if content.get('success', '') == "false":
                         return content
@@ -350,6 +352,7 @@ class SaleOrder(models.Model):
     available_installation_line = fields.One2many('otl.available.installation.line', 'order_id', string='Available Installtion Dates')
     additional_comment_synced = fields.Boolean("Synced Additional Comments", default=False)
     email_sent = fields.Boolean('Email Sent', default=False)
+    synced_to_cloud_storage = fields.Boolean('Synced Files to Cloud Storage', default=False)
 
 
     def write(self, vals):
@@ -750,17 +753,11 @@ class SaleOrder(models.Model):
                     if record.special_price_id and record.special_price_id.msrp:
                         list_price = record.special_price_id.msrp or 0
                     if record.promotion_code_id and record.promotion_code_id.discount:
-                        excluded_amount_from_promotion = 0
-                        for question_line in record.contract_question_line.filtered(
-                                lambda x: x.question_id.exclude_from_promotion and x.room_measurement_id and not x.room_measurement_id.exclude_from_calculation):
-                            if question_line.extra_price and question_line.answer_data:
-                                excluded_amount_from_promotion += question_line.extra_price
                         if record.promotion_code_id.calculation_type == 'sqft':
                             promo_discount = record.promotion_code_id.discount or 0
                             promotion_amount = record.total_area * promo_discount
                         elif record.promotion_code_id.calculation_type == 'percentage':
-                            promotion_amount = (record.total_area * list_price + additional_cost + stair_price - excluded_amount_from_promotion)*record.promotion_code_id.discount/100.0
-                            _logger.info('promotion_amount----------%s'%(promotion_amount))
+                            promotion_amount = (record.total_area * list_price + additional_cost + stair_price - record.excluded_amount_promotion)*record.promotion_code_id.discount/100.0
                         else:
                             promotion_amount = record.promotion_code_id.discount or 0
                 measurement_price = record.total_area * list_price
@@ -889,10 +886,10 @@ class SaleOrder(models.Model):
                 try:
                     for sale_order in self:
                         if sale_order.appointment_id.improveit_appointment_id:
-                            _logger.error('started - appointment_id %s ' % sale_order.appointment_id.improveit_appointment_id )
+                            _logger.info('started - appointment_id %s ' % sale_order.appointment_id.improveit_appointment_id )
                             improveit_appointment_id = record.test_appointment_id or sale_order.appointment_id.improveit_appointment_id or ''
                             if document and reference:
-                                _logger.error('Started Attaching Document %s ' % reference)
+                                _logger.info('Started Attaching Document %s ' % reference)
                                 decoded_image = base64.decodestring(document)
                                 data = {
                                     "Name": reference,
@@ -908,11 +905,11 @@ class SaleOrder(models.Model):
                                                     timeout=TIMEOUT)
                                 req.raise_for_status()
                                 content = req.json()
-                                _logger.error('Attaching Document Finished %s ' % content)
+                                _logger.info('Attaching Document Finished %s ' % content)
                             for room_lines in sale_order.room_measurement_line:
-                                _logger.error('Attaching Room line  Data %s' % room_lines.name)
+                                _logger.info('Attaching Room line  Data %s' % room_lines.name)
                                 if room_lines.shape_image_id.datas:
-                                    _logger.error('Started Attaching Room Shape Drawing')
+                                    _logger.info('Started Attaching Room Shape Drawing')
                                     decoded_image = base64.decodestring(room_lines.shape_image_id.datas)
                                     data = {
 
@@ -928,10 +925,10 @@ class SaleOrder(models.Model):
                                     req = requests.post(request_url, data=json.dumps(data), headers=headers,timeout=TIMEOUT)
                                     req.raise_for_status()
                                     content = req.json()
-                                    _logger.error('Attaching Room Shape Drawing Finished %s ' % content)
+                                    _logger.info('Attaching Room Shape Drawing Finished %s ' % content)
                                 if room_lines.attachment_ids:
                                     for attachemnt in room_lines.attachment_ids:
-                                        _logger.error('Attaching Room Images')
+                                        _logger.info('Attaching Room Images')
                                         decoded_image = base64.decodestring(attachemnt.datas)
                                         data = {
 
@@ -948,8 +945,8 @@ class SaleOrder(models.Model):
                                         req = requests.post(request_url, data=json.dumps(data), headers=headers,timeout=TIMEOUT)
                                         req.raise_for_status()
                                         content = req.json()
-                                        _logger.error('Attached Image %s ' % content)
-                                _logger.error(' Attaching Room line Data Finished %s' % room_lines.name)
+                                        _logger.info('Attached Image %s ' % content)
+                                _logger.info(' Attaching Room line Data Finished %s' % room_lines.name)
                 except requests.HTTPError:
                     raise UserError(_("Something went wrong while Creating Attachments."))
             except IOError:
@@ -1042,7 +1039,7 @@ class SaleOrder(models.Model):
                             }
                             end_point_url = configurations.token_url
                             client_token = configurations.client_token
-                            _logger.info(json.dumps(data))
+                            _logger.info('Add Quote API Input Payload of sale %s: %s' %(sale_order.id, data))
                             if end_point_url and client_token:
                                 request_url = end_point_url + 'AddQuote' + client_token
                             req = requests.post(request_url, data=json.dumps(data), headers=headers,
@@ -1069,7 +1066,7 @@ class SaleOrder(models.Model):
                                             }
                                         ]
                                     }
-                            _logger.error('Add Quote API Response of sale %s: %s' %(sale_order.id, content))
+                            _logger.info('Add Quote API Response of sale %s: %s' %(sale_order.id, content))
                             if content['success'] == "true":
                                 sale_order.write({
                                     'quote_id': content['id'] or '',
@@ -1104,7 +1101,7 @@ class SaleOrder(models.Model):
                             }
                             end_point_url = configurations.token_url
                             client_token = configurations.client_token
-                            _logger.info('Excluded Add Quote API Payload: %s'%json.dumps(data))
+                            _logger.info('Excluded Add Quote API Payload of sale %s: %s'%(sale_order.id, json.dumps(data)))
                             if end_point_url and client_token:
                                 request_url = end_point_url + 'AddQuote' + client_token
                             req = requests.post(request_url, data=json.dumps(data), headers=headers,
@@ -1131,7 +1128,7 @@ class SaleOrder(models.Model):
                                             }
                                         ]
                                     }
-                            _logger.error('Excluded Add Quote API Response of sale %s: %s' % (sale_order.id, content))
+                            _logger.info('Excluded Add Quote API Response of sale %s: %s' % (sale_order.id, content))
                             if content['success'] == "true":
                                 sale_order.write({
                                     'excluded_quote_id': content['id'] or '',
@@ -1206,12 +1203,12 @@ class SaleOrder(models.Model):
                     }
                     end_point_url = configurations.token_url
                     client_token = configurations.client_token
-                    _logger.error('Add Sale API Input data : %s' % json.dumps(data))
+                    _logger.info('Add Sale API Input data of sale %s: %s' % (sale_order.id, json.dumps(data)))
                     if end_point_url and client_token:
                         request_url = end_point_url + 'AddSale' + client_token
                     req = requests.post(request_url, data=json.dumps(data), headers=headers,
                                         timeout=TIMEOUT, verify=configurations.enable_ssl)
-                    _logger.error('Add Sale API Response of sale %s: %s' %(sale_order.id, str(req.content)))
+                    _logger.info('Add Sale API Response of sale %s: %s' %(sale_order.id, str(req.content)))
                     req.raise_for_status()
                     try:
                         content = req.json()
@@ -1234,7 +1231,7 @@ class SaleOrder(models.Model):
                                     }
                                 ]
                             }
-                    _logger.error('Add Sale API Response Json : %s' % content)
+                    _logger.info('Add Sale API Response Json of sale %s: %s'%(sale_order.id, content))
                     if content.get('success', '') == "true":
                         sale_order.write({
                             'quote_id': content['id'] or '',
@@ -1288,10 +1285,10 @@ class SaleOrder(models.Model):
                             "ErrorCode": log.error_code or '',
                             "ErrorDescription": log.message or '',
                         }
-                        _logger.error('CreateChargeDeclineNotice API Input data : %s' % json.dumps(data))
+                        _logger.info('CreateChargeDeclineNotice API Input Payload of sale %s: %s' % (sale_order.id, json.dumps(data)))
                         req = requests.post(request_url, data=json.dumps(data), headers=headers,
                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
-                        _logger.error('CreateChargeDeclineNotice API Response of sale %s: %s' %(sale_order.id, str(req.content)))
+                        _logger.info('CreateChargeDeclineNotice API Response of sale %s: %s' %(sale_order.id, str(req.content)))
                         req.raise_for_status()
                         try:
                             content = req.json()
@@ -1314,9 +1311,9 @@ class SaleOrder(models.Model):
                                         }
                                     ]
                                 }
-                        if content.get('success', '') == "true":
+                        if content.get('success', '') == "true" or content.get('success', '') == True:
                             log.write({'synced': True})
-                        if content.get('success', '') == "false":
+                        if content.get('success', '') == "false" or content.get('success', '') == False:
                             return content
         return result
 
@@ -1415,237 +1412,275 @@ class SaleOrder(models.Model):
                     quote_id = sale_order.quote_id
                     excluded_quote_id = sale_order.excluded_quote_id
                     request_url = configurations.token_url
-                    if quote_id and document and document.store_fname and not document.improveit_id:
-                        full_path = document._full_path(document.store_fname)
+                    if quote_id and document and not document.improveit_id:
+                        if document.type == 'binary' and document.store_fname:
+                            full_path = document._full_path(document.store_fname)
+                            binary_content = open(full_path, 'rb')
+                        elif document.type == 'url' and document.url:
+                            response = requests.get(document.url)
+                            response.raise_for_status()  # Check if the request was successful
+                            binary_content = response.content
                         multi_part_data = MultipartEncoder(
                             fields={
                                 "QuoteID": quote_id or '',
-                                "File": (document.name, open(full_path, 'rb'), document.mimetype),
+                                "File": (document.name, binary_content, document.mimetype),
                             }
                         )
-
                         headers = {
                             'Content-type': multi_part_data.content_type,
 
                         }
-                        _logger.info('Document Upload---------')
-                        _logger.info(multi_part_data)
+                        _logger.info('Document Upload Input Payload of sale %s : %s '%(sale_order.id, multi_part_data))
                         req = requests.post(request_url, data=multi_part_data, headers=headers,
                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
                         req.raise_for_status()
                         content = req.json()
-                        _logger.error('Attaching Contract Document Finished of sale %s: %s' %(sale_order.id, content))
+                        _logger.info('Attaching Contract Document Finished of sale %s: %s' %(sale_order.id, content))
                         if content.get('success', '') == "true":
                             document.sudo().write({'improveit_id': content['id'] or ''})
                         if content.get('success', '') == "false":
-                            _logger.error("******--------Error in Contract Document Upload---------********")
+                            _logger.info("******--------Error in Contract Document Upload---------********")
                             result.update({"success": "false"})
                     for room_lines in sale_order.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation):
                         if quote_id:
-                            _logger.error('Attaching Room line  Data %s' % room_lines.name)
+                            _logger.info('Attaching Room line  Data %s' % room_lines.name)
                             if room_lines.shape_image_id:
                                 attach = room_lines.shape_image_id
-                                if attach.store_fname and not attach.improveit_id:
-                                    full_path = attach._full_path(attach.store_fname)
+                                if not attach.improveit_id:
                                     extension = attach.name.split(".")[-1]
                                     room_name = room_lines.custom_room_name or ''
                                     if not room_name:
                                         room_name = room_lines.room_id.name
                                     file_name = '%s_Measure.%s' % (room_name, extension)
+                                    if attach.type == 'binary' and attach.store_fname:
+                                        full_path = attach._full_path(attach.store_fname)
+                                        binary_content = open(full_path, 'rb')
+                                    elif attach.type == 'url' and attach.url:
+                                        response = requests.get(attach.url)
+                                        response.raise_for_status()  # Check if the request was successful
+                                        binary_content = response.content
                                     multi_part_data = MultipartEncoder(
                                         fields={
                                             "QuoteID": quote_id or '',
-                                            "File": (file_name, open(full_path, 'rb'), attach.mimetype),
+                                            "File": (file_name, binary_content, attach.mimetype),
                                         }
                                     )
                                     headers = {
                                         'Content-type': multi_part_data.content_type,
                                     }
-                                    _logger.info('Measurement Upload---------')
+                                    _logger.info('Measurement Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                                     _logger.info(multi_part_data)
                                     req = requests.post(request_url, data=multi_part_data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
                                     req.raise_for_status()
                                     content = req.json()
-                                    _logger.error('Attaching Room Shape Drawing Finished of sale %s: %s' %(sale_order.id, content))
+                                    _logger.info('Attaching Room Shape Drawing Finished of sale %s: %s' %(sale_order.id, content))
                                     if content.get('success', '') == "true":
                                         attach.sudo().write({'improveit_id': content['id'] or ''})
                                     if content.get('success', '') == "false":
-                                        _logger.error("******--------Error in Room Shape Drawing Upload---------********")
+                                        _logger.info("******--------Error in Room Shape Drawing Upload---------********")
                                         result.update({"success": "false"})
                             if room_lines.attachment_ids:
                                 count = 0
                                 for attachment in room_lines.attachment_ids:
-                                    _logger.error('Attaching Room Images')
-                                    if attachment.store_fname and not attachment.improveit_id:
+                                    _logger.info('Attaching Room Images')
+                                    if not attachment.improveit_id:
                                         count += 1
-                                        full_path = attachment._full_path(attachment.store_fname)
                                         extension = attachment.name.split(".")[-1]
                                         room_name = room_lines.custom_room_name or ''
                                         if not room_name:
                                             room_name = room_lines.room_id.name
                                         file_name = '%s_%s.%s' % (room_name, count, extension)
+                                        if attachment.type == 'binary' and attachment.store_fname:
+                                            full_path = attachment._full_path(attachment.store_fname)
+                                            binary_content = open(full_path, 'rb')
+                                        elif attachment.type == 'url' and attachment.url:
+                                            response = requests.get(attachment.url)
+                                            response.raise_for_status()  # Check if the request was successful
+                                            binary_content = response.content
                                         multi_part_data = MultipartEncoder(
                                             fields={
                                                 "QuoteID": quote_id or '',
-                                                "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                                "File": (file_name, binary_content, attachment.mimetype),
                                             }
                                         )
                                         headers = {
                                             'Content-type': multi_part_data.content_type,
                                         }
-                                        _logger.info('Room images Upload---------')
-                                        _logger.info(multi_part_data)
+                                        _logger.info('Room images Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                                         req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
                                         req.raise_for_status()
                                         content = req.json()
-                                        _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
+                                        _logger.info('Attached Image of sale %s: %s' %(sale_order.id, content))
                                         if content.get('success', '') == "true":
                                             attachment.sudo().write({'improveit_id': content['id'] or ''})
                                         if content.get('success', '') == "false":
-                                            _logger.error(
+                                            _logger.info(
                                                 "******--------Error in Room Image- %s Upload---------********"%(file_name))
                                             result.update({"success": "false"})
-                                _logger.error('%s Room Images upload completed--' % room_lines.name)
+                                _logger.info('%s Room Images upload completed--' % room_lines.name)
                             if room_lines.protrusion_image_ids:
                                 count = 0
                                 for attachment in room_lines.protrusion_image_ids:
-                                    _logger.error('Attaching Room Anomaly Images')
-                                    if attachment.store_fname and not attachment.improveit_id:
+                                    _logger.info('Attaching Room Anomaly Images')
+                                    if not attachment.improveit_id:
                                         count += 1
-                                        full_path = attachment._full_path(attachment.store_fname)
                                         extension = attachment.name.split(".")[-1]
                                         room_name = room_lines.custom_room_name or ''
                                         if not room_name:
                                             room_name = room_lines.room_id.name
                                         file_name = '%s_Anomaly_%s.%s' % (room_name, count, extension)
+                                        if attachment.type == 'binary' and attachment.store_fname:
+                                            full_path = attachment._full_path(attachment.store_fname)
+                                            binary_content = open(full_path, 'rb')
+                                        elif attachment.type == 'url' and attachment.url:
+                                            response = requests.get(attachment.url)
+                                            response.raise_for_status()  # Check if the request was successful
+                                            binary_content = response.content
                                         multi_part_data = MultipartEncoder(
                                             fields={
                                                 "QuoteID": quote_id or '',
-                                                "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                                "File": (file_name, binary_content, attachment.mimetype),
                                             }
                                         )
                                         headers = {
                                             'Content-type': multi_part_data.content_type,
                                         }
-                                        _logger.info('Room Anomaly images Upload---------')
+                                        _logger.info('Room Anomaly images Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                                         _logger.info(multi_part_data)
                                         req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
                                         req.raise_for_status()
                                         content = req.json()
-                                        _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
+                                        _logger.info('Attached Image of sale %s: %s' %(sale_order.id, content))
                                         if content.get('success', '') == "true":
                                             attachment.sudo().write({'improveit_id': content['id'] or ''})
                                         if content.get('success', '') == "false":
-                                            _logger.error(
+                                            _logger.info(
                                                 "******--------Error in Room Anomaly Image- %s Upload---------********"%(file_name))
                                             result.update({"success": "false"})
-                                _logger.error('%s room anomaly images upload completed' % room_lines.name)
-                            _logger.error('Attaching Room line Data Finished %s' % room_lines.name)
+                                _logger.info('%s room anomaly images upload completed' % room_lines.name)
+                            _logger.info('Attaching Room line Data Finished %s' % room_lines.name)
+                    if excluded_quote_id and not quote_id:
+                        quote_id = excluded_quote_id
                     for room_lines in sale_order.room_measurement_line.filtered(lambda x: x.exclude_from_calculation):
                         if excluded_quote_id:
-                            _logger.error('Attaching Room line  Data %s' % room_lines.name)
+                            _logger.info('Attaching Room line  Data %s' % room_lines.name)
                             if room_lines.shape_image_id:
                                 attach = room_lines.shape_image_id
-                                if attach.store_fname and not attach.improveit_id:
-                                    full_path = attach._full_path(attach.store_fname)
+                                if not attach.improveit_id:
                                     extension = attach.name.split(".")[-1]
                                     room_name = room_lines.custom_room_name or ''
                                     if not room_name:
                                         room_name = room_lines.room_id.name
                                     file_name = '%s_Measure.%s' % (room_name, extension)
+                                    if attach.type == 'binary' and attach.store_fname:
+                                        full_path = attach._full_path(attach.store_fname)
+                                        binary_content = open(full_path, 'rb')
+                                    elif attach.type == 'url' and attach.url:
+                                        response = requests.get(attach.url)
+                                        response.raise_for_status()  # Check if the request was successful
+                                        binary_content = response.content
                                     multi_part_data = MultipartEncoder(
                                         fields={
                                             "QuoteID": excluded_quote_id or '',
-                                            "File": (file_name, open(full_path, 'rb'), attach.mimetype),
+                                            "File": (file_name, binary_content, attach.mimetype),
                                         }
                                     )
                                     headers = {
                                         'Content-type': multi_part_data.content_type,
                                     }
-                                    _logger.info('Measurement Upload---------')
-                                    _logger.info(multi_part_data)
+                                    _logger.info('Measurement Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                                     req = requests.post(request_url, data=multi_part_data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
                                     req.raise_for_status()
                                     content = req.json()
-                                    _logger.error('Attaching Room Shape Drawing Finished of sale %s: %s' %(sale_order.id, content))
+                                    _logger.info('Attaching Room Shape Drawing Finished of sale %s: %s' %(sale_order.id, content))
                                     if content.get('success', '') == "true":
                                         attach.sudo().write({'improveit_id': content['id'] or ''})
                                     if content.get('success', '') == "false":
-                                        _logger.error("******--------Error in Room Shape Drawing Upload---------********")
+                                        _logger.info("******--------Error in Room Shape Drawing Upload---------********")
                                         result.update({"success": "false"})
                             if room_lines.attachment_ids:
                                 count = 0
                                 for attachment in room_lines.attachment_ids:
-                                    _logger.error('Attaching Room Images')
+                                    _logger.info('Attaching Room Images')
                                     if attachment.store_fname and not attachment.improveit_id:
                                         count += 1
-                                        full_path = attachment._full_path(attachment.store_fname)
                                         extension = attachment.name.split(".")[-1]
                                         room_name = room_lines.custom_room_name or ''
                                         if not room_name:
                                             room_name = room_lines.room_id.name
                                         file_name = '%s_%s.%s' % (room_name, count, extension)
+                                        if attachment.type == 'binary' and attachment.store_fname:
+                                            full_path = attachment._full_path(attachment.store_fname)
+                                            binary_content = open(full_path, 'rb')
+                                        elif attachment.type == 'url' and attachment.url:
+                                            response = requests.get(attachment.url)
+                                            response.raise_for_status()  # Check if the request was successful
+                                            binary_content = response.content
                                         multi_part_data = MultipartEncoder(
                                             fields={
                                                 "QuoteID": excluded_quote_id or '',
-                                                "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                                "File": (file_name, binary_content, attachment.mimetype),
                                             }
                                         )
                                         headers = {
                                             'Content-type': multi_part_data.content_type,
                                         }
-                                        _logger.info('Room images Upload---------')
-                                        _logger.info(multi_part_data)
+                                        _logger.info('Room images Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                                         req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
                                         req.raise_for_status()
                                         content = req.json()
-                                        _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
+                                        _logger.info('Attached Image of sale %s: %s' %(sale_order.id, content))
                                         if content.get('success', '') == "true":
                                             attachment.sudo().write({'improveit_id': content['id'] or ''})
                                         if content.get('success', '') == "false":
-                                            _logger.error(
+                                            _logger.info(
                                                 "******--------Error in Room Image- %s Upload---------********"%(file_name))
                                             result.update({"success": "false"})
-                                _logger.error('%s Room Images upload completed--' % room_lines.name)
+                                _logger.info('%s Room Images upload completed--' % room_lines.name)
                             if room_lines.protrusion_image_ids:
                                 count = 0
                                 for attachment in room_lines.protrusion_image_ids:
-                                    _logger.error('Attaching Room Anomaly Images')
+                                    _logger.info('Attaching Room Anomaly Images of sale:%s'%sale_order.id)
                                     if attachment.store_fname and not attachment.improveit_id:
                                         count += 1
-                                        full_path = attachment._full_path(attachment.store_fname)
                                         extension = attachment.name.split(".")[-1]
                                         room_name = room_lines.custom_room_name or ''
                                         if not room_name:
                                             room_name = room_lines.room_id.name
                                         file_name = '%s_Anomaly_%s.%s' % (room_name, count, extension)
+                                        if attachment.type == 'binary' and attachment.store_fname:
+                                            full_path = attachment._full_path(attachment.store_fname)
+                                            binary_content = open(full_path, 'rb')
+                                        elif attachment.type == 'url' and attachment.url:
+                                            response = requests.get(attachment.url)
+                                            response.raise_for_status()  # Check if the request was successful
+                                            binary_content = response.content
                                         multi_part_data = MultipartEncoder(
                                             fields={
                                                 "QuoteID": excluded_quote_id or '',
-                                                "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                                "File": (file_name, binary_content, attachment.mimetype),
                                             }
                                         )
                                         headers = {
                                             'Content-type': multi_part_data.content_type,
                                         }
-                                        _logger.info('Room Anomaly images Upload---------')
-                                        _logger.info(multi_part_data)
+                                        _logger.info('Room Anomaly images Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                                         req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
                                         req.raise_for_status()
                                         content = req.json()
-                                        _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
+                                        _logger.info('Attached Image of sale %s: %s' %(sale_order.id, content))
                                         if content.get('success', '') == "true":
                                             attachment.sudo().write({'improveit_id': content['id'] or ''})
                                         if content.get('success', '') == "false":
-                                            _logger.error(
+                                            _logger.info(
                                                 "******--------Error in Room Anomaly Image- %s Upload---------********"%(file_name))
                                             result.update({"success": "false"})
-                                _logger.error('%s room anomaly images upload completed' % room_lines.name)
-                            _logger.error('Attaching Room line Data Finished %s' % room_lines.name)
+                                _logger.info('%s room anomaly images upload completed' % room_lines.name)
+                            _logger.info('Attaching Room line Data Finished %s' % room_lines.name)
                     if quote_id and sale_order.appointment_id and sale_order.appointment_id.attachment_ids:
                         attachment_ids = sale_order.appointment_id.attachment_ids
                         count = 0
@@ -1653,29 +1688,34 @@ class SaleOrder(models.Model):
                         for attachment in attachment_ids:
                             if attachment.store_fname and not attachment.improveit_id:
                                 count += 1
-                                full_path = attachment._full_path(attachment.store_fname)
                                 extension = attachment.name.split(".")[-1]
                                 file_name = '%s_%s.%s' % ('Snapshot', count, extension)
+                                if attachment.type == 'binary' and attachment.store_fname:
+                                    full_path = attachment._full_path(attachment.store_fname)
+                                    binary_content = open(full_path, 'rb')
+                                elif attachment.type == 'url' and attachment.url:
+                                    response = requests.get(attachment.url)
+                                    response.raise_for_status()  # Check if the request was successful
+                                    binary_content = response.content
                                 multi_part_data = MultipartEncoder(
                                     fields={
                                         "QuoteID": quote_id or '',
-                                        "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                        "File": (file_name, binary_content, attachment.mimetype),
                                     }
                                 )
                                 headers = {
                                     'Content-type': multi_part_data.content_type,
                                 }
-                                _logger.info('Snapshot images Upload---------')
-                                _logger.info(multi_part_data)
+                                _logger.info('Snapshot images Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                                 req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                     timeout=TIMEOUT, verify=configurations.enable_ssl)
                                 req.raise_for_status()
                                 content = req.json()
-                                _logger.error('Attached Snapshot of sale %s: %s' %(sale_order.id, content))
+                                _logger.info('Attached Snapshot of sale %s: %s' %(sale_order.id, content))
                                 if content.get('success', '') == "true":
                                     attachment.sudo().write({'improveit_id': content['id'] or ''})
                                 if content.get('success', '') == "false":
-                                    _logger.error(
+                                    _logger.info(
                                         "******--------Error in Snapshot Image- %s Upload---------********" % (file_name))
                                     result.update({"success": "false"})
                         _logger.info('----------Snapshot Uploading Finished-----------')
@@ -1724,12 +1764,18 @@ class SaleOrder(models.Model):
                     request_url = configurations.token_url
                     if sale_order.contract_doc_attachment_id:
                         document = sale_order.contract_doc_attachment_id
-                        if document and document.store_fname and not sale_order.email_sent:
-                            full_path = document._full_path(document.store_fname)
+                        if document and not sale_order.email_sent:
+                            if document.type == 'binary' and document.store_fname:
+                                full_path = document._full_path(document.store_fname)
+                                binary_content = open(full_path, 'rb')
+                            elif document.type == 'url' and document.url:
+                                response = requests.get(document.url)
+                                response.raise_for_status()  # Check if the request was successful
+                                binary_content = response.content
                             multi_part_data = MultipartEncoder(
                                 fields={
                                     "SaleID": quote_id or '',
-                                    "WorkOrderFile": ('WorkOrder.pdf', open(full_path, 'rb'), document.mimetype),
+                                    "WorkOrderFile": ('WorkOrder.pdf', binary_content, document.mimetype),
                                     "ContractDate": sale_order.date_order.strftime('%m/%d/%Y')
                                 }
                             )
@@ -1737,21 +1783,21 @@ class SaleOrder(models.Model):
                                 'Content-type': multi_part_data.content_type,
 
                             }
-                            _logger.info('Document Upload---------')
-                            _logger.info(multi_part_data)
+                            _logger.info('Contract Document Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                             req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                 timeout=TIMEOUT, verify=configurations.enable_ssl)
                             req.raise_for_status()
                             content = req.json()
                             _logger.info('Document Upload-------content--%s', content)
 
-                            _logger.error('Attaching Contract Document Finished of sale %s: %s' %(sale_order.id, content))
+                            _logger.info('Attaching Contract Document Finished of sale %s: %s' %(sale_order.id, content))
                             if content.get('Result', False) == 'Success':
                                 sale_order.write({'email_sent': True})
                                 #document.sudo().write({'improveit_id': content.get('Result', False)})
                             else:
-                                _logger.error("******--------Error in add_contract_document_file---------********")
+                                _logger.info("******--------Error in add_contract_document_file---------********")
                                 result.update({"success": "false"})
+                                result.update(content)
         except IOError:
             # error_msg = _(
             #     "Something went wrong during adding Sale Contract Document Attachment")
@@ -1779,18 +1825,24 @@ class SaleOrder(models.Model):
                     request_url = configurations.token_url
                     if sale_order.contract_doc_attachment_id:
                         attachment = sale_order.contract_doc_attachment_id
-                        full_path = attachment._full_path(attachment.store_fname)
+                        if attachment.type == 'binary' and attachment.store_fname:
+                            full_path = attachment._full_path(attachment.store_fname)
+                            binary_content = open(full_path, 'rb')
+                        elif attachment.type == 'url' and attachment.url:
+                            response = requests.get(attachment.url)
+                            response.raise_for_status()  # Check if the request was successful
+                            binary_content = response.content
                         multi_part_data = MultipartEncoder(
                             fields={
                                 "SaleId": quote_id or '',
-                                "File": ('WorkOrder.pdf', open(full_path, 'rb'), attachment.mimetype)
+                                "File": ('WorkOrder.pdf', binary_content, attachment.mimetype)
                             }
                         )
                         headers = {
                             'Content-type': multi_part_data.content_type,
 
                         }
-                        _logger.info(multi_part_data)
+                        _logger.info('Contract Document Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                         req = requests.post(request_url, data=multi_part_data, headers=headers,
                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
                         req.raise_for_status()
@@ -1798,10 +1850,10 @@ class SaleOrder(models.Model):
                         if isinstance(content, str):
                             content = json.loads(content)
  
-                        _logger.error('Uploading Contract Document Finished of sale %s: %s: %s' %(sale_order.id, content ,str(type(content))))
+                        _logger.info('Uploading Contract Document Finished of sale %s: %s: %s' %(sale_order.id, content ,str(type(content))))
                         if content.get('success', '') == "true":
                             attachment.sudo().write({'improveit_id': content['id'] or ''})
-                            _logger.info("/n Contract Document uploaded Sucessfully")
+                            _logger.info("Contract Document uploaded Successfully of sale"%sale_order.id)
                             sync_log.create({
                                     'appointment_id': sale_order.appointment_id.id,
                                     'response': content,
@@ -1815,7 +1867,7 @@ class SaleOrder(models.Model):
                                 'state': 'failed',
                                 'name': 'Contract Document Upload To i360 ',
                             })
-                            _logger.error("/n Error during upload Contract Document")
+                            _logger.info("/n Error during upload Contract Document")
                             result.update({"success": "false"})
         except Exception as e:
             pass
@@ -1840,11 +1892,17 @@ class SaleOrder(models.Model):
                         credit_application.generate_link(sale_order)
                     attachment = credit_application.attachment_id
                     if not attachment.improveit_id:
-                        full_path = attachment._full_path(attachment.store_fname)
+                        if attachment.type == 'binary' and attachment.store_fname:
+                            full_path = attachment._full_path(attachment.store_fname)
+                            binary_content = open(full_path, 'rb')
+                        elif attachment.type == 'url' and attachment.url:
+                            response = requests.get(attachment.url)
+                            response.raise_for_status()  # Check if the request was successful
+                            binary_content = response.content
                         multi_part_data = MultipartEncoder(
                             fields={
                                 "SaleID": quote_id or '',
-                                "File": (attachment.name, open(full_path, 'rb'), attachment.mimetype),
+                                "File": (attachment.name, binary_content, attachment.mimetype),
                             }
                         )
 
@@ -1852,7 +1910,7 @@ class SaleOrder(models.Model):
                             'Content-type': multi_part_data.content_type,
 
                         }
-                        _logger.info('Credit Card Document Upload---------')
+                        _logger.info('Credit Card Document Upload of sale %s: %s' % (sale_order.id, multi_part_data))
                         _logger.info(multi_part_data)
                         req = requests.post(request_url, data=multi_part_data, headers=headers,
                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
@@ -1860,12 +1918,12 @@ class SaleOrder(models.Model):
                         content = req.json()
                         if isinstance(content, str):
                             content = json.loads(content)
-                        _logger.error(
+                        _logger.info(
                             'Attaching Credit Card Document Finished of sale %s: %s' % (sale_order.id, content))
                         if content.get('success', '') == "true":
                             attachment.sudo().write({'improveit_id': content['id'] or ''})
                         if content.get('success', '') == "false":
-                            _logger.error("******--------Error in Credit Card Document Upload---------********")
+                            _logger.info("******--------Error in Credit Card Document Upload---------********")
                             result.update({"success": "false"})
 
         return result
@@ -1901,151 +1959,171 @@ class SaleOrder(models.Model):
                     #                         timeout=TIMEOUT)
                     #     req.raise_for_status()
                     #     content = req.json()
-                    #     _logger.error('Attaching Contract Document Finished %s ' % content)
+                    #     _logger.info('Attaching Contract Document Finished %s ' % content)
                     result= sale_order.action_upload_credit_application(result)
                     for room_lines in sale_order.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation):
-                        _logger.error('Attaching Room line  Data %s' % room_lines.name)
+                        _logger.info('Attaching Room line  Data %s' % room_lines.name)
                         if room_lines.shape_image_id:
                             attach = room_lines.shape_image_id
-                            if attach.store_fname and not attach.improveit_id:
-                                full_path = attach._full_path(attach.store_fname)
+                            if not attach.improveit_id:
                                 extension = attach.name.split(".")[-1]
                                 room_name = room_lines.custom_room_name or ''
                                 if not room_name:
                                     room_name = room_lines.room_id.name
                                 file_name = '%s_Measure.%s'%(room_name, extension)
+                                if attach.type == 'binary' and attach.store_fname:
+                                    full_path = attach._full_path(attach.store_fname)
+                                    binary_content = open(full_path, 'rb')
+                                elif attach.type == 'url' and attach.url:
+                                    response = requests.get(attach.url)
+                                    response.raise_for_status()  # Check if the request was successful
+                                    binary_content = response.content
                                 multi_part_data = MultipartEncoder(
                                     fields={
                                         "SaleID": quote_id or '',
-                                        "File": (file_name, open(full_path, 'rb'), attach.mimetype),
+                                        "File": (file_name, binary_content, attach.mimetype),
                                     }
                                 )
                                 headers = {
                                     'Content-type': multi_part_data.content_type,
                                 }
-                                _logger.info('Measurement Upload---------')
-                                _logger.info(multi_part_data)
+                                _logger.info('Measurement Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                                 req = requests.post(request_url, data=multi_part_data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
                                 req.raise_for_status()
                                 content = req.json()
                                 if isinstance(content, str):
                                     content = json.loads(content)
-                                _logger.error('Attaching Room Shape Drawing Finished of sale %s: %s' %(sale_order.id, content))
+                                _logger.info('Attaching Room Shape Drawing Finished of sale %s: %s' %(sale_order.id, content))
                                 if content.get('success', '') == "true":
                                     attach.sudo().write({'improveit_id': content['id'] or ''})
                                 if content.get('success', '') == "false":
-                                    _logger.error("******--------Error in Room Shape Drawing Upload---------********")
+                                    _logger.info("******--------Error in Room Shape Drawing Upload---------********")
                                     result.update({"success": "false"})
                         if room_lines.attachment_ids:
                             count = 0
                             for attachment in room_lines.attachment_ids:
-                                _logger.error('Attaching Room Images')
-                                if attachment.store_fname and not attachment.improveit_id:
+                                _logger.info('Attaching Room Images')
+                                if not attachment.improveit_id:
                                     count += 1
-                                    full_path = attachment._full_path(attachment.store_fname)
                                     extension = attachment.name.split(".")[-1]
                                     room_name = room_lines.custom_room_name or ''
                                     if not room_name:
                                         room_name = room_lines.room_id.name
                                     file_name = '%s_%s.%s' % (room_name, count, extension)
+                                    if attachment.type == 'binary' and attachment.store_fname:
+                                        full_path = attachment._full_path(attachment.store_fname)
+                                        binary_content = open(full_path, 'rb')
+                                    elif attachment.type == 'url' and attachment.url:
+                                        response = requests.get(attachment.url)
+                                        response.raise_for_status()  # Check if the request was successful
+                                        binary_content = response.content
                                     multi_part_data = MultipartEncoder(
                                         fields={
                                             "SaleID": quote_id or '',
-                                            "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                            "File": (file_name, binary_content, attachment.mimetype),
                                         }
                                     )
                                     headers = {
                                         'Content-type': multi_part_data.content_type,
                                     }
-                                    _logger.info('Room images Upload---------')
-                                    _logger.info(multi_part_data)
+                                    _logger.info('Room images Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                                     req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                         timeout=TIMEOUT, verify=configurations.enable_ssl)
                                     req.raise_for_status()
                                     content = req.json()
                                     if isinstance(content, str):
                                         content = json.loads(content)
-                                    _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
+                                    _logger.info('Attached Image of sale %s: %s' %(sale_order.id, content))
                                     if content.get('success', '') == "true":
                                         attachment.sudo().write({'improveit_id': content['id'] or ''})
                                     if content.get('success', '') == "false":
-                                        _logger.error(
+                                        _logger.info(
                                             "******--------Error in Room Image- %s Upload---------********"%(file_name))
                                         result.update({"success": "false"})
                         if room_lines.protrusion_image_ids:
                             count = 0
                             for attachment in room_lines.protrusion_image_ids:
-                                _logger.error('Attaching Room Anomaly Images')
-                                if attachment.store_fname and not attachment.improveit_id:
+                                _logger.info('Attaching Room Anomaly Images')
+                                if not attachment.improveit_id:
                                     count += 1
-                                    full_path = attachment._full_path(attachment.store_fname)
                                     extension = attachment.name.split(".")[-1]
                                     room_name = room_lines.custom_room_name or ''
                                     if not room_name:
                                         room_name = room_lines.room_id.name
                                     file_name = '%s_Anomaly_%s.%s' % (room_name, count, extension)
+                                    if attachment.type == 'binary' and attachment.store_fname:
+                                        full_path = attachment._full_path(attachment.store_fname)
+                                        binary_content = open(full_path, 'rb')
+                                    elif attachment.type == 'url' and attachment.url:
+                                        response = requests.get(attachment.url)
+                                        response.raise_for_status()  # Check if the request was successful
+                                        binary_content = response.content
                                     multi_part_data = MultipartEncoder(
                                         fields={
                                             "SaleID": quote_id or '',
-                                            "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                            "File": (file_name, binary_content, attachment.mimetype),
                                         }
                                     )
                                     headers = {
                                         'Content-type': multi_part_data.content_type,
                                     }
-                                    _logger.info('Room Anomaly images Upload---------')
-                                    _logger.info(multi_part_data)
+                                    _logger.info('Room Anomaly images Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                                     req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                         timeout=TIMEOUT, verify=configurations.enable_ssl)
                                     req.raise_for_status()
                                     content = req.json()
                                     if isinstance(content, str):
                                         content = json.loads(content)
-                                    _logger.error('Attached Image of sale %s: %s' %(sale_order.id, content))
+                                    _logger.info('Attached Image of sale %s: %s' %(sale_order.id, content))
                                     if content.get('success', '') == "true":
                                         attachment.sudo().write({'improveit_id': content['id'] or ''})
                                     if content.get('success', '') == "false":
-                                        _logger.error(
+                                        _logger.info(
                                             "******--------Error in Room Anomaly  Image- %s Upload---------********"%(file_name))
                                         result.update({"success": "false"})
-                            _logger.error('%s room anomaly images upload completed' % room_lines.name)
-                        _logger.error('Attaching Room line Data Finished %s' % room_lines.name)
+                            _logger.info('%s room anomaly images upload completed' % room_lines.name)
+                        _logger.info('Attaching Room line Data Finished %s' % room_lines.name)
                     if sale_order.appointment_id and sale_order.appointment_id.attachment_ids:
                         attachment_ids = sale_order.appointment_id.attachment_ids
                         count = 0
                         _logger.info('--------------Snapshot Uploading Started--------------')
                         for attachment in attachment_ids:
-                            if attachment.store_fname and not attachment.improveit_id:
+                            if not attachment.improveit_id:
                                 count += 1
-                                full_path = attachment._full_path(attachment.store_fname)
                                 file_name_split = attachment.name.split(".")
                                 if len(file_name_split)> 1:
                                     extension = file_name_split[-1]
                                 else:
                                     extension='.JPG'
                                 file_name = '%s_%s.%s' % ('Snapshot', count, extension)
+                                if attachment.type == 'binary' and attachment.store_fname:
+                                    full_path = attachment._full_path(attachment.store_fname)
+                                    binary_content = open(full_path, 'rb')
+                                elif attachment.type == 'url' and attachment.url:
+                                    response = requests.get(attachment.url)
+                                    response.raise_for_status()  # Check if the request was successful
+                                    binary_content = response.content
                                 multi_part_data = MultipartEncoder(
                                     fields={
                                         "SaleID": quote_id or '',
-                                        "File": (file_name, open(full_path, 'rb'), attachment.mimetype),
+                                        "File": (file_name, binary_content, attachment.mimetype),
                                     }
                                 )
                                 headers = {
                                     'Content-type': multi_part_data.content_type,
                                 }
-                                _logger.info('Snapshot images Upload---------')
-                                _logger.info(multi_part_data)
+                                _logger.info('Snapshot images Upload of sale %s: %s' %(sale_order.id, multi_part_data))
                                 req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                     timeout=TIMEOUT, verify=configurations.enable_ssl)
                                 req.raise_for_status()
                                 content = req.json()
                                 if isinstance(content, str):
                                     content = json.loads(content)
-                                _logger.error('Attached Snapshot of sale %s: %s' %(sale_order.id, content))
+                                _logger.info('Attached Snapshot of sale %s: %s' %(sale_order.id, content))
                                 if content.get('success', '') == "true":
                                     attachment.sudo().write({'improveit_id': content['id'] or ''})
                                 if content.get('success', '') == "false":
-                                    _logger.error(
+                                    _logger.info(
                                         "******--------Error in Snapshot Image- %s Upload---------********" % (file_name))
                                     result.update({"success": "false"})
                         _logger.info('----------Snapshot Uploading Finished-----------')
@@ -2068,7 +2146,7 @@ class SaleOrder(models.Model):
             configurations = self.env['team.improveit.configuration'].search(
                 [('api_type', '=', 'boomi')], limit=1)
             for sale_order in self:
-                if sale_order.appointment_id and sale_order.quote_id:
+                if sale_order.appointment_id and (sale_order.quote_id or sale_order.excluded_quote_id):
                     included_room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
                         lambda x: not x.exclude_from_calculation and not x.improveit_id)
                     excluded_room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
@@ -2096,6 +2174,11 @@ class SaleOrder(models.Model):
                     category_name = floor_type and floor_type.categ_id and floor_type.categ_id.name or ''
                     # no_of_rooms = len(sale_order.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation))
                     # discount_per_room = sale_order.adjustment and no_of_rooms and sale_order.adjustment/float(no_of_rooms) or 0
+                    total_discount_amount = sale_order.get_total_discount()
+                    total_sale_amount = sale_order.one_year_price
+                    discount_rate = 0
+                    if total_sale_amount and total_discount_amount:
+                        discount_rate = total_discount_amount / total_sale_amount
                     if included_room_measurement_lines_to_sync and sale_order.quote_id:
                         for room_line in included_room_measurement_lines_to_sync:
                             stair_product_name = ''
@@ -2165,21 +2248,30 @@ class SaleOrder(models.Model):
                                     "ProductID": improveit_product_id,
                                     "Category": category_name,
                                 })
+                                if sale_order.calc_based_on == 'list_price':
+                                    room_cost = room_line.adjusted_area * floor_type.list_price
+                                else:
+                                    room_cost = room_line.adjusted_area * floor_type.msrp
+                            if room_line.custom_room_name:
+                                contract_question_line = sale_order.contract_question_line.filtered(
+                                    lambda x: x.room_name == room_line.custom_room_name)
+                            else:
+                                contract_question_line = sale_order.contract_question_line.filtered(
+                                    lambda x: x.room_id == room_line.room_id.id)
+                            for questions in contract_question_line:
+                                if questions.room_id.id == room_line.room_id.id and questions.question_id.code != 'StairCount':
+                                    if questions.question_id.reflect_cost:
+                                        reflect_cost += questions.extra_price or 0
+                                    if questions.amount_included and questions.question_id.code == 'LevelingSolutionSqft':
+                                        leveling_solution_included = questions.amount_included
+                                    if questions.question_id.code == 'RemoveCurrentCovering':
+                                        removal_cost = questions.extra_price or 0
 
-                                for questions in sale_order.contract_question_line:
-                                    if questions.room_id.id == room_line.room_id.id and questions.question_id.code != 'StairCount':
-                                        if questions.question_id.reflect_cost:
-                                            reflect_cost += questions.extra_price or 0
-                                        if questions.amount_included and questions.question_id.code == 'LevelingSolutionSqft':
-                                            leveling_solution_included = questions.amount_included
-                                        if questions.question_id.code == 'RemoveCurrentCovering':
-                                            removal_cost = questions.extra_price or 0
-                                room_cost = 0
-                                if floor_type:
-                                    room_cost = room_line.adjusted_area * floor_type.flooring_cost
                             unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price + removal_cost
-                            # discount = sale_order.adjustment or 0
                             discounted_unit_price = unit_price
+                            if discount_rate:
+                                discount = unit_price * discount_rate
+                                discounted_unit_price = round(unit_price - discount)
                             data.update({"Description": room_line.custom_room_name and room_line.custom_room_name or room_line.room_id.name})
                             data.update({"Taxable": True})
                             data.update({"Units": "Room"})
@@ -2213,7 +2305,6 @@ class SaleOrder(models.Model):
 
                                 })
                                 count = count + 1
-                            _logger.error('Add Quote Items API Adding Room Transitions')
                             if room_line.custom_room_name:
                                 contract_questions = self.env['team.contract.question.line'].search(
                                     [('room_name', '=', room_line.custom_room_name), ('order_id', '=', sale_order.id)])
@@ -2235,18 +2326,17 @@ class SaleOrder(models.Model):
                                             answer = False
 
                                 data.update({question: answer})
-                            _logger.error('Add Quote Items API Adding Contract Questions')
                             headers = {
                                 'Content-type': 'application/json',
                             }
 
                             end_point_url = configurations.token_url
                             client_token = configurations.client_token
-                            _logger.info(data)
+                            _logger.info('Add Quote Item API Data of sale %s: %s' %(sale_order.id, data))
                             if end_point_url and client_token:
                                 request_url = end_point_url + 'AddQuoteItem' + client_token
                             req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
-                            _logger.error('Add Quote Item API Response of sale %s: %s' %(sale_order.id, str(req.content)))
+                            _logger.info('Add Quote Item API Response of sale %s: %s' %(sale_order.id, str(req.content)))
                             req.raise_for_status()
                             try:
                                 content = req.json()
@@ -2269,7 +2359,7 @@ class SaleOrder(models.Model):
                                             }
                                         ]
                                     }
-                            _logger.error('Add Quote Items API Response of sale %s: %s' %(sale_order.id, content))
+                            _logger.info('Add Quote Items API Response of sale %s: %s' %(sale_order.id, content))
                             if content.get('success', '') == "true":
                                 room_line.improveit_id = content['id'] or ''
                             if content.get('success', '') == "false":
@@ -2343,21 +2433,30 @@ class SaleOrder(models.Model):
                                     "ProductID": improveit_product_id,
                                     "Category": category_name,
                                 })
+                                if sale_order.calc_based_on == 'list_price':
+                                    room_cost = room_line.adjusted_area * floor_type.list_price
+                                else:
+                                    room_cost = room_line.adjusted_area * floor_type.msrp
+                            if room_line.custom_room_name:
+                                contract_question_line = sale_order.contract_question_line.filtered(
+                                    lambda x: x.room_name == room_line.custom_room_name)
+                            else:
+                                contract_question_line = sale_order.contract_question_line.filtered(
+                                    lambda x: x.room_id == room_line.room_id.id)
+                            for questions in contract_question_line:
+                                if questions.room_id.id == room_line.room_id.id and questions.question_id.code != 'StairCount':
+                                    if questions.question_id.reflect_cost:
+                                        reflect_cost += questions.extra_price or 0
+                                    if questions.amount_included and questions.question_id.code == 'LevelingSolutionSqft':
+                                        leveling_solution_included = questions.amount_included
+                                    if questions.question_id.code == 'RemoveCurrentCovering':
+                                        removal_cost = questions.extra_price or 0
 
-                                for questions in sale_order.contract_question_line:
-                                    if questions.room_id.id == room_line.room_id.id and questions.question_id.code != 'StairCount':
-                                        if questions.question_id.reflect_cost:
-                                            reflect_cost += questions.extra_price or 0
-                                        if questions.amount_included and questions.question_id.code == 'LevelingSolutionSqft':
-                                            leveling_solution_included = questions.amount_included
-                                        if questions.question_id.code == 'RemoveCurrentCovering':
-                                            removal_cost = questions.extra_price or 0
-                                room_cost = 0
-                                if floor_type:
-                                    room_cost = room_line.adjusted_area * floor_type.flooring_cost
                             unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price + removal_cost
-                            # discount = sale_order.adjustment or 0
                             discounted_unit_price = unit_price
+                            if discount_rate:
+                                discount = unit_price * discount_rate
+                                discounted_unit_price = round(unit_price - discount)
                             data.update({
                                             "Description": room_line.custom_room_name and room_line.custom_room_name or room_line.room_id.name})
                             data.update({"Taxable": True})
@@ -2393,7 +2492,6 @@ class SaleOrder(models.Model):
 
                                 })
                                 count = count + 1
-                            _logger.error('Add Quote Items API Adding Room Transitions')
                             if room_line.custom_room_name:
                                 contract_questions = self.env['team.contract.question.line'].search(
                                     [('room_name', '=', room_line.custom_room_name), ('order_id', '=', sale_order.id)])
@@ -2408,26 +2506,25 @@ class SaleOrder(models.Model):
                                         answer = eval(contract_question_answer.answer)
                                     else:
                                         answer = contract_question_answer.answer
-                                    if answer == 'Yes':
-                                        answer = True
-                                    elif answer == 'No':
-                                        answer = False
+                                    if question != 'StairCoverRisers':
+                                        if answer == 'Yes':
+                                            answer = True
+                                        elif answer == 'No':
+                                            answer = False
 
                                 data.update({question: answer})
-                            _logger.error('Add Quote Items API Adding Contract Questions')
                             headers = {
                                 'Content-type': 'application/json',
                             }
 
                             end_point_url = configurations.token_url
                             client_token = configurations.client_token
-                            _logger.info(data)
+                            _logger.info('Add Quote Item API Payload of sale %s: %s' % (sale_order.id, data))
                             if end_point_url and client_token:
                                 request_url = end_point_url + 'AddQuoteItem' + client_token
                             req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
                                                 verify=configurations.enable_ssl)
-                            _logger.error(
-                                'Add Quote Item API Response of sale %s: %s' % (sale_order.id, str(req.content)))
+                            _logger.info('Add Quote Item API Response of sale %s: %s' % (sale_order.id, str(req.content)))
                             req.raise_for_status()
                             try:
                                 content = req.json()
@@ -2450,7 +2547,7 @@ class SaleOrder(models.Model):
                                             }
                                         ]
                                     }
-                            _logger.error('Add Quote Items API Response of sale %s: %s' % (sale_order.id, content))
+                            _logger.info('Add Quote Items API Response of sale %s: %s' % (sale_order.id, content))
                             if content.get('success', '') == "true":
                                 room_line.improveit_id = content['id'] or ''
                             if content.get('success', '') == "false":
@@ -2463,6 +2560,15 @@ class SaleOrder(models.Model):
             _logger.error("******--------Error in add_quote_items_sales_app---------********")
             result.update({"success": "false"})
         return result
+
+    def get_total_discount(self):
+        discount = 0
+        for order in self:
+            if order.adjustment or order.promotion_code_id:
+                for line in order.order_line.filtered(lambda x: x.price_unit <0):
+                    discount += abs(line.price_unit)
+        return discount
+
 
     def add_sale_items_api(self):
         result = {
@@ -2483,6 +2589,11 @@ class SaleOrder(models.Model):
                     improveit_product_id = sale_order.floor_type.improveit_product_id or False
                     category_name = sale_order.floor_type and sale_order.floor_type.categ_id and sale_order.floor_type.categ_id.name or ''
                     room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation and not x.improveit_id)
+                    total_discount_amount = sale_order.get_total_discount()
+                    total_sale_amount = sale_order.one_year_price
+                    discount_rate = 0
+                    if total_sale_amount and total_discount_amount:
+                        discount_rate = total_discount_amount/total_sale_amount
                     for room_line in room_measurement_lines_to_sync:
                         reflect_cost = 0
                         leveling_solution_included = 0
@@ -2550,19 +2661,27 @@ class SaleOrder(models.Model):
                                 "ProductID": improveit_product_id,
                                 "Category": category_name,
                             })
-
-                            for questions in sale_order.contract_question_line:
-                                if questions.room_id.id == room_line.room_id.id and questions.question_id.code != 'StairCount':
-                                    if questions.question_id.reflect_cost:
-                                        reflect_cost += questions.extra_price or 0
-                                    if questions.amount_included and questions.question_id.code == 'LevelingSolutionSqft':
-                                        leveling_solution_included = questions.amount_included
-                                    if questions.question_id.code == 'RemoveCurrentCovering':
-                                        removal_cost = questions.extra_price or 0
-                            room_cost = room_line.adjusted_area * sale_order.floor_type.flooring_cost
+                            if sale_order.calc_based_on == 'list_price':
+                                room_cost = room_line.adjusted_area * sale_order.floor_type.list_price
+                            else:
+                                room_cost = room_line.adjusted_area * sale_order.floor_type.msrp
+                        if room_line.custom_room_name:
+                            contract_question_line = sale_order.contract_question_line.filtered(lambda x: x.room_name == room_line.custom_room_name)
+                        else:
+                            contract_question_line = sale_order.contract_question_line.filtered(lambda x: x.room_id == room_line.room_id.id)
+                        for questions in contract_question_line:
+                            if questions.room_id.id == room_line.room_id.id and questions.question_id.code != 'StairCount':
+                                if questions.question_id.reflect_cost:
+                                    reflect_cost += questions.extra_price or 0
+                                if questions.amount_included and questions.question_id.code == 'LevelingSolutionSqft':
+                                    leveling_solution_included = questions.amount_included
+                                if questions.question_id.code == 'RemoveCurrentCovering':
+                                    removal_cost = questions.extra_price or 0
                         unit_price = room_cost + reflect_cost + color_up_charge_total + molding_total_price + removal_cost
-                        discount = sale_order.adjustment or 0
                         discounted_unit_price = unit_price
+                        if discount_rate:
+                            discount = unit_price*discount_rate
+                            discounted_unit_price = round(unit_price - discount)
                         data.update({'Description': room_line.custom_room_name and room_line.custom_room_name or room_line.room_id.name})
                         data.update({'Taxable': True})
                         data.update({'Units': "Room"})
@@ -2596,7 +2715,7 @@ class SaleOrder(models.Model):
 
                             })
                             count = count + 1
-                        _logger.error('Add Sale Items API Adding Room Transitions')
+                        _logger.info('Add Sale Items API Adding Room Transitions')
                         if room_line.custom_room_name:
                             contract_questions = self.env['team.contract.question.line'].search(
                                 [('room_name', '=', room_line.custom_room_name), ('order_id', '=', sale_order.id)])
@@ -2617,21 +2736,17 @@ class SaleOrder(models.Model):
                                     elif answer == 'No':
                                         answer = False
                             data.update({question: answer})
-                        _logger.error('Add Sale Items API Adding Contract Questions')
-                        _logger.info('-----------------------------------')
-                        _logger.info(data)
-                        _logger.info('-----------------------------------')
                         headers = {
                             'Content-type': 'application/json',
                         }
+                        _logger.info('Add SaleItem API Payload of sale %s: %s' %(sale_order.id, data))
 
                         end_point_url = configurations.token_url
                         client_token = configurations.client_token
-                        _logger.info(data)
                         if end_point_url and client_token:
                             request_url = end_point_url + 'AddSaleItem' + client_token
                         req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
-                        _logger.error('Add SaleIteam API Response of sale %s: %s' %(sale_order.id, str(req.content)))
+                        _logger.info('Add SaleItem API Response of sale %s: %s' %(sale_order.id, str(req.content)))
                         req.raise_for_status()
                         try:
                             content = req.json()
@@ -2654,7 +2769,7 @@ class SaleOrder(models.Model):
                                         }
                                     ]
                                 }
-                        _logger.error('Add Sale Items API Response :%s' % content)
+                        _logger.info('Add Sale Items API Response :%s' % content)
                         if content.get('success', '') == "true":
                             room_line.improveit_id = content['id'] or ''
                         if content.get('success', '') == "false":
@@ -2676,8 +2791,8 @@ class SaleOrder(models.Model):
         try:
             configurations = self.env['team.improveit.configuration'].search(
                 [('api_type', '=', 'boomi')], limit=1)
-            _logger.info('--------Starting SetAppointmentResult API---------')
             for sale_order in self:
+                _logger.info('--------Starting SetAppointmentResult API of sale %s---------'%sale_order.id)
                 _logger.info('--------Appointment ID---------: %s'%(sale_order.appointment_id))
                 if sale_order.appointment_id:
                     data = {
@@ -2697,13 +2812,13 @@ class SaleOrder(models.Model):
                     }
                     end_point_url = configurations.token_url
                     client_token = configurations.client_token
-                    _logger.info(data)
+                    _logger.info('SetAppointmentResult API Response of Appointment %s :%s' %(sale_order.appointment_id.id, data))
                     if end_point_url and client_token:
                         request_url = end_point_url + 'SetAppointmentResult' + client_token
                     req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
                     req.raise_for_status()
                     content = req.json()
-                    _logger.error('SetAppointmentResult API Response of Appointment %s :%s' %(sale_order.appointment_id.id, content))
+                    _logger.info('SetAppointmentResult API Response of Appointment %s :%s' %(sale_order.appointment_id.id, content))
                     if content.get('Result', '') == "Failed":
                         result.update({
                             "success": "false",
@@ -3214,12 +3329,11 @@ class SaleOrder(models.Model):
                 }
                 end_point_url = configurations.token_url
                 client_token = configurations.client_token
-                _logger.info("----------AddCreditApplication------------")
-                _logger.info('data: %s'%(json.dumps(data)))
+                _logger.info("----------AddCreditApplication Input Payload of Appointment %s : %s"%(credit_application.appointment_id.id, data))
                 if end_point_url and client_token:
                     request_url = end_point_url + 'AddCreditApplication' + client_token
                 req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
-                _logger.error('Add Credit Application API Response of Appointment %s : %s'%(credit_application.appointment_id.id, str(req.content)))
+                _logger.info('Add Credit Application API Response of Appointment %s : %s'%(credit_application.appointment_id.id, str(req.content)))
                 req.raise_for_status()
                 try:
                     content = req.json()
@@ -3242,7 +3356,7 @@ class SaleOrder(models.Model):
                                 }
                             ]
                         }
-                _logger.info('---AddCreditApplication Response: %s'%(content))
+                _logger.info('---AddCreditApplication Response of Appointment %s : %s'%(credit_application.appointment_id.id, content))
                 if content.get('success', '') == "true":
                     credit_application.write({
                         'improveit_id': content['id'] or '',
@@ -3267,9 +3381,8 @@ class SaleOrder(models.Model):
         try:
             configurations = self.env['team.improveit.configuration'].search(
                 [('api_type', '=', 'boomi')], limit=1)
-            _logger.info('--------Starting CreateProject API---------')
             for sale_order in self:
-                _logger.info('--------Appointment ID---------: %s' % (sale_order.appointment_id))
+                _logger.info('--------Starting CreateProject API of Appointment ID---------: %s' % (sale_order.appointment_id.id))
                 if sale_order.appointment_id:
                     data = {
                         'SaleId': sale_order.quote_id or '',
@@ -3281,15 +3394,14 @@ class SaleOrder(models.Model):
                     }
                     end_point_url = configurations.token_url
                     client_token = configurations.client_token
-                    _logger.info(data)
+                    _logger.info('CreateProject API Input of Appointment %s :%s' % (sale_order.appointment_id.id, data))
                     if end_point_url and client_token:
                         request_url = end_point_url + 'CreateProject' + client_token
                     req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
                                         verify=configurations.enable_ssl)
                     req.raise_for_status()
                     content = req.json()
-                    _logger.error('CreateProject API Response of Appointment %s :%s' % (
-                    sale_order.appointment_id.id, content))
+                    _logger.info('CreateProject API Response of Appointment %s :%s' % (sale_order.appointment_id.id, content))
                     if content.get('success', '') == "true":
                         selected_installation.write({
                             'project_i360_id': content['id'] or '',
@@ -3317,9 +3429,8 @@ class SaleOrder(models.Model):
         try:
             configurations = self.env['team.improveit.configuration'].search(
                 [('api_type', '=', 'boomi')], limit=1)
-            _logger.info('--------Starting CreateProjectActivity API---------')
             for sale_order in self:
-                _logger.info('--------Appointment ID---------: %s' % (sale_order.appointment_id))
+                _logger.info('--------Starting CreateProjectActivity API Appointment ID---------: %s' % (sale_order.appointment_id.id))
                 if selected_installation.project_i360_id:
                     data = {
                         "ProjectId": selected_installation.project_i360_id or '',
@@ -3334,15 +3445,14 @@ class SaleOrder(models.Model):
                     }
                     end_point_url = configurations.token_url
                     client_token = configurations.client_token
-                    _logger.info('CreateProjectActivity Data: %s'%data)
+                    _logger.info('CreateProjectActivity Data of Appointment %s :%s' % (sale_order.appointment_id.id, data))
                     if end_point_url and client_token:
                         request_url = end_point_url + 'CreateProjectActivity' + client_token
                     req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
                                         verify=configurations.enable_ssl)
                     req.raise_for_status()
                     content = req.json()
-                    _logger.error('CreateProjectActivity API Response of Appointment %s :%s' % (
-                    sale_order.appointment_id.id, content))
+                    _logger.info('CreateProjectActivity API Response of Appointment %s :%s' % (sale_order.appointment_id.id, content))
                     if content.get('success', '') == "true":
                         selected_installation.write({
                             'project_activity_i360_id': content['id'] or '',
@@ -3357,7 +3467,7 @@ class SaleOrder(models.Model):
                         return content.get('Errors', {})
         except IOError:
             pass
-            _logger.error("******--------Error in create_project_activity_in_i360 API---------********")
+            _logger.info("******--------Error in create_project_activity_in_i360 API---------********")
             result.update({"success": "false"})
         return result
 
@@ -3369,10 +3479,9 @@ class SaleOrder(models.Model):
         try:
             configurations = self.env['team.improveit.configuration'].search(
                 [('api_type', '=', 'boomi')], limit=1)
-            _logger.info('--------Starting AddSaleComments API---------')
             for sale_order in self:
                 appointment = sale_order.appointment_id
-                _logger.info('--------Appointment ID---------: %s' % (sale_order.appointment_id))
+                _logger.info('--------Starting AddSaleComments API Appointment ID---------: %s' % (sale_order.appointment_id.id))
                 if sale_order.quote_id and appointment:
                     data = {
                         'Id': sale_order.quote_id or '',
@@ -3384,15 +3493,14 @@ class SaleOrder(models.Model):
                     }
                     end_point_url = configurations.token_url
                     client_token = configurations.client_token
-                    _logger.info(data)
+                    _logger.info('AddSaleComments API Input of Appointment %s :%s' % (appointment.id, data))
                     if end_point_url and client_token:
                         request_url = end_point_url + 'AddSaleComments' + client_token
                     req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
                                         verify=configurations.enable_ssl)
                     req.raise_for_status()
                     content = req.json()
-                    _logger.error('AddSaleComments API Response of Appointment %s :%s' % (
-                        appointment.id, content))
+                    _logger.info('AddSaleComments API Response of Appointment %s :%s' % (appointment.id, content))
                     if content.get('success', '') == "true":
                         sale_order.write({
                             'additional_comment_synced': True,
@@ -3416,10 +3524,9 @@ class SaleOrder(models.Model):
         try:
             configurations = self.env['team.improveit.configuration'].search(
                 [('api_type', '=', 'boomi')], limit=1)
-            _logger.info('--------Starting SyncLoanData API---------')
             for sale_order in self:
                 appointment = sale_order.appointment_id
-                _logger.info('--------Appointment ID---------: %s' % (sale_order.appointment_id))
+                _logger.info('--------Starting SyncLoanData API of Appointment ID---------: %s' % (sale_order.appointment_id.id))
                 if sale_order.quote_id and appointment:
                     data = {
                         'Id': sale_order.quote_id or '',
@@ -3432,15 +3539,14 @@ class SaleOrder(models.Model):
                     }
                     end_point_url = configurations.token_url
                     client_token = configurations.client_token
-                    _logger.info(data)
+                    _logger.info('SyncLoanData API Payload of Appointment %s :%s' % (appointment.id, data))
                     if end_point_url and client_token:
                         request_url = end_point_url + 'SyncLoanData' + client_token
                     req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
                                         verify=configurations.enable_ssl)
                     req.raise_for_status()
                     content = req.json()
-                    _logger.error('SyncLoanData API Response of Appointment %s :%s' % (
-                        appointment.id, content))
+                    _logger.info('SyncLoanData API Response of Appointment %s :%s' % (appointment.id, content))
                     if content.get('success', '') == "true":
                         ext_credit_application.write({
                             'improveit_id': content.get('id', ''),

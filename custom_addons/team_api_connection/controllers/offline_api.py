@@ -55,6 +55,7 @@ class APIHomes(API_Homes):
         self.get_credit_application_status_api_queue = dict()
         self.initiate_i360_sync_api_queue = dict()
         self.image_sync_api_queue = dict()
+        self.appointment_sync_api_queue = dict()
         self.available_installation_date_api_queue = dict()
         self.selected_installation_date_api_queue = dict()
 
@@ -1332,7 +1333,27 @@ class APIHomes(API_Homes):
             _logger.info("------------password missing in main get_appointments api-------------------")
             return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
+        enable_api_queue_system = eval(
+            str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         if status:
+            if enable_api_queue_system:
+                _logger.info('appointment_sync_api_queue Data - Starting--:%s - User ID: %s' % (
+                    self.appointment_sync_api_queue, uid))
+                time = datetime.now()
+                if uid in self.appointment_sync_api_queue:
+                    queue_time = self.appointment_sync_api_queue.get(uid, {})
+                    time_difference = (time - queue_time).total_seconds()
+                    if int(time_difference) < 60:
+                        _logger.info('appointment_sync_api_queue Data - Duplicate--:%s - User ID ID: %s' % (
+                            self.appointment_sync_api_queue, uid))
+                        result = {'override_json_result': 1, 'result': 'Failed',
+                                  'message': 'Execution is already in progress'}
+                        return json.dumps(result)
+                self.appointment_sync_api_queue.update({
+                    uid: time
+                })
+                _logger.info('appointment_sync_api_queue Data - Added--:%s' % (
+                    self.appointment_sync_api_queue))
             appointment_data = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
                                                  'action_get_appointment_data', [int(uid)])
 
@@ -1346,6 +1367,11 @@ class APIHomes(API_Homes):
                 }
         else:
             result = message
+        result.update({'override_json_result': 1})
+        if enable_api_queue_system and uid:
+            self.appointment_sync_api_queue.pop(uid, '')
+            _logger.info('appointment_sync_api_queue Data - Ending--:%s' % (
+                self.appointment_sync_api_queue))
         return json.dumps(result)
 
     @route('/api/update_customer_and_room_information', type='json', auth="none", methods=['POST'], csrf=False)
@@ -1418,6 +1444,7 @@ class APIHomes(API_Homes):
         image_type = params.get('image_type', '')
         image_name = params.get('image_name', '')
         data_completed = params.get('data_completed', 0)
+        network_strength = params.get('network_strength', '')
         file = params.get('file', False)
         _logger.info("------------add_screenshots params: %s------------------" % (params))
         data = []
@@ -1457,8 +1484,8 @@ class APIHomes(API_Homes):
                             self.image_sync_api_queue, appointment_id, image_name))
                         result = {'override_json_result': 1, 'result': 'Failed',
                                   'message': 'Execution is already in progress'}
-                        request.env['otl.api.sync.log'].sudo().create_api_log('/api/upload_images', {'appointment_id': appointment_id}, uid, result)
-                        return result
+                        request.env['otl.api.sync.log'].sudo().create_api_log('/api/upload_images', {'appointment_id': appointment_id}, uid, result, network_strength)
+                        return json.dumps(result)
                 self.image_sync_api_queue[appointment_id].update({
                     image_name: time
                 })
@@ -1502,9 +1529,9 @@ class APIHomes(API_Homes):
         else:
             result = message
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/upload_images', {'appointment_id': appointment_id}, uid,
-                                                              result)
+                                                              result, network_strength)
         result.update({'override_json_result': 1})
-        if enable_api_queue_system:
+        if enable_api_queue_system and appointment_id and self.image_sync_api_queue.get(appointment_id, False):
             self.image_sync_api_queue[appointment_id].pop(image_name, {})
             if not self.image_sync_api_queue[appointment_id]:
                 self.image_sync_api_queue.pop(appointment_id, '')
@@ -1522,6 +1549,7 @@ class APIHomes(API_Homes):
         flexible_installation = params.get('flexible_installation', 0) and int(params.get('flexible_installation', 0)) or 0
         recision_date = params.get('recision_date', False)
         additional_comments = params.get('additional_comments', '')
+        network_strength = params.get('network_strength', '')
         if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
                 (not contract_plumbing_option_1 and not contract_plumbing_option_2):
             return json.dumps({
@@ -1571,8 +1599,8 @@ class APIHomes(API_Homes):
                                   'message': 'Execution is already in progress'}
                         request.env['otl.api.sync.log'].sudo().create_api_log(
                             '/api/generate_contract_document', data, uid,
-                            result)
-                        return result
+                            result, network_strength)
+                        return json.dumps(result)
                 self.generate_contract_document_api_queue.update({
                     appointment_id: time
                 })
@@ -1584,7 +1612,7 @@ class APIHomes(API_Homes):
         else:
             result = message
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/generate_contract_document', data, uid,
-                                                              result)
+                                                              result, network_strength)
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.generate_contract_document_api_queue.pop(appointment_id, '')
@@ -1599,6 +1627,7 @@ class APIHomes(API_Homes):
         token = params.get('token', '')
         appointment_id = params.get('appointment_id', 0) and int(params.get('appointment_id', 0)) or 0
         sync_delay = params.get('sync_delay', 1) and int(params.get('sync_delay', 1)) or 1
+        network_strength = params.get('network_strength', '')
         result = {}
         if not token:
             _logger.info("------------Token Missing in initiate_sync_to_i360------------------")
@@ -1624,7 +1653,7 @@ class APIHomes(API_Homes):
         else:
             result = message
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/initiate_sync_to_i360', data, uid,
-                                                              result)
+                                                              result, network_strength)
         result.update({'override_json_result': 1})
         return json.dumps(result)
 
@@ -1634,6 +1663,8 @@ class APIHomes(API_Homes):
         params = request.jsonrequest.copy()
         token = params.get('token', '')
         data = params.get('data', [])
+        appointment_id = False
+        network_strength = params.get('network_strength', '')
         result = {}
         if not token:
             _logger.info("------------Token Missing in initiate_sync_to_i360_json------------------")
@@ -1656,13 +1687,6 @@ class APIHomes(API_Homes):
                         self.initiate_i360_sync_api_queue, data.get('appointment_id', 0)))
                     appointment_id = data.get('appointment_id', 0) and str(data.get('appointment_id', 0)) or '0'
                     time = datetime.now()
-                    if appointment_id in self.available_installation_date_api_queue:
-                        result = {'override_json_result': 1, 'result': 'Failed',
-                                  'message': 'Installation Date API Execution is in Progress'}
-                        request.env['otl.api.sync.log'].sudo().create_api_log(
-                            '/api/initiate_sync_to_i360_json', data, uid,
-                            result)
-                        return result
                     if appointment_id in self.initiate_i360_sync_api_queue:
                         queue_time = self.initiate_i360_sync_api_queue.get(appointment_id, {})
                         time_difference = (time - queue_time).total_seconds()
@@ -1673,8 +1697,8 @@ class APIHomes(API_Homes):
                                       'message': 'Execution is already in progress'}
                             request.env['otl.api.sync.log'].sudo().create_api_log(
                                 '/api/initiate_sync_to_i360_json', data, uid,
-                                result)
-                            return result
+                                result, network_strength)
+                            return json.dumps(result)
                     self.initiate_i360_sync_api_queue.update({
                         appointment_id: time
                     })
@@ -1691,9 +1715,9 @@ class APIHomes(API_Homes):
         else:
             result = message
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/initiate_sync_to_i360_json', data, uid,
-                                                              result)
+                                                              result, network_strength)
         result.update({'override_json_result': 1})
-        if enable_api_queue_system:
+        if enable_api_queue_system and appointment_id:
             self.initiate_i360_sync_api_queue.pop(appointment_id, '')
             _logger.info('initiate_i360_sync_api_queue Data - Ending--:%s' % (
                 self.initiate_i360_sync_api_queue))
@@ -1780,6 +1804,7 @@ class APIHomes(API_Homes):
         params = request.jsonrequest.copy()
         token = params.get('token', False)
         data = params.get('data', False)
+        network_strength = params.get('network_strength', '')
         appointment_id = False
         _logger.info("------------create_order_and_update_measurements_encoded params - 1st: %s------------------" % (params))
         while 'data' in data:
@@ -1817,8 +1842,8 @@ class APIHomes(API_Homes):
                                       'message': 'Execution is already in progress'}
                             request.env['otl.api.sync.log'].sudo().create_api_log(
                                 '/api/create_order_and_update_measurements_encoded', data, uid,
-                                result)
-                            return result
+                                result, network_strength)
+                            return json.dumps(result)
                     self.create_order_and_update_measurements_api_queue.update({
                         appointment_id: time
                     })
@@ -1842,7 +1867,7 @@ class APIHomes(API_Homes):
                 result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Something went wrong while decoding the payment token'}
                 request.env['otl.api.sync.log'].sudo().create_api_log(
                     '/api/create_order_and_update_measurements_encoded', data, uid,
-                    result)
+                    result, network_strength)
                 if enable_api_queue_system:
                     self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
                 return json.dumps(result)
@@ -1857,7 +1882,7 @@ class APIHomes(API_Homes):
                 result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Something went wrong while decoding the credit application token'}
                 request.env['otl.api.sync.log'].sudo().create_api_log(
                     '/api/create_order_and_update_measurements_encoded', data, uid,
-                    result)
+                    result, network_strength)
                 if enable_api_queue_system:
                     self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
                 return json.dumps(result)
@@ -1872,7 +1897,7 @@ class APIHomes(API_Homes):
         else:
             result = message
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements_encoded', data, uid,
-                                                              result)
+                                                              result, network_strength)
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             if appointment_id:
@@ -1887,6 +1912,7 @@ class APIHomes(API_Homes):
         token = params.get('token', False)
         data = params.get('data', False)
         native_data = params.get('native_data', False)
+        network_strength = params.get('network_strength', '')
         decode_options = ast.literal_eval(str(params.get('decode_options', {'verify_signature': True})))
         decoded_data = {}
         _logger.info("------------create_order_and_update_measurements_encoded_v2 params: %s------------------" % (params))
@@ -1920,7 +1946,7 @@ class APIHomes(API_Homes):
         else:
             result = message
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements_encoded_v2', decoded_data, uid,
-                                                              result)
+                                                              result, network_strength)
         result.update({'override_json_result': 1})
         return json.dumps(result)
 
@@ -1931,6 +1957,7 @@ class APIHomes(API_Homes):
         token = params.get('token', False)
         data = params.get('data', False)
         appointment_id = int(params.get('appointment_id', 0))
+        network_strength = params.get('network_strength', '')
         _logger.info(
             "------------fetch_database_raw_data params: %s------------------" % (params))
         if not token:
@@ -1946,7 +1973,7 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         if status:
             if data and appointment_id:
-                result = request.env['otl.api.sync.log'].sudo().store_database_raw_data('/api/fetch_database_raw_data', data, uid, appointment_id)
+                result = request.env['otl.api.sync.log'].sudo().store_database_raw_data('/api/fetch_database_raw_data', data, uid, appointment_id, network_strength)
             else:
                 result = {'result': 'Failed', 'message': 'Data or Appointment ID is missing'}
         else:
@@ -1987,6 +2014,7 @@ class APIHomes(API_Homes):
         params = request.params.copy()
         token = params.get('token', '')
         appointment_id = params.get('appointment_id', '')
+        network_strength = params.get('network_strength', '')
         _logger.info(
             "------------action_get_available_installation_date params: %s------------------" % (params))
         if not token:
@@ -2020,8 +2048,8 @@ class APIHomes(API_Homes):
                                   'message': 'Execution is already in progress'}
                         request.env['otl.api.sync.log'].sudo().create_api_log(
                             '/api/get_available_installation_date', params, uid,
-                            result)
-                        return result
+                            result, network_strength)
+                        return json.dumps(result)
                 self.available_installation_date_api_queue.update({
                     appointment_id: time
                 })
@@ -2033,7 +2061,7 @@ class APIHomes(API_Homes):
         _logger.info("---------action_get_available_installation_date Response: %s"%(result))
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/get_available_installation_date', params,
                                                               uid,
-                                                              result)
+                                                              result, network_strength)
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.available_installation_date_api_queue.pop(appointment_id, '')
@@ -2049,6 +2077,7 @@ class APIHomes(API_Homes):
         token = params.get('token', '')
         sale_order_id = params.get('sale_order_id', '')
         installation_id = params.get('installation_id', '')
+        network_strength = params.get('network_strength', '')
         _logger.info(
             "------------submit_selected_installation_date params: %s------------------" % (params))
         if not token:
@@ -2092,8 +2121,8 @@ class APIHomes(API_Homes):
                                   'message': 'Execution is already in progress'}
                         request.env['otl.api.sync.log'].sudo().create_api_log(
                             '/api/get_available_installation_date', params, uid,
-                            result)
-                        return result
+                            result, network_strength)
+                        return json.dumps(result)
                 self.selected_installation_date_api_queue.update({
                     sale_order_id: time
                 })
@@ -2107,7 +2136,7 @@ class APIHomes(API_Homes):
         _logger.info("---------submit_selected_installation_date Response: %s" % (result))
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/submit_selected_installation_date', params,
                                                               uid,
-                                                              result)
+                                                              result, network_strength)
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.selected_installation_date_api_queue.pop(sale_order_id, '')
@@ -2170,6 +2199,7 @@ class APIHomes(API_Homes):
         additional_comments = params.get('additional_comments', '')
         appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
         recision_date = params.get('recision_date', False)
+        network_strength = params.get('network_strength', '')
 
         _logger.info("------------update_additional_appointment_data params: %s------------------" % (params))
         result = {}
@@ -2210,8 +2240,8 @@ class APIHomes(API_Homes):
                                       'message': 'Execution is already in progress'}
                             request.env['otl.api.sync.log'].sudo().create_api_log(
                                 '/api/%s/update_additional_appointment_data'%(version), data, uid,
-                                result)
-                            return result
+                                result, network_strength)
+                            return json.dumps(result)
                     self.update_additional_appointment_data_api_queue.update({
                         appointment_id: time
                     })
@@ -2225,7 +2255,7 @@ class APIHomes(API_Homes):
         else:
             result = message
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_additional_appointment_data'%(version), params, uid,
-                                                              result)
+                                                              result, network_strength)
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.update_additional_appointment_data_api_queue.pop(appointment_id, '')
@@ -2246,6 +2276,7 @@ class APIHomes(API_Homes):
             token = access_token[7:]
         data = params
         appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
+        network_strength = params.get('network_strength', '')
         _logger.info(
             "------------get_credit_application_status params: %s------------------" % (params))
         if not token:
@@ -2283,8 +2314,8 @@ class APIHomes(API_Homes):
                                       'message': 'Execution is already in progress'}
                             request.env['otl.api.sync.log'].sudo().create_api_log(
                                 '/api/%s/update_additional_appointment_data'%(version), data, uid,
-                                result)
-                            return result
+                                result, network_strength)
+                            return json.dumps(result)
                     self.get_credit_application_status_api_queue.update({
                         appointment_id: time
                     })
@@ -2299,7 +2330,7 @@ class APIHomes(API_Homes):
             result = message
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/get_credit_application_status' % (version),
                                                               params, uid,
-                                                              result)
+                                                              result, network_strength)
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.get_credit_application_status_api_queue.pop(appointment_id, '')
@@ -2316,6 +2347,7 @@ class APIHomes(API_Homes):
         arrival_date = params.get('arrival_date', False)
         departure_date = params.get('departure_date', False)
         timezone = params.get('timezone', False)
+        network_strength = params.get('network_strength', '')
 
         _logger.info("------------update_arrival_departure_time params: %s------------------" % (params))
         result = {}
@@ -2355,8 +2387,8 @@ class APIHomes(API_Homes):
                                       'message': 'Execution is already in progress'}
                             request.env['otl.api.sync.log'].sudo().create_api_log(
                                 '/api/%s/update_arrival_departure_time'%(version), data, uid,
-                                result)
-                            return result
+                                result, network_strength)
+                            return json.dumps(result)
                     self.update_arrival_departure_time_api_queue.update({
                         appointment_id: time
                     })
@@ -2370,7 +2402,7 @@ class APIHomes(API_Homes):
         else:
             result = message
         request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_arrival_departure_time'%(version), params, uid,
-                                                              result)
+                                                              result, network_strength)
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.update_arrival_departure_time_api_queue.pop(appointment_id, '')

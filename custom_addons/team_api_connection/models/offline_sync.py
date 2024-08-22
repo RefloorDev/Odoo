@@ -28,7 +28,7 @@ import time
 from fusion_refloor.configuration import Configuration
 from fusion_refloor.api_client import ApiClient, ApiException
 from fusion_refloor.api import scheduling_services_api
-from fusion_refloor.model.schedule_request import ScheduleRequest
+from fusion_refloor.models.schedule_request import ScheduleRequest
 
 import logging
 _logger = logging.getLogger(__name__)
@@ -342,10 +342,16 @@ class ResUsers(models.Model):
                     data = {
                         "SalespersonID": user_id
                     }
-
-                    req = requests.post(url, data=json.dumps(data), headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
-                    req.raise_for_status()
-                    content = req.json()
+                    try:
+                        req = requests.post(url, data=json.dumps(data), headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
+                        req.raise_for_status()
+                        content = req.json()
+                    except Exception as e:
+                        _logger.error('-----get_sales_appointment_api_offline Error: %s'%e)
+                        return {
+                            'result': 'Failed',
+                            'message': 'Error is occurred while fetching appointments.'
+                        }
                     res_user = self.env['res.users'].search([('improveit_user_id', '=', user_id)], limit=1)
                     tz = res_user.tz or self._context.get('tz') or 'UTC'
                     first_start_date_utc, first_end_date_utc = get_week_date(0, tz)
@@ -419,12 +425,17 @@ class ResUsers(models.Model):
                                     'office_location_id': office_location_id and office_location_id.id or False,
 
                                 }
-                                appointment_obj = self.env['team.customer.appointment'].create(appointment_values)
+                                try:
+                                    appointment_obj = self.env['team.customer.appointment'].create(appointment_values)
+                                except:
+                                    appointment_obj = False
+                                    -_logger.error('Error while creating appointment %s'%appointment_values)
+                                    continue
                                 try:
                                     appointment_obj.geo_localize()
                                 except:
                                     continue
-                                if market_segment and not office_location_id:
+                                if appointment_obj and market_segment and not office_location_id:
                                     appointment_obj.message_post(body='Office Location is not found for Market Segment %s'%(market_segment))
                             elif appointments and update_existing_record:
                                 appointment_values = {
@@ -492,12 +503,16 @@ class ResUsers(models.Model):
         return result
 
     @api.model
-    def action_log_user_authentication(self, uid, action, token):
+    def action_log_user_authentication(self, uid, action, token, user_data={}):
+        values = user_data.copy()
         vals = {
             'user_id': int(uid),
             'action': action,
             'token': token,
         }
+        if values:
+            values.pop('device_reg_id', '')
+            vals.update(values)
         log = self.env['otl.user.authentication.log'].sudo().create(vals)
         _logger.info("Authentication log created successfully----. Vals: %s, Record: %s"%(vals, log.id))
         return True
@@ -1046,7 +1061,12 @@ class TeamCustomerAppointment(models.Model):
                     vals.update({
                         'partner_id': partner.id,
                     })
-            appointment.write(vals)
+            if vals:
+                vals.update({
+                    'write_uid': self.env.user.id,
+                    'write_date': datetime.now().replace(tzinfo=pytz.utc)
+                })
+                appointment.write(vals)
             result = {
                 'message': 'Appointment updated successfully',
                 'result': 'Success',
@@ -1078,12 +1098,6 @@ class TeamCustomerAppointment(models.Model):
                 exclude_from_calculation = int(data.get('exclude_from_calculation', 0)) or 0
                 room = self.env['team.room.room'].browse(room_id)
                 if room.exists():
-                    room_domain = [('appointment_id', '=', self.id)]
-                    if custom_room_measured and data.get('room_name', ''):
-                        room_domain += [('custom_room_name', '=', data.get('room_name', ''))]
-                    elif data.get('room_id', False):
-                        room_domain += [('room_id', '=', room_id)]
-                    room_measure = room_measure_obj.search(room_domain, limit=1)
                     material_id = int(data.get('material_id', 0))
                     vals = {
                         'custom_room_name': data.get('room_name', ''),
@@ -1120,17 +1134,12 @@ class TeamCustomerAppointment(models.Model):
                             result = {'message': 'Wrong Material Value', 'result': 'Failed'}
                             return result
 
-                    if room_measure:
-                        room_measure.write(vals)
-                        if room_measure.transition_line_id:
-                            room_measure.transition_line_id.unlink()
-                    else:
-                        vals.update({
-                            'appointment_id': self.id,
-                            'room_id': room_id,
-                            'order_id': sale_order and sale_order.id or False
-                             })
-                        room_measure = room_measure_obj.create(vals)
+                    vals.update({
+                        'appointment_id': self.id,
+                        'room_id': room_id,
+                        'order_id': sale_order and sale_order.id or False
+                         })
+                    room_measure = room_measure_obj.create(vals)
                     if data.get('transitions', []):
                         for transition_data in data.get('transitions', []):
                             if transition_data.get('name', '') and transition_data.get('width', 0):
@@ -1165,51 +1174,42 @@ class TeamCustomerAppointment(models.Model):
         _logger.info('--------------Inside action_update_questionnaires------------')
         room_questions = room_question_obj.search([('appointment_id', '=', self.id)])
         if room_questions:
-            for question in room_questions:
-                if question.answers:
-                    question.answers.unlink()
-                question.unlink()
+            room_questions.unlink()
+        custom_room = self.env['team.room.room'].search([('is_custom', '=', True)], limit=1)
         for data in questionnaire_list:
             room_name = data.get('room_name', '')
             calculate_order_wise = data.get('calculate_order_wise', 0)
             if data.get('room_id', False) or room_name:
                 room_id = int(data.get('room_id', False)) or 0
                 if not room_id:
-                    room = self.env['team.room.room'].search([('is_custom', '=', True)], limit=1)
-                    room_id = room and room.id or 0
+                    room_id = custom_room and custom_room.id or 0
                 question_id = int(data.get('question_id', False)) or 0
                 answers = data.get('answer', [])
                 answer_exists = False
                 for answer in answers:
                     if answer:
                         answer_exists = True
-                if self.env['team.room.room'].browse(room_id).exists():
-                    if not question_id:
-                        _logger.info("------ Question ID Missing-------------")
-                        return {'message': 'Question ID Missing', 'result': 'Failed'}
-                    if self.env['team.quote.question'].browse(question_id).exists():
-                        if room_name:
-                            room_measure = room_measure_obj.search(
-                                [('appointment_id', '=', self.id), ('custom_room_name', '=', room_name)], limit=1)
-                        else:
-                            room_measure = room_measure_obj.search(
-                                [('appointment_id', '=', self.id), ('room_id', '=', room_id)], limit=1)
-                        room_question = room_question_obj.search(
-                            [('appointment_id', '=', self.id), ('question_id', '=', question_id), ('room_measurement_id', '=', room_measure.id)], limit=1)
-                        if answer_exists:
-                            if room_question:
-                                if room_question.answers:
-                                    room_question.answers.unlink()
+                if answer_exists:
+                    if self.env['team.room.room'].browse(room_id).exists():
+                        if not question_id:
+                            _logger.info("------ Question ID Missing-------------")
+                            return {'message': 'Question ID Missing', 'result': 'Failed'}
+                        if self.env['team.quote.question'].browse(question_id).exists():
+                            if room_name:
+                                room_measure = room_measure_obj.search(
+                                    [('appointment_id', '=', self.id), ('custom_room_name', '=', room_name)], limit=1)
                             else:
-                                room_question = room_question_obj.create({
-                                    'room_id': room_id,
-                                    'question_id': question_id,
-                                    'room_name': room_name,
-                                    'room_measurement_id': room_measure and room_measure.id or False,
-                                    'calculate_order_wise': calculate_order_wise and True or False,
-                                    'appointment_id': self.id,
-                                    'order_id': sale_order and sale_order.id or False
-                                })
+                                room_measure = room_measure_obj.search(
+                                    [('appointment_id', '=', self.id), ('room_id', '=', room_id)], limit=1)
+                            room_question = room_question_obj.create({
+                                'room_id': room_id,
+                                'question_id': question_id,
+                                'room_name': room_name,
+                                'room_measurement_id': room_measure and room_measure.id or False,
+                                'calculate_order_wise': calculate_order_wise and True or False,
+                                'appointment_id': self.id,
+                                'order_id': sale_order and sale_order.id or False
+                            })
                             for answer in answers:
                                 if answer:
                                     answer_record = answer_obj.create({
@@ -1221,13 +1221,13 @@ class TeamCustomerAppointment(models.Model):
                                 'result': 'Success'
                             }
 
-                    else:
-                        _logger.info("------ Question ID Wrong-------------")
-                        result = {'message': 'Question ID Wrong', 'result': 'Failed'}
+                        else:
+                            _logger.info("------ Question ID Wrong-------------")
+                            result = {'message': 'Question ID Wrong', 'result': 'Failed'}
 
-                else:
-                    _logger.info("------ Room_id Wrong-------------")
-                    result = {'message': 'Wrong Room Value', 'result': 'Failed'}
+                    else:
+                        _logger.info("------ Room_id Wrong-------------")
+                        result = {'message': 'Wrong Room Value', 'result': 'Failed'}
             else:
                 _logger.info("------ Room_id Empty-------------")
                 result = {'message': 'Room_id Empty', 'result': 'Failed'}
@@ -1498,6 +1498,8 @@ class TeamCustomerAppointment(models.Model):
                 'one_year_price': msrp+additional_cost,
                 'coapplicant_skip': True if coapplicant_skip == 1 else False,
                 'applicant_inititals': initials or '',
+                'write_uid': self.env.user.id,
+                'write_date': datetime.now().replace(tzinfo=pytz.utc)
             })
 
             if not sale_order:
@@ -1537,7 +1539,8 @@ class TeamCustomerAppointment(models.Model):
                     sale_order.order_line.unlink()
                 if sale_order.discount_history_line:
                     sale_order.discount_history_line.unlink()
-                sale_order.write(sale_order_vals)
+                if sale_order_vals:
+                    sale_order.write(sale_order_vals)
             if execution_order == 'room_order':
                 if team_question_obj:
                     team_question_obj.write({'order_id': sale_order.id})
@@ -1671,25 +1674,27 @@ class TeamCustomerAppointment(models.Model):
                 }
         if appointment_id:
             appointment = self.browse(appointment_id)
+            room_measure_vals = {}
+            appointment_vals = {}
             if appointment.exists():
                 if image_type == 'snapshot':
-                    appointment.write({'attachment_ids': [(4, attachment_id)]})
+                    appointment_vals.update({'attachment_ids': [(4, attachment_id)]})
                 elif image_type == 'applicant_signature':
                     if appointment.applicant_signature_id:
                         appointment.applicant_signature_id.sudo().unlink()
-                    appointment.write({'applicant_signature_id': attachment_id})
+                    appointment_vals.update({'applicant_signature_id': attachment_id})
                 elif image_type == 'applicant_initial':
                     if appointment.applicant_initial_id:
                         appointment.applicant_initial_id.sudo().unlink()
-                    appointment.write({'applicant_initial_id': attachment_id})
+                    appointment_vals.update({'applicant_initial_id': attachment_id})
                 elif image_type == 'co_applicant_signature':
                     if appointment.co_applicant_signature_id:
                         appointment.co_applicant_signature_id.sudo().unlink()
-                    appointment.write({'co_applicant_signature_id': attachment_id})
+                    appointment_vals.update({'co_applicant_signature_id': attachment_id})
                 elif image_type == 'co_applicant_initial':
                     if appointment.co_applicant_initial_id:
                         appointment.co_applicant_initial_id.sudo().unlink()
-                    appointment.write({'co_applicant_initial_id': attachment_id})
+                    appointment_vals.update({'co_applicant_initial_id': attachment_id})
                 elif image_type in ['room_photo', 'measurement_image', 'protrusion_image']:
                     if not room_name:
                         if not self.env['team.room.room'].browse(room_id).exists():
@@ -1711,11 +1716,19 @@ class TeamCustomerAppointment(models.Model):
                     if image_type == 'measurement_image':
                         if room_measure.shape_image_id:
                             room_measure.shape_image_id.sudo().unlink()
-                        room_measure.write({'shape_image_id': attachment_id})
+                        room_measure_vals.update({'shape_image_id': attachment_id})
                     elif image_type == 'protrusion_image':
-                        room_measure.write({'protrusion_image_ids': [(4, attachment_id)]})
+                        room_measure_vals.update({'protrusion_image_ids': [(4, attachment_id)]})
                     else:
-                        room_measure.write({'attachment_ids': [(4, attachment_id)]})
+                        room_measure_vals.update({'attachment_ids': [(4, attachment_id)]})
+                    if room_measure_vals:
+                        room_measure_vals.update({'write_uid': self.env.user.id, 'write_date': datetime.now().replace(tzinfo=pytz.utc)})
+                        _logger.info("------Before write, Room Measure ID: %s-------------"%(room_measure.id))
+                        room_measure.write(room_measure_vals)
+                        _logger.info("------After write, Room Measure ID: %s-------------"%(room_measure.id))
+                if appointment_vals:
+                    appointment_vals.update({'write_uid': self.env.user.id, 'write_date': datetime.now().replace(tzinfo=pytz.utc)})
+                    appointment.write(appointment_vals)
                 result= {
                     'message': 'File upload successfully',
                     'result': 'Success',
@@ -1857,8 +1870,7 @@ class TeamCustomerAppointment(models.Model):
                                         'result': 'Failed'
                                     }
 
-                room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(
-                    lambda x: not x.exclude_from_calculation and not x.improveit_id)
+                room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(lambda x: not x.improveit_id)
                 if room_measurement_lines_to_sync:
                     if sale_order.appointment_result == 'Sold':
                         if room_measurement_lines_to_sync.filtered(lambda x: not x.exclude_from_calculation and not x.improveit_id):
@@ -2073,12 +2085,15 @@ class TeamCustomerAppointment(models.Model):
                                 'state': 'failed',
                                 'name': 'AddSaleComments',
                             })
-                    sale_order.write(sale_order_vals)
                     if sale_order.check_document_upload_completed():
-                        sale_order.write({'is_data_upload_completed': True})
+                        sale_order_vals.update({'is_data_upload_completed': True})
+                    if sale_order_vals:
+                        sale_order_vals.update({
+                            'write_uid': self.env.user.id,
+                            'write_date': datetime.now().replace(tzinfo=pytz.utc)
+                        })
+                        sale_order.write(sale_order_vals)
                     self.env.cr.commit()
-
-            self.env.cr.commit()
             new_cr.close()
             _logger.info('------End of action_start_sync_to_i360------: %s' % (sale_order_id))
         return True
@@ -2421,12 +2436,12 @@ class TeamCustomerAppointment(models.Model):
                                                 all_room_updated= False
                                     if not all_room_updated:
                                         room_measure_result = appointment.action_update_room_measurements(rooms_list, order)
-                                    if room_measure_result.get('result', False) == 'Failed':
-                                        room_measure_result.update({
-                                            'payment_status': payment_status,
-                                            'payment_message': payment_message,
-                                        })
-                                        return room_measure_result
+                                        if room_measure_result.get('result', False) == 'Failed':
+                                            room_measure_result.update({
+                                                'payment_status': payment_status,
+                                                'payment_message': payment_message,
+                                            })
+                                            return room_measure_result
                                 if answer_list and not order.contract_question_line:
                                     room_quesionnaire_result = appointment.action_update_questionnaires(answer_list, order)
                                     if room_quesionnaire_result.get('result', False) == 'Failed':
@@ -2470,22 +2485,19 @@ class TeamCustomerAppointment(models.Model):
                                                     if notification:
                                                         if user_id and user_id.device_reg_id:
                                                             device_id = user_id.device_reg_id
-                                                            device_type = 'ios'
                                                             message_body = description
                                                             message_title = "Payment Failed - %s %s" % (
                                                             appointment.applicant_first_name,
                                                             appointment.applicant_last_name)
                                                             extra_data = {'type': notification.res_model,
-                                                                          'id': notification.id,
-                                                                          'name': notification.res_id}
+                                                                          'id': str(notification.id),
+                                                                          'name': str(notification.res_id)}
                                                             notification_result = notification.push_pyfcm_single(
                                                                 company, device_id,
                                                                 message_title,
                                                                 message_body,
-                                                                extra_data=extra_data,
-                                                                device_type=device_type)
-                                                            if notification_result and notification_result.get(
-                                                                    'success', False):
+                                                                extra_data=extra_data)
+                                                            if notification_result and notification_result.get('success', False):
                                                                 notification.status = 'sent'
                                                             else:
                                                                 notification.status = 'failed'
@@ -2559,6 +2571,7 @@ class TeamCustomerAppointment(models.Model):
                                         payment_result.update({
                                             'payment_status': payment_status,
                                             'payment_message': payment_message,
+                                            'authorize_transaction_id': transaction_id,
                                         })
                                         return payment_result
                                     else:
@@ -2579,17 +2592,16 @@ class TeamCustomerAppointment(models.Model):
                                                 if notification:
                                                     if user_id and user_id.device_reg_id:
                                                         device_id = user_id.device_reg_id
-                                                        device_type = 'ios'
                                                         message_body = description
                                                         message_title = "Payment Failed - %s %s"%(appointment.applicant_first_name, appointment.applicant_last_name)
                                                         extra_data = {'type': notification.res_model,
-                                                                      'id': notification.id,
-                                                                      'name': notification.res_id}
-                                                        notification_result = notification.push_pyfcm_single(company, device_id,
-                                                                                                message_title,
-                                                                                                message_body,
-                                                                                                extra_data=extra_data,
-                                                                                                device_type=device_type)
+                                                                      'id': str(notification.id),
+                                                                      'name': str(notification.res_id)}
+                                                        notification_result = notification.push_pyfcm_single(
+                                                            company, device_id,
+                                                            message_title,
+                                                            message_body,
+                                                            extra_data=extra_data)
                                                         if notification_result and notification_result.get('success', False):
                                                             notification.status = 'sent'
                                                         else:
@@ -2841,6 +2853,8 @@ class TeamCustomerAppointment(models.Model):
 
                 api_response = api_instance.schedule_existing_order(sale_order.quote_id, schedule_request=model)
                 _logger.info(api_response)
+                if not isinstance(api_response, dict):
+                    api_response = api_response.dict()
                 result.update({
                     'data': api_response.get('crews', [])
                 })
@@ -3244,7 +3258,7 @@ class TeamCustomerAppointment(models.Model):
             sync_log = self.env['otl.appointment.sync.log']
             _logger.info('------Starting action_start_sync_arrival_departure_time_to_i360------: %s'%(appointment_id))
             appointment = self.env['team.customer.appointment'].browse(int(appointment_id))
-            if appointment.arrival_date or appointment.departure_date:
+            if appointment.arrival_date and appointment.departure_date and not appointment.arrival_departure_synced:
                 result = appointment.update_arrival_departure_time_in_i360()
                 if result.get('success', '') == 'true':
                     _logger.info("------ SalesRepArrivalDeparture Success-------------")
@@ -3471,7 +3485,9 @@ class SaleOrder(models.Model):
             values.update({
                 'payment_method': payment_method,
                 'state': 'sale',
-                'date_order': order.appointment_id.completed_date
+                'date_order': order.appointment_id.completed_date,
+                'write_uid': self.env.user.id,
+                'write_date': datetime.now().replace(tzinfo=pytz.utc)
             })
             if order.invoice_ids:
                 _logger.info("------Payment Already Done------------")
