@@ -9,6 +9,7 @@ access_quote_question_user,quote.question.user,model_team_quote_question,base.gr
 access_quote_label_user,quote.label.user,model_team_quote_label,base.group_user,1,0,0,0
 access_quote_count_cost_user,quote.count.cost.user,model_team_quote_count_cost,base.group_user,1,0,0,0
 access_labor_cost_user,labor.cost.user,model_labor_cost,base.group_user,1,0,0,0
+access_delivery_option_line_user,otl.delivery.option.line.user,model_otl_delivery_option_line,base.group_user,1,0,0,0
 access_contract_transition_line_user,contract.transition.line.user,model_team_contract_transition_line,base.group_user,1,0,0,0
 access_contract_room_measurement_user,team.contract.room.measurement.line.user,model_team_contract_room_measurement_line,base.group_user,1,0,0,0
 
@@ -29,6 +30,7 @@ access_quote_question_manager,quote.question.manager,model_team_quote_question,s
 access_quote_label_manager,quote.label.manager,model_team_quote_label,sales_team.group_sale_manager,1,1,1,1
 access_quote_count_cost_manager,quote.count.cost.manager,model_team_quote_count_cost,sales_team.group_sale_manager,1,1,1,1
 access_labor_cost_manager,labor.cost.manager,model_labor_cost,sales_team.group_sale_manager,1,1,1,1
+access_delivery_option_line_manager,otl.delivery.option.line.manager,model_otl_delivery_option_line,sales_team.group_sale_manager,1,1,1,1
 
 access_contract_transition_line_manager,contract.transition.line.manager,model_team_contract_transition_line,sales_team.group_sale_salesman,1,1,1,1
 access_contract_question_line_manager,team.contract.question.line.manager,model_team_contract_question_line,sales_team.group_sale_salesman,1,1,1,1

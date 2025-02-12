@@ -2,6 +2,9 @@ from odoo import models, fields, api, _
 import time
 from datetime import timedelta, datetime
 import pytz
+import requests
+import base64
+
 
 _STATES = [
     ('draft', 'New'),
@@ -97,6 +100,68 @@ class TeamCustomerAppointment(models.Model):
                 transaction_log_exists = True
             record.transaction_log_exists = transaction_log_exists
 
+    @api.depends('applicant_initial_id', 'applicant_initial_id.datas', 'applicant_initial_id.type')
+    def _compute_applicant_initial(self):
+        for record in self:
+            applicant_initial = False
+            applicant_initial_id = record.applicant_initial_id or False
+            if applicant_initial_id:
+                if applicant_initial_id.type == 'binary':
+                    applicant_initial = applicant_initial_id.datas
+                elif applicant_initial_id.type == 'url' and applicant_initial_id.url:
+                    try:
+                        applicant_initial = base64.b64encode(requests.get(applicant_initial_id.url.strip()).content).replace(b'\n', b'')
+                    except:
+                        continue
+            record.applicant_initial = applicant_initial
+
+    @api.depends('co_applicant_initial_id', 'co_applicant_initial_id.datas', 'co_applicant_initial_id.type')
+    def _compute_co_applicant_initial(self):
+        for record in self:
+            co_applicant_initial = False
+            co_applicant_initial_id = record.co_applicant_initial_id or False
+            if co_applicant_initial_id:
+                if co_applicant_initial_id.type == 'binary':
+                    co_applicant_initial = co_applicant_initial_id.datas
+                elif co_applicant_initial_id.type == 'url' and co_applicant_initial_id.url:
+                    try:
+                        co_applicant_initial = base64.b64encode(requests.get(co_applicant_initial_id.url.strip()).content).replace(b'\n', b'')
+
+                    except:
+                        continue
+            record.co_applicant_initial = co_applicant_initial
+
+    @api.depends('applicant_signature_id', 'applicant_signature_id.datas', 'applicant_signature_id.type')
+    def _compute_applicant_signature(self):
+        for record in self:
+            applicant_signature = False
+            applicant_signature_id = record.applicant_signature_id or False
+            if applicant_signature_id:
+                if applicant_signature_id.type == 'binary':
+                    applicant_signature = applicant_signature_id.datas
+                elif applicant_signature_id.type == 'url' and applicant_signature_id.url:
+                    try:
+                        applicant_signature = base64.b64encode(requests.get(applicant_signature_id.url.strip()).content).replace(b'\n', b'')
+                    except:
+                        continue
+            record.applicant_signature = applicant_signature
+
+    @api.depends('co_applicant_signature_id', 'co_applicant_signature_id.datas', 'co_applicant_signature_id.type')
+    def _compute_co_applicant_signature(self):
+        for record in self:
+            co_applicant_signature = False
+            co_applicant_signature_id = record.co_applicant_signature_id or False
+            if co_applicant_signature_id:
+                if co_applicant_signature_id.type == 'binary':
+                    co_applicant_signature = co_applicant_signature_id.datas
+                elif co_applicant_signature_id.type == 'url' and co_applicant_signature_id.url:
+                    try:
+                        co_applicant_signature = base64.b64encode(requests.get(co_applicant_signature_id.url.strip()).content).replace(b'\n', b'')
+
+                    except:
+                        continue
+            record.co_applicant_signature = co_applicant_signature
+
     name = fields.Char('Reference', required=True, copy=False, default='/')
     customer_name = fields.Char('Customer Name', required=False, readonly=False)
     phone = fields.Char('Phone Number',  readonly=True, states={'draft': [('readonly', False)]})
@@ -138,10 +203,10 @@ class TeamCustomerAppointment(models.Model):
     finance_application = fields.Boolean('Finance Application')
     credit_card = fields.Boolean('Credit Card')
     contract = fields.Boolean('Contract')
-    applicant_signature = fields.Binary('Applicant Signature', related='applicant_signature_id.datas')
-    co_applicant_signature = fields.Binary('Co-Applicant Signature', related='co_applicant_signature_id.datas')
-    applicant_initial = fields.Binary('Applicant Initial', related='applicant_initial_id.datas')
-    co_applicant_initial = fields.Binary('Co-Applicant Initial', related='co_applicant_initial_id.datas')
+    applicant_signature = fields.Binary('Applicant Signature', compute='_compute_applicant_signature')
+    co_applicant_signature = fields.Binary('Co-Applicant Signature', compute='_compute_co_applicant_signature')
+    applicant_initial = fields.Binary('Applicant Initial', compute='_compute_applicant_initial')
+    co_applicant_initial = fields.Binary('Co-Applicant Initial', compute='_compute_co_applicant_initial')
 
     applicant_first_name = fields.Char("Applicant First Name")
     applicant_middle_name = fields.Char("Applicant Middle Name")
@@ -180,6 +245,7 @@ class TeamCustomerAppointment(models.Model):
     departure_date = fields.Datetime("Departure Time", copy=False)
     arrival_departure_synced = fields.Boolean("Arrival Departure Time Synced", default=False, copy=False)
     last_price_quoted_value = fields.Float("Last Price Quoted Value", copy=False)
+    compressed_attachment_id = fields.Many2one('ir.attachment', string="Compressed Appointment Data")
 
     @api.onchange('country_id')
     def _onchange_country_id(self):
@@ -308,7 +374,7 @@ class APISyncLog(models.Model):
     response = fields.Text('Sync Response')
     data = fields.Text('API Data')
     name = fields.Char('API')
-    network_strength = fields.Char('Network Strength')
+    network_strength = fields.Char('Upload Network Strength')
 
     def create_api_log(self, url, data, uid, result, network_strength=''):
         appointment_id = data.get('appointment_id', False)

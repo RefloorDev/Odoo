@@ -22,6 +22,7 @@ _logger = logging.getLogger(__name__)
 class AppointmentResult(models.Model):
     _name = 'appointment.result'
     _description = "Appointment Result"
+    _rec_name = 'result'
 
     active = fields.Boolean('Active', default=True)
     result = fields.Char(string="Appointment Result")
@@ -39,6 +40,17 @@ class FloorMolding(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     active = fields.Boolean('Active', default=True)
     unit_price = fields.Float(string="Unit Price", default=0.0)
+    default_delivery = fields.Char('Default Delivery')
+    delivery_option_line = fields.One2many('otl.delivery.option.line', 'molding_type_id', string='Delivery Options')
+
+
+class DeliveryOptionLine(models.Model):
+    _name = 'otl.delivery.option.line'
+    _description = 'Delivery Options'
+
+    name = fields.Char('Delivery Options', required=True)
+    molding_type_id = fields.Many2one('team.floor.molding', 'Molding Type', ondelete='cascade')
+
 
 
 class ResCompany(models.Model):
@@ -495,6 +507,9 @@ class ProductProduct(models.Model):
     color_up_charge_price = fields.Float('Color Up Charge Price')
     display_name_in_app = fields.Char(string="Display Name in App")
     color_attachment_id = fields.Many2one('ir.attachment', string='Color Attachment Ref', copy=False)
+    in_stock = fields.Boolean('Stock Available', default=False)
+    special_order = fields.Boolean('Special Order', default=False)
+    office_location_ids = fields.Many2many('otl.office.location', string='Market Segments Where Out Of Stock')
 
 
 class LaborCost(models.Model):
@@ -750,6 +765,7 @@ class AppointmentResultReason(models.Model):
     reference_id = fields.Char("i360 Reference ID")
     sequence = fields.Integer('Priority',
                               help="Give to the more specialized category, a higher priority to have them in top of the list.", default = 10)
+    appointment_result_ids = fields.Many2many('appointment.result', 'appointment_result_reason_rel', 'result_id', 'result_reason_id', string='Applicable Appointment Results')
 
     _sql_constraints = [
         ('name_company_uniq', 'unique (name,company_id)', 'Reason must be unique per company!')

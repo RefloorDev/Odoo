@@ -1113,16 +1113,30 @@ class TeamImproveitConfiguration(models.Model):
                             'sequence': sequence,
                             'active': True,
                             'unit_price': result_data.get('PricePerUnit', 0),
+                            'default_delivery': result_data.get('DefaultDelivery', '')
                         }
                         sequence += 1
                         list_molding_type.append(result_data.get('Name', False))
-                        duplicate_molding_type = self.env['team.floor.molding'].with_context(
+                        molding_type = self.env['team.floor.molding'].with_context(
                             active_test=False).search([('name', '=', result_data.get('Name', False))], limit=1)
-                        if not duplicate_molding_type:
-                            self.env['team.floor.molding'].create(molding_type_dict)
+                        if not molding_type:
+                            molding_type = self.env['team.floor.molding'].create(molding_type_dict)
                             _logger.info('----New Molding Created: %s'%result_data.get('Name', False))
-                        if duplicate_molding_type:
-                            duplicate_molding_type.write(molding_type_dict)
+                        else:
+                            molding_type.write(molding_type_dict)
+                        if molding_type:
+                            delivery_options_list = result_data.get('DeliveryOptions')
+                            if delivery_options_list:
+                                for delivery_option in delivery_options_list:
+                                    option_line = self.env['otl.delivery.option.line'].search([
+                                        ('molding_type_id', '=', molding_type.id),
+                                        ('name', '=', delivery_option)
+                                    ])
+                                    if not option_line:
+                                        self.env['otl.delivery.option.line'].create({
+                                            'name': delivery_option,
+                                            'molding_type_id': molding_type.id
+                                        })
                 unused_molding_types = self.env['team.floor.molding'].search([('name', 'not in', list_molding_type)])
                 if unused_molding_types:
                     unused_molding_types.write({'active': False})
@@ -1133,6 +1147,16 @@ class TeamImproveitConfiguration(models.Model):
         except:
             return False
         return image
+
+    def get_office_locations(self):
+        location_data = {}
+        locations = self.env['otl.office.location'].search([])
+        for location in locations:
+            location_data.update({
+                location.name: location.id
+            })
+        return location_data
+
 
     def get_floor_color_api(self):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
@@ -1147,11 +1171,27 @@ class TeamImproveitConfiguration(models.Model):
                     req = requests.get(url, data=data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
                     req.raise_for_status()
                     content = req.json()
+                    location_dict = self.get_office_locations()
                     for color in content:
                         name = color.get('name') or ''
                         display_name_in_app = color.get('salesAppDisplayName') or color.get('name') or ''
                         product_lines = color.get('productLines', '') or color.get('ProductLines', '') or ''
                         color_up_charge_price = color.get('colorUpcharge', 0) or 0
+                        in_stock = color.get('inStock', False) or False
+                        special_order = color.get('specialOrder', False) or False
+                        market_segments = color.get('marketSegment', '') or ''
+                        office_location_ids = []
+                        if market_segments:
+                            market_segment_list = market_segments.split(';')
+                            for market_segment in market_segment_list:
+                                if market_segment not in location_dict:
+                                    location_id = self.env['otl.office.location'].create({
+                                        'name': market_segment
+                                    })
+                                    location_dict.update({
+                                        market_segment: location_id.id
+                                    })
+                                office_location_ids.append(location_dict.get(market_segment, 0))
                         if product_lines:
                             thumb_nail = color.get('thumbnail') or ''
                             image_url = ''
@@ -1159,6 +1199,7 @@ class TeamImproveitConfiguration(models.Model):
                                 image_url = "https://refloormichigan.com/FlooringThumbs/%s"%(thumb_nail)
                             _logger.info('image_url: %s'%image_url)
                             image_data = self.is_valid_url_image(image_url)
+                            image_binary = False
                             if image_data:
                                 try:
                                     image_data = urlopen(image_url).read()
@@ -1172,14 +1213,18 @@ class TeamImproveitConfiguration(models.Model):
                             for product in products:
                                 if product.product_template_attribute_value_ids.filtered(lambda x: x.name == name and x.attribute_id.name == 'colour'):
                                     attachment = False
-                                    product.write({'floor_color': name,
-                                                   'product_line': product_lines,
-                                                   'thumb_nail': thumb_nail,
-                                                   'url': image_url,
-                                                   'color_up_charge_price': color_up_charge_price,
-                                                   'display_name_in_app': display_name_in_app,
-                                                   'image_variant_1920': image_binary,
-                                                   })
+                                    product.write({
+                                        'floor_color': name,
+                                        'product_line': product_lines,
+                                        'thumb_nail': thumb_nail,
+                                        'url': image_url,
+                                        'color_up_charge_price': color_up_charge_price,
+                                        'display_name_in_app': display_name_in_app,
+                                        'image_variant_1920': image_binary,
+                                        'in_stock': in_stock,
+                                        'special_order': special_order,
+                                        'office_location_ids': [(6, 0, office_location_ids)]
+                                    })
                                     if product.color_attachment_id:
                                         if not product.image_variant_128:
                                             product.color_attachment_id.unlink()
@@ -1531,24 +1576,32 @@ class TeamImproveitConfiguration(models.Model):
                     reason_i360_ref_list = []
                     reason_obj = self.env['otl.appointment.result.reason']
                     sequence = 10
-                    for data in content:
-                        reason = data.get('Value', '')
-                        reference_id = data.get('Id', '')
-                        values = {
-                            'active': True,
-                            'name': reason,
-                            'reference_id': reference_id,
-                            'sequence': sequence
-                        }
-                        if reference_id:
-                            reason_i360_ref_list.append(reference_id)
-                        reason = reason_obj.with_context(active_test=False).search([('reference_id', '=', reference_id)])
-                        if reason:
-                            reason.write(values)
-                        else:
-                            reason_obj.create(values)
-                        sequence += 10
-                    unwanted_reasons = reason_obj.search([('reference_id', 'not in', reason_i360_ref_list)])
+                    appointment_results = self.env['appointment.result'].search([])
+                    reasons = reason_obj.search([])
+                    if reasons:
+                        reasons.write({'appointment_result_ids': [(6, 0, [])]})
+                    content_data = {}
+                    if content:
+                        content_data = content[0]
+                    for result in appointment_results:
+                        for data in content_data.get(result.result, []):
+                            # reference id is not passing in the latest change(Q4-2024)
+                            # reference_id = data.get('Id', '')
+                            values = {
+                                'active': True,
+                                'name': data,
+                                # 'reference_id': reference_id,
+                                'sequence': sequence,
+                                'appointment_result_ids': [(4, result.id)]
+                            }
+                            reason_i360_ref_list.append(data)
+                            reason = reason_obj.with_context(active_test=False).search([('name', '=', data)])
+                            if reason:
+                                reason.write(values)
+                            else:
+                                reason_obj.create(values)
+                            sequence += 10
+                    unwanted_reasons = reason_obj.search([('name', 'not in', reason_i360_ref_list)])
                     if unwanted_reasons:
                         unwanted_reasons.write({'active': False})
                 except IOError:

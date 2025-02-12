@@ -1343,7 +1343,7 @@ class APIHomes(API_Homes):
                 if uid in self.appointment_sync_api_queue:
                     queue_time = self.appointment_sync_api_queue.get(uid, {})
                     time_difference = (time - queue_time).total_seconds()
-                    if int(time_difference) < 60:
+                    if int(time_difference) < 20:
                         _logger.info('appointment_sync_api_queue Data - Duplicate--:%s - User ID ID: %s' % (
                             self.appointment_sync_api_queue, uid))
                         result = {'override_json_result': 1, 'result': 'Failed',
@@ -1479,7 +1479,7 @@ class APIHomes(API_Homes):
                 if image_name in image_dict:
                     queue_time = image_dict.get(image_name, {})
                     time_difference = (time - queue_time).total_seconds()
-                    if int(time_difference) < 60:
+                    if int(time_difference) < 20:
                         _logger.info('image_sync_api_queue Data - Duplicate--:%s - Appointment ID: %s, Image: %s' % (
                             self.image_sync_api_queue, appointment_id, image_name))
                         result = {'override_json_result': 1, 'result': 'Failed',
@@ -1592,7 +1592,7 @@ class APIHomes(API_Homes):
                 if appointment_id in self.generate_contract_document_api_queue:
                     queue_time = self.generate_contract_document_api_queue.get(appointment_id, {})
                     time_difference = (time - queue_time).total_seconds()
-                    if int(time_difference) < 60:
+                    if int(time_difference) < 20:
                         _logger.info('generate_contract_document_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
                             self.generate_contract_document_api_queue, appointment_id))
                         result = {'override_json_result': 1, 'result': 'Failed',
@@ -1690,7 +1690,7 @@ class APIHomes(API_Homes):
                     if appointment_id in self.initiate_i360_sync_api_queue:
                         queue_time = self.initiate_i360_sync_api_queue.get(appointment_id, {})
                         time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 60:
+                        if int(time_difference) < 20:
                             _logger.info('initiate_i360_sync_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
                                 self.initiate_i360_sync_api_queue, data.get('appointment_id', 0)))
                             result = {'override_json_result': 1, 'result': 'Failed',
@@ -1834,7 +1834,7 @@ class APIHomes(API_Homes):
                     if appointment_id in self.create_order_and_update_measurements_api_queue:
                         queue_time = self.create_order_and_update_measurements_api_queue.get(appointment_id, {})
                         time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 60:
+                        if int(time_difference) < 20:
                             _logger.info(
                                 'create_order_and_update_measurements_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
                                     self.create_order_and_update_measurements_api_queue, data.get('appointment_id', 0)))
@@ -2040,7 +2040,7 @@ class APIHomes(API_Homes):
                 if appointment_id in self.available_installation_date_api_queue:
                     queue_time = self.available_installation_date_api_queue.get(appointment_id, {})
                     time_difference = (time - queue_time).total_seconds()
-                    if int(time_difference) < 60:
+                    if int(time_difference) < 20:
                         _logger.info(
                             'available_installation_date_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
                                 self.available_installation_date_api_queue, appointment_id))
@@ -2113,7 +2113,7 @@ class APIHomes(API_Homes):
                 if sale_order_id in self.selected_installation_date_api_queue:
                     queue_time = self.selected_installation_date_api_queue.get(sale_order_id, {})
                     time_difference = (time - queue_time).total_seconds()
-                    if int(time_difference) < 60:
+                    if int(time_difference) < 20:
                         _logger.info(
                             'selected_installation_date_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
                                 self.selected_installation_date_api_queue, sale_order_id))
@@ -2233,7 +2233,7 @@ class APIHomes(API_Homes):
                     if appointment_id in self.update_additional_appointment_data_api_queue:
                         queue_time = self.update_additional_appointment_data_api_queue.get(appointment_id, {})
                         time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 60:
+                        if int(time_difference) < 20:
                             _logger.info('update_additional_appointment_data_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
                                 self.update_additional_appointment_data_api_queue, appointment_id))
                             result = {'override_json_result': 1, 'result': 'Failed',
@@ -2307,7 +2307,7 @@ class APIHomes(API_Homes):
                     if appointment_id in self.get_credit_application_status_api_queue:
                         queue_time = self.get_credit_application_status_api_queue.get(appointment_id, {})
                         time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 60:
+                        if int(time_difference) < 20:
                             _logger.info('get_credit_application_status_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
                                 self.get_credit_application_status_api_queue, appointment_id))
                             result = {'override_json_result': 1, 'result': 'Failed',
@@ -2349,7 +2349,7 @@ class APIHomes(API_Homes):
         timezone = params.get('timezone', False)
         network_strength = params.get('network_strength', '')
 
-        _logger.info("------------update_arrival_departure_time params: %s------------------" % (params))
+        _logger.info("------------update_arrival_departure_time params: %s------------------" % params)
         result = {}
         if not token:
             _logger.info("------------Token Missing in update_arrival_departure_time------------------")
@@ -2380,7 +2380,7 @@ class APIHomes(API_Homes):
                     if appointment_id in self.update_arrival_departure_time_api_queue:
                         queue_time = self.update_arrival_departure_time_api_queue.get(appointment_id, {})
                         time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 60:
+                        if int(time_difference) < 20:
                             _logger.info('update_arrival_departure_time_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
                                 self.update_arrival_departure_time_api_queue, appointment_id))
                             result = {'override_json_result': 1, 'result': 'Failed',
@@ -2409,3 +2409,95 @@ class APIHomes(API_Homes):
             _logger.info('update_arrival_departure_time_api_queue Data - Ending--:%s' % (
                 self.update_arrival_departure_time_api_queue))
         return json.dumps(result)
+
+    @route('/api/<version>/get_appointment_sync_status', type='http', auth="none", methods=['GET'], csrf=False,
+           allow_none=True, )
+    def get_appointment_sync_status(self, version='v1', **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL), allow_none=True)
+        token = ''
+        access_token = request.httprequest.headers.get('Authorization')
+        if not access_token:
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'})
+        if access_token.startswith('Bearer '):
+            token = access_token[7:]
+        if not token:
+            _logger.info("------------Token Missing in get_appointment_sync_status api------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token is not existing'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in get_appointment_sync_status api-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info(
+                "------------password missing in get_appointment_sync_status api-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if status:
+            if version == 'v1':
+                result = models.execute_kw(DB, int(uid), password, 'res.users', 'action_get_appointment_sync_status', [int(uid)])
+                _logger.info('-----get_appointment_sync_status: Result: %s'%(result))
+            else:
+                result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
+        else:
+            result = message
+        result.update({'override_json_result': 1})
+        return json.dumps(result)
+
+    @route('/api/<version>/upload_compressed_files', type='http', auth="none", methods=['POST'], csrf=False,
+           allow_none=True, )
+    def upload_compressed_files_api(self,version='v1', **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.params.copy()
+        token = ''
+        access_token = request.httprequest.headers.get('Authorization')
+        if not access_token:
+            _logger.error("upload_compressed_files - Empty access_token")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'})
+        if access_token.startswith('Bearer '):
+            token = access_token[7:]
+        file_data = {}
+        appointment_id = params.get('appointment_id', 0) and int(params.get('appointment_id', 0)) or 0
+        file = params.get('file', False)
+        if not token:
+            _logger.error("upload_compressed_files - Empty Token")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.error("upload_compressed_files - Empty uid")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.error("upload_compressed_files - Empty password")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        if not file:
+            _logger.error("upload_compressed_files - Empty file")
+            return json.dumps({'result': 'Failed', 'message': 'Empty attachment in values.'})
+        if version == 'v1':
+
+            if type(file) == werkzeug.datastructures.FileStorage:
+                image_binary = (file.read())
+                file_data.update({
+                    'image': base64.encodestring(image_binary),
+                    'file_name': file.filename,
+                    'appointment_id': appointment_id
+
+                })
+                data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment', 'upload_compressed_files',
+                                         [file_data])
+
+                if data:
+                    _logger.info(f"upload_compressed_files - Compressed attachment uploaded.")
+                    return json.dumps({'result': 'Success', 'message': 'Compressed attachment uploaded.', 'values': data})
+                else:
+                    _logger.error(f"upload_compressed_files - Failed while uploading compressed Attachment.")
+                    return json.dumps({'result': 'Failed', 'message': 'Failed while uploading compressed Attachment.'})
+            else:
+                _logger.error(f"upload_compressed_files - File type must be werkzeug.datastructures.FileStorage type.")
+                return json.dumps(
+                    {'result': 'Failed', 'message': 'File type must be werkzeug.datastructures.FileStorage type.'})
+        else :
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'})

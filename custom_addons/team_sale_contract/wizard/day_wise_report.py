@@ -133,7 +133,7 @@ class DayWiseSyncReport(models.TransientModel):
             sync_error = ''
             order = appointment.sale_order_ids and appointment.sale_order_ids[0] or False
             if order:
-                if order.is_data_upload_completed:
+                if order.is_data_upload_completed and not order.i360_sync_stopped_manually:
                     sync_status = 'Completed'
                 else:
                     sync_logs = appointment.sync_log_line.filtered(lambda x: x.state == 'failed')
@@ -218,7 +218,7 @@ class DayWiseSyncReport(models.TransientModel):
         col += 1
         worksheet.write(row, col, 'Device Details', bold_font)
         col += 1
-        worksheet.write(row, col, 'Network Strength', bold_font)
+        worksheet.write(row, col, 'Upload Network Strength', bold_font)
         col += 1
         worksheet.write(row, col, 'Odoo Sync Status', bold_font)
         col += 1

@@ -115,6 +115,30 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-12 col-lg-6 o_setting_box" id="max_stair_width_setting" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Stair Width</span>
+                        <div class="text-muted">
+                            Maximum width allowed for a stair.
+                        </div>
+                        <div class="row mt16">
+                            <label for="max_stair_width" string="Stair Width Limit" class="col-lg-4 o_light_label"/>
+                            <field name="max_stair_width" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6 o_setting_box" id="min_down_payment_amount_setting" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Down Payment</span>
+                        <div class="text-muted">
+                            Minimum down payment required for a cash sale.
+                        </div>
+                        <div class="row mt16">
+                            <label for="min_down_payment_amount" string="Minimum Down Payment" class="col-lg-4 o_light_label"/>
+                            <field name="min_down_payment_amount" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="col-12 col-lg-6 o_setting_box" id="document_status_setting" groups="base.group_no_one">
                     <div class="o_setting_right_pane">
@@ -242,6 +266,18 @@
                             <label for="google_bucket_name" string="Bucket Name"
                                    class="col-lg-4 o_light_label"/>
                             <field name="google_bucket_name" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6 o_setting_box" id="max_i360_sync_retry_limit_setting" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">i360 Sync Retry Limit</span>
+                        <div class="text-muted">
+                            Maximum allowed duration for i360 sync retry attempts from sync initiated time.
+                        </div>
+                        <div class="row mt16">
+                            <label for="max_i360_sync_retry_limit" string="i360 Sync Retry Limit" class="col-lg-4 o_light_label"/>
+                            <field name="max_i360_sync_retry_limit" class="oe_inline"/> Hours
                         </div>
                     </div>
                 </div>

@@ -23,6 +23,9 @@ class ResConfigSettings(models.TransientModel):
     enable_geolocation = fields.Boolean('Enable Geolocation Tracking', default=False)
     geolocation_radius_limit = fields.Integer("Geolocation Radius Limit")
     google_bucket_name = fields.Char("Google Bucket Name")
+    max_stair_width = fields.Float('Maximum Stair Width')
+    min_down_payment_amount = fields.Float('Minimum Down Payment Amount')
+    max_i360_sync_retry_limit = fields.Integer('Maximum Allowed i360 Sync Retry Duration')
 
     @api.model
     def get_values(self):
@@ -46,6 +49,9 @@ class ResConfigSettings(models.TransientModel):
         enable_geolocation = str(params.get_param('enable_geolocation', default=False))
         geolocation_radius_limit = params.get_param('geolocation_radius_limit', default=150)
         google_bucket_name = params.get_param('google_bucket_name', default='')
+        max_stair_width = params.get_param('max_stair_width',default=0.0)
+        min_down_payment_amount = params.get_param('min_down_payment_amount',default=0.0)
+        max_i360_sync_retry_limit = params.get_param('max_i360_sync_retry_limit', default=24)
 
 
         res.update({
@@ -66,6 +72,9 @@ class ResConfigSettings(models.TransientModel):
             'enable_geolocation': eval(enable_geolocation),
             'geolocation_radius_limit': int(geolocation_radius_limit),
             'google_bucket_name': str(google_bucket_name),
+            'max_stair_width':float(max_stair_width),
+            'min_down_payment_amount':float(min_down_payment_amount),
+            'max_i360_sync_retry_limit': int(max_i360_sync_retry_limit),
         })
         return res
 
@@ -88,4 +97,7 @@ class ResConfigSettings(models.TransientModel):
         self.env['ir.config_parameter'].sudo().set_param("enable_geolocation", self.enable_geolocation or 'False')
         self.env['ir.config_parameter'].sudo().set_param("geolocation_radius_limit",self.geolocation_radius_limit)
         self.env['ir.config_parameter'].sudo().set_param("google_bucket_name",self.google_bucket_name)
+        self.env['ir.config_parameter'].sudo().set_param("max_stair_width",self.max_stair_width)
+        self.env['ir.config_parameter'].sudo().set_param("min_down_payment_amount",self.min_down_payment_amount)
+        self.env['ir.config_parameter'].sudo().set_param("max_i360_sync_retry_limit",self.max_i360_sync_retry_limit)
 

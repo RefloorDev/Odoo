@@ -32,6 +32,7 @@ class ResUsers(models.Model):
     token_name = fields.Char('Token')
     device_reg_id = fields.Char('Device registered Id')
     can_view_phone_number = fields.Boolean('Can View Phone Number?', default=True)
+    enable_force_sync = fields.Boolean("Enable Force Sync", default=False)
 
     @api.model
     def get_user_roles(self, values):
