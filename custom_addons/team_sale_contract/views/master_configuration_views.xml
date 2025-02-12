@@ -521,6 +521,9 @@
                     <field name="is_material"/>
                     <field name="color"/>
                     <field name="color_up_charge_price"/>
+                    <field name="in_stock"/>
+                    <field name="special_order"/>
+                    <field name="office_location_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
                 </field>
             </field>
         </record>
@@ -1310,6 +1313,7 @@
                         <group>
                             <group>
                                 <field name="sequence"/>
+                                <field name="appointment_result_ids" widget="many2many_tags" options="{'no_create': True}"/>
                                 <field name="company_id" groups="base.group_multi_company"/>
                                 <field name="active" invisible="1"/>
                             </group>
@@ -1324,8 +1328,9 @@
             <field name="model">otl.appointment.result.reason</field>
             <field name="arch" type="xml">
                 <tree>
-                    <field name="name"/>
                     <field name="sequence" widget='handle'/>
+                    <field name="name"/>
+                    <field name="appointment_result_ids" widget="many2many_tags"/>
                     <field name="company_id" groups="base.group_multi_company"/>
                 </tree>
             </field>
@@ -1348,6 +1353,81 @@
               parent="measurement_conf_root"
               action="appointment_reason_action"
               sequence="10"/>
+
+
+        <record id="floor_molding_form" model="ir.ui.view">
+            <field name="name">floor.molding.form</field>
+            <field name="model">team.floor.molding</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="sequence"/>
+                                <field name="unit_price"/>
+                                <field name="default_delivery"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="delivery_option_line" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="name"/>
+                                </tree>
+                                <form>
+                                    <group>
+                                        <group>
+                                            <field name="name"/>
+                                        </group>
+                                        <group></group>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="floor_molding_tree" model="ir.ui.view">
+            <field name="name">floor.molding.tree</field>
+            <field name="model">team.floor.molding</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="sequence" widget='handle'/>
+                    <field name="name"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="floor_molding_action" model="ir.actions.act_window">
+        <field name="name">Molding Types</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">team.floor.molding</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create!
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="floor_molding_menu"
+              name="Molding Types"
+              parent="measurement_conf_root"
+              action="floor_molding_action"
+              sequence="20"/>
+
 
     </data>
 </odoo>

@@ -11,6 +11,7 @@
                 <group>
                     <field name="token_name" invisible="1" />
                     <field name="device_reg_id" invisible="1" />
+                    <field name="enable_force_sync" groups="base.group_no_one"/>
                 </group>
             </xpath>
         </field>

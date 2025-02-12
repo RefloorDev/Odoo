@@ -218,6 +218,7 @@ class ResUsers(models.Model):
     def authenticate_salesperson_user(self, data):
         username = data.get('username', 0)
         password = data.get('password', 0)
+        url = ''
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')], limit=1)
         if configurations:
             end_point_url = configurations.token_url
@@ -227,10 +228,12 @@ class ResUsers(models.Model):
             headers = {"Content-type": "application/json"}
             data = {"LoginID": username, "Password": password}
             try:
+                _logger.info(f"Authentication - i360 - user : {username} -end point url : {url} , timeout : {TIMEOUT}")
                 req = requests.post(url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
                                     verify=configurations.enable_ssl)
                 req.raise_for_status()
                 content = req.json()
+                _logger.info(f"Authentication - i360 - user : {username} -i360 response : {content}")
                 user_existed = True
                 if content.get('SalespersonID', '') or content.get('InstallerID', ''):
                     users = self.env['res.users'].search([('login', '=ilike', username)], limit=1)
@@ -238,9 +241,13 @@ class ResUsers(models.Model):
                     can_view_phone_number = True
                     if not eval(content.get('ShowCustomerPhone', 'False')):
                         can_view_phone_number = False
-                    restrict_geolocation = False
-                    if eval(content.get('RestrictGeolocationTracking', 'False')):
-                        restrict_geolocation = True
+                    """
+                        Currently RestrictGeolocationTracking is not sharing from i360 middleware. 
+                        "restrict_geolocation" update option is from user authentication function is removed(Dtd:01/14/2025)
+                    """
+                    # restrict_geolocation = False
+                    # if eval(content.get('RestrictGeolocationTracking', 'False')):
+                    #     restrict_geolocation = True
                     if not users:
                         users = self.env['res.users'].sudo().with_context(no_reset_password=True, create_mode=False,
                                                                           mail_create_nosubscribe=True,
@@ -250,7 +257,7 @@ class ResUsers(models.Model):
                             'email': username,
                             'password': password,
                             'can_view_phone_number': can_view_phone_number,
-                            'restrict_geolocation': restrict_geolocation,
+                            # 'restrict_geolocation': restrict_geolocation,
                             'groups_id': [(6, 0, [self.env.ref('sales_team.group_sale_salesman').id,
                                                   self.env.ref('base.group_partner_manager').id,
                                                   self.env.ref('account.group_account_invoice').id])],
@@ -264,7 +271,7 @@ class ResUsers(models.Model):
                             vals = {
                                 'password': password,
                                 'can_view_phone_number': can_view_phone_number,
-                                'restrict_geolocation': restrict_geolocation,
+                                # 'restrict_geolocation': restrict_geolocation,
                             }
                             if content.get('SalespersonID', ''):
                                 vals.update({'improveit_user_id': content.get('SalespersonID', '')})
@@ -278,18 +285,19 @@ class ResUsers(models.Model):
                                 users.sudo().write(vals)
                         status = {'message': 'Authenticating SalesPerson Api Successful', 'result': 'Success',
                                   'content': content}
+                        _logger.info(f"Authentication - i360 - user : {username} - i360 Authentication successful")
                         return status
                     else:
-                        _logger.info("------Authenticating User Failed-------------")
+                        _logger.error(f"Authentication - i360 - user : {username} - i360 Authentication failed")
                         status = {'message': 'Authenticating User Failed', 'result': 'Failed'}
                         return status
                 else:
-                    _logger.info("------Authenticating User Failed-------------")
+                    _logger.error(f"Authentication - i360 - user : {username} - i360 Authentication failed , salesperson id not found")
                     status = {'message': 'Authenticating User Failed', 'result': 'Failed'}
                     return status
 
             except Exception as e:
-                _logger.error("------Error in  authenticate_salesperson_user: %s"%e)
+                _logger.info(f"Authentication - i360 - user : {username} - i360 Authentication exception : {e}")
                 status = {'message': 'An error occurred during the authentication process.', 'result': 'Failed'}
                 return status
         else:
@@ -3258,23 +3266,17 @@ class SaleOrder(models.Model):
             if record.appointment_id:
                 appointment = record.appointment_id
                 if (not appointment.arrival_departure_synced) and (
-                        appointment.arrival_date and appointment.departure_date):
+                        appointment.arrival_date or appointment.departure_date):
                     is_data_upload_completed = False
-            if record.appointment_result == 'Sold':
-                if not record.quote_id:
-                    is_data_upload_completed = False
-                if record.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation and not x.improveit_id):
-                    is_data_upload_completed = False
-            else:
-                included_room_measurement_lines = record.room_measurement_line.filtered(
-                    lambda x: not x.exclude_from_calculation)
-                excluded_room_measurement_lines = record.room_measurement_line.filtered(
-                    lambda x: x.exclude_from_calculation)
-                if (included_room_measurement_lines and not record.quote_id) or (
-                        excluded_room_measurement_lines and not record.excluded_quote_id):
-                    is_data_upload_completed = False
-                if record.room_measurement_line.filtered(lambda x: not x.improveit_id):
-                    is_data_upload_completed = False
+            included_room_measurement_lines = record.room_measurement_line.filtered(
+                lambda x: not x.exclude_from_calculation)
+            excluded_room_measurement_lines = record.room_measurement_line.filtered(
+                lambda x: x.exclude_from_calculation)
+            if (included_room_measurement_lines and not record.quote_id) or (
+                    excluded_room_measurement_lines and not record.excluded_quote_id):
+                is_data_upload_completed = False
+            if record.room_measurement_line.filtered(lambda x: not x.improveit_id):
+                is_data_upload_completed = False
             if record.required_file_upload:
                 is_data_upload_completed = False
         return is_data_upload_completed
@@ -5010,10 +5012,21 @@ class SaleOrder(models.Model):
             ('appointment_id.sync_initiated_date', '<=', sync_start_allow_time)])
         sync_log = self.env['otl.appointment.sync.log']
         model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+        current_time = datetime.now()
+        max_i360_sync_retry_limit = int(self.env['ir.config_parameter'].sudo().get_param('max_i360_sync_retry_limit')) or 0
         for sale_order in orders:
             appointment = sale_order.appointment_id
             if appointment and appointment.start_sync_to_i360:
-                if (not appointment.arrival_departure_synced) and (appointment.arrival_date and appointment.departure_date):
+                if max_i360_sync_retry_limit:
+                    max_syn_retry_time = appointment.sync_initiated_date + relativedelta(hours=max_i360_sync_retry_limit)
+                    if max_syn_retry_time < current_time:
+                        sale_order.write({
+                            'is_data_upload_completed': True,
+                            'i360_sync_stopped_manually': True,
+                            'write_uid': self.env.user and self.env.user.id or 1,
+                            'write_date': datetime.now().replace(tzinfo=pytz.utc)
+                        })
+                if (not appointment.arrival_departure_synced) and (appointment.arrival_date or appointment.departure_date):
                     result = appointment.update_arrival_departure_time_in_i360()
                     if result.get('success', '') == 'true':
                         _logger.info("------ SalesRepArrivalDeparture Success-------------")
@@ -5076,7 +5089,12 @@ class SaleOrder(models.Model):
                                 'state': 'failed',
                                 'name': 'SetAppointmentResult',
                             })
-                    if not sale_order.quote_id:
+                    included_room_measurement_lines = sale_order.room_measurement_line.filtered(
+                        lambda x: not x.exclude_from_calculation)
+                    excluded_room_measurement_lines = sale_order.room_measurement_line.filtered(
+                        lambda x: x.exclude_from_calculation)
+                    if (included_room_measurement_lines and not sale_order.quote_id) or (
+                            excluded_room_measurement_lines and not sale_order.excluded_quote_id):
                         if sale_order.appointment_result == 'Sold':
                             if sale_order.state != 'sale':
                                 sale_order.confirm_order_and_create_invoice()
@@ -5099,10 +5117,6 @@ class SaleOrder(models.Model):
                                     'name': 'AddSale',
                                 })
                         else:
-                            included_room_measurement_lines = sale_order.room_measurement_line.filtered(
-                                lambda x: not x.exclude_from_calculation)
-                            excluded_room_measurement_lines = sale_order.room_measurement_line.filtered(
-                                lambda x: x.exclude_from_calculation)
                             if (included_room_measurement_lines and not sale_order.quote_id) or (
                                     excluded_room_measurement_lines and not sale_order.excluded_quote_id):
                                 response_result = sale_order.add_quote_sales_app(sale_order.appointment_result)
@@ -5255,7 +5269,6 @@ class SaleOrder(models.Model):
                         if sale_order.state in ['sale', 'done'] or sale_order.appointment_result == 'Sold':
                             result = sale_order.add_sale_id_file()
                             if result.get('success', '') == 'true':
-                                sale_order_vals.update({'contract_document_uploaded': True})
                                 sync_log.create({
                                     'appointment_id': appointment.id,
                                     'response': result,
@@ -5271,7 +5284,6 @@ class SaleOrder(models.Model):
                         else:
                             result = sale_order.add_quote_id_file(document=False)
                             if result.get('success', '') == 'true':
-                                sale_order_vals.update({'contract_document_uploaded': True})
                                 sync_log.create({
                                     'appointment_id': appointment.id,
                                     'response': result,
