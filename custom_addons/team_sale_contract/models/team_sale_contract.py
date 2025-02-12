@@ -234,6 +234,8 @@ class TeamContractRoomMeasurement(models.Model):
     color_up_charge_total = fields.Float('Color Up Charge Total Amount', compute='_compute_color_up_charge_total', store=True)
     molding_unit_price = fields.Float('Molding Unit Price')
     molding_total_price = fields.Float('Molding Total Amount', compute='_compute_molding_total_price', store=True)
+    misc_charge_comments = fields.Char('Miscellaneous Charge Comments')
+    delivery_option = fields.Char("Selected Delivery Option")
 
     def write(self, vals):
         _logger.info('ContractRoomMeasurement ID: %s, vals: %s'%(self.ids, vals))

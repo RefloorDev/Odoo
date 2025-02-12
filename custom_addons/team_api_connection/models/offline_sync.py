@@ -75,6 +75,49 @@ class ResUsers(models.Model):
     _inherit = 'res.users'
 
     @api.model
+    def action_get_appointment_sync_status(self, user_id=None):
+        result = {
+            'result': 'Success',
+            'message': 'No Force sync is enabled for the user',
+            'data': {
+                'force_sync_enabled': 0,
+            }
+        }
+        if user_id:
+            user = self.browse(user_id)
+            if user.exists():
+                appointments= []
+                if user.enable_force_sync:
+                    pending_appointments = self.env['team.customer.appointment'].search([('user_id', '=', user_id), ('start_sync_to_i360', '=', False), ('state', 'in', ['scheduled', 'canceled'])])
+                    for appointment in pending_appointments:
+                        if appointment.api_sync_log_line:
+                            success_logs = self.env['otl.api.sync.log'].search([
+                                ('appointment_id', '=', appointment.id),
+                                ('state', '=', 'success'),
+                                ('user_id', '=', user_id)
+                            ], limit=1, order='created_date desc')
+                            if success_logs:
+                                appointments.append({
+                                    'appointment_id': appointment.id,
+                                    'last_api': success_logs.name or ''
+                                })
+                    result['data'].update({
+                        'appointments': appointments,
+                        'force_sync_enabled': 1,
+
+                    })
+                    result.update({
+                        'message': 'Force sync is enabled for the user %s' % (user.name)
+                    })
+            else:
+                return {
+                    'result': 'Failed',
+                    'message': 'User is not existing',
+                }
+        return result
+
+
+    @api.model
     def action_logout_from_device(self, user_id = None):
         result = {
             'result': 'Success',
@@ -161,7 +204,8 @@ class ResUsers(models.Model):
         reasons = self.env['otl.appointment.result.reason'].search([])
         reason_list = [{
             'reason':  reason.name or "",
-            'reason_id' : reason.id or 0,
+            'reason_id': reason.id or 0,
+            'applicable_result_ids': reason.appointment_result_ids and reason.appointment_result_ids.ids or []
         }
             for reason in reasons]
         return reason_list
@@ -317,6 +361,8 @@ class ResUsers(models.Model):
             'enable_geolocation': eval(str(self.env['ir.config_parameter'].sudo().get_param('enable_geolocation'))) or False,
             'geolocation_radius_limit': int(self.env['ir.config_parameter'].sudo().get_param('geolocation_radius_limit')) or 0,
             'external_credentials': credential_list,
+            'max_stair_width': float(self.env['ir.config_parameter'].sudo().get_param('max_stair_width')) or 0,
+            'min_down_payment_amount': float(self.env['ir.config_parameter'].sudo().get_param('min_down_payment_amount')) or 0.0,
         })
         # except:
         #     result = {
@@ -389,7 +435,7 @@ class ResUsers(models.Model):
                                 '%Y-%m-%d %H:%M:%S')
                             state = self.env['res.country.state'].search(
                                 [('country_id', '=', 233), ('code', '=', appointment.get('ProspectState',''))],limit=1)
-                            appointments = self.env['team.customer.appointment'].search(
+                            appointments = self.env['team.customer.appointment'].sudo().search(
                                 [('improveit_appointment_id', '=', appointment['AppointmentID'])], limit=1, order='id desc')
                             if appointments and appointments.sale_order_ids:
                                 if appointments.appointment_date and appointments.appointment_date.strftime(
@@ -427,16 +473,18 @@ class ResUsers(models.Model):
                                 }
                                 try:
                                     appointment_obj = self.env['team.customer.appointment'].create(appointment_values)
-                                except:
+                                except Exception as e:
                                     appointment_obj = False
-                                    -_logger.error('Error while creating appointment %s'%appointment_values)
+                                    _logger.error('Following Error is occurred while creating appointment: %s'%e)
                                     continue
-                                try:
-                                    appointment_obj.geo_localize()
-                                except:
-                                    continue
-                                if appointment_obj and market_segment and not office_location_id:
-                                    appointment_obj.message_post(body='Office Location is not found for Market Segment %s'%(market_segment))
+                                if appointment_obj:
+                                    try:
+                                        appointment_obj.geo_localize()
+                                    except Exception as e:
+                                        _logger.error('Following Error is occurred while fetching Geo Localization: %s' % e)
+                                        continue
+                                    if appointment_obj and market_segment and not office_location_id:
+                                        appointment_obj.message_post(body='Office Location is not found for Market Segment %s'%(market_segment))
                             elif appointments and update_existing_record:
                                 appointment_values = {
                                     'improveit_appointment_id': appointment['AppointmentID'],
@@ -601,7 +649,7 @@ class ProductProduct(models.Model):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         if self.color_attachment_id:
             attachment = self.color_attachment_id
-            attachment.generate_access_token()
+            attachment.sudo().generate_access_token()
             url = base_url + '/web/image/' + str(attachment.id) + '?access_token=' + str(attachment.access_token)
         return url
 
@@ -637,7 +685,10 @@ class ProductProduct(models.Model):
                         'name': product.name,
                         'color': color,
                         'material_image_url': floor_color_url,
-                        'color_up_charge_price': product.color_up_charge_price or 0
+                        'color_up_charge_price': product.color_up_charge_price or 0,
+                        'in_stock': product.in_stock and 1 or 0,
+                        'special_order': product.special_order and 1 or 0,
+                        'office_location_ids': product.office_location_ids and product.office_location_ids.ids or []
                     }
 
                     color_list.append(color)
@@ -658,6 +709,8 @@ class FloorMolding(models.Model):
                 'molding_id': molding.id,
                 'name': molding.name,
                 'unit_price': molding.unit_price or 0,
+                'default_delivery': molding.default_delivery or '',
+                'delivery_options': [option_line.name for option_line in molding.delivery_option_line]
             })
         return molding_type_list
 
@@ -705,7 +758,7 @@ class TeamMonthlyPromo(models.Model):
             default_promo_img_url = _('%s/web/image/%s?access_token=%s' % (
                 base_url, default_promo_image_attachment_id.id, default_promo_image_attachment_id.access_token))
         for discount_coupon in all_discount_coupons:
-            promo_image_attachment_id = discount_coupon.attachment_id or False
+            promo_image_attachment_id = discount_coupon.attachment_id and discount_coupon.attachment_id.sudo() or False
             promo_img_url = ''
             if promo_image_attachment_id:
                 if not promo_image_attachment_id.access_token:
@@ -1107,6 +1160,8 @@ class TeamCustomerAppointment(models.Model):
                         'room_perimeter': float(data.get('room_perimeter', 0)),
                         'exclude_from_calculation': exclude_from_calculation and True or False,
                         'custom_room_measured': custom_room_measured and True or False,
+                        'misc_charge_comments': data.get('misc_charge_comments', ''),
+                        'delivery_option': data.get('delivery_option', ''),
                     }
                     if material_id and self.env['product.product'].browse(material_id).exists():
                         vals.update({
@@ -1656,6 +1711,12 @@ class TeamCustomerAppointment(models.Model):
                 'message': 'Empty attachment_id',
                 'result': 'Failed'
             }
+        attachment = self.env['ir.attachment'].browse(attachment_id)
+        if attachment and not attachment.datas:
+            return {
+                'message': 'Attachment has no content. Due to some error file content is not stored in Odoo.',
+                'result': 'Failed'
+            }
         if not image_type:
             return {
                 'message': 'Empty Image Type',
@@ -1805,7 +1866,11 @@ class TeamCustomerAppointment(models.Model):
                             'name': 'SetAppointmentResult',
                         })
                 sale_order_vals = {}
-                if not sale_order.quote_id:
+                included_room_measurement_lines = sale_order.room_measurement_line.filtered(
+                    lambda x: not x.exclude_from_calculation)
+                excluded_room_measurement_lines = sale_order.room_measurement_line.filtered(
+                    lambda x: x.exclude_from_calculation)
+                if (included_room_measurement_lines and not sale_order.quote_id) or (excluded_room_measurement_lines  and not sale_order.excluded_quote_id):
                     if sale_order.appointment_result == 'Sold':
                         if sale_order.payment_method in ['credit_card',
                                                          'debit_card'] and sale_order.down_payment_amount and not sale_order.card_transaction_log_line.filtered(
@@ -1839,10 +1904,7 @@ class TeamCustomerAppointment(models.Model):
                                     'result': 'Failed'
                                 }
                     else:
-                        included_room_measurement_lines = sale_order.room_measurement_line.filtered(
-                            lambda x: not x.exclude_from_calculation)
-                        excluded_room_measurement_lines = sale_order.room_measurement_line.filtered(
-                            lambda x: x.exclude_from_calculation)
+
                         if (included_room_measurement_lines and not sale_order.quote_id) or (excluded_room_measurement_lines  and not sale_order.excluded_quote_id):
                             response_result = sale_order.add_quote_sales_app(sale_order.appointment_result)
                             _logger.info('-------i360 AddQuote Response: %s' % (response_result))
@@ -1873,7 +1935,7 @@ class TeamCustomerAppointment(models.Model):
                 room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(lambda x: not x.improveit_id)
                 if room_measurement_lines_to_sync:
                     if sale_order.appointment_result == 'Sold':
-                        if room_measurement_lines_to_sync.filtered(lambda x: not x.exclude_from_calculation and not x.improveit_id):
+                        if room_measurement_lines_to_sync.filtered(lambda x: not x.improveit_id):
                             response_result = sale_order.add_sale_items_api()
                             _logger.info('-------i360 AddSaleItem Response: %s' % (response_result))
                             if response_result.get('success', '') == 'true':
@@ -2839,6 +2901,10 @@ class TeamCustomerAppointment(models.Model):
             configuration.verify_ssl = api_configuration.enable_ssl
             api_client = ApiClient(configuration)
             api_instance = scheduling_services_api.SchedulingServicesApi(api_client)
+            environment = "production"
+            if api_configuration.mode == "test":
+                environment = "development"
+
 
             try:
                 # Request schedule using a new sales order
@@ -2851,7 +2917,7 @@ class TeamCustomerAppointment(models.Model):
                 model.proposed_start_date = start_date
                 model.proposed_end_date = end_date
 
-                api_response = api_instance.schedule_existing_order(sale_order.quote_id, schedule_request=model)
+                api_response = api_instance.schedule_existing_order(sale_order.quote_id, x_refloor_environment= environment, schedule_request=model)
                 _logger.info(api_response)
                 if not isinstance(api_response, dict):
                     api_response = api_response.dict()
@@ -3258,7 +3324,7 @@ class TeamCustomerAppointment(models.Model):
             sync_log = self.env['otl.appointment.sync.log']
             _logger.info('------Starting action_start_sync_arrival_departure_time_to_i360------: %s'%(appointment_id))
             appointment = self.env['team.customer.appointment'].browse(int(appointment_id))
-            if appointment.arrival_date and appointment.departure_date and not appointment.arrival_departure_synced:
+            if (appointment.arrival_date or appointment.departure_date) and not appointment.arrival_departure_synced:
                 result = appointment.update_arrival_departure_time_in_i360()
                 if result.get('success', '') == 'true':
                     _logger.info("------ SalesRepArrivalDeparture Success-------------")
@@ -4522,6 +4588,9 @@ class IRAttachment(models.Model):
                 attachment = self.env['ir.attachment'].sudo().create(vals)
                 image_already_existing = False
             if attachment:
+                if not attachment.datas:
+                    attachment.write({'datas': data.get('image')})
+                    image_already_existing = False
                 attachment.generate_access_token()
                 if attachment.access_token:
                     image_list.append({'attachment_id': attachment.id,
@@ -4531,6 +4600,31 @@ class IRAttachment(models.Model):
                                      attachment.access_token)})
 
         return image_list
+    @api.model
+    def upload_compressed_files(self, data):
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        appointment_id = data.get('appointment_id', False)
+        appointment = False
+        if data.get('image', False):
+            vals = {
+                'name': data.get('file_name', 'Attachment'),
+                'datas': data.get('image')
+            }
+            if data.get('appointment_id', False):
+                appointment = self.env['team.customer.appointment'].browse(appointment_id)
+                vals.update({'appointment_id':appointment.id})
+            attachment = self.env['ir.attachment'].sudo().create(vals)
+            if attachment:
+                attachment.generate_access_token()
+                if attachment.access_token:
+                    appointment.write({'compressed_attachment_id':attachment.id})
+                    return {'attachment_id': attachment.id,
+                            'name': attachment.name,
+
+                            'url': base_url + '/web/image/' + str(attachment.id) + '?access_token=' + str(
+                                attachment.access_token)}
+
+        return False
 
 
 class VersatileCreditApplication(models.Model):

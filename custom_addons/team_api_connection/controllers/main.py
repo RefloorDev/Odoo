@@ -112,22 +112,26 @@ class API_Homes(http.Controller):
         return user_id, password
 
     def authenticate_user(self, username, password, user_values={}, restrict_multi_login=0):
+        _logger.info(f"Authentication - authenticate_user -odoo - user : {username}")
         uid = False
         token = ''
         result = {}
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         if username and password and DB:
+            _logger.info(f"Authentication - authenticate_user -odoo - before db connection - user : {username}")
             uid = common.authenticate(DB, username, password, {})
+            _logger.info(f"Authentication - authenticate_user -odoo - after db connection - user : {username}")
             registered_id = user_values.get('device_reg_id', '')
             if uid:
                 user = request.env['res.users'].browse(uid)
                 if restrict_multi_login and user.token_name and user.device_reg_id and user.device_reg_id != registered_id:
+                    _logger.error(f"Authentication - authenticate_user -odoo - user : {username} ; already logged-in another device")
                     result.update({
                         'result': 'TokenExist',
                         'message': 'You have already logged-in another device. Please logout from that device or contact refloor support.',
                     })
                     return result
-                _logger.info("------------Authentication Success----------")
+                _logger.info(f"Authentication - authenticate_user -odoo - user : {username} ; success")
                 # token = token_hex(32)
                 token = ''
                 payload = {
@@ -137,10 +141,10 @@ class API_Homes(http.Controller):
                 }
                 token = JWT_ENCODE(payload, JWT_SECRET, JWT_ALGORITHM)
                 token = self.reverse(token.decode("utf-8"))
-                _logger.info("-----------Token generated--------------")
+                _logger.info(f"Authentication - authenticate_user -odoo - user : {username} ; Token generated")
                 models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'write',
                                   [[uid], {'token_name': token}])
-
+                _logger.info(f"Authentication - authenticate_user -odoo - user : {username} ; Retrieving user details")
                 user_details = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'get_user_details',
                                               [int(uid)])
                 user_details.update({
@@ -155,16 +159,18 @@ class API_Homes(http.Controller):
                 })
                 if user_values:
                     user_values.update({'login': username})
+                    _logger.info(f"Authentication - authenticate_user -odoo - user : {username} ; updating device id")
                     data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'update_device_id',
                                              [user_values])
                     return result
             else:
-                _logger.info("------------Invalid Credentials-------------------")
+                _logger.error(f"Authentication - authenticate_user -odoo - user : {username} ; Invalid credentials")
                 return {
                     'result': 'Failed',
                     'message': 'Invalid Credentials'
                 }
         else:
+            _logger.error(f"Authentication - authenticate_user -odoo - user : {username} ; No Value for Login/Password/DB")
             return {
                 'result': 'Failed',
                 'message': 'No Value for Login/Password/DB'
@@ -256,12 +262,12 @@ class API_Homes(http.Controller):
         """
         params = request.params.copy()
         login = params.get('login', False)
-        login = params.get('login', False)
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         if not login:
             _logger.info("----------------------Failed:Empty login-------------------------")
             return json.dumps({'result': 'Failed', 'message': 'Empty login'})
         values = ({'login': login})
+        _logger.info(f"Forgot Password - request for - {login}")
         data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'forget_password_api',
                                  [values])
         return json.dumps(data)
@@ -309,7 +315,9 @@ class API_Homes(http.Controller):
 
         @apiSampleRequest off
         """
-        _logger.info("===============server_proxy=========" + str(models))
+        _logger.info("Authentication - Login request received")
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        #_logger.info("===============server_proxy=========" + str(models))
         values = request.params.copy()
         username = values.get('login', False)
         password = values.get('password', False)
@@ -317,18 +325,21 @@ class API_Homes(http.Controller):
         device_name = values.get('device_name', '')
         device_os = values.get('device_os', '')
         app_version = values.get('app_version', '')
+        _logger.info(f"Authentication - {username,device_name,device_os,app_version,registered_id} ")
         restrict_multi_login = int(values.get('restrict_multi_login', 0))
         if not username:
-            _logger.info("--------:----Empty username-------------------")
+            _logger.error("Authentication - Empty username")
             return json.dumps({'result': 'Failed', 'message': 'Empty login'})
         if not password:
-            _logger.info("------------Empty password-------------------")
+            _logger.error(f"Authentication - Empty password  for user: {username}")
             return json.dumps({'result': 'Failed', 'message': 'Empty password'})
         if not registered_id:
-            _logger.info("------------Empty registered_id-------------------")
+            _logger.error(f"Authentication - Empty registered_id for user : {username}")
             return json.dumps({'result': 'Failed', 'message': 'Empty registered_id'})
+        _logger.info(f"Authentication - Before i360 connection for user: {username}")
         data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'authenticate_salesperson_user',
                                      [{'username': username, 'password': password}])
+        _logger.info(f"Authentication - After i360 connection for user: {username}")
         if data.get('result', '') == 'Success':
             user_vals = {
                 'device_reg_id': registered_id,
@@ -336,12 +347,13 @@ class API_Homes(http.Controller):
                 'device_os': device_os,
                 'app_version': app_version,
             }
+            _logger.info(f"Authentication - Before odoo db connection for user: {username}")
             message = self.authenticate_user(username, password, user_vals, restrict_multi_login)
-            _logger.info("------------Authenticating User------------------")
+            _logger.info(f"Authentication - After odoo db connection for user: {username}")
             return json.dumps(message)
         else:
-            _logger.info("------------User Authentication Failed------------------")
-            result = data
+            _logger.error(f"Authentication - i360 authentication failure for user : {username} ; data: {data}")
+            #result = data
             return json.dumps({'result': 'Failed', 'message': 'User Authentication Failed'})
 
     # Create Attachment
