@@ -45,6 +45,8 @@ class TeamImproveitConfiguration(models.Model):
         ('boomi', 'Boomi'),
         ('rules_engine', 'Rules Engine'),
         ('contract_doc', 'Contract Document'),
+        ('review', 'Send Review'),
+        ('order_checklist', 'Order Checklist'),
     ], string='API Type', default='improveit')
     section = fields.Selection([
         ('quote', 'Quote'),
@@ -56,7 +58,7 @@ class TeamImproveitConfiguration(models.Model):
     ],'Zapier API Section')
     test_appointment_id = fields.Char('Test Appointment ID')
     update_existing_record = fields.Boolean('Update Existing Record')
-    client_token = fields.Char('Client Token Boomi')
+    client_token = fields.Char('Client Token')
     sync_master_data_in_progress = fields.Boolean("Is Sync Master Data Executing?", default= False)
     enable_ssl = fields.Boolean('Enable SSL', default=True)
 
@@ -1607,6 +1609,49 @@ class TeamImproveitConfiguration(models.Model):
                 except IOError:
                     error_msg = _("Something went wrong during GetAppointmentResultDetails API execution.")
                     raise self.env['res.config.settings'].get_config_warning(error_msg)
+
+    def get_finance_order_checklist_api(self):
+        configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'order_checklist')])
+        if configurations:
+            end_point_url = configurations.token_url
+            client_token = configurations.client_token
+            if end_point_url and client_token:
+                url = end_point_url + 'GetArrivalCompletionChecklist' + client_token
+                headers = {"Content-type": "application/json"}
+                data = {}
+                try:
+                    req = requests.get(url, data=data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    order_checklist = []
+                    checklist_obj = self.env['otl.finance.checklist.items']
+                    for data in content:
+                        checklist_name = data.get('name', '')
+                        sequence = data.get('display_Order')
+                        vals = {
+                            'name': checklist_name,
+                            'sequence': sequence,
+                            'active': True
+                        }
+                        if checklist_name:
+                            checklist = checklist_obj.with_context(active_test=False).search([('name', '=', checklist_name)], limit=1)
+                            if checklist:
+                                checklist.write(vals)
+                            else:
+                                checklist = checklist_obj.create(vals)
+                            order_checklist.append(checklist.id)
+                    if order_checklist:
+                        inactive_checklists = checklist_obj.search([('id', 'not in', order_checklist)])
+                        if inactive_checklists:
+                            inactive_checklists.write({'active': False})
+
+
+
+
+                except IOError:
+                    error_msg = _("Something went wrong during GetArrivalCompletionChecklist API execution.")
+                    raise self.env['res.config.settings'].get_config_warning(error_msg)
+
     def action_sync_master_data(self, data={}):
         _logger.info('-------Starting: action_sync_master_data')
         for record in self.sudo().search([('api_type', '=', 'boomi')]):

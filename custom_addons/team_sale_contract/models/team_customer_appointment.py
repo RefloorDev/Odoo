@@ -242,10 +242,14 @@ class TeamCustomerAppointment(models.Model):
     make_payment_failure = fields.Boolean('Set Payment as Failure')
     resulting_reason_id = fields.Many2one('otl.appointment.result.reason', string="Appointment Result Details", copy=False)
     arrival_date = fields.Datetime("Arrival Time", copy=False)
+    manual_arrival_date = fields.Datetime("Manual Arrival Time", copy=False)
     departure_date = fields.Datetime("Departure Time", copy=False)
     arrival_departure_synced = fields.Boolean("Arrival Departure Time Synced", default=False, copy=False)
+    manual_arrival_date_synced = fields.Boolean("Manual Arrival Date Synced", default=False, copy=False)
+    sent_review_link = fields.Boolean("Sent Review Link", default=False, copy=False)
     last_price_quoted_value = fields.Float("Last Price Quoted Value", copy=False)
     compressed_attachment_id = fields.Many2one('ir.attachment', string="Compressed Appointment Data")
+    both_parties_present = fields.Boolean("Both Parties Present", default=False, copy=False)
 
     @api.onchange('country_id')
     def _onchange_country_id(self):
@@ -276,7 +280,7 @@ class TeamCustomerAppointment(models.Model):
         return self.write({'state': 'scheduled'})
 
     def button_cancel(self):
-        return self.write({'state': 'cancelled'})
+        return self.write({'state': 'canceled'})
 
     def button_done(self):
         return self.write({'state': 'done'})
@@ -384,7 +388,7 @@ class APISyncLog(models.Model):
             if sale_order.exists() and sale_order.appointment_id:
                 appointment_id = sale_order.appointment_id.id
         state = 'success'
-        if result.get('result', False) == 'Failed':
+        if result.get('result', False) in ['Failed', 'AuthFailed']:
             state = 'failed'
         if uid and appointment_id and self.env['team.customer.appointment'].browse(int(appointment_id)).exists():
             self.create({

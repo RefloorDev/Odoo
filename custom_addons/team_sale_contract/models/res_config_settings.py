@@ -26,6 +26,8 @@ class ResConfigSettings(models.TransientModel):
     max_stair_width = fields.Float('Maximum Stair Width')
     min_down_payment_amount = fields.Float('Minimum Down Payment Amount')
     max_i360_sync_retry_limit = fields.Integer('Maximum Allowed i360 Sync Retry Duration')
+    send_review_success_message = fields.Char('Send Review Success Message')
+    send_review_failure_message = fields.Char('Send Review Failure Message')
 
     @api.model
     def get_values(self):
@@ -52,6 +54,8 @@ class ResConfigSettings(models.TransientModel):
         max_stair_width = params.get_param('max_stair_width',default=0.0)
         min_down_payment_amount = params.get_param('min_down_payment_amount',default=0.0)
         max_i360_sync_retry_limit = params.get_param('max_i360_sync_retry_limit', default=24)
+        send_review_success_message = params.get_param('send_review_success_message', default='Review link sent successfully.')
+        send_review_failure_message = params.get_param('send_review_failure_message', default='Something went wrong while sending the review link.')
 
 
         res.update({
@@ -75,6 +79,8 @@ class ResConfigSettings(models.TransientModel):
             'max_stair_width':float(max_stair_width),
             'min_down_payment_amount':float(min_down_payment_amount),
             'max_i360_sync_retry_limit': int(max_i360_sync_retry_limit),
+            'send_review_success_message': send_review_success_message,
+            'send_review_failure_message': send_review_failure_message,
         })
         return res
 
@@ -100,4 +106,6 @@ class ResConfigSettings(models.TransientModel):
         self.env['ir.config_parameter'].sudo().set_param("max_stair_width",self.max_stair_width)
         self.env['ir.config_parameter'].sudo().set_param("min_down_payment_amount",self.min_down_payment_amount)
         self.env['ir.config_parameter'].sudo().set_param("max_i360_sync_retry_limit",self.max_i360_sync_retry_limit)
+        self.env['ir.config_parameter'].sudo().set_param("send_review_success_message", self.send_review_success_message)
+        self.env['ir.config_parameter'].sudo().set_param("send_review_failure_message", self.send_review_failure_message)
 
