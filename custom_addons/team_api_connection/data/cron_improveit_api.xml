@@ -188,6 +188,19 @@
             <field name="code">model.get_appointment_result_detail_api()</field>
         </record>
 
+        <record forcecreate="True" id="ir_cron_finance_order_checklist_sync" model="ir.cron">
+            <field name="name">Finance Order Checklist Sync</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+            <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
+            <field name="state">code</field>
+            <field name="code">model.get_finance_order_checklist_api()</field>
+        </record>
+
 <!--        <record forcecreate="True" id="ir_cron_action_do_file_upload" model="ir.cron">-->
 <!--            <field name="name">Document Upload to i360(Cron 2)</field>-->
 <!--            <field eval="False" name="active"/>-->

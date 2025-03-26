@@ -210,13 +210,17 @@ class ResUsers(models.Model):
             for reason in reasons]
         return reason_list
 
-    def get_dynamic_contract_vals_api(self):
+    def get_dynamic_contract_vals_api(self, app_version):
 
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
 
         applicant_list = []
         non_applicant_list = []
-        latest_version = self.env['otl.sales.app.version'].search([], order='date desc', limit=1)
+        latest_version = False
+        if app_version:
+            latest_version = self.env['otl.sales.app.version'].search([('name', '=', app_version)], order='date desc', limit=1)
+        if not latest_version:
+            latest_version = self.env['otl.sales.app.version'].search([], order='date desc', limit=1)
         app_dict = [
 
                     # 'app_id': latest_version.id,
@@ -293,6 +297,17 @@ class ResUsers(models.Model):
             })
         return credential_list
 
+    def get_finance_checklist_items(self):
+        finance_checklist = []
+        checklists = self.env['otl.finance.checklist.items'].search([])
+        for checklist in checklists:
+            finance_checklist.append({
+                'checklist_id': checklist.id,
+                'name': checklist.name or '',
+                'sequence': checklist.sequence
+            })
+        return finance_checklist
+
 
     @api.model
     def get_master_data_contents(self, data={}):
@@ -301,6 +316,7 @@ class ResUsers(models.Model):
             'message': 'Master Data retrieved successfully.'
         }
         # try:
+        app_version = data.get('app_version', '')
         room_list = self.env['team.room.room'].get_rooms()
         questionnaire_list = self.env['team.quote.question'].get_all_questionnaires()
         flooring_colors_list = self.env['product.product'].get_all_flooring_colors()
@@ -318,7 +334,8 @@ class ResUsers(models.Model):
         transition_height_list = self.get_transition_heights()
         rules = self.get_restriction_rules_api()
         reasons_list = self.get_appointment_result_reasons_api()
-        templates = self.sudo().get_dynamic_contract_vals_api()
+        finance_checklist = self.get_finance_checklist_items()
+        templates = self.sudo().get_dynamic_contract_vals_api(app_version)
         credential_list = self.sudo().get_external_application_credentials()
         auto_logout_time = ''
         if self.env.user.company_id.enable_auto_logout:
@@ -355,6 +372,7 @@ class ResUsers(models.Model):
             'payment_restriction_rules': rules,
             'appointment_result_reasons': reasons_list,
             'contract_document_templates': templates,
+            'finance_checklist': finance_checklist,
             'versatile_url': company.versatile_url or '',
             'versatile_api_key': company.versatile_api_key or '',
             'versatile_entity_key': company.versatile_entity_key or '',
@@ -978,6 +996,9 @@ class TeamCustomerAppointment(models.Model):
             flexible_installation = False
             if data.get('flexible_installation', 0) == 1:
                 flexible_installation = True
+            both_parties_present = False
+            if data.get('both_parties_present', 0) == 1:
+                both_parties_present = True
             app_version_id = False
             if app_version:
                 app_version_id = self.env['otl.sales.app.version'].search([('name', '=', app_version)], limit=1)
@@ -994,6 +1015,7 @@ class TeamCustomerAppointment(models.Model):
                 'additional_comments': data.get('additional_comments', ''),
                 'send_physical_document':  send_physical_document,
                 'flexible_installation':  flexible_installation,
+                'both_parties_present':  both_parties_present,
                 'timezone': data.get('timezone', ''),
                 'app_version_id':  app_version_id,
                 'last_price_quoted_value': data.get('last_price_quoted_value') if 'last_price_quoted_value' in data else 0,
@@ -2036,6 +2058,23 @@ class TeamCustomerAppointment(models.Model):
                                 'response': result,
                                 'state': 'failed',
                                 'name': 'SyncLoanData',
+                            })
+                    if (sale_order.discount_history_line or sale_order.promotion_code_id) and not sale_order.discount_history_sync_i360_ref:
+                        result = sale_order.action_sync_discount_history_line_to_i360()
+                        if result.get('success', '') == 'true':
+                            _logger.info("------ AppliedDiscounts Create,Update Success-------------")
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'AppliedDiscounts',
+                            })
+                        else:
+                            _logger.info("------ AppliedDiscounts Create,Update Failed-------------")
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'AppliedDiscounts',
                             })
                     sale_order_vals = {}
                     if sale_order.appointment_result == 'Sold':
@@ -3317,6 +3356,7 @@ class TeamCustomerAppointment(models.Model):
         return result
 
     def action_start_sync_arrival_departure_time_to_i360(self, appointment_id):
+        time.sleep(3)
         with api.Environment.manage():
             # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
             new_cr = self.pool.cursor()
@@ -3407,6 +3447,185 @@ class TeamCustomerAppointment(models.Model):
             }
         _logger.info("------action_update_arrival_departure_time result: %s-------------" % (result))
         return result
+
+    def action_start_sync_manual_arrival_date_to_i360(self, appointment_id):
+        time.sleep(3)
+        with api.Environment.manage():
+            # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            sync_log = self.env['otl.appointment.sync.log']
+            _logger.info('------Starting action_start_sync_manual_arrival_date_to_i360------: %s'%(appointment_id))
+            appointment = self.env['team.customer.appointment'].browse(int(appointment_id))
+            if appointment.manual_arrival_date and not appointment.manual_arrival_date_synced:
+                result = appointment.update_manual_arrival_date_in_i360()
+                if result.get('success', '') == 'true':
+                    _logger.info("------ SalesRepArrivalDeparture Success-------------")
+                    sync_log.create({
+                        'appointment_id': appointment.id,
+                        'response': result,
+                        'name': 'SalesRepArrivalDeparture-ManualArrivalDate',
+                    })
+                else:
+                    _logger.info("------ SalesRepArrivalDeparture Failed-------------")
+                    sync_log.create({
+                        'appointment_id': appointment.id,
+                        'response': result,
+                        'state': 'failed',
+                        'name': 'SalesRepArrivalDeparture-ManualArrivalDate',
+                    })
+            else:
+                _logger.info('-----No Arrival & Departure Time in appointment----')
+            self.env.cr.commit()
+            new_cr.close()
+            _logger.info('------End of action_start_sync_manual_arrival_date_to_i360------: %s' % (appointment_id))
+
+        return True
+
+    @api.model
+    def action_update_manual_arrival_date(self, data):
+        result = {
+            'message': 'Something went wrong updating the appointment',
+            'result': 'Failed'
+        }
+        _logger.info("------action_update_manual_arrival_date data: %s-------------" % (data))
+        try:
+            appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
+            manual_arrival_date = data.get('manual_arrival_date', False)
+            timezone = data.get('timezone', 'US/Eastern')
+            manual_arrival_date_utc = False
+            if appointment_id:
+                appointment = self.env['team.customer.appointment'].browse(appointment_id)
+                if appointment.exists():
+                    if appointment.manual_arrival_date_synced:
+                        result = {
+                            'message': 'The Arrival Date has already been synchronized.',
+                            'result': 'Failed',
+                        }
+                    else:
+                        if manual_arrival_date:
+                            manual_arrival_date_utc = manual_arrival_date
+                            if manual_arrival_date and timezone:
+                                manual_arrival_date_utc = self.get_timezone_based_time(manual_arrival_date, timezone)
+                        appointment.write({
+                            'manual_arrival_date': manual_arrival_date_utc,
+                            'timezone': timezone,
+                        })
+                        result = {
+                            'message': 'Data Updated Successfully',
+                            'result': 'Success',
+                        }
+                        _logger.info("------Data Updated Successfully-------------")
+                        t1 = threading.Thread(target=self.action_start_sync_manual_arrival_date_to_i360, args=(appointment.id,))
+                        t1.start()
+                        _logger.info("thread %s started!" % t1)
+                else:
+                    _logger.info("------Wrong Appointment Id-------------")
+                    result = {
+                        'message': 'Wrong Appointment Id',
+                        'result': 'Failed'
+                    }
+
+            else:
+                _logger.info("------Empty Appointment Id-------------")
+                result = {
+                    'message': 'Empty Appointment Id',
+                    'result': 'Failed'
+                }
+        except:
+            result = {
+                'message': 'Something Went Wrong.',
+                'result': 'Failed'
+            }
+        _logger.info("------action_update_manual_arrival_date result: %s-------------" % (result))
+        return result
+
+    @api.model
+    def action_send_review_link(self, data):
+        result = {
+            'message': 'Something went wrong updating the appointment',
+            'result': 'Failed'
+        }
+        _logger.info("------action_send_review_link data: %s-------------" % (data))
+        try:
+            appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
+            phone = data.get('phone', False)
+            if appointment_id:
+                appointment = self.env['team.customer.appointment'].browse(appointment_id)
+                if appointment.exists():
+                    if phone:
+                        appointment.write({'phone': phone})
+                        result = appointment.action_send_review_link_to_i360()
+                    else:
+                        result = {
+                            'message': 'Phone Number is missing.',
+                            'result': 'Failed'
+                        }
+        except:
+            result = {
+                'message': 'Something Went Wrong.',
+                'result': 'Failed'
+            }
+        _logger.info("------action_send_review_link result: %s-------------" % (result))
+        return result
+
+    @api.model
+    def action_get_appointment_current_status(self, data):
+        result = {
+            'message': 'Something went wrong updating the appointment',
+            'result': 'Failed'
+        }
+        _logger.info("------action_get_appointment_current_status data: %s-------------" % (data))
+        try:
+            appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
+            user_id = data.get('user_id', 0) and int(data.get('user_id', 0)) or 0
+            if appointment_id:
+                if user_id:
+                    user = self.env['res.users'].browse(int(user_id))
+                    if user and user.improveit_user_id:
+                        result = self.env['res.users'].get_sales_appointment_api_offline(user.improveit_user_id)
+                        if result.get('result', '') == 'Failed':
+                            return result
+                appointment = self.sudo().search([('id', '=', appointment_id)], limit=1)
+                if appointment:
+                    if appointment.appointment_result:
+                        result = {
+                            'message': 'The appointment has already been completed.',
+                            'result': 'Failed'
+                        }
+                    elif appointment.user_id.id != user_id:
+                        result = {
+                            'message': 'You are not the assigned salesperson for this appointment',
+                            'result': 'Failed'
+                        }
+                    elif appointment.state != 'scheduled':
+                        result = {
+                            'message': 'This appointment has been canceled and cannot be started.',
+                            'result': 'Failed'
+                        }
+                    else:
+                        result = {
+                            'message': 'The appointment is now ready to start.',
+                            'result': 'Success'
+                        }
+                else:
+                    result = {
+                        'message': 'No appointment found for the given ID.',
+                        'result': 'Failed'
+                    }
+            else:
+                result = {
+                    'message': 'Appointment ID is missing',
+                    'result': 'Failed'
+                }
+        except:
+            result = {
+                'message': 'Something Went Wrong.',
+                'result': 'Failed'
+            }
+        _logger.info("------action_get_appointment_current_status result: %s-------------" % (result))
+        return result
+
 
 
 class SaleOrder(models.Model):
@@ -4451,6 +4670,13 @@ class SaleOrder(models.Model):
                                 'sale_contract_tmpl_id') or False
                     if document_template_id:
                         template = self.env['otl_document_sign.template'].sudo().browse(int(document_template_id))
+                        if template.sign_item_ids.filtered(lambda x: x.type_id.option_field):
+                            if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
+                                    (not contract_plumbing_option_1 and not contract_plumbing_option_2):
+                                return {
+                                    'result': 'Failed',
+                                    'message': 'Plumbing option should select either one option'
+                                }
                         vals = {
                             'template_id': template.id,
                             'reference': template.name,

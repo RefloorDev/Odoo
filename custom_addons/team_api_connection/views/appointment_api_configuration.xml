@@ -23,7 +23,7 @@
                             <field name="update_existing_record"/>
                             <field name="enable_ssl"/>
                             <field name="active" invisible="1"/>
-                            <field name="client_token" attrs="{'invisible': [('api_type', '!=', 'boomi')]}"/>
+                            <field name="client_token" attrs="{'invisible': [('api_type', 'not in', ['boomi', 'order_checklist'])]}"/>
                         </group>
                     </sheet>
                 </form>

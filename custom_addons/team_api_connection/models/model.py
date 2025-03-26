@@ -3279,6 +3279,8 @@ class SaleOrder(models.Model):
                 is_data_upload_completed = False
             if record.required_file_upload:
                 is_data_upload_completed = False
+            if (record.discount_history_line or record.promotion_code_id) and not record.discount_history_sync_i360_ref:
+                is_data_upload_completed = False
         return is_data_upload_completed
 
     authorize_transaction_id = fields.Char('Transaction ID', copy=False)
@@ -5174,6 +5176,23 @@ class SaleOrder(models.Model):
                                 'response': result,
                                 'state': 'failed',
                                 'name': 'SyncLoanData',
+                            })
+                    if (sale_order.discount_history_line or sale_order.promotion_code_id) and not sale_order.discount_history_sync_i360_ref:
+                        result = sale_order.action_sync_discount_history_line_to_i360()
+                        if result.get('success', '') == 'true':
+                            _logger.info("------ AppliedDiscounts Create,Update Success-------------")
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'AppliedDiscounts',
+                            })
+                        else:
+                            _logger.info("------ AppliedDiscounts Create,Update Failed-------------")
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'AppliedDiscounts',
                             })
                     sale_order_vals = {}
                     room_measurement_lines_to_sync = sale_order.room_measurement_line.filtered(

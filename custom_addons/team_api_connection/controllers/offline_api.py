@@ -52,6 +52,9 @@ class APIHomes(API_Homes):
         self.generate_contract_document_api_queue = dict()
         self.update_additional_appointment_data_api_queue = dict()
         self.update_arrival_departure_time_api_queue = dict()
+        self.update_manual_arrival_date_api_queue = dict()
+        self.send_review_link_api_queue = dict()
+        self.get_appointment_current_status_api_queue = dict()
         self.get_credit_application_status_api_queue = dict()
         self.initiate_i360_sync_api_queue = dict()
         self.image_sync_api_queue = dict()
@@ -1300,6 +1303,7 @@ class APIHomes(API_Homes):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', False)
+        app_version = params.get('app_version', '')
         if not token:
             _logger.info("------------Token Missing in main get_master_data api------------------")
             return json.dumps({'result': 'Failed', 'message': 'Empty token.'})
@@ -1312,7 +1316,7 @@ class APIHomes(API_Homes):
             return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         if status:
-            result = models.execute_kw(DB, int(uid), password, 'res.users', 'get_master_data_contents', [{}])
+            result = models.execute_kw(DB, int(uid), password, 'res.users', 'get_master_data_contents', [{'app_version': app_version}])
         else:
             result = message
         return json.dumps(result)
@@ -1550,13 +1554,13 @@ class APIHomes(API_Homes):
         recision_date = params.get('recision_date', False)
         additional_comments = params.get('additional_comments', '')
         network_strength = params.get('network_strength', '')
-        if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
-                (not contract_plumbing_option_1 and not contract_plumbing_option_2):
-            return json.dumps({
-                'override_json_result': 1,
-                'result': 'Failed',
-                'message': 'Plumbing option should select either one option'
-            })
+        # if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
+        #         (not contract_plumbing_option_1 and not contract_plumbing_option_2):
+        #     return json.dumps({
+        #         'override_json_result': 1,
+        #         'result': 'Failed',
+        #         'message': 'Plumbing option should select either one option'
+        #     })
         appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
 
         _logger.info("------------generate_contract_document params: %s------------------" % (params))
@@ -2501,3 +2505,235 @@ class APIHomes(API_Homes):
                     {'result': 'Failed', 'message': 'File type must be werkzeug.datastructures.FileStorage type.'})
         else :
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'})
+
+    @route('/api/<version>/update_manual_arrival_date', type='http', auth="none", methods=['POST'], csrf=False,
+           allow_none=True, )
+    def action_update_manual_arrival_date(self, version='v1', **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.params.copy()
+        token = params.get('token', '')
+        appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
+        manual_arrival_date = params.get('manual_arrival_date', False)
+        timezone = params.get('timezone', False)
+        network_strength = params.get('network_strength', '')
+
+        _logger.info("------------update_manual_arrival_date params: %s------------------" % params)
+        result = {}
+        if not token:
+            _logger.info("------------Token Missing in update_manual_arrival_date------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in update_manual_arrival_date-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in update_manual_arrival_date-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        enable_api_queue_system = eval(
+            str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        if status:
+            if version == 'v1':
+                data = {
+                    'appointment_id': int(appointment_id),
+                    'manual_arrival_date': manual_arrival_date,
+                    'timezone': timezone
+                }
+                if enable_api_queue_system:
+                    _logger.info('update_manual_arrival_date_api_queue Data - Starting--:%s - Appointment ID: %s' % (
+                        self.update_manual_arrival_date_api_queue, appointment_id))
+                    time = datetime.now()
+                    if appointment_id in self.update_manual_arrival_date_api_queue:
+                        queue_time = self.update_manual_arrival_date_api_queue.get(appointment_id, {})
+                        time_difference = (time - queue_time).total_seconds()
+                        if int(time_difference) < 20:
+                            _logger.info(
+                                'update_manual_arrival_date_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
+                                    self.update_manual_arrival_date_api_queue, appointment_id))
+                            result = {'override_json_result': 1, 'result': 'Failed',
+                                      'message': 'Execution is already in progress'}
+                            request.env['otl.api.sync.log'].sudo().create_api_log(
+                                '/api/%s/update_manual_arrival_date' % (version), data, uid,
+                                result, network_strength)
+                            return json.dumps(result)
+                    self.update_manual_arrival_date_api_queue.update({
+                        appointment_id: time
+                    })
+                    _logger.info('update_manual_arrival_date_api_queue Data - Added--:%s' % (
+                        self.update_manual_arrival_date_api_queue))
+
+                result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                           'action_update_manual_arrival_date',
+                                           [data])
+            else:
+                result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_manual_arrival_date' % (version),
+                                                              params, uid,
+                                                              result, network_strength)
+        result.update({'override_json_result': 1})
+        if enable_api_queue_system:
+            self.update_manual_arrival_date_api_queue.pop(appointment_id, '')
+            _logger.info('update_manual_arrival_date_api_queue Data - Ending--:%s' % (
+                self.update_manual_arrival_date_api_queue))
+        return json.dumps(result)
+
+    @route('/api/<version>/send_review_link', type='http', auth="none", methods=['POST'], csrf=False,
+           allow_none=True, )
+    def action_send_review_link(self, version='v1', **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.params.copy()
+        token = ''
+        access_token = request.httprequest.headers.get('Authorization')
+        if not access_token:
+            _logger.error("send_review_link - Empty access_token")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'})
+        if access_token.startswith('Bearer '):
+            token = access_token[7:]
+        appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
+        phone = params.get('phone', False)
+        network_strength = params.get('network_strength', '')
+
+        _logger.info("------------send_review_link params: %s------------------" % params)
+        result = {}
+        if not token:
+            _logger.info("------------Token Missing in send_review_link------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in send_review_link-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in send_review_link-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        enable_api_queue_system = eval(
+            str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        if status:
+            if version == 'v1':
+                data = {
+                    'appointment_id': int(appointment_id),
+                    'phone': phone,
+                }
+                if enable_api_queue_system:
+                    _logger.info('send_review_link_api_queue Data - Starting--:%s - Appointment ID: %s' % (
+                        self.send_review_link_api_queue, appointment_id))
+                    time = datetime.now()
+                    if appointment_id in self.send_review_link_api_queue:
+                        queue_time = self.send_review_link_api_queue.get(appointment_id, {})
+                        time_difference = (time - queue_time).total_seconds()
+                        if int(time_difference) < 20:
+                            _logger.info(
+                                'send_review_link_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
+                                    self.send_review_link_api_queue, appointment_id))
+                            result = {'override_json_result': 1, 'result': 'Failed',
+                                      'message': 'Execution is already in progress'}
+                            request.env['otl.api.sync.log'].sudo().create_api_log(
+                                '/api/%s/send_review_link' % (version), data, uid,
+                                result, network_strength)
+                            return json.dumps(result)
+                    self.send_review_link_api_queue.update({
+                        appointment_id: time
+                    })
+                    _logger.info('send_review_link_api_queue Data - Added--:%s' % (
+                        self.send_review_link_api_queue))
+
+                result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                           'action_send_review_link',
+                                           [data])
+            else:
+                result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/send_review_link' % (version),
+                                                              params, uid,
+                                                              result, network_strength)
+        result.update({'override_json_result': 1})
+        if enable_api_queue_system:
+            self.send_review_link_api_queue.pop(appointment_id, '')
+            _logger.info('send_review_link_api_queue Data - Ending--:%s' % (
+                self.send_review_link_api_queue))
+        return json.dumps(result)
+
+    @route('/api/<version>/get_appointment_current_status', type='http', auth="none", methods=['POST'], csrf=False,
+           allow_none=True, )
+    def action_get_appointment_current_status(self, version='v1', **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.params.copy()
+        token = ''
+        access_token = request.httprequest.headers.get('Authorization')
+        if not access_token:
+            _logger.error("get_appointment_current_status - Empty access_token")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'})
+        if access_token.startswith('Bearer '):
+            token = access_token[7:]
+        appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
+        network_strength = params.get('network_strength', '')
+
+        _logger.info("------------get_appointment_current_status params: %s------------------" % params)
+        result = {}
+        if not token:
+            _logger.info("------------Token Missing in get_appointment_current_status------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in get_appointment_current_status-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in get_appointment_current_status-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        enable_api_queue_system = eval(
+            str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        if status:
+            if version == 'v1':
+                data = {
+                    'appointment_id': int(appointment_id),
+                    'user_id': int(uid)
+                }
+                if enable_api_queue_system:
+                    _logger.info('get_appointment_current_status_api_queue Data - Starting--:%s - Appointment ID: %s' % (
+                        self.get_appointment_current_status_api_queue, appointment_id))
+                    time = datetime.now()
+                    if appointment_id in self.get_appointment_current_status_api_queue:
+                        queue_time = self.get_appointment_current_status_api_queue.get(appointment_id, {})
+                        time_difference = (time - queue_time).total_seconds()
+                        if int(time_difference) < 20:
+                            _logger.info(
+                                'get_appointment_current_status_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
+                                    self.get_appointment_current_status_api_queue, appointment_id))
+                            result = {'override_json_result': 1, 'result': 'Failed',
+                                      'message': 'Execution is already in progress'}
+                            request.env['otl.api.sync.log'].sudo().create_api_log(
+                                '/api/%s/get_appointment_current_status' % (version), data, uid,
+                                result, network_strength)
+                            return json.dumps(result)
+                    self.get_appointment_current_status_api_queue.update({
+                        appointment_id: time
+                    })
+                    _logger.info('get_appointment_current_status_api_queue Data - Added--:%s' % (
+                        self.get_appointment_current_status_api_queue))
+
+                result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                           'action_get_appointment_current_status',
+                                           [data])
+            else:
+                result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/get_appointment_current_status' % (version),
+                                                              params, uid,
+                                                              result, network_strength)
+        result.update({'override_json_result': 1})
+        if enable_api_queue_system:
+            self.get_appointment_current_status_api_queue.pop(appointment_id, '')
+            _logger.info('get_appointment_current_status_api_queue Data - Ending--:%s' % (
+                self.get_appointment_current_status_api_queue))
+        return json.dumps(result)

@@ -113,6 +113,138 @@ class TeamCustomerAppointment(models.Model):
             result.update({"success": "false"})
         return result
 
+    def update_manual_arrival_date_in_i360(self):
+        result = {
+            "success": "true",
+            "errors": []
+        }
+        try:
+            configurations = self.env['team.improveit.configuration'].search(
+                [('api_type', '=', 'boomi')], limit=1)
+            for appointment in self:
+                _logger.info(
+                    '--------Starting SalesRepArrivalDeparture API Appointment ID---------: %s' % (appointment.id))
+                if appointment.improveit_appointment_id and appointment.manual_arrival_date:
+                    if appointment.manual_arrival_date_synced:
+                        return {
+                            "success": "false",
+                            "errors": [{"message": "Manual Arrival Time is already synced to i360."}]
+                        }
+                    data = {
+                        'AppointmentID': appointment.improveit_appointment_id or '',
+                    }
+                    if appointment.manual_arrival_date:
+                        data.update({
+                            'ManualArrivalTime': appointment.manual_arrival_date.strftime('%Y-%m-%dT%H:%M:%S')
+                        })
+
+                    headers = {
+                        'Content-type': 'application/json',
+                    }
+                    end_point_url = configurations.token_url
+                    client_token = configurations.client_token
+                    _logger.info('SalesRepArrivalDeparture API Input Payload of Appointment %s :%s' % (
+                        appointment.id, data))
+                    if end_point_url and client_token:
+                        request_url = end_point_url + 'SalesRepArrivalDeparture' + client_token
+                    req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
+                                        verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    if isinstance(content, str):
+                        content = json.loads(content)
+                    _logger.info('SalesRepArrivalDeparture API Response of Appointment %s :%s' % (
+                        appointment.id, content))
+                    if content.get('Result', '') == "Success":
+                        appointment.write({
+                            'manual_arrival_date_synced': True,
+                            'write_uid': self.env.user.id,
+                            'write_date': datetime.now().replace(tzinfo=pytz.utc)
+                        })
+                    if content.get('success', '') == "false":
+                        return content
+                    elif "Errors" in content:
+                        return content.get('Errors', {})
+
+        except IOError:
+            pass
+            _logger.error("******--------Error in update_manual_arrival_date_in_i360 API---------********")
+            result.update({"success": "false"})
+        return result
+
+    def action_send_review_link_to_i360(self):
+        result = {
+            "result": "Failed",
+            "message": "something went wrong!"
+        }
+        try:
+            configurations = self.env['team.improveit.configuration'].search(
+                [('api_type', '=', 'review')], limit=1)
+            if not configurations:
+                return {
+                    "result": "Failed",
+                    "message": "Send Review Link API URL is not configured."
+                }
+            for appointment in self:
+                _logger.info('--------Starting SendReviewLink API Appointment ID---------: %s' % (appointment.id))
+                if appointment.phone:
+                    if appointment.sent_review_link:
+                        return {
+                            "result": "Failed",
+                            "message": "The review link has already been sent to i360."
+                        }
+                    if not appointment.market_segment:
+                        return {
+                            "result": "Failed",
+                            "message": "Market Segment is missing on the appointment."
+                        }
+                    data = {
+                        "MobilePhone": appointment.phone,
+                        "MarketSegment": appointment.market_segment
+                    }
+
+                    headers = {
+                        'Content-type': 'application/json',
+                    }
+                    end_point_url = configurations.token_url
+                    _logger.info('SendReviewLink API Input Payload of Appointment %s :%s' % (
+                        appointment.id, data))
+                    if end_point_url:
+                        request_url = end_point_url + 'RMRSMS'
+                    req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
+                                        verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    if isinstance(content, str):
+                        content = json.loads(content)
+                    _logger.info('SendReviewLink API Response of Appointment %s :%s' % (
+                    appointment.id, content))
+                    if content.get('Success', '') == True:
+                        appointment.write({
+                            'sent_review_link': True,
+                            'write_uid': self.env.user.id,
+                            'write_date': datetime.now().replace(tzinfo=pytz.utc)
+                        })
+                        result = {
+                            "result": "Success",
+                            "message": self.env['ir.config_parameter'].sudo().get_param('send_review_success_message') or "",
+                        }
+                    else:
+                        result = {
+                            "result": "Failed",
+                            "message": self.env['ir.config_parameter'].sudo().get_param(
+                                'send_review_failure_message') or "",
+                        }
+                else:
+                    result = {
+                        "result": "Failed",
+                        "message": "Phone number is missing on the appointment.",
+                    }
+        except IOError:
+            pass
+            _logger.error("******--------Error in SendReviewLink API---------********")
+        return result
+
 
 class SignRequest(models.Model):
     _inherit = "otl_document_sign.request"
@@ -360,6 +492,7 @@ class SaleOrder(models.Model):
     email_sent = fields.Boolean('Email Sent', default=False)
     synced_to_cloud_storage = fields.Boolean('Synced Files to Cloud Storage', default=False)
     i360_sync_stopped_manually = fields.Boolean('i360 Sync Stopped Manually', default=False, copy=False)
+    discount_history_sync_i360_ref = fields.Char('Synced Discount i360 Ref', default=False, copy=False)
 
 
     def write(self, vals):
@@ -3006,6 +3139,7 @@ class SaleOrder(models.Model):
                         'AppointmentID': sale_order.appointment_id.improveit_appointment_id or '',
                         'Result': status,
                         'Amount': sale_order.amount_total or 0,
+                        'BothPartiesPresent': sale_order.appointment_id.both_parties_present and True or False
                     }
                     if notes:
                         data.update({
@@ -3733,7 +3867,8 @@ class SaleOrder(models.Model):
                 [('api_type', '=', 'boomi')], limit=1)
             for sale_order in self:
                 appointment = sale_order.appointment_id
-                _logger.info('--------Starting SyncLoanData API of Appointment ID---------: %s' % (sale_order.appointment_id.id))
+                _logger.info(
+                    '--------Starting SyncLoanData API of Appointment ID---------: %s' % (sale_order.appointment_id.id))
                 if sale_order.quote_id and appointment:
                     data = {
                         'Id': sale_order.quote_id or '',
@@ -3768,6 +3903,127 @@ class SaleOrder(models.Model):
             _logger.error("******--------Error in action_sync_ext_loan_data_to_i360 API---------********")
             result.update({"success": "false"})
         return result
+
+    def action_sync_discount_history_line_to_i360(self):
+        result = {
+            "success": "true",
+            "errors": []
+        }
+        try:
+            configurations = self.env['team.improveit.configuration'].search(
+                [('api_type', '=', 'boomi')], limit=1)
+            for sale_order in self:
+                appointment = sale_order.appointment_id
+                _logger.info('--------Starting AppliedDiscounts API of Appointment ID---------: %s' % (sale_order.appointment_id.id))
+                discount_history_line = sale_order.discount_history_line
+                if sale_order.quote_id and appointment and not sale_order.discount_history_sync_i360_ref:
+                    end_point_url = configurations.token_url
+                    client_token = configurations.client_token
+                    if end_point_url and client_token:
+                        request_url = end_point_url + 'AppliedDiscounts' + client_token
+                    appointment_result = appointment.appointment_result
+                    discount_history_list = []
+                    if sale_order.promotion_code_id and sale_order.promotion_code_id.discount:
+                        stair_count = 0
+                        stair_product = False
+                        stair_count_lines = sale_order.contract_question_line.filtered(
+                            lambda
+                                x: x.question_id.code == 'StairCount' and not x.room_measurement_id.exclude_from_calculation)
+                        if stair_count_lines:
+                            for stair_count_line in stair_count_lines:
+                                for answer_line in stair_count_line.answers:
+                                    if answer_line.answer:
+                                        stair_count += float(answer_line.answer)
+                        if stair_count:
+                            stair_product = self.env['product.template'].search([
+                                ('type', '=', 'product'),
+                                ('product_variant_ids', '!=', False),
+                                ('categ_id.name', 'ilike', 'Stairs'),
+                                ('grade', '=', sale_order.floor_type.grade)
+                            ], order='sequence asc', limit=1)
+                        stair_price = 0
+                        stair_unit_price = 0
+                        if stair_count and stair_product:
+                            if sale_order.stair_calc_based_on == 'list_price':
+                                stair_unit_price = stair_product.list_price or 0
+                                if sale_order.stair_special_price_id and sale_order.stair_special_price_id.list_price:
+                                    stair_unit_price = sale_order.stair_special_price_id.list_price or 0
+                            else:
+                                stair_unit_price = stair_product.msrp or 0
+                                if sale_order.stair_special_price_id and sale_order.stair_special_price_id.msrp:
+                                    stair_unit_price = sale_order.stair_special_price_id.msrp or 0
+                            stair_price = stair_unit_price * stair_count
+                        promotion_amount = 0
+                        if sale_order.calc_based_on == 'list_price':
+                            list_price = sale_order.floor_type.list_price or 0
+                            if sale_order.special_price_id and sale_order.special_price_id.list_price:
+                                list_price = sale_order.special_price_id.list_price or 0
+                        else:
+                            list_price = sale_order.floor_type.msrp or 0
+                            if sale_order.special_price_id and sale_order.special_price_id.msrp:
+                                list_price = sale_order.special_price_id.msrp or 0
+                        sale_price = sale_order.total_area * list_price + sale_order.additional_cost + stair_price
+                        if sale_order.promotion_code_id.calculation_type == 'sqft':
+                            promo_discount = sale_order.promotion_code_id.discount or 0
+                            promotion_amount = sale_order.total_area * promo_discount
+                        elif sale_order.promotion_code_id.calculation_type == 'percentage':
+                            promotion_amount = (sale_price - sale_order.excluded_amount_promotion) * sale_order.promotion_code_id.discount / 100.0
+                        else:
+                            promotion_amount = sale_order.promotion_code_id.discount or 0
+                        if promotion_amount > 0:
+                            data = {
+                                "Amount": promotion_amount or 0,
+                                "ExcludedAmount": sale_order.excluded_amount_promotion or 0,
+                                "PriceAfterDiscount": sale_price-promotion_amount or 0,
+                                "PriceBeforeDiscount": sale_price or 0,
+                                "Type": sale_order.promotion_code_id.calculation_type == "percentage" and "Percentage" or "Dollars",
+                                "Value": sale_order.promotion_code_id.discount,
+                                "Name": sale_order.promotion_code_id.name
+                            }
+                            if appointment_result == 'Sold':
+                                data.update({"Sale": sale_order.quote_id})
+                            else:
+                                data.update({"Quote": sale_order.quote_id})
+                            discount_history_list.append(data)
+                    for line in discount_history_line:
+                        data = {
+                            "Amount": line.discount_amount or 0,
+                            "ExcludedAmount": line.excluded_amount_discount or 0,
+                            "PriceAfterDiscount": line.sale_price or 0,
+                            "PriceBeforeDiscount": line.actual_price or 0,
+                            "Type": line.type == "amount" and "Dollars" or "Percentage",
+                            "Value": line.name,
+                            "Name": line.promo_type and "Promotion" or "Discount"
+                        }
+                        if appointment_result == 'Sold':
+                            data.update({"Sale": sale_order.quote_id})
+                        else:
+                            data.update({"Quote": sale_order.quote_id})
+                        discount_history_list.append(data)
+                    headers = {
+                        'Content-type': 'application/json',
+                    }
+                    _logger.info('AppliedDiscounts API Payload of Appointment %s :%s' % (appointment.id, discount_history_list))
+                    req = requests.post(request_url, data=json.dumps(discount_history_list), headers=headers, timeout=TIMEOUT,
+                                        verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    _logger.info('AppliedDiscounts API Response of Appointment %s :%s' % (appointment.id, content))
+                    if content.get('success', '') == "true":
+                        sale_order.write({
+                            'discount_history_sync_i360_ref': content.get('id', ''),
+                        })
+                    if content.get('success', '') == "false":
+                        return content
+                    elif "Errors" in content:
+                        return content.get('Errors', {})
+
+        except IOError:
+            pass
+            _logger.error("******--------Error in action_sync_discount_history_line_to_i360 API---------********")
+            result.update({"success": "false"})
+        return result
+
 
 class Followers(models.Model):
     _inherit = 'mail.followers'
