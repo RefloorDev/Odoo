@@ -165,6 +165,32 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-12 col-lg-6 o_setting_box" id="send_review_success_message" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Review Link Sent Success Message</span>
+                        <div class="text-muted">
+                            Enter Message to Display while sent review link is success!
+                        </div>
+                        <div class="row mt16">
+                            <label for="send_review_success_message" string="Success Message"
+                                   class="col-lg-4 o_light_label"/>
+                            <field name="send_review_success_message" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6 o_setting_box" id="send_review_failure_message" groups="base.group_no_one">
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Review Link Sent Failure Message</span>
+                        <div class="text-muted">
+                            Enter Message to Display while sent review link is failed!
+                        </div>
+                        <div class="row mt16">
+                            <label for="send_review_failure_message" string="Failure Message"
+                                   class="col-lg-4 o_light_label"/>
+                            <field name="send_review_failure_message" class="oe_inline"/>
+                        </div>
+                    </div>
+                </div>
                 <div class="col-12 col-lg-6 o_setting_box" id="credit_application_tmpl_id_ncp_setting"
                      groups="base.group_no_one">
                     <div class="o_setting_right_pane">

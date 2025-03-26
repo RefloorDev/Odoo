@@ -1428,6 +1428,63 @@
               action="floor_molding_action"
               sequence="20"/>
 
+    <record id="finance_checklist_items_form" model="ir.ui.view">
+            <field name="name">finance.checklist.items.form</field>
+            <field name="model">otl.finance.checklist.items</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="sequence"/>
+                                <field name="reference_id"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="finance_checklist_items_tree" model="ir.ui.view">
+            <field name="name">finance.checklist.items.tree</field>
+            <field name="model">otl.finance.checklist.items</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="sequence" widget='handle'/>
+                    <field name="name"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="finance_checklist_items_action" model="ir.actions.act_window">
+        <field name="name">Finance and Order Checklists</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">otl.finance.checklist.items</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create!
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="finance_checklist_items_menu"
+              name="Finance and Order Checklists"
+              parent="measurement_conf_root"
+              action="finance_checklist_items_action"
+              sequence="60"/>
+
 
     </data>
 </odoo>

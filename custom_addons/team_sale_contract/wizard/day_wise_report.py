@@ -184,11 +184,12 @@ class DayWiseSyncReport(models.TransientModel):
         worksheet.set_column(0, 12, 25)
         worksheet.set_column(0, 13, 15)
         worksheet.set_column(0, 14, 20)
-        worksheet.set_column(0, 15, 25)
-        worksheet.set_column(0, 16, 20)
-        worksheet.set_column(0, 17, 25)
-        worksheet.set_column(0, 18, 20)
+        worksheet.set_column(0, 15, 20)
+        worksheet.set_column(0, 16, 25)
+        worksheet.set_column(0, 17, 20)
+        worksheet.set_column(0, 18, 25)
         worksheet.set_column(0, 19, 20)
+        worksheet.set_column(0, 20, 20)
 
         worksheet.write(row, col, 'Appointment', bold_font)
         col += 1
@@ -219,6 +220,8 @@ class DayWiseSyncReport(models.TransientModel):
         worksheet.write(row, col, 'Device Details', bold_font)
         col += 1
         worksheet.write(row, col, 'Upload Network Strength', bold_font)
+        col += 1
+        worksheet.write(row, col, 'Appointment Status', bold_font)
         col += 1
         worksheet.write(row, col, 'Odoo Sync Status', bold_font)
         col += 1
@@ -282,7 +285,7 @@ class DayWiseSyncReport(models.TransientModel):
             result = self.get_sync_completed_time(appointment)
             sync_completed_time = result.get('sync_completed_time', '')
             if sync_completed_time:
-                sync_completed_time = self.convert_date_utc_2_local(appointment.sync_initiated_date, tz)
+                sync_completed_time = self.convert_date_utc_2_local(sync_completed_time, tz)
             worksheet.write(row, col, sync_completed_time, normal_font_left)
             col += 1
             worksheet.write(row, col, appointment.app_version_id and appointment.app_version_id.name or '',
@@ -292,6 +295,9 @@ class DayWiseSyncReport(models.TransientModel):
             worksheet.write(row, col, device_details, normal_font_left)
             col += 1
             worksheet.write(row, col, result.get('network_strength', ''), normal_font_left)
+            col += 1
+            appointment_state = dict(appointment._fields['state'].selection).get(appointment.state)
+            worksheet.write(row, col, appointment_state, normal_font_left)
             col += 1
             if result.get('sync_status', '') == 'Completed':
                 worksheet.write(row, col, result.get('sync_status', ''), normal_font_left_bg_gr)
