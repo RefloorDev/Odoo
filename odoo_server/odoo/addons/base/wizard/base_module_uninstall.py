@@ -26,8 +26,12 @@ class BaseModuleUninstall(models.TransientModel):
     @api.depends('module_id', 'show_all')
     def _compute_module_ids(self):
         for wizard in self:
-            modules = wizard._get_modules()
-            wizard.module_ids = modules if wizard.show_all else modules.filtered('application')
+            modules = wizard._get_modules().sorted(lambda m: (not m.application, m.sequence))
+            wizard.module_ids = modules if wizard.show_all else wizard._modules_to_display(modules)
+
+    @api.model
+    def _modules_to_display(self, modules):
+        return modules.filtered('application')
 
     def _get_models(self):
         """ Return the models (ir.model) to consider for the impact. """

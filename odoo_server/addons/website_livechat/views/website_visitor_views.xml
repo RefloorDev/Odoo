@@ -2,23 +2,27 @@
 <odoo><data>
     <record id="website_visitor_livechat_session_action" model="ir.actions.act_window">
         <field name="name">Visitor's Sessions</field>
-        <field name="res_model">mail.channel</field>
-        <field name="view_mode">tree,form</field>
-        <field name="view_id" ref="im_livechat.mail_channel_view_tree"/>
-        <field name="domain">[('livechat_visitor_id', '=', active_id)]</field>
+        <field name="res_model">discuss.channel</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="im_livechat.discuss_channel_view_tree"/>
+        <field name="domain">[('livechat_visitor_id', '=', active_id), ('has_message', '=', True)]</field>
+        <field name="context">{
+                'search_default_livechat_visitor_id': [active_id],
+                'default_livechat_visitor_id': active_id,
+            }</field>
     </record>
 
     <record id="website_visitor_livechat_session_action_tree" model="ir.actions.act_window.view">
         <field name="sequence">1</field>
-        <field name="view_mode">tree</field>
-        <field name="view_id" ref="im_livechat.mail_channel_view_tree"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="im_livechat.discuss_channel_view_tree"/>
         <field name="act_window_id" ref="website_livechat.website_visitor_livechat_session_action"/>
     </record>
 
     <record id="website_visitor_livechat_session_action_form" model="ir.actions.act_window.view">
         <field name="sequence">2</field>
         <field name="view_mode">form</field>
-        <field name="view_id" ref="im_livechat.mail_channel_view_form"/>
+        <field name="view_id" ref="im_livechat.discuss_channel_view_form"/>
         <field name="act_window_id" ref="website_livechat.website_visitor_livechat_session_action"/>
     </record>
 
@@ -28,37 +32,49 @@
         <field name="model">website.visitor</field>
         <field name="inherit_id" ref="website.website_visitor_view_kanban"/>
         <field name="arch" type="xml">
-            <field name="page_ids" position="after">
+            <field name="country_id" position="after">
                 <field name="livechat_operator_id"/>
+                <field name="session_count"/>
             </field>
-            <xpath expr="//div[hasclass('w_visitor_kanban_actions')]" position="before">
+            <xpath expr="//div[@name='w_visitor_kanban_actions']" position="before">
+                <div t-if="record.session_count.raw_value">Chats<field name="session_count" class="float-end fw-bold"/></div>
                 <div t-if="record.livechat_operator_id.raw_value">
-                    <span class="fa fa-comments mr-2"/>Speaking With <span class="font-weight-bold"><field name="livechat_operator_name"/></span>
+                    Speaking With
+                    <div name="livechat_operator_id"
+                        class="fw-bold float-end d-inline-block">
+                        <field name="livechat_operator_id" widget="image" options="{'preview_image': 'avatar_128', 'size': [19, 19]}" class="rounded-circle" alt="Operator Avatar"/>
+                        <field name="livechat_operator_name"/>
+                    </div>
                 </div>
                 <t t-else="">
-                    <br attrs="{'invisible': ['|', ('livechat_operator_id', '!=', False), ('is_connected', '=', False)]}"/>
+                    <br invisible="livechat_operator_id or not is_connected"/>
                 </t>
             </xpath>
             <xpath expr="//div[hasclass('w_visitor_kanban_actions_ungrouped')]" position="before">
-                <div class="col" >
-                    <b>
-                        <field name="livechat_operator_name" t-if="record.livechat_operator_id.raw_value"/>
-                        <span t-else="">-</span>
-                    </b>
+                <div class="col-lg col-sm-4 col-6 py-0 my-2">
+                    <span t-att-class="record.session_count.raw_value ? 'fw-bold' : 'text-muted'">
+                        <field name="session_count"/>
+                    </span>
+                    <div t-att-class="record.session_count.raw_value ? '' : 'text-muted'">Chats</div>
+                </div>
+                <div t-if="record.livechat_operator_id.raw_value" class="col-lg col-sm-4 col-6 py-0 my-2">
+                    <field name="livechat_operator_id" widget="image" options="{'preview_image': 'avatar_128', 'size': [19, 19]}" class="rounded-circle" alt="Operator Avatar"/>
+                    <field name="livechat_operator_name" class="fw-bold"/>
                     <div>Speaking With</div>
                 </div>
+                <div t-else="" class="col-lg d-none d-lg-block"/>
             </xpath>
-            <xpath expr="//div[hasclass('w_visitor_kanban_actions')]" position="inside">
+            <xpath expr="//div[@name='w_visitor_kanban_actions']" position="inside">
                 <button name="action_send_chat_request" type="object"
                         class="btn btn-secondary"
-                        attrs="{'invisible': ['|', ('livechat_operator_id', '!=', False), ('is_connected', '=', False)]}">
+                        invisible="livechat_operator_id or not is_connected">
                         Chat
                 </button>
             </xpath>
             <xpath expr="//div[hasclass('w_visitor_kanban_actions_ungrouped')]" position="inside">
                 <button name="action_send_chat_request" type="object"
-                        class="btn btn-secondary border"
-                        attrs="{'invisible': ['|', ('livechat_operator_id', '!=', False), ('is_connected', '=', False)]}">
+                        class="btn btn-secondary"
+                        invisible="livechat_operator_id or not is_connected">
                         Chat
                 </button>
             </xpath>
@@ -72,31 +88,31 @@
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
                 <button name="action_send_chat_request" string="Send chat request" type="object" class="oe_highlight"
-                attrs="{'invisible': ['|', ('livechat_operator_id', '!=', False), ('is_connected', '=', False)]}"/>
+                invisible="livechat_operator_id or not is_connected"/>
             </xpath>
             <xpath expr="//group[@id='general_info']" position="before">
-                <group id="livechat_info">
-                    <field name="livechat_operator_id"/>
+                <group id="livechat_info" invisible="not livechat_operator_id">
+                    <field name="livechat_operator_id" widget="many2one_avatar"/>
                 </group>
             </xpath>
             <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
                 <button name="%(website_visitor_livechat_session_action)d" type="action" class="oe_stat_button" icon="fa-comment"
-                        attrs="{'invisible': [('session_count', '=', 0)]}">
-                    <field name="session_count" widget="statinfo" string="Sessions"/>
+                        invisible="session_count == 0">
+                    <field name="session_count" widget="statinfo" string="Chats"/>
                 </button>
             </xpath>
         </field>
     </record>
 
     <record id="website_visitor_view_tree" model="ir.ui.view">
-        <field name="name">website.visitor.view.tree.inherit.website.livechat</field>
+        <field name="name">website.visitor.view.list.inherit.website.livechat</field>
         <field name="model">website.visitor</field>
         <field name="inherit_id" ref="website.website_visitor_view_tree"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='is_connected']" position="after">
-                <field name="livechat_operator_id"/>
-                <button name="action_send_chat_request" string="Send chat request" type="object" icon="fa-comments"
-                        attrs="{'invisible': ['|', ('livechat_operator_id', '!=', False), ('is_connected', '=', False)]}"/>
+            <xpath expr="//field[@name='email']" position="after">
+                <field name="livechat_operator_id" optional="hide"/>
+                <button name="action_send_chat_request" string="Chat" type="object" icon="fa-comments"
+                        invisible="livechat_operator_id or not is_connected"/>
             </xpath>
         </field>
     </record>
@@ -106,16 +122,16 @@
         <field name="model">website.visitor</field>
         <field name="inherit_id" ref="website.website_visitor_view_search"/>
         <field name="arch" type="xml">
-            <xpath expr="//search" position="inside">
-                <filter string="Busy" name="in_conversation" domain="[('livechat_operator_id', '!=', False)]"/>
-                <filter string="Available" name="not_in_conversation" domain="[('livechat_operator_id', '=', False)]"/>
+            <xpath expr="//filter[@name='filter_is_connected']" position="after">
+                <separator/>
+                <filter string="Available" name="filter_not_in_conversation" domain="[('livechat_operator_id', '=', False)]"/>
+                <filter string="In Conversation" name="filter_in_conversation" domain="[('livechat_operator_id', '!=', False)]"/>
             </xpath>
         </field>
     </record>
 
     <record id="website_livechat_send_chat_request_action_server" model="ir.actions.server">
         <field name="name">Send Chat Requests</field>
-        <field name="type">ir.actions.server</field>
         <field name="model_id" ref="model_website_visitor"/>
         <field name="binding_model_id" ref="model_website_visitor"/>
         <field name="binding_view_types">list</field>
@@ -123,14 +139,6 @@
         <field name="code">
             if records:
                 action = records.action_send_chat_request()
-        </field>
-    </record>
-
-    <record id="website.website_visitors_action" model="ir.actions.act_window">
-        <field name="help" type="html">
-          <p class="o_view_nocontent_smiling_face">
-              Wait for visitors to come to your website to see their history.</p>
-            <p>Interact with them by sending them messages.</p>
         </field>
     </record>
 

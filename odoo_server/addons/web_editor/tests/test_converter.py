@@ -8,7 +8,7 @@ from lxml.builder import E
 
 from odoo.tests import common
 from odoo.tests.common import BaseCase
-from odoo.addons.web_editor.models.ir_qweb import html_to_text
+from odoo.addons.web_editor.models.ir_qweb_fields import html_to_text
 
 
 class TestHTMLToText(BaseCase):
@@ -129,7 +129,7 @@ class TestConvertBack(common.TransactionCase):
         field_value = 'record.%s' % field
         e.set('t-field', field_value)
 
-        rendered = self.env['ir.qweb'].render(t, {'record': record})
+        rendered = self.env['ir.qweb']._render(t, {'record': record})
 
         element = html.fromstring(rendered, parser=html.HTMLParser(encoding='utf-8'))
         model = 'ir.qweb.field.' + element.get('data-oe-type', '')
@@ -145,6 +145,7 @@ class TestConvertBack(common.TransactionCase):
 
     def test_integer(self):
         self.field_roundtrip('integer', 42)
+        self.field_roundtrip('integer', 42000)
 
     def test_float(self):
         self.field_roundtrip('float', 42.567890)
@@ -197,7 +198,7 @@ class TestConvertBack(common.TransactionCase):
         field_value = 'record.%s' % field
         e.set('t-field', field_value)
 
-        rendered = self.env['ir.qweb'].render(t, {'record': record})
+        rendered = self.env['ir.qweb']._render(t, {'record': record})
         element = html.fromstring(rendered, parser=html.HTMLParser(encoding='utf-8'))
 
         # emulate edition

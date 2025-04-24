@@ -8,26 +8,30 @@
             <form string="Merge Mass Mailing List">
                 <group>
                     <field name="merge_options" widget="selection"/>
-                    <field name="new_list_name" attrs="{'invisible': [('merge_options', '=', 'existing')], 'required': [('merge_options', '=', 'new')]}"/>
-                    <field name="dest_list_id" attrs="{'invisible': [('merge_options', '=', 'new')], 'required': [('merge_options', '=', 'existing')]}"/>
+                    <field name="new_list_name" invisible="merge_options == 'existing'" required="merge_options == 'new'"/>
+                    <field name="dest_list_id" invisible="merge_options == 'new'" required="merge_options == 'existing'"/>
                     <field name="archive_src_lists"/>
                 </group>
                 <field name="src_list_ids">
-                    <tree>
+                    <list>
                         <field name="name"/>
-                        <field name="contact_nbr" string="Number of Recipients"/>
-                    </tree>
+                        <field name="contact_count" string="Number of Recipients"/>
+                    </list>
                 </field>
                 <footer>
-                    <button name="action_mailing_lists_merge" type="object" string="Merge" class="btn-primary"/>
-                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    <button name="action_mailing_lists_merge" type="object" string="Merge" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
                 </footer>
             </form>
         </field>
     </record>
 
-    <act_window id="mailing_list_merge_action" name="Merge Selected Mailing Lists"
-        res_model="mailing.list.merge"
-        binding_model="mailing.list" binding_views="list"
-        view_mode="form" target="new"/>
+    <record id="mailing_list_merge_action" model="ir.actions.act_window">
+        <field name="name">Merge</field>
+        <field name="res_model">mailing.list.merge</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_mailing_list"/>
+        <field name="binding_view_types">list</field>
+    </record>
 </odoo>

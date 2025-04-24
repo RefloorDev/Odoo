@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="lunch_supplier_view_tree" model="ir.ui.view">
-        <field name="name">lunch.supplier.view.tree</field>
+        <field name="name">lunch.supplier.view.list</field>
         <field name="model">lunch.supplier</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="name"/>
-                <field name="phone"/>
+                <field name="phone" class="o_force_ltr"/>
                 <field name="email"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -18,10 +18,10 @@
         <field name="arch" type="xml">
             <form>
                 <sheet>
-                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
                     <div class="oe_title">
-                        <label for="name" class="oe_edit_only"/>
-                        <h1><field name="name" required="1"/></h1>
+                        <label for="name" string="Vendor"/>
+                        <h1><field name="name" required="1" placeholder="e.g. The Pizzeria Inn"/></h1>
                     </div>
                     <group>
                         <group>
@@ -38,38 +38,75 @@
                         </group>
                         <group>
                             <field name="active" invisible="1"/>
-                            <field name="email" attrs="{'required': [('send_by', '=', 'mail')]}"/>
-                            <field name="phone"  attrs="{'required': [('send_by', '=', 'phone')]}"/>
+                            <field name="email" required="send_by == 'mail'"/>
+                            <field name="phone" class="o_force_ltr" required="send_by == 'phone'"/>
                             <field name="company_id" groups="base.group_multi_company"/>
-                            <field name="responsible_id" attrs="{'required': [('send_by', '=', 'mail')]}" groups="base.group_no_one"/>
+                            <field name="responsible_id" required="send_by == 'mail'" groups="base.group_no_one" domain="[('share', '=', False)]"/>
                         </group>
                     </group>
                     <group>
                         <group string="Availability">
                             <field name="tz" groups="base.group_no_one"/>
-                            <field name="recurrency_monday"/>
-                            <field name="recurrency_tuesday"/>
-                            <field name="recurrency_wednesday"/>
-                            <field name="recurrency_thursday"/>
-                            <field name="recurrency_friday"/>
-                            <field name="recurrency_saturday"/>
-                            <field name="recurrency_sunday"/>
+                            <label for="sun" class="d-none"/>
+                            <field name="sun" invisible="1"/>
+                            <widget name="week_days"/>
                             <field name="recurrency_end_date" groups="base.group_no_one"/>
                         </group>
                         <group string="Orders">
                             <field name="delivery"/>
                             <field name="available_location_ids" widget="many2many_tags"/>
                             <field name="send_by" widget="radio"/>
-                            <label for="automatic_email_time" attrs="{'invisible': [('send_by', '!=', 'mail')]}"/>
-                            <div class="o_row" attrs="{'invisible': [('send_by', '!=', 'mail')]}"><field name="automatic_email_time" widget="float_time"/> <field name="moment"/></div>
+                            <label for="automatic_email_time" invisible="send_by != 'mail'"/>
+                            <div class="o_row" invisible="send_by != 'mail'"><field name="automatic_email_time" widget="float_time"/> <field name="moment"/></div>
                         </group>
                     </group>
+                    <group>
+                        <group>
+                            <field name="active" invisible="1"/>
+                            <field name="topping_label_1"/>
+                            <field name="topping_quantity_1" class="w-50"/>
+                        </group>
+                        <div>
+                            <field name="topping_ids_1" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="company_id" column_invisible="True"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="price" widget="monetary"/>
+                                </list>
+                            </field>
+                        </div>
+                        <group>
+                            <field name="topping_label_2"/>
+                            <field name="topping_quantity_2" class="w-50"/>
+                        </group>
+                        <div>
+                            <field name="topping_ids_2" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="company_id" column_invisible="True"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="price" widget="monetary"/>
+                                </list>
+                            </field>
+                        </div>
+                        <group>
+                            <field name="topping_label_3"/>
+                            <field name="topping_quantity_3" class="w-50"/>
+                        </group>
+                        <div>
+                            <field name="topping_ids_3" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="company_id" column_invisible="True"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="price" widget="monetary"/>
+                                </list>
+                            </field>
+                        </div>
+                    </group>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
-                    <field name="activity_ids" widget="mail_activity"/>
-                    <field name="message_ids" widget="mail_thread"/>
-                </div>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -79,23 +116,17 @@
         <field name="model">lunch.supplier</field>
         <field name="arch" type="xml">
             <kanban>
-                <field name="partner_id"/>
-                <field name="city"/>
-                <field name="country_id"/>
-                <field name="email"/>
                 <templates>
-                    <t t-name="kanban-box">
-                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill o_res_partner_kanban">
-                            <div class="oe_kanban_details">
-                                <strong class="o_kanban_record_title oe_partner_heading"><field name="display_name"/></strong>
-                                <ul>
-                                    <li t-if="record.city.raw_value and !record.country_id.raw_value"><field name="city"/></li>
-                                    <li t-if="!record.city.raw_value and record.country_id.raw_value"><field name="country_id"/></li>
-                                    <li t-if="record.city.raw_value and record.country_id.raw_value"><field name="city"/>, <field name="country_id"/></li>
-                                    <li t-if="record.email.raw_value" class="o_text_overflow"><field name="email"/></li>
-                                </ul>
+                    <t t-name="card">
+                        <main>
+                            <field name="display_name" class="fw-bold fs-5"/>
+                            <field t-if="record.city.raw_value and !record.country_id.raw_value" name="city"/>
+                            <field t-if="!record.city.raw_value and record.country_id.raw_value" name="country_id"/>
+                            <div t-if="record.city.raw_value and record.country_id.raw_value">
+                                <field name="city"/>, <field name="country_id"/>
                             </div>
-                        </div>
+                            <field t-if="record.email.raw_value" class="o_text_overflow" name="email"/>
+                        </main>
                     </t>
                 </templates>
             </kanban>
@@ -117,7 +148,7 @@
     <record id="lunch_vendors_action" model="ir.actions.act_window">
         <field name="name">Vendors</field>
         <field name="res_model">lunch.supplier</field>
-        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="search_view_id" ref="lunch_supplier_view_search"/>
     </record>
 </odoo>

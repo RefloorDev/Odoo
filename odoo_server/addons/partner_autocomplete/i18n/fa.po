@@ -1,20 +1,19 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# * partner_autocomplete
+# 	* partner_autocomplete
 # 
 # Translators:
-# Martin Trigaux, 2018
-# Hamid Darabi, 2018
-# سید محمد آذربرا <mohammadazarbara98@gmail.com>, 2018
-# Hamed Mohammadi <hamed@dehongi.com>, 2018
+# zakariya moradi, 2025
+# Tiffany Chang, 2025
+# 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~11.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-10-02 10:06+0000\n"
-"PO-Revision-Date: 2018-10-02 10:06+0000\n"
-"Last-Translator: Hamed Mohammadi <hamed@dehongi.com>, 2018\n"
-"Language-Team: Persian (https://www.transifex.com/odoo/teams/41243/fa/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Tiffany Chang, 2025\n"
+"Language-Team: Persian (https://app.transifex.com/odoo/teams/41243/fa/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -22,108 +21,21 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid "(Time Now)"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.res_config_settings_view_form
-msgid ""
-"<i class=\"fa fa-arrow-right\"/>\n"
-"                        Buy more credits"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.res_config_settings_view_form
-msgid ""
-"<i class=\"fa fa-exclamation-triangle text-warning\"/> &amp;nbsp; You don't "
-"have credits to auto-complete companies' data anymore."
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid ""
-"<i class=\"fa fa-fw mr-2 fa-building text-primary\"/>\n"
-"                <b>Company type:</b>"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid ""
-"<i class=\"fa fa-fw mr-2 fa-calendar text-primary\"/>\n"
-"                <b>Founded:</b>"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid ""
-"<i class=\"fa fa-fw mr-2 fa-cube text-primary\"/>\n"
-"                <b>Technology Used :</b>"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid ""
-"<i class=\"fa fa-fw mr-2 fa-envelope text-primary\"/>\n"
-"                <b>Email :</b>"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid ""
-"<i class=\"fa fa-fw mr-2 fa-globe text-primary\"/>\n"
-"                <b>Timezone :</b>"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid ""
-"<i class=\"fa fa-fw mr-2 fa-industry text-primary\"/>\n"
-"                <b>Sector:</b>"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid ""
-"<i class=\"fa fa-fw mr-2 fa-money text-primary\"/>\n"
-"                <b>Annual revenue:</b>"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid ""
-"<i class=\"fa fa-fw mr-2 fa-money text-primary\"/>\n"
-"                <b>Estimated annual revenue:</b>"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid ""
-"<i class=\"fa fa-fw mr-2 fa-phone text-primary\"/>\n"
-"                <b>Phone :</b>"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid ""
-"<i class=\"fa fa-fw mr-2 fa-users text-primary\"/>\n"
-"                <b>Employees:</b>"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.res_config_settings_view_form
-msgid "<span>&amp;times;</span>"
-msgstr ""
-
-#. module: partner_autocomplete
 #: model:ir.model.fields,field_description:partner_autocomplete.field_res_partner__additional_info
+#: model:ir.model.fields,field_description:partner_autocomplete.field_res_users__additional_info
 msgid "Additional info"
+msgstr "اطلاعات اضافی"
+
+#. module: partner_autocomplete
+#: model:iap.service,description:partner_autocomplete.iap_service_partner_autocomplete
+msgid "Automatically enrich your contact base with corporate data."
 msgstr ""
 
 #. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.res_config_settings_view_form
-msgid "Close"
-msgstr "بستن"
+#. odoo-javascript
+#: code:addons/partner_autocomplete/static/src/xml/partner_autocomplete.xml:0
+msgid "Buy more credits"
+msgstr "خرید اعتبار بیشتر"
 
 #. module: partner_autocomplete
 #: model:ir.model,name:partner_autocomplete.model_res_company
@@ -131,15 +43,22 @@ msgid "Companies"
 msgstr "شرکت‌ها"
 
 #. module: partner_autocomplete
+#. odoo-python
+#: code:addons/partner_autocomplete/models/res_company.py:0
+msgid "Company auto-completed by Odoo Partner Autocomplete Service"
+msgstr "شرکت به‌طور خودکار توسط سرویس تکمیل خودکار شریک Odoo تکمیل شد"
+
+#. module: partner_autocomplete
 #: model:ir.model.fields,field_description:partner_autocomplete.field_res_company__partner_gid
 #: model:ir.model.fields,field_description:partner_autocomplete.field_res_partner__partner_gid
+#: model:ir.model.fields,field_description:partner_autocomplete.field_res_users__partner_gid
 msgid "Company database ID"
-msgstr ""
+msgstr "شناسه پایگاه داده شرکت"
 
 #. module: partner_autocomplete
 #: model:ir.model,name:partner_autocomplete.model_res_config_settings
 msgid "Config Settings"
-msgstr ""
+msgstr "تنظیمات پیکربندی"
 
 #. module: partner_autocomplete
 #: model:ir.model,name:partner_autocomplete.model_res_partner
@@ -154,12 +73,38 @@ msgstr "ایجاد شده توسط"
 #. module: partner_autocomplete
 #: model:ir.model.fields,field_description:partner_autocomplete.field_res_partner_autocomplete_sync__create_date
 msgid "Created on"
-msgstr "ایجاد شده در"
+msgstr "ایجادشده در"
 
 #. module: partner_autocomplete
 #: model:ir.model.fields,field_description:partner_autocomplete.field_res_partner_autocomplete_sync__display_name
 msgid "Display Name"
-msgstr "نام نمایشی"
+msgstr "نام نمایش داده شده"
+
+#. module: partner_autocomplete
+#: model:ir.model.fields,field_description:partner_autocomplete.field_res_company__iap_enrich_auto_done
+msgid "Enrich Done"
+msgstr "انجام غنی‌سازی"
+
+#. module: partner_autocomplete
+#: model:iap.service,unit_name:partner_autocomplete.iap_service_partner_autocomplete
+msgid "Enrichments"
+msgstr ""
+
+#. module: partner_autocomplete
+#: model:ir.model,name:partner_autocomplete.model_ir_http
+msgid "HTTP Routing"
+msgstr "مسیریابی HTTP"
+
+#. module: partner_autocomplete
+#. odoo-javascript
+#: code:addons/partner_autocomplete/static/src/js/partner_autocomplete_core.js:0
+msgid "IAP Account Token missing"
+msgstr "توکن حساب IAP گمشده است"
+
+#. module: partner_autocomplete
+#: model:ir.model,name:partner_autocomplete.model_iap_autocomplete_api
+msgid "IAP Partner Autocomplete API"
+msgstr "API تکمیل خودکار شریک IAP"
 
 #. module: partner_autocomplete
 #: model:ir.model.fields,field_description:partner_autocomplete.field_res_partner_autocomplete_sync__id
@@ -169,27 +114,34 @@ msgstr "شناسه"
 #. module: partner_autocomplete
 #: model:ir.model.fields,field_description:partner_autocomplete.field_res_config_settings__partner_autocomplete_insufficient_credit
 msgid "Insufficient credit"
-msgstr ""
+msgstr "اعتبار کافی نیست"
 
 #. module: partner_autocomplete
 #: model:ir.model.fields,field_description:partner_autocomplete.field_res_partner_autocomplete_sync__synched
 msgid "Is synched"
-msgstr ""
-
-#. module: partner_autocomplete
-#: model:ir.model.fields,field_description:partner_autocomplete.field_res_partner_autocomplete_sync____last_update
-msgid "Last Modified on"
-msgstr "آخرین تغییر در"
+msgstr "همگام‌سازی شده است"
 
 #. module: partner_autocomplete
 #: model:ir.model.fields,field_description:partner_autocomplete.field_res_partner_autocomplete_sync__write_uid
 msgid "Last Updated by"
-msgstr "آخرین تغییر توسط"
+msgstr "آخرین بروز رسانی توسط"
 
 #. module: partner_autocomplete
 #: model:ir.model.fields,field_description:partner_autocomplete.field_res_partner_autocomplete_sync__write_date
 msgid "Last Updated on"
-msgstr "آخرین به روز رسانی در"
+msgstr "آخرین بروز رسانی در"
+
+#. module: partner_autocomplete
+#. odoo-python
+#: code:addons/partner_autocomplete/models/iap_autocomplete_api.py:0
+msgid "No account token"
+msgstr "بدون توکن حساب"
+
+#. module: partner_autocomplete
+#. odoo-javascript
+#: code:addons/partner_autocomplete/static/src/js/partner_autocomplete_core.js:0
+msgid "Not enough credits for Partner Autocomplete"
+msgstr "برای تکمیل خودکار شریک اعتبارات کافی نیست"
 
 #. module: partner_autocomplete
 #: model:ir.model.fields,field_description:partner_autocomplete.field_res_partner_autocomplete_sync__partner_id
@@ -197,42 +149,42 @@ msgid "Partner"
 msgstr "همکار"
 
 #. module: partner_autocomplete
-#: model:ir.actions.server,name:partner_autocomplete.ir_cron_partner_autocomplete_ir_actions_server
-#: model:ir.cron,cron_name:partner_autocomplete.ir_cron_partner_autocomplete
-#: model:ir.cron,name:partner_autocomplete.ir_cron_partner_autocomplete
-msgid "Partner Autocomplete : Sync with remote DB"
-msgstr ""
-
-#. module: partner_autocomplete
 #: model:ir.model,name:partner_autocomplete.model_res_partner_autocomplete_sync
 msgid "Partner Autocomplete Sync"
-msgstr ""
+msgstr "همگام‌سازی تکمیل خودکار شریک"
 
 #. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
+#: model:ir.actions.server,name:partner_autocomplete.ir_cron_partner_autocomplete_ir_actions_server
+msgid "Partner Autocomplete: Sync with remote DB"
+msgstr "تکمیل خودکار شریک: همگام‌سازی با پایگاه داده راه دور"
+
+#. module: partner_autocomplete
+#. odoo-python
+#: code:addons/partner_autocomplete/models/res_partner.py:0
 msgid "Partner created by Odoo Partner Autocomplete Service"
-msgstr ""
+msgstr "مشارکت کننده ایجاد شده توسط سرویس تکمیل خودکار همکاران اودو"
 
 #. module: partner_autocomplete
-#. openerp-web
-#: code:addons/partner_autocomplete/static/src/xml/partner_autocomplete.xml:8
-#, python-format
+#. odoo-javascript
+#: code:addons/partner_autocomplete/static/src/xml/partner_autocomplete.xml:0
 msgid "Placeholder"
-msgstr ""
+msgstr "مکان‌نما"
 
 #. module: partner_autocomplete
-#. openerp-web
-#: code:addons/partner_autocomplete/static/src/js/partner_autocomplete_many2one.js:22
-#, python-format
+#. odoo-javascript
+#: code:addons/partner_autocomplete/static/src/js/partner_autocomplete_fieldchar.js:0
+#: code:addons/partner_autocomplete/static/src/js/partner_autocomplete_many2one.js:0
 msgid "Searching Autocomplete..."
-msgstr ""
+msgstr "در حال جستجوی تکمیل خودکار..."
 
 #. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid "Twitter :"
-msgstr ""
+#. odoo-javascript
+#: code:addons/partner_autocomplete/static/src/xml/partner_autocomplete.xml:0
+msgid "Set Your Account Token"
+msgstr "تنظیم توکن حساب شما"
 
 #. module: partner_autocomplete
-#: model_terms:ir.ui.view,arch_db:partner_autocomplete.additional_info_template
-msgid "followers)"
-msgstr ""
+#. odoo-python
+#: code:addons/partner_autocomplete/models/iap_autocomplete_api.py:0
+msgid "Test mode"
+msgstr "روش تست"

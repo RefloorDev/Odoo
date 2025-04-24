@@ -3,10 +3,11 @@
 
 {
     'name': 'Time Off',
-    'version': '1.5',
+    'version': '1.6',
     'category': 'Human Resources/Time Off',
-    'summary': 'Allocate time off and follow time off requests',
-    'website': 'https://www.odoo.com/page/leaves',
+    'sequence': 85,
+    'summary': 'Allocate PTOs and follow leaves requests',
+    'website': 'https://www.odoo.com/app/time-off',
     'description': """
 Manage time off requests and allocations
 =====================================
@@ -26,9 +27,11 @@ A synchronization with an internal agenda (Meetings of the CRM module) is also p
     'depends': ['hr', 'calendar', 'resource'],
     'data': [
         'data/report_paperformat.xml',
-        'data/mail_data.xml',
+        'data/mail_activity_type_data.xml',
+        'data/mail_message_subtype_data.xml',
         'data/hr_holidays_data.xml',
         'data/ir_cron_data.xml',
+        'data/hr_holidays_tour.xml',
 
         'security/hr_holidays_security.xml',
         'security/ir.model.access.csv',
@@ -37,25 +40,51 @@ A synchronization with an internal agenda (Meetings of the CRM module) is also p
         'views/hr_leave_views.xml',
         'views/hr_leave_type_views.xml',
         'views/hr_leave_allocation_views.xml',
+        'views/hr_leave_accrual_views.xml',
+        'views/hr_leave_mandatory_day_views.xml',
         'views/mail_activity_views.xml',
+        'views/calendar_views.xml',
 
+        'wizard/hr_holidays_cancel_leave_views.xml',
         'wizard/hr_holidays_summary_employees_views.xml',
+        'wizard/hr_leave_generate_multi_wizard_views.xml',
+        'wizard/hr_leave_allocation_generate_multi_wizard_views.xml',
 
         'report/hr_holidays_templates.xml',
         'report/hr_holidays_reports.xml',
         'report/hr_leave_reports.xml',
+        'report/hr_leave_report_calendar.xml',
+        'report/hr_leave_employee_type_report.xml',
 
         'views/hr_views.xml',
-        'views/hr_leave_template.xml',
         'views/hr_holidays_views.xml',
     ],
     'demo': [
         'data/hr_holidays_demo.xml',
     ],
-    'qweb': [
-        'static/src/xml/*.xml',
-    ],
     'installable': True,
     'application': True,
-    'auto_install': False,
+    'assets': {
+        'web.assets_backend': [
+            'hr_holidays/static/src/**/*',
+            # Don't include dark mode files in light mode
+            ('remove', 'hr_holidays/static/src/**/*.dark.scss'),
+        ],
+        "web.assets_web_dark": [
+            'hr_holidays/static/src/**/*.dark.scss',
+        ],
+        'web.assets_unit_tests': [
+            'hr_holidays/static/tests/**/*',
+            ('remove', 'hr_holidays/static/tests/tours/**/*'),
+            ('remove', 'hr_holidays/static/tests/legacy/**/*'),
+        ],
+        'web.qunit_suite_tests': [
+            'hr_holidays/static/tests/legacy/**/*',
+        ],
+        'web.assets_tests': [
+            '/hr_holidays/static/tests/tours/**/*'
+        ],
+    },
+    'post_init_hook': '_hr_holiday_post_init',
+    'license': 'LGPL-3',
 }

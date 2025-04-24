@@ -3,25 +3,27 @@
 # 	* base_sparse_field
 # 
 # Translators:
-# Rodrigo de Almeida Sottomaior Macedo <rmsolucoeseminformatic4@gmail.com>, 2019
-# Martin Trigaux, 2019
-# Mateus Lopes <mateus1@gmail.com>, 2019
-# grazziano <gra.negocia@gmail.com>, 2019
-# André Augusto Firmino Cordeiro <a.cordeito@gmail.com>, 2019
+# Wil Odoo, 2024
+# Maitê Dietze, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: André Augusto Firmino Cordeiro <a.cordeito@gmail.com>, 2019\n"
-"Language-Team: Portuguese (Brazil) (https://www.transifex.com/odoo/teams/41243/pt_BR/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Maitê Dietze, 2024\n"
+"Language-Team: Portuguese (Brazil) (https://app.transifex.com/odoo/teams/41243/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: pt_BR\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
+
+#. module: base_sparse_field
+#: model:ir.model,name:base_sparse_field.model_base
+msgid "Base"
+msgstr "Base"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__boolean
@@ -29,8 +31,8 @@ msgid "Boolean"
 msgstr "Boleano"
 
 #. module: base_sparse_field
+#. odoo-python
 #: code:addons/base_sparse_field/models/models.py:0
-#, python-format
 msgid "Changing the storing system for field \"%s\" is not allowed."
 msgstr "Não é permitido alterar o sistema de armazenamento para o campo \"%s\"."
 
@@ -62,7 +64,7 @@ msgstr "Nome exibido"
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_ir_model_fields__ttype
 msgid "Field Type"
-msgstr "Tipo do Campo"
+msgstr "Tipo do campo"
 
 #. module: base_sparse_field
 #: model:ir.model,name:base_sparse_field.model_ir_model_fields
@@ -72,7 +74,7 @@ msgstr "Campos"
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__float
 msgid "Float"
-msgstr "Ponto Flutuante"
+msgstr "Float"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__id
@@ -96,11 +98,6 @@ msgid "Integer"
 msgstr "Inteiro"
 
 #. module: base_sparse_field
-#: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test____last_update
-msgid "Last Modified on"
-msgstr "Última modificação em"
-
-#. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__write_uid
 msgid "Last Updated by"
 msgstr "Última atualização por"
@@ -113,18 +110,18 @@ msgstr "Última atualização em"
 #. module: base_sparse_field
 #: model:ir.model.fields.selection,name:base_sparse_field.selection__sparse_fields_test__selection__one
 msgid "One"
-msgstr ""
+msgstr "Um"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__partner
 msgid "Partner"
-msgstr "Parceiro"
+msgstr "Usuário"
 
 #. module: base_sparse_field
+#. odoo-python
 #: code:addons/base_sparse_field/models/models.py:0
-#, python-format
 msgid "Renaming sparse field \"%s\" is not allowed"
-msgstr "Não é permitido renomear o campo \"%s\""
+msgstr "Não é permitido renomear o campo esparso \"%s\""
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__selection
@@ -134,25 +131,29 @@ msgstr "Seleção"
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_ir_model_fields__serialization_field_id
 msgid "Serialization Field"
-msgstr "Campo de Serialização"
+msgstr "Campo de serialização"
 
 #. module: base_sparse_field
+#. odoo-python
 #: code:addons/base_sparse_field/models/models.py:0
-#, python-format
-msgid "Serialization field `%s` not found for sparse field `%s`!"
-msgstr "O campo de serialização '%s` não foi encontrado o campo `%s`!"
+msgid ""
+"Serialization field \"%(serialization_field)s\" not found for sparse field "
+"%(sparse_field)s!"
+msgstr ""
+"Campo de serialização \"%(serialization_field)s\" não encontrado para campo "
+"esparso %(sparse_field)s!"
 
 #. module: base_sparse_field
 #: model:ir.model,name:base_sparse_field.model_sparse_fields_test
 msgid "Sparse fields Test"
-msgstr ""
+msgstr "Teste de campos esparsos"
 
 #. module: base_sparse_field
 #: model:ir.model.fields.selection,name:base_sparse_field.selection__sparse_fields_test__selection__two
 msgid "Two"
-msgstr ""
+msgstr "Dois"
 
 #. module: base_sparse_field
 #: model:ir.model.fields.selection,name:base_sparse_field.selection__ir_model_fields__ttype__serialized
 msgid "serialized"
-msgstr ""
+msgstr "serializado"

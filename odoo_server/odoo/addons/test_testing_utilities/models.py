@@ -3,7 +3,7 @@ from __future__ import division
 
 from itertools import count, zip_longest
 
-from odoo import api, fields, models
+from odoo import api, fields, models, Command
 
 class A(models.Model):
     _name = 'test_testing_utilities.a'
@@ -92,7 +92,7 @@ class M2MChange(models.Model):
         for r in self:
             r.write({
                 'm2m': [
-                    (0, False, {'name': str(n)})
+                    Command.create({'name': str(n)})
                     for n, v in zip_longest(range(r.count), r.m2m or [])
                     if v is None
                 ]
@@ -103,6 +103,7 @@ class M2MSub(models.Model):
     _description = 'Testing Utilities Subtraction 2'
 
     name = fields.Char()
+    m2o_ids = fields.Many2many('test_testing_utilities.m2o')
 
 class M2MChange2(models.Model):
     _name = 'test_testing_utilities.f'
@@ -170,17 +171,42 @@ class O2MSub(models.Model):
         if self.has_parent:
             self.value = self.parent_id.value
 
+class O2MRef(models.Model):
+    _name = 'test_testing_utilities.ref'
+    _description = 'Testing Utilities ref'
+
+    value = fields.Integer(default=1)
+    subs = fields.One2many('test_testing_utilities.ref.sub', 'parent_id')
+    x = fields.Integer()
+
+class O2MRefSub(models.Model):
+    _name = 'test_testing_utilities.ref.sub'
+    _description = 'Testing Utilities Subtraction'
+
+    a = fields.Integer()
+    b = fields.Integer()
+    c = fields.Integer()
+    z = fields.Integer()
+    parent_id = fields.Many2one('test_testing_utilities.ref')
+
 class O2MDefault(models.Model):
     _name = 'test_testing_utilities.default'
     _description = 'Testing Utilities Default'
 
-    def _default_subs(self):
-        return [
-            (0, 0, {'v': 5})
-        ]
     value = fields.Integer(default=1)
     v = fields.Integer()
-    subs = fields.One2many('test_testing_utilities.sub3', 'parent_id', default=_default_subs)
+    subs = fields.One2many('test_testing_utilities.sub3', 'parent_id', default=lambda self: self._default_subs())
+
+    def _default_subs(self):
+        return [
+            Command.create({'v': 5})
+        ]
+
+    @api.onchange('value')
+    def _onchange_value(self):
+        if self.value == 42:
+            self.subs = False
+
 
 class O2MSub3(models.Model):
     _name = 'test_testing_utilities.sub3'
@@ -280,12 +306,26 @@ class ReqBool(models.Model):
 
     f_bool = fields.Boolean(required=True)
 
+class O2MChangesParent(models.Model):
+    _name = _description = 'o2m_changes_parent'
+
+    name = fields.Char()
+    line_ids = fields.One2many('o2m_changes_children', 'parent_id')
+
+    @api.onchange('name')
+    def _onchange_name(self):
+        for line in self.line_ids:
+            line.line_ids = [Command.delete(l.id) for l in line.line_ids] + [
+                Command.create({'v': 0, 'vv': 0})
+            ]
+
 class O2MChangesChildren(models.Model):
     _name = _description = 'o2m_changes_children'
 
     name = fields.Char()
     v = fields.Integer()
     line_ids = fields.One2many('o2m_changes_children.lines', 'parent_id')
+    parent_id = fields.Many2one('o2m_changes_parent')
 
     @api.onchange('v')
     def _onchange_v(self):
@@ -299,3 +339,43 @@ class O2MChangesChildrenLines(models.Model):
     parent_id = fields.Many2one('o2m_changes_children')
     v = fields.Integer()
     vv = fields.Integer()
+
+class ResConfigTest(models.Model):
+    _inherit = 'res.config.settings'
+
+    _name = 'res.config.test'
+    _description = 'Config test'
+
+    param1 = fields.Integer(
+        string='Test parameter 1',
+        config_parameter='resConfigTest.parameter1',
+        default=1000)
+
+    param2 = fields.Many2one(
+        'res.config',
+        config_parameter="resConfigTest.parameter2")
+
+
+class Wide(models.Model):
+    _name = _description = 'test_testing_utilities.wide'
+    _log_access = False
+
+    account_id = fields.Float()
+    amount_currency = fields.Float()
+    credit = fields.Float()
+    currency_id = fields.Float()
+    date_maturity = fields.Float()
+    debit = fields.Float()
+    discount = fields.Float()
+    name = fields.Float()
+    partner_id = fields.Float()
+    price_subtotal = fields.Float()
+    price_total = fields.Float()
+    price_unit = fields.Float()
+    product_id = fields.Float()
+    product_uom_id = fields.Float()
+    quantity = fields.Float()
+    tax_base_amount = fields.Float()
+    tax_ids = fields.Float()
+    tax_line_id = fields.Float()
+    tax_tag_invert = fields.Float()

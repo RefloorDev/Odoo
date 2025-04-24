@@ -1,153 +1,221 @@
-odoo.define('payment_authorize.payment_form', function (require) {
-"use strict";
+/** @odoo-module **/
+/* global Accept */
 
-var ajax = require('web.ajax');
-var core = require('web.core');
-var PaymentForm = require('payment.payment_form');
+import { _t } from '@web/core/l10n/translation';
+import { loadJS } from '@web/core/assets';
 
-var _t = core._t;
+import paymentForm from '@payment/js/payment_form';
+import { rpc, RPCError } from '@web/core/network/rpc';
 
-PaymentForm.include({
+paymentForm.include({
 
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
+    authorizeData: undefined,
+
+    // #=== DOM MANIPULATION ===#
 
     /**
-     * called when clicking on pay now or add payment event to create token for credit card/debit card.
+     * Prepare the inline form of Authorize.net for direct payment.
      *
      * @private
-     * @param {Event} ev
-     * @param {DOMElement} checkedRadio
-     * @param {Boolean} addPmEvent
+     * @param {number} providerId - The id of the selected payment option's provider.
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {string} flow - The online payment flow of the selected payment option.
+     * @return {void}
      */
-    _createAuthorizeToken: function (ev, $checkedRadio, addPmEvent) {
-        var self = this;
-        if (ev.type === 'submit') {
-            var button = $(ev.target).find('*[type="submit"]')[0]
-        } else {
-            var button = ev.target;
-        }
-        this.disableButton(button);
-        var acquirerID = this.getAcquirerIdFromRadio($checkedRadio);
-        var acquirerForm = this.$('#o_payment_add_token_acq_' + acquirerID);
-        var inputsForm = $('input', acquirerForm);
-        var formData = self.getFormData(inputsForm);
-        if (this.options.partnerId === undefined) {
-            console.warn('payment_form: unset partner_id when adding new token; things could go wrong');
-        }
-        var AcceptJs = false;
-        if (formData.acquirer_state === 'enabled') {
-            AcceptJs = 'https://js.authorize.net/v3/AcceptUI.js';
-        } else {
-            AcceptJs = 'https://jstest.authorize.net/v3/AcceptUI.js';
-        }
-
-        window.responseHandler = function (response) {
-            _.extend(formData, response);
-
-            if (response.messages.resultCode === "Error") {
-                var errorMessage = "";
-                _.each(response.messages.message, function (message) {
-                    errorMessage += message.code + ": " + message.text;
-                })
-                acquirerForm.removeClass('d-none');
-                self.enableButton(button);
-                return self.displayError(_t('Server Error'), errorMessage);
-            }
-
-            self._rpc({
-                route: formData.data_set,
-                params: formData
-            }).then (function (data) {
-                if (addPmEvent) {
-                    if (formData.return_url) {
-                        window.location = formData.return_url;
-                    } else {
-                        window.location.reload();
-                    }
-                } else {
-                    $checkedRadio.val(data.id);
-                    self.el.submit();
-                }
-            }).guardedCatch(function (error) {
-                // if the rpc fails, pretty obvious
-                error.event.preventDefault();
-                acquirerForm.removeClass('d-none');
-                self.enableButton(button);
-                self.displayError(
-                    _t('Server Error'),
-                    _t("We are not able to add your payment method at the moment.") +
-                        self._parseError(error)
-                );
-            });
-        };
-
-        if (this.$button === undefined) {
-            var params = {
-                'class': 'AcceptUI d-none',
-                'data-apiLoginID': formData.login_id,
-                'data-clientKey': formData.client_key,
-                'data-billingAddressOptions': '{"show": false, "required": false}',
-                'data-responseHandler': 'responseHandler'
-            };
-            this.$button = $('<button>', params);
-            this.$button.appendTo('body');
-        }
-        ajax.loadJS(AcceptJs).then(function () {
-            self.$button.trigger('click');
-        });
-    },
-    /**
-     * @override
-     */
-    updateNewPaymentDisplayStatus: function () {
-        var $checkedRadio = this.$('input[type="radio"]:checked');
-
-        if ($checkedRadio.length !== 1) {
+    async _prepareInlineForm(providerId, providerCode, paymentOptionId, paymentMethodCode, flow) {
+        if (providerCode !== 'authorize') {
+            await this._super(...arguments);
             return;
         }
 
-        //  hide add token form for authorize
-        if ($checkedRadio.data('provider') === 'authorize' && this.isNewPaymentRadio($checkedRadio)) {
-            this.$('[id*="o_payment_add_token_acq_"]').addClass('d-none');
-        } else {
-            this._super.apply(this, arguments);
+        // Check if the inline form values were already extracted.
+        this.authorizeData ??= {}; // Store the form data of each instantiated payment method.
+        if (flow === 'token') {
+            return; // Don't show the form for tokens.
+        } else if (this.authorizeData[paymentOptionId]) {
+            this._setPaymentFlow('direct'); // Overwrite the flow even if no re-instantiation.
+            await loadJS(this.authorizeData[paymentOptionId]['acceptJSUrl']); // Reload the SDK.
+            return; // Don't re-extract the data if already done for this payment method.
         }
+
+        // Overwrite the flow of the selected payment method.
+        this._setPaymentFlow('direct');
+
+        // Extract and deserialize the inline form values.
+        const radio = document.querySelector('input[name="o_payment_radio"]:checked');
+        const inlineForm = this._getInlineForm(radio);
+        const authorizeForm = inlineForm.querySelector('[name="o_authorize_form"]');
+        this.authorizeData[paymentOptionId] = JSON.parse(
+            authorizeForm.dataset['authorizeInlineFormValues']
+        );
+        let acceptJSUrl = 'https://js.authorize.net/v1/Accept.js';
+        if (this.authorizeData[paymentOptionId].state !== 'enabled') {
+            acceptJSUrl = 'https://jstest.authorize.net/v1/Accept.js';
+        }
+        this.authorizeData[paymentOptionId].form = authorizeForm;
+        this.authorizeData[paymentOptionId].acceptJSUrl = acceptJSUrl;
+
+        // Load the SDK.
+        await loadJS(acceptJSUrl);
     },
 
-    //--------------------------------------------------------------------------
-    // Handlers
-    //--------------------------------------------------------------------------
+    // #=== PAYMENT FLOW ===#
 
     /**
-     * @override
+     * Trigger the payment processing by submitting the data.
+     *
+     * @override method from payment.payment_form
+     * @private
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {string} flow - The payment flow of the selected payment option.
+     * @return {void}
      */
-    payEvent: function (ev) {
-        ev.preventDefault();
-        var $checkedRadio = this.$('input[type="radio"]:checked');
-
-        // first we check that the user has selected a authorize as s2s payment method
-        if ($checkedRadio.length === 1 && this.isNewPaymentRadio($checkedRadio) && $checkedRadio.data('provider') === 'authorize') {
-            this._createAuthorizeToken(ev, $checkedRadio);
-        } else {
-            this._super.apply(this, arguments);
+    async _initiatePaymentFlow(providerCode, paymentOptionId, paymentMethodCode, flow) {
+        if (providerCode !== 'authorize' || flow === 'token') {
+            await this._super(...arguments); // Tokens are handled by the generic flow
+            return;
         }
+
+        const inputs = Object.values(
+            this._authorizeGetInlineFormInputs(paymentOptionId, paymentMethodCode)
+        );
+        if (!inputs.every(element => element.reportValidity())) {
+            this._enableButton(); // The submit button is disabled at this point, enable it
+            return;
+        }
+
+        await this._super(...arguments);
     },
+
     /**
-     * @override
+     * Process the direct payment flow.
+     *
+     * @override method from payment.payment_form
+     * @private
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {object} processingValues - The processing values of the transaction.
+     * @return {void}
      */
-    addPmEvent: function (ev) {
-        ev.stopPropagation();
-        ev.preventDefault();
-        var $checkedRadio = this.$('input[type="radio"]:checked');
+    async _processDirectFlow(providerCode, paymentOptionId, paymentMethodCode, processingValues) {
+        if (providerCode !== 'authorize') {
+            this._super(...arguments);
+            return;
+        }
 
-        // first we check that the user has selected a authorize as add payment method
-        if ($checkedRadio.length === 1 && this.isNewPaymentRadio($checkedRadio) && $checkedRadio.data('provider') === 'authorize') {
-            this._createAuthorizeToken(ev, $checkedRadio, true);
+        // Build the authentication and card data objects to be dispatched to Authorized.Net
+        const secureData = {
+            authData: {
+                apiLoginID: this.authorizeData[paymentOptionId]['login_id'],
+                clientKey: this.authorizeData[paymentOptionId]['client_key'],
+            },
+            ...this._authorizeGetPaymentDetails(paymentOptionId, paymentMethodCode),
+        };
+
+        // Dispatch secure data to Authorize.Net to get a payment nonce in return
+        Accept.dispatchData(
+            secureData, response => this._authorizeHandleResponse(response, processingValues)
+        );
+    },
+
+    /**
+     * Handle the response from Authorize.Net and initiate the payment.
+     *
+     * @private
+     * @param {object} response - The payment nonce returned by Authorized.Net
+     * @param {object} processingValues - The processing values of the transaction.
+     * @return {void}
+     */
+    _authorizeHandleResponse(response, processingValues) {
+        if (response.messages.resultCode === 'Error') {
+            let error = '';
+            response.messages.message.forEach(msg => error += `${msg.code}: ${msg.text}\n`);
+            this._displayErrorDialog(_t("Payment processing failed"), error);
+            this._enableButton();
+            return;
+        }
+
+        // Initiate the payment
+        rpc('/payment/authorize/payment', {
+            'reference': processingValues.reference,
+            'partner_id': processingValues.partner_id,
+            'opaque_data': response.opaqueData,
+            'access_token': processingValues.access_token,
+        }).then(() => {
+            window.location = '/payment/status';
+        }).catch((error) => {
+            if (error instanceof RPCError) {
+                this._displayErrorDialog(_t("Payment processing failed"), error.data.message);
+                this._enableButton();
+            } else {
+                return Promise.reject(error);
+            }
+        });
+    },
+
+    // #=== GETTERS ===#
+
+    /**
+     * Return all relevant inline form inputs based on the payment method type of the provider.
+     *
+     * @private
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @return {Object} - An object mapping the name of inline form inputs to their DOM element
+     */
+    _authorizeGetInlineFormInputs(paymentOptionId, paymentMethodCode) {
+        const form = this.authorizeData[paymentOptionId]['form'];
+        if (paymentMethodCode === 'card') {
+            return {
+                card: form.querySelector('#o_authorize_card'),
+                month: form.querySelector('#o_authorize_month'),
+                year: form.querySelector('#o_authorize_year'),
+                code: form.querySelector('#o_authorize_code'),
+            };
         } else {
-            this._super.apply(this, arguments);
+            return {
+                accountName: form.querySelector('#o_authorize_account_name'),
+                accountNumber: form.querySelector('#o_authorize_account_number'),
+                abaNumber: form.querySelector('#o_authorize_aba_number'),
+                accountType: form.querySelector('#o_authorize_account_type'),
+            };
         }
     },
-});
+
+    /**
+     * Return the credit card or bank data to pass to the Accept.dispatch request.
+     *
+     * @private
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @return {Object} - Data to pass to the Accept.dispatch request
+     */
+    _authorizeGetPaymentDetails(paymentOptionId, paymentMethodCode) {
+        const inputs = this._authorizeGetInlineFormInputs(paymentOptionId, paymentMethodCode);
+        if (paymentMethodCode === 'card') {
+            return {
+                cardData: {
+                    cardNumber: inputs.card.value.replace(/ /g, ''), // Remove all spaces
+                    month: inputs.month.value,
+                    year: inputs.year.value,
+                    cardCode: inputs.code.value,
+                },
+            };
+        } else {
+            return {
+                bankData: {
+                    nameOnAccount: inputs.accountName.value.substring(0, 22), // Max allowed by acceptjs
+                    accountNumber: inputs.accountNumber.value,
+                    routingNumber: inputs.abaNumber.value,
+                    accountType: inputs.accountType.value,
+                },
+            };
+        }
+    },
+
 });

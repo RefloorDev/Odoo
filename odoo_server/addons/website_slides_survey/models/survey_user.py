@@ -11,7 +11,8 @@ class SurveyUserInput(models.Model):
     slide_id = fields.Many2one('slide.slide', 'Related course slide',
         help="The related course slide when there is no membership information")
     slide_partner_id = fields.Many2one('slide.slide.partner', 'Subscriber information',
-        help="Slide membership information for the logged in user")
+        help="Slide membership information for the logged in user",
+        index='btree_not_null') # index useful for deletions in comodel
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -26,10 +27,10 @@ class SurveyUserInput(models.Model):
         return res
 
     def _check_for_failed_attempt(self):
-        """ If the user fails his last attempt at a course certification,
-        we remove him from the members of the course (and he has to enroll again).
-        He receives an email in the process notifying him of his failure and suggesting
-        he enrolls to the course again.
+        """ If the user fails their last attempt at a course certification,
+        we remove them from the members of the course (and they have to enroll again).
+        They receive an email in the process notifying them of their failure and suggesting
+        they enroll to the course again.
 
         The purpose is to have a 'certification flow' where the user can re-purchase the
         certification when they have failed it."""
@@ -38,7 +39,7 @@ class SurveyUserInput(models.Model):
             user_inputs = self.search([
                 ('id', 'in', self.ids),
                 ('state', '=', 'done'),
-                ('quizz_passed', '=', False),
+                ('scoring_success', '=', False),
                 ('slide_partner_id', '!=', False)
             ])
 
@@ -50,7 +51,7 @@ class SurveyUserInput(models.Model):
                         continue
 
                     self.env.ref('website_slides_survey.mail_template_user_input_certification_failed').send_mail(
-                        user_input.id, notif_layout="mail.mail_notification_light"
+                        user_input.id, email_layout_xmlid="mail.mail_notification_light"
                     )
 
                     removed_memberships = removed_memberships_per_partner.get(

@@ -3,19 +3,19 @@
 # 	* http_routing
 # 
 # Translators:
-# Baskhuu Lodoikhuu <baskhuujacara@gmail.com>, 2019
-# Martin Trigaux, 2019
-# Otgonbayar.A <gobi.mn@gmail.com>, 2019
-# Khishigbat Ganbold <khishigbat@asterisk-tech.mn>, 2019
+# baaska sh <sh.baaskash@gmail.com>, 2024
+# Martin Trigaux, 2024
+# hish, 2024
+# Baskhuu Lodoikhuu <baskhuujacara@gmail.com>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:14+0000\n"
-"PO-Revision-Date: 2019-08-26 09:11+0000\n"
-"Last-Translator: Khishigbat Ganbold <khishigbat@asterisk-tech.mn>, 2019\n"
-"Language-Team: Mongolian (https://www.transifex.com/odoo/teams/41243/mn/)\n"
+"POT-Creation-Date: 2024-09-26 08:57+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Baskhuu Lodoikhuu <baskhuujacara@gmail.com>, 2024\n"
+"Language-Team: Mongolian (https://app.transifex.com/odoo/teams/41243/mn/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -29,8 +29,12 @@ msgstr "403: Хориотой"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.404
-msgid "404: Page not found!"
-msgstr "404: Хуудас олдсонгүй!"
+msgid ""
+"<b>Don't panic.</b> If you think it's our mistake, please send us a message "
+"on"
+msgstr ""
+"<b>Бүү сандар.</b> Хэрэв та үүнийг бидний алдаа гэж бодож байвал бидэнд "
+"зурвас илгээгээрэй"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.error_message
@@ -49,19 +53,35 @@ msgid "Error"
 msgstr "Алдаа"
 
 #. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "Error 404"
+msgstr "Алдаа 404"
+
+#. module: http_routing
 #: model:ir.model,name:http_routing.model_ir_http
 msgid "HTTP Routing"
 msgstr "HTTP Routing"
 
 #. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
 #: model_terms:ir.ui.view,arch_db:http_routing.500
 msgid "Home"
 msgstr "Нүүр хуудас"
 
 #. module: http_routing
+#: model:ir.model,name:http_routing.model_res_lang
+msgid "Languages"
+msgstr "Хэлүүд"
+
+#. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "Maybe you were looking for one of these <b>popular pages?</b>"
+msgstr "Та магадгүй дараах түгээмэл хуудсуудын<b>нэгийг хайж байсан уу?</b>"
+
+#. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.400
 msgid "Oops! Something went wrong."
-msgstr ""
+msgstr "Oops! Ямар нэг асуудал тулгарлаа."
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
@@ -69,14 +89,19 @@ msgid "QWeb"
 msgstr "QWeb"
 
 #. module: http_routing
+#: model:ir.model,name:http_routing.model_ir_qweb
+msgid "Qweb"
+msgstr "Qweb"
+
+#. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.400
 msgid "Take a look at the error message below."
-msgstr ""
+msgstr "Дараах мэдэгдэлтэй танилцана уу."
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
-msgid "The error occured while rendering the template"
-msgstr "Үлгэрийг харуулах явцад алдаа гарлаа"
+msgid "The error occurred while rendering the template"
+msgstr "template  боловсруулж харуулах явцад алдаа гарлаа"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.403
@@ -84,24 +109,21 @@ msgid "The page you were looking for could not be authorized."
 msgstr "Таны хайсан хуудас хандалт зөвшөөрөгдөх боломжгүй."
 
 #. module: http_routing
-#: model_terms:ir.ui.view,arch_db:http_routing.404
-msgid ""
-"The page you were looking for could not be found; it is possible you have\n"
-"                            typed the address incorrectly, but it has most probably been removed due\n"
-"                            to the recent reorganisation."
-msgstr ""
-
-#. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
 msgid "Traceback"
 msgstr "Алдааны мөр"
 
 #. module: http_routing
-#: model:ir.model,name:http_routing.model_ir_ui_view
-msgid "View"
-msgstr "Харах"
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "We couldn't find the page you're looking for!"
+msgstr "Таны хайж буй хуудсыг бид олсонгүй!"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
 msgid "and evaluating the following expression:"
 msgstr "бөгөөд дараах илэрхийллийг тооцоолох:"
+
+#. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "this page"
+msgstr "Энэ хуудас"

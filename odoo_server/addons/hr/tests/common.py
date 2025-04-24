@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo.addons.test_mail.tests.common import mail_new_test_user
+from odoo.addons.mail.tests.common import mail_new_test_user
 from odoo.tests import common
 
 
 class TestHrCommon(common.TransactionCase):
 
-    def setUp(self):
-        super(TestHrCommon, self).setUp()
+    @classmethod
+    def setUpClass(cls):
+        super(TestHrCommon, cls).setUpClass()
 
-        self.res_users_hr_officer = mail_new_test_user(self.env, login='hro', groups='base.group_user,hr.group_hr_user', name='HR Officer', email='hro@example.com')
+        cls.res_users_hr_officer = mail_new_test_user(cls.env, login='hro', groups='base.group_user,hr.group_hr_user', name='HR Officer', email='hro@example.com')

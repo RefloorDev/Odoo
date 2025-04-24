@@ -10,10 +10,10 @@
 import logging
 import os
 import tempfile
+from lxml import etree
 from subprocess import Popen, PIPE
 
 from .. import api
-from . import ustr, config
 from .safe_eval import safe_eval
 
 _logger = logging.getLogger(__name__)
@@ -31,11 +31,7 @@ def try_report(cr, uid, rname, ids, data=None, context=None, our_module=None, re
 
     env = api.Environment(cr, uid, context)
 
-    report_id = env['ir.actions.report'].search([('report_name', '=', rname)], limit=1)
-    if not report_id:
-        raise Exception("Required report does not exist: %s" % rname)
-
-    res_data, res_format = report_id.render(ids, data=data)
+    res_data, res_format = env['ir.actions.report']._render(rname, ids, data=data)
 
     if not res_data:
         raise ValueError("Report %s produced an empty result!" % rname)
@@ -44,21 +40,20 @@ def try_report(cr, uid, rname, ids, data=None, context=None, our_module=None, re
     if res_format == 'pdf':
         if res_data[:5] != b'%PDF-':
             raise ValueError("Report %s produced a non-pdf header, %r" % (rname, res_data[:10]))
-        res_text = False
+        res_text = None
         try:
             fd, rfname = tempfile.mkstemp(suffix=res_format)
             os.write(fd, res_data)
             os.close(fd)
 
-            proc = Popen(['pdftotext', '-enc', 'UTF-8', '-nopgbrk', rfname, '-'], shell=False, stdout=PIPE)
-            stdout, stderr = proc.communicate()
-            res_text = ustr(stdout)
+            proc = Popen(['pdftotext', '-enc', 'UTF-8', '-nopgbrk', rfname, '-'], shell=False, stdout=PIPE, encoding="utf-8")
+            res_text, _stderr = proc.communicate()
             os.unlink(rfname)
         except Exception:
             _logger.debug("Unable to parse PDF report: install pdftotext to perform automated tests.")
 
-        if res_text is not False:
-            for line in res_text.split('\n'):
+        if res_text:
+            for line in res_text.splitlines():
                 if ('[[' in line) or ('[ [' in line):
                     _logger.error("Report %s may have bad expression near: \"%s\".", rname, line[80:])
             # TODO more checks, what else can be a sign of a faulty report?
@@ -74,11 +69,14 @@ def try_report(cr, uid, rname, ids, data=None, context=None, our_module=None, re
 def try_report_action(cr, uid, action_id, active_model=None, active_ids=None,
                 wiz_data=None, wiz_buttons=None,
                 context=None, our_module=None):
-    """Take an ir.action.act_window and follow it until a report is produced
+    """Take an ir.actions.act_window and follow it until a report is produced
 
+        :param cr:
+        :param uid:
         :param action_id: the integer id of an action, or a reference to xml id
                 of the act_window (can search [our_module.]+xml_id
-        :param active_model, active_ids: call the action as if it had been launched
+        :param active_model:
+        :param active_ids: call the action as if it had been launched
                 from that model+ids (tree/form view action)
         :param wiz_data: a dictionary of values to use in the wizard, if needed.
                 They will override (or complete) the default values of the
@@ -86,6 +84,7 @@ def try_report_action(cr, uid, action_id, active_model=None, active_ids=None,
         :param wiz_buttons: a list of button names, or button icon strings, which
                 should be preferred to press during the wizard.
                 Eg. 'OK' or 'fa-print'
+        :param context:
         :param our_module: the name of the calling module (string), like 'account'
     """
     if not our_module and isinstance(action_id, str):
@@ -121,7 +120,7 @@ def try_report_action(cr, uid, action_id, active_model=None, active_ids=None,
         act_model, act_id = action._name, action.id
     else:
         assert isinstance(action_id, int)
-        act_model = 'ir.action.act_window'     # assume that
+        act_model = 'ir.actions.act_window'     # assume that
         act_id = action_id
         act_xmlid = '<%s>' % act_id
 
@@ -140,7 +139,7 @@ def try_report_action(cr, uid, action_id, active_model=None, active_ids=None,
         env = env(context=context)
         if action['type'] in ['ir.actions.act_window', 'ir.actions.submenu']:
             for key in ('res_id', 'res_model', 'view_mode',
-                        'limit', 'search_view', 'search_view_id'):
+                        'limit', 'search_view_id'):
                 datas[key] = action.get(key, datas.get(key, None))
 
             view_id = False
@@ -166,21 +165,24 @@ def try_report_action(cr, uid, action_id, active_model=None, active_ids=None,
             log_test("will emulate a %s view: %s#%s",
                         view_type, datas['res_model'], view_id or '?')
 
-            view_res = env[datas['res_model']].fields_view_get(view_id, view_type=view_type)
+            model = env[datas['res_model']]
+            view_res = model.get_view(view_id, view_type)
             assert view_res and view_res.get('arch'), "Did not return any arch for the view"
             view_data = {}
-            if view_res.get('fields'):
-                view_data = env[datas['res_model']].default_get(list(view_res['fields']))
+            arch = etree.fromstring(view_res['arch'])
+            fields = [el.get('name') for el in arch.xpath('//field[not(ancestor::field)]')]
+            if fields:
+                view_data = model.default_get(fields)
             if datas.get('form'):
                 view_data.update(datas.get('form'))
             if wiz_data:
                 view_data.update(wiz_data)
             _logger.debug("View data is: %r", view_data)
 
-            for fk, field in view_res.get('fields',{}).items():
+            for fk in fields:
                 # Default fields returns list of int, while at create()
                 # we need to send a [(6,0,[int,..])]
-                if field['type'] in ('one2many', 'many2many') \
+                if model._fields[fk].type in ('one2many', 'many2many') \
                         and view_data.get(fk, False) \
                         and isinstance(view_data[fk], list) \
                         and not isinstance(view_data[fk][0], tuple) :

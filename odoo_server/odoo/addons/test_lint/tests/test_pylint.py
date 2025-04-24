@@ -2,19 +2,20 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import logging
+import platform
+
 try:
     import pylint
 except ImportError:
     pylint = None
 import subprocess
-from distutils.version import LooseVersion
 import os
 from os.path import join
-import sys
 
-from odoo.tests.common import TransactionCase
 from odoo import tools
 from odoo.modules import get_modules, get_module_path
+from odoo.tests import TransactionCase
+from odoo.tools.which import which
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 
@@ -28,9 +29,14 @@ class TestPyLint(TransactionCase):
         'undefined-variable',
         'eval-used',
         'unreachable',
+        'function-redefined',
 
-        'mixed-indentation',
+        # custom checkers
         'sql-injection',
+        'gettext-variable',
+        'gettext-placeholders',
+        'gettext-repr',
+        'raise-unlink-override',
     ]
 
     BAD_FUNCTIONS = [
@@ -41,19 +47,17 @@ class TestPyLint(TransactionCase):
         'csv',
         'urllib',
         'cgi',
-    ] + list(tools.SUPPORTED_DEBUGGER)
+    ] + list(tools.constants.SUPPORTED_DEBUGGER)
 
     def _skip_test(self, reason):
-        _logger.warn(reason)
+        _logger.warning(reason)
         self.skipTest(reason)
 
     def test_pylint(self):
         if pylint is None:
             self._skip_test('please install pylint')
-        required_pylint_version = LooseVersion('1.6.4')
-        if sys.version_info >= (3, 6):
-            required_pylint_version = LooseVersion('1.7.0')
-        if LooseVersion(getattr(pylint, '__version__', '0.0.1')) < required_pylint_version:
+        required_pylint_version = tools.parse_version('1.7.0')
+        if tools.parse_version(getattr(pylint, '__version__', '0.0.1')) < required_pylint_version:
             self._skip_test('please upgrade pylint to >= %s' % required_pylint_version)
 
         paths = [tools.config['root_path']]
@@ -68,20 +72,31 @@ class TestPyLint(TransactionCase):
             '--enable=%s' % ','.join(self.ENABLED_CODES),
             '--reports=n',
             "--msg-template='{msg} ({msg_id}) at {path}:{line}'",
-            '--load-plugins=pylint.extensions.bad_builtin,_odoo_checkers,_odoo_checker_sql_injection',
+            '--load-plugins=pylint.extensions.bad_builtin,_odoo_checker_sql_injection,_odoo_checker_gettext,_odoo_checker_unlink_override',
             '--bad-functions=%s' % ','.join(self.BAD_FUNCTIONS),
             '--deprecated-modules=%s' % ','.join(self.BAD_MODULES)
         ]
 
         pypath = HERE + os.pathsep + os.environ.get('PYTHONPATH', '')
         env = dict(os.environ, PYTHONPATH=pypath)
+
+        if os.name == 'posix' and platform.system() != 'Darwin':
+            # Pylint started failing at ~2.4g from time to time.
+            # Removing the memory limit will solve this issue for a while (runbot limit is arroung 5g)
+            def preexec():
+                import resource
+                resource.setrlimit(resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+        else:
+            preexec = None
+
         try:
-            pylint_bin = tools.which('pylint')
+            pylint_bin = which('pylint')
             process = subprocess.Popen(
                 [pylint_bin] + options + paths,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=env,
+                preexec_fn=preexec,
             )
         except (OSError, IOError):
             self._skip_test('pylint executable not found in the path')

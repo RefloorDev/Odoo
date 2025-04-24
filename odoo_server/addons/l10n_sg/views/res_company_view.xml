@@ -7,10 +7,7 @@
             <field name="inherit_id" ref="base.view_company_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='email']" position="after">
-                  <field name="l10n_sg_unique_entity_number"/>
-                </xpath>
-                <xpath expr="//field[@name='vat']" position="attributes">
-                  <attribute name="string" >GST No.</attribute>
+                  <field name="l10n_sg_unique_entity_number" invisible="country_code != 'SG'"/>
                 </xpath>
             </field>
         </record>

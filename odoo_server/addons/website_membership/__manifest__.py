@@ -9,15 +9,15 @@
     'description': """
 Publish your members/association directory publicly.
     """,
-    'depends': ['website_partner', 'website_google_map', 'association', 'website_sale'],
+    'depends': ['website_partner', 'website_google_map', 'membership', 'website_sale'],
     'data': [
-        'data/membership_data.xml',
         'views/product_template_views.xml',
         'views/website_membership_templates.xml',
         'security/ir.model.access.csv',
         'security/website_membership.xml',
+        'views/snippets.xml',
     ],
     'demo': ['data/membership_demo.xml'],
-    'qweb': ['static/src/xml/*.xml'],
     'installable': True,
+    'license': 'LGPL-3',
 }

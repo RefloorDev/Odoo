@@ -6,15 +6,16 @@
             <field name="name">Members</field>
             <field name="model">res.partner</field>
             <field name="arch" type="xml">
-                <tree string="Members">
+                <list string="Members">
                     <field name="name"/>
-                    <field name="membership_state"/>
+                    <field name="membership_state" widget="badge" decoration-info="membership_state =='waiting'"
+                           decoration-success="membership_state in ['invoiced', 'free', 'paid']"/>
                     <field name="associate_member"/>
                     <field name="membership_start"/>
                     <field name="membership_stop"/>
-                    <field name="user_id" invisible="1"/>
+                    <field name="user_id" column_invisible="True"/>
                     <field name="company_id" groups="base.group_multi_company"/>
-                </tree>
+                </list>
             </field>
         </record>
 
@@ -49,8 +50,9 @@
 
         <record model="ir.actions.act_window" id="action_membership_members">
             <field name="name">Members</field>
+            <field name="path">members</field>
             <field name="res_model">res.partner</field>
-            <field name="view_mode">kanban,tree,form,activity</field>
+            <field name="view_mode">kanban,list,form,activity</field>
             <field name="search_view_id" ref="view_res_partner_member_filter"/>
             <field name="context">{"search_default_all_members": 1, "default_free_member": True}</field>
             <field name="help" type="html">
@@ -65,7 +67,7 @@
 
         <record model="ir.actions.act_window.view" id="action_membership_members_view_tree">
             <field name="sequence" eval="2"/>
-            <field name="view_mode">tree</field>
+            <field name="view_mode">list</field>
             <field name="view_id" ref="membership_members_tree"/>
             <field name="act_window_id" ref="action_membership_members"/>
         </record>
@@ -86,50 +88,38 @@
 
         <!-- PARTNERS -->
 
-        <record model="ir.ui.view" id="view_partner_tree">
-            <field name="name">res.partner.tree.form.inherit</field>
-            <field name="model">res.partner</field>
-            <field name="inherit_id" ref="base.view_partner_tree"/>
-            <field name="arch" type="xml">
-                <tree string="Contacts">
-                    <field name="category_id" position="after" optional="hide"/>
-                    <field name="membership_state" optional="hide"/>
-                </tree>
-            </field>
-        </record>
-
         <record model="ir.ui.view" id="view_partner_form">
             <field name="name">res.partner.form.inherit</field>
             <field name="model">res.partner</field>
             <field name="inherit_id" ref="base.view_partner_form"/>
             <field name="arch" type="xml">
                 <notebook position="inside">
-                    <page string="Membership">
+                    <page string="Membership" name="membership">
                         <group>
                             <group>
                                 <field name="free_member"/>
                                 <label for="membership_state"/>
-                                <div>
-                                    <field name="membership_state"/>
-                                    <button name="%(action_membership_invoice_view)d" type="action" string="Buy Membership" 
-                                        attrs="{'invisible':[('free_member','=',True)]}" class="oe_link"/>
+                                <div class="d-flex align-items-center justify-content-start gap-3">
+                                    <field name="membership_state" class="oe_inline mb-0"/>
+                                    <button name="%(action_membership_invoice_view)d" type="action" string="Buy Membership"
+                                        invisible="free_member" class="oe_link"/>
                                 </div>
                             </group>
                             <group>
-                                <field name="associate_member" attrs="{'invisible':[('free_member','=',True)]}"/>
-                                <field name="membership_start" attrs="{'invisible':[('membership_start','=',False)]}"/>
-                                <field name="membership_stop" attrs="{'invisible':[('membership_stop','=',False)]}"/>
-                                <field name="membership_cancel" attrs="{'invisible':[('membership_cancel','=',False)]}"/>
+                                <field name="associate_member" invisible="free_member"/>
+                                <field name="membership_start" invisible="not membership_start"/>
+                                <field name="membership_stop" invisible="not membership_stop"/>
+                                <field name="membership_cancel" invisible="not membership_cancel"/>
                             </group>
                         </group>
                         <field name="member_lines" nolabel="1" colspan="4" readonly="1">
-                            <tree string="Memberships">
+                            <list string="Memberships">
                                 <field name="date"/>
                                 <field name="membership_id"/>
                                 <field name="member_price"/>
                                 <field name="account_invoice_id"/>
                                 <field name="state"/>
-                            </tree>
+                            </list>
                             <form string="Memberships">
                                 <group col="2">
                                     <group>

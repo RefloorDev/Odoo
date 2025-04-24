@@ -3,18 +3,19 @@
 # 	* barcodes
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Arnis Putniņš <arnis@allegro.lv>, 2019
-# ievaputnina <ievai.putninai@gmail.com>, 2019
+# Arnis Putniņš <arnis@allegro.lv>, 2024
+# Martin Trigaux, 2024
+# ievaputnina <ievai.putninai@gmail.com>, 2024
+# Armīns Jeltajevs <armins.jeltajevs@gmail.com>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: ievaputnina <ievai.putninai@gmail.com>, 2019\n"
-"Language-Team: Latvian (https://www.transifex.com/odoo/teams/41243/lv/)\n"
+"POT-Creation-Date: 2024-09-25 08:40+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Armīns Jeltajevs <armins.jeltajevs@gmail.com>, 2024\n"
+"Language-Team: Latvian (https://app.transifex.com/odoo/teams/41243/lv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -22,27 +23,9 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);\n"
 
 #. module: barcodes
-#: code:addons/barcodes/models/barcodes.py:0
-#, python-format
-msgid " '*' is not a valid Regex Barcode Pattern. Did you mean '.*' ?"
-msgstr ""
-
-#. module: barcodes
-#: code:addons/barcodes/models/barcodes.py:0
-#, python-format
-msgid ": a rule can only contain one pair of braces."
-msgstr ""
-
-#. module: barcodes
-#: code:addons/barcodes/models/barcodes.py:0
-#, python-format
-msgid ": braces can only contain N's followed by D's."
-msgstr ""
-
-#. module: barcodes
-#: code:addons/barcodes/models/barcodes.py:0
-#, python-format
-msgid ": empty braces."
+#. odoo-python
+#: code:addons/barcodes/models/barcode_rule.py:0
+msgid " '*' is not a valid Regex Barcode Pattern. Did you mean '.*'?"
 msgstr ""
 
 #. module: barcodes
@@ -64,7 +47,7 @@ msgstr ""
 #. module: barcodes
 #: model_terms:ir.actions.act_window,help:barcodes.action_barcode_nomenclature_form
 msgid "Add a new barcode nomenclature"
-msgstr ""
+msgstr "Pievienot jaunu svītrkoda nomenklatūru"
 
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__alias
@@ -80,17 +63,23 @@ msgstr "Vienmēr"
 #. module: barcodes
 #: model:ir.model.fields,help:barcodes.field_barcode_rule__name
 msgid "An internal identification for this barcode nomenclature rule"
-msgstr ""
+msgstr "Iekšējais identifikators šim svīrtkoda nomenklatūras noteikumam"
 
 #. module: barcodes
 #: model:ir.model.fields,help:barcodes.field_barcode_nomenclature__name
 msgid "An internal identification of the barcode nomenclature"
-msgstr ""
+msgstr "Iekšējais identifikators svīrtkoda nomenklatūras noteikumam"
 
 #. module: barcodes
 #: model:ir.model.fields.selection,name:barcodes.selection__barcode_rule__encoding__any
 msgid "Any"
-msgstr ""
+msgstr "Jebkurš"
+
+#. module: barcodes
+#. odoo-javascript
+#: code:addons/barcodes/static/src/components/barcode_scanner.xml:0
+msgid "Barcode"
+msgstr "Svītrkods"
 
 #. module: barcodes
 #: model:ir.model,name:barcodes.model_barcodes_barcode_events_mixin
@@ -103,28 +92,34 @@ msgstr ""
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__barcode_nomenclature_id
 #: model_terms:ir.ui.view,arch_db:barcodes.view_barcode_nomenclature_form
 msgid "Barcode Nomenclature"
-msgstr ""
+msgstr "Svītrkoda nomenklatūra"
 
 #. module: barcodes
 #: model:ir.actions.act_window,name:barcodes.action_barcode_nomenclature_form
 #: model_terms:ir.ui.view,arch_db:barcodes.view_barcode_nomenclature_tree
 msgid "Barcode Nomenclatures"
-msgstr ""
+msgstr "Svītrkoda nomeklatūras"
 
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__pattern
 msgid "Barcode Pattern"
-msgstr ""
+msgstr "Svītrkoda raksts"
 
 #. module: barcodes
 #: model:ir.model,name:barcodes.model_barcode_rule
 #: model_terms:ir.ui.view,arch_db:barcodes.view_barcode_rule_form
 msgid "Barcode Rule"
-msgstr ""
+msgstr "Svītrkoda noteikums"
 
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcodes_barcode_events_mixin___barcode_scanned
 msgid "Barcode Scanned"
+msgstr "Svītrkods noskenēts"
+
+#. module: barcodes
+#. odoo-javascript
+#: code:addons/barcodes/static/src/barcode_handlers.js:0
+msgid "Barcode: %(barcode)s"
 msgstr ""
 
 #. module: barcodes
@@ -145,100 +140,53 @@ msgid "Created on"
 msgstr "Izveidots"
 
 #. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Discard"
-msgstr "Atmest"
-
-#. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_nomenclature__display_name
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__display_name
-#: model:ir.model.fields,field_description:barcodes.field_barcodes_barcode_events_mixin__display_name
 msgid "Display Name"
-msgstr "Attēlotais nosaukums"
+msgstr "Nosaukums"
 
 #. module: barcodes
 #: model:ir.model.fields.selection,name:barcodes.selection__barcode_rule__encoding__ean13
 msgid "EAN-13"
-msgstr ""
+msgstr "EAN-13"
 
 #. module: barcodes
 #: model:ir.model.fields.selection,name:barcodes.selection__barcode_nomenclature__upc_ean_conv__ean2upc
 msgid "EAN-13 to UPC-A"
-msgstr ""
+msgstr "EAN-13 līdz UPC-A"
 
 #. module: barcodes
 #: model:ir.model.fields.selection,name:barcodes.selection__barcode_rule__encoding__ean8
 msgid "EAN-8"
-msgstr ""
+msgstr "EAN-8"
 
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__encoding
 msgid "Encoding"
-msgstr ""
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Error: Barcode command is undefined"
-msgstr ""
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Error: Document not editable"
-msgstr ""
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Error: No last scanned barcode"
-msgstr ""
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Error: Pager not available"
-msgstr ""
+msgstr "Kodējums"
 
 #. module: barcodes
 #: model:ir.model,name:barcodes.model_ir_http
 msgid "HTTP Routing"
-msgstr ""
+msgstr "HTTP maršrutēšana"
 
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_nomenclature__id
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__id
-#: model:ir.model.fields,field_description:barcodes.field_barcodes_barcode_events_mixin__id
 msgid "ID"
 msgstr "ID"
-
-#. module: barcodes
-#: model:ir.model.fields,field_description:barcodes.field_barcode_nomenclature____last_update
-#: model:ir.model.fields,field_description:barcodes.field_barcode_rule____last_update
-#: model:ir.model.fields,field_description:barcodes.field_barcodes_barcode_events_mixin____last_update
-msgid "Last Modified on"
-msgstr "Pēdējoreiz modificēts"
 
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_nomenclature__write_uid
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__write_uid
 msgid "Last Updated by"
-msgstr "Pēdējoreiz atjaunoja"
+msgstr "Pēdējo reizi atjaunoja"
 
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_nomenclature__write_date
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__write_date
 msgid "Last Updated on"
-msgstr "Pēdējoreiz atjaunots"
+msgstr "Pēdējās izmaiņas"
 
 #. module: barcodes
 #: model:ir.model.fields.selection,name:barcodes.selection__barcode_nomenclature__upc_ean_conv__none
@@ -248,18 +196,24 @@ msgstr "Nekad"
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_res_company__nomenclature_id
 msgid "Nomenclature"
-msgstr ""
+msgstr "Nomenklatūra"
 
 #. module: barcodes
 #: model_terms:ir.ui.view,arch_db:barcodes.view_barcode_nomenclature_form
 msgid ""
 "Patterns can also define how numerical values, such as weight or price, can be\n"
 "                                encoded into the barcode. They are indicated by <code>{NNN}</code> where the N's\n"
-"                                define where the number's digits are encoded. Floats are also supported with the \n"
-"                                decimals indicated with D's, such as <code>{NNNDD}</code>. In these cases, \n"
-"                                the barcode field on the associated records <i>must</i> show these digits as \n"
+"                                define where the number's digits are encoded. Floats are also supported with the\n"
+"                                decimals indicated with D's, such as <code>{NNNDD}</code>. In these cases,\n"
+"                                the barcode field on the associated records <i>must</i> show these digits as\n"
 "                                zeroes."
 msgstr ""
+
+#. module: barcodes
+#. odoo-javascript
+#: code:addons/barcodes/static/src/components/barcode_scanner.js:0
+msgid "Please, Scan again!"
+msgstr "Lūdzu, noskenējiet atkārtoti"
 
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__name
@@ -272,28 +226,20 @@ msgid "Rules"
 msgstr "Noteikumi"
 
 #. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Select"
-msgstr "Izvēlēties"
-
-#. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__sequence
 msgid "Sequence"
-msgstr "Secība"
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Set quantity"
-msgstr ""
+msgstr "Sekvence"
 
 #. module: barcodes
 #: model_terms:ir.ui.view,arch_db:barcodes.view_barcode_nomenclature_form
 msgid "Tables"
-msgstr ""
+msgstr "Galdi"
+
+#. module: barcodes
+#. odoo-javascript
+#: code:addons/barcodes/static/src/components/barcode_scanner.xml:0
+msgid "Tap to scan"
+msgstr "Piemiedziet, lai noskenēt"
 
 #. module: barcodes
 #: model:ir.model.fields,help:barcodes.field_barcode_rule__pattern
@@ -301,9 +247,16 @@ msgid "The barcode matching pattern"
 msgstr ""
 
 #. module: barcodes
+#. odoo-python
+#: code:addons/barcodes/models/barcode_rule.py:0
+msgid ""
+"The barcode pattern %(pattern)s does not lead to a valid regular expression."
+msgstr ""
+
+#. module: barcodes
 #: model:ir.model.fields,help:barcodes.field_barcode_nomenclature__rule_ids
 msgid "The list of barcode rules"
-msgstr ""
+msgstr "Saraksts ar svītrkodu noteikumiem"
 
 #. module: barcodes
 #: model:ir.model.fields,help:barcodes.field_barcode_rule__alias
@@ -311,11 +264,26 @@ msgid "The matched pattern will alias to this barcode"
 msgstr ""
 
 #. module: barcodes
-#: code:addons/barcodes/models/barcodes.py:0
-#: code:addons/barcodes/models/barcodes.py:0
-#: code:addons/barcodes/models/barcodes.py:0
-#, python-format
-msgid "There is a syntax error in the barcode pattern "
+#. odoo-python
+#: code:addons/barcodes/models/barcode_rule.py:0
+msgid ""
+"There is a syntax error in the barcode pattern %(pattern)s: a rule can only "
+"contain one pair of braces."
+msgstr ""
+
+#. module: barcodes
+#. odoo-python
+#: code:addons/barcodes/models/barcode_rule.py:0
+msgid ""
+"There is a syntax error in the barcode pattern %(pattern)s: braces can only "
+"contain N's followed by D's."
+msgstr ""
+
+#. module: barcodes
+#. odoo-python
+#: code:addons/barcodes/models/barcode_rule.py:0
+msgid ""
+"There is a syntax error in the barcode pattern %(pattern)s: empty braces."
 msgstr ""
 
 #. module: barcodes
@@ -323,20 +291,6 @@ msgstr ""
 msgid ""
 "This rule will apply only if the barcode is encoded with the specified "
 "encoding"
-msgstr ""
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "To modify this document, please first start edition."
-msgstr ""
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "To set the quantity please scan a barcode first."
 msgstr ""
 
 #. module: barcodes
@@ -355,22 +309,28 @@ msgstr ""
 #. module: barcodes
 #: model:ir.model.fields.selection,name:barcodes.selection__barcode_rule__encoding__upca
 msgid "UPC-A"
-msgstr ""
+msgstr "UPC-A"
 
 #. module: barcodes
 #: model:ir.model.fields.selection,name:barcodes.selection__barcode_nomenclature__upc_ean_conv__upc2ean
 msgid "UPC-A to EAN-13"
-msgstr ""
+msgstr "UPC-A līdz EAN-13"
 
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_nomenclature__upc_ean_conv
 msgid "UPC/EAN Conversion"
-msgstr ""
+msgstr "UPC/EAN konvertācija"
 
 #. module: barcodes
 #: model:ir.model.fields.selection,name:barcodes.selection__barcode_rule__type__product
 msgid "Unit Product"
-msgstr ""
+msgstr "Preces vienība"
+
+#. module: barcodes
+#. odoo-javascript
+#: code:addons/barcodes/static/src/barcode_handlers.js:0
+msgid "Unknown barcode command"
+msgstr "Nezināma svītrkoda komanda"
 
 #. module: barcodes
 #: model:ir.model.fields,help:barcodes.field_barcode_rule__sequence
@@ -381,4 +341,4 @@ msgstr ""
 #. module: barcodes
 #: model:ir.model.fields,help:barcodes.field_barcodes_barcode_events_mixin___barcode_scanned
 msgid "Value of the last barcode scanned."
-msgstr ""
+msgstr "Pēdējā noskenētā svītrkoda vērtība."

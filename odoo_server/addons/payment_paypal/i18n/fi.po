@@ -3,18 +3,24 @@
 # 	* payment_paypal
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2019
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2020
+# Tuomas Lyyra <tuomas.lyyra@legenda.fi>, 2024
+# Eino Mäkitalo <eino.makitalo@netitbe.fi>, 2024
+# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
+# Veikko Väätäjä <veikko.vaataja@gmail.com>, 2024
+# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
+# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
+# Jiri Grönroos <jiri.gronroos@iki.fi>, 2024
+# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
+# Jessica Jakara, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:12+0000\n"
-"Last-Translator: Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2020\n"
-"Language-Team: Finnish (https://www.transifex.com/odoo/teams/41243/fi/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Jessica Jakara, 2025\n"
+"Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -22,70 +28,104 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: payment_paypal
-#: model_terms:ir.ui.view,arch_db:payment_paypal.mail_template_paypal_invite_user_to_configure
-msgid ""
-"<br/><br/>\n"
-"                Thanks,<br/>\n"
-"                <b>The Odoo Team</b>"
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:payment_paypal.payment_provider_form
+msgid "Client ID"
+msgstr "Asiakkaan tunniste/ID"
 
 #. module: payment_paypal
-#: code:addons/payment_paypal/models/payment.py:0
-#, python-format
-msgid "Add your Paypal account to Odoo"
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:payment_paypal.payment_provider_form
+msgid "Client Secret"
+msgstr "Client Secret"
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_email_account
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__code
+msgid "Code"
+msgstr "Koodi"
+
+#. module: payment_paypal
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_provider.py:0
+msgid "Could not establish the connection to the API."
+msgstr "Yhteyttä API:han ei saatu muodostettua."
+
+#. module: payment_paypal
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_provider.py:0
+msgid "Could not generate a new access token."
+msgstr "Uutta käyttöoikeustunnistetta ei voitu luoda."
+
+#. module: payment_paypal
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__paypal_email_account
 msgid "Email"
 msgstr "Sähköposti"
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__fees_dom_fixed
-msgid "Fixed domestic fees"
-msgstr "Kiinteä kustannus kotimaassa"
+#: model_terms:ir.ui.view,arch_db:payment_paypal.payment_provider_form
+msgid "Generate your webhook"
+msgstr "Luo webhook"
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__fees_int_fixed
-msgid "Fixed international fees"
-msgstr "Kiinteä kustannus kansainvälisesti"
-
-#. module: payment_paypal
-#: model_terms:ir.ui.view,arch_db:payment_paypal.mail_template_paypal_invite_user_to_configure
-msgid ""
-"Hello,\n"
-"                <br/><br/>\n"
-"                You have received a payment through PayPal.<br/>\n"
-"                Kindly follow the instructions given by PayPal to create your account.<br/>\n"
-"                Then, help us complete your Paypal credentials in Odoo.<br/><br/>"
-msgstr ""
-
-#. module: payment_paypal
-#: model_terms:ir.ui.view,arch_db:payment_paypal.acquirer_form_paypal
+#: model_terms:ir.ui.view,arch_db:payment_paypal.payment_provider_form
 msgid "How to configure your paypal account?"
-msgstr ""
+msgstr "Kuinka määrittää Paypal-tilisi?"
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_seller_account
-msgid "Merchant Account ID"
-msgstr "Kauppian tilin ID"
+#. odoo-python
+#: code:addons/payment_paypal/controllers/main.py:0
+msgid "Invalid response format, can't normalize."
+msgstr "Virheellinen vastausmuoto, ei voi normalisoida."
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_pdt_token
-msgid "PDT Identity Token"
-msgstr ""
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_transaction.py:0
+msgid "Missing value for txn_id (%(txn_id)s) or txn_type (%(txn_type)s)."
+msgstr "Puuttuva arvo txn_id (%(txn_id)s) tai txn_type (%(txn_type)s)."
 
 #. module: payment_paypal
-#: model:ir.model,name:payment_paypal.model_payment_acquirer
-msgid "Payment Acquirer"
-msgstr "Maksun vastaanottaja"
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_transaction.py:0
+msgid "No transaction found matching reference %s."
+msgstr "Viitettä %s vastaavaa tapahtumaa ei löytynyt."
 
 #. module: payment_paypal
-#: model:ir.model.fields,help:payment_paypal.field_payment_acquirer__paypal_pdt_token
-msgid ""
-"Payment Data Transfer allows you to receive notification of successful "
-"payments as they are made."
-msgstr ""
+#: model:ir.model.fields.selection,name:payment_paypal.selection__payment_provider__code__paypal
+msgid "PayPal"
+msgstr "PayPal"
+
+#. module: payment_paypal
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__paypal_access_token
+msgid "PayPal Access Token"
+msgstr "PayPal pääsyoikeustunniste"
+
+#. module: payment_paypal
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__paypal_access_token_expiry
+msgid "PayPal Access Token Expiry"
+msgstr "PayPal pääsyoikeustunnisteen vanhentuminen"
+
+#. module: payment_paypal
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__paypal_client_id
+msgid "PayPal Client ID"
+msgstr "PayPal-asiakastunnus"
+
+#. module: payment_paypal
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__paypal_client_secret
+msgid "PayPal Client Secret"
+msgstr "PayPal-asiakkaan salaisuus"
+
+#. module: payment_paypal
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_transaction__paypal_type
+msgid "PayPal Transaction Type"
+msgstr "PayPal-transaktion tyyppi"
+
+#. module: payment_paypal
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__paypal_webhook_id
+msgid "PayPal Webhook ID"
+msgstr "PayPal Webhook ID"
+
+#. module: payment_paypal
+#: model:ir.model,name:payment_paypal.model_payment_provider
+msgid "Payment Provider"
+msgstr "Maksupalveluntarjoaja"
 
 #. module: payment_paypal
 #: model:ir.model,name:payment_paypal.model_payment_transaction
@@ -93,56 +133,61 @@ msgid "Payment Transaction"
 msgstr "Maksutapahtuma"
 
 #. module: payment_paypal
-#: model:ir.model.fields.selection,name:payment_paypal.selection__payment_acquirer__provider__paypal
-msgid "Paypal"
-msgstr ""
+#. odoo-javascript
+#: code:addons/payment_paypal/static/src/js/payment_form.js:0
+msgid "Payment processing failed"
+msgstr "Maksun käsittely epäonnistui"
 
 #. module: payment_paypal
-#: model:ir.model.fields,help:payment_paypal.field_payment_acquirer__paypal_use_ipn
-msgid "Paypal Instant Payment Notification"
-msgstr "Paypal välitön maksuilmoitus"
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_transaction.py:0
+msgid "Received data with invalid payment status: %s"
+msgstr "Vastaanotetut tiedot, joiden maksutila on virheellinen: %s"
 
 #. module: payment_paypal
-#: code:addons/payment_paypal/models/payment.py:0
-#, python-format
-msgid "Paypal: received data with missing reference (%s) or txn_id (%s)"
-msgstr ""
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_provider.py:0
+msgid "The communication with the API failed. Details: %s"
+msgstr "Yhteys API:n kanssa epäonnistui. Yksityiskohdat: %s"
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__provider
-msgid "Provider"
-msgstr "Palveluntarjoaja"
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_transaction.py:0
+msgid "The customer left the payment page."
+msgstr "Asiakas poistui maksusivulta."
 
 #. module: payment_paypal
-#: model_terms:ir.ui.view,arch_db:payment_paypal.mail_template_paypal_invite_user_to_configure
-msgid "Set Paypal credentials"
-msgstr ""
+#: model:ir.model.fields,help:payment_paypal.field_payment_provider__paypal_access_token_expiry
+msgid "The moment at which the access token becomes invalid."
+msgstr "Hetki, jolloin pääsytunnisteen voimassaolo lakkaa."
 
 #. module: payment_paypal
-#: model:ir.model.fields,help:payment_paypal.field_payment_acquirer__paypal_seller_account
+#: model:ir.model.fields,help:payment_paypal.field_payment_provider__paypal_email_account
 msgid ""
-"The Merchant ID is used to ensure communications coming from Paypal are "
-"valid and secured."
+"The public business email solely used to identify the account with PayPal"
 msgstr ""
-"Kauppiaan ID:tä käytetään varmentamaan että Paypalilta tuleva kommunikaatio "
-"on validia ja turvallista."
+"Julkinen yrityssähköpostiosoite, jota käytetään ainoastaan PayPal-tilin "
+"tunnistamiseen"
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_transaction__paypal_txn_type
-msgid "Transaction type"
-msgstr "Tapahtuman tyyppi"
-
-#. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_use_ipn
-msgid "Use IPN"
-msgstr "Käytä välitöntä maksuilmoitusta"
-
-#. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__fees_dom_var
-msgid "Variable domestic fees (in percents)"
+#: model:ir.model.fields,help:payment_paypal.field_payment_provider__paypal_access_token
+msgid "The short-lived token used to access Paypal APIs"
 msgstr ""
+"Lyhytikäinen tunniste, jota käytetään Paypalin sovellusliittymien "
+"käyttämiseen"
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__fees_int_var
-msgid "Variable international fees (in percents)"
-msgstr ""
+#: model:ir.model.fields,help:payment_paypal.field_payment_provider__code
+msgid "The technical code of this payment provider."
+msgstr "Tämän maksupalveluntarjoajan tekninen koodi."
+
+#. module: payment_paypal
+#: model_terms:ir.ui.view,arch_db:payment_paypal.payment_provider_form
+msgid "Webhook ID"
+msgstr "Webhook-tunnus"
+
+#. module: payment_paypal
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_provider.py:0
+msgid "You must have an HTTPS connection to generate a webhook."
+msgstr "Webhookin luominen edellyttää HTTPS-yhteyttä."

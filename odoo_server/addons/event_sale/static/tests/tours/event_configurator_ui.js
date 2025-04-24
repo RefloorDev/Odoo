@@ -1,85 +1,61 @@
-odoo.define('event.event_configurator_tour', function (require) {
-"use strict";
+/** @odoo-module **/
 
-var tour = require('web_tour.tour');
+import { registry } from "@web/core/registry";
+import { stepUtils } from "@web_tour/tour_service/tour_utils";
+import tourUtils from "@sale/js/tours/tour_utils";
 
-tour.register('event_configurator_tour', {
-    url: "/web",
-    test: true,
-}, [tour.STEPS.SHOW_APPS_MENU_ITEM, {
-    trigger: '.o_app[data-menu-xmlid="sale.sale_menu_root"]',
-    edition: 'community'
-}, {
-    trigger: '.o_app[data-menu-xmlid="sale.sale_menu_root"]',
-    edition: 'enterprise'
-}, {
-    trigger: ".o_list_button_add",
-    extra_trigger: ".o_sale_order"
-}, {
-    trigger: "a:contains('Add a product')"
-}, {
-    trigger: 'div[name="product_id"] input, div[name="product_template_id"] input',
-    run: function (actions) {
-        actions.text('EVENT');
-    }
-}, {
-    trigger: 'ul.ui-autocomplete a:contains("EVENT")',
-    run: 'click'
-}, {
-    trigger: 'div[name="event_id"] input',
-    run: 'click'
-}, {
-    trigger: 'ul.ui-autocomplete a:contains("Design")',
-    run: 'click',
-    in_modal: false
-}, {
-    trigger: 'div[name="event_ticket_id"] input',
-    run: 'click'
-}, {
-    trigger: 'ul.ui-autocomplete a:contains("VIP")',
-    run: 'click',
-    in_modal: false
-}, {
-    trigger: '.o_event_sale_js_event_configurator_ok'
-}, {
-    trigger: 'textarea[name="name"]',
-    run: function () {
-        var $textarea = $('textarea[name="name"]');
-        if ($textarea.val().includes('Design Fair Los Angeles') && $textarea.val().includes('VIP')) {
-            $textarea.addClass('tour_success');
-        }
-    }
-}, {
-    trigger: 'textarea[name="name"].tour_success',
-    run: function () {} // check
-}, {
-    trigger: 'ul.nav a:contains("Order Lines")',
-    run: 'click'
-}, {
-    trigger: 'td:contains("EVENT")',
-    run: 'click'
-}, {
-    trigger: '.o_edit_product_configuration'
-}, {
-    trigger: 'div[name="event_ticket_id"] input',
-    run: 'click'
-}, {
-    trigger: 'ul.ui-autocomplete a:contains("Standard")',
-    run: 'click',
-    in_modal: false
-}, {
-    trigger: '.o_event_sale_js_event_configurator_ok'
-}, {
-    trigger: 'textarea[name="name"]',
-    run: function () {
-        var $textarea = $('textarea[name="name"]');
-        if ($textarea.val().includes('Standard')) {
-            $textarea.addClass('tour_success_2');
-        }
-    }
-}, {
-    trigger: 'textarea[name="name"].tour_success_2',
-    run: function () {} // check
-}]);
-
+registry.category("web_tour.tours").add("event_configurator_tour", {
+    url: "/odoo",
+    steps: () => [
+        ...stepUtils.goToAppSteps("sale.sale_menu_root", "Go to the Sales App"),
+        ...tourUtils.createNewSalesOrder(),
+        ...tourUtils.selectCustomer("Azure"),
+        ...tourUtils.addProduct("Event Registration"),
+        {
+            trigger: 'div[name="event_id"] input',
+            run: "click",
+        },
+        {
+            trigger: "ul.ui-autocomplete a:contains(Design)",
+            run: "click",
+        },
+        {
+            trigger: 'div[name="event_ticket_id"] input',
+            run: "click",
+        },
+        {
+            trigger: "ul.ui-autocomplete a:contains(VIP)",
+            run: "click",
+        },
+        {
+            trigger: ".modal .o_event_sale_js_event_configurator_ok",
+            run: "click",
+        },
+        {
+            content: "Wait the modal is closed",
+            trigger: "body:not(:has(.modal))",
+        },
+        ...tourUtils.clickSomewhereElse(),
+        tourUtils.editLineMatching("Event Registration", "VIP"),
+        tourUtils.editConfiguration(),
+        {
+            trigger: 'div[name="event_ticket_id"] input',
+            run: "click",
+        },
+        {
+            trigger: "ul.ui-autocomplete a:contains(Standard)",
+            run: "click",
+        },
+        {
+            trigger: ".modal .o_event_sale_js_event_configurator_ok",
+            run: "click",
+        },
+        {
+            content: "Wait the modal is closed",
+            trigger: "body:not(:has(.modal))",
+        },
+        ...tourUtils.clickSomewhereElse(),
+        tourUtils.checkSOLDescriptionContains("Event Registration", "Standard"),
+        ...stepUtils.saveForm(),
+    ],
 });

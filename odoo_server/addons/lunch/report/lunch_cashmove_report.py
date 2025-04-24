@@ -17,8 +17,9 @@ class CashmoveReport(models.Model):
     user_id = fields.Many2one('res.users', string='User')
     description = fields.Text('Description')
 
-    def name_get(self):
-        return [(cashmove.id, '%s %s' % (_('Lunch Cashmove'), '#%d' % cashmove.id)) for cashmove in self]
+    def _compute_display_name(self):
+        for cashmove in self:
+            cashmove.display_name = '{} {}'.format(_('Lunch Cashmove'), '#%d' % cashmove.id)
 
     def init(self):
         tools.drop_view_if_exists(self._cr, self._table)
@@ -40,7 +41,7 @@ class CashmoveReport(models.Model):
                     lol.date as date,
                     lol.currency_id as currency_id,
                     lol.user_id as user_id,
-                    format('Order: %%s x %%s %%s', lol.quantity::text, lp.name, lol.display_toppings) as description
+                    format('Order: %%s x %%s %%s', lol.quantity::text, lp.name->>'en_US', lol.display_toppings) as description
                 FROM lunch_order lol
                 JOIN lunch_product lp ON lp.id = lol.product_id
                 WHERE

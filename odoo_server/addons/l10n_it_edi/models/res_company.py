@@ -1,4 +1,3 @@
-# -*- coding:utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models, _
@@ -33,18 +32,13 @@ class ResCompany(models.Model):
         store=True, readonly=False, help="Fiscal code of your company")
     l10n_it_tax_system = fields.Selection(selection=TAX_SYSTEM, string="Tax System",
         help="Please select the Tax system to which you are subjected.")
-
-    # PEC server
-    l10n_it_mail_pec_server_id = fields.Many2one('ir.mail_server', string="Server PEC",
-        help="Configure your PEC-mail server to send electronic invoices.")
-    l10n_it_address_recipient_fatturapa = fields.Char(string="Government PEC-mail",
-        help="Enter Government PEC-mail address. Ex: sdi01@pec.fatturapa.it")
-    l10n_it_address_send_fatturapa = fields.Char(string="Company PEC-mail",
-        help="Enter your company PEC-mail address. Ex: yourcompany@pec.mail.it")
-
+    l10n_it_edi_proxy_user_id = fields.Many2one(
+        comodel_name="account_edi_proxy_client.user",
+        compute="_compute_l10n_it_edi_proxy_user_id",
+    )
 
     # Economic and Administrative Index
-    l10n_it_has_eco_index = fields.Boolean(default=False,
+    l10n_it_has_eco_index = fields.Boolean(
         help="The seller/provider is a company listed on the register of companies and as\
         such must also indicate the registration data on all documents (art. 2250, Italian\
         Civil Code)")
@@ -53,7 +47,7 @@ class ResCompany(models.Model):
     l10n_it_eco_index_number = fields.Char(string="Number in register of companies", size=20,
         help="This field must contain the number under which the\
         seller/provider is listed on the register of companies.")
-    l10n_it_eco_index_share_capital = fields.Float(default=0.0, string="Share capital actually paid up",
+    l10n_it_eco_index_share_capital = fields.Float(string="Share capital actually paid up",
         help="Mandatory if the seller/provider is a company with share\
         capital (SpA, SApA, Srl), this field must contain the amount\
         of share capital actually paid up as resulting from the last\
@@ -72,7 +66,7 @@ class ResCompany(models.Model):
 
 
     # Tax representative
-    l10n_it_has_tax_representative = fields.Boolean(default=False,
+    l10n_it_has_tax_representative = fields.Boolean(
         help="The seller/provider is a non-resident subject which\
         carries out transactions in Italy with relevance for VAT\
         purposes and which takes avail of a tax representative in\
@@ -82,19 +76,27 @@ class ResCompany(models.Model):
     @api.constrains('l10n_it_has_eco_index',
                     'l10n_it_eco_index_office',
                     'l10n_it_eco_index_number',
-                    'l10n_it_eco_index_share_capital',
-                    'l10n_it_eco_index_sole_shareholder',
                     'l10n_it_eco_index_liquidation_state')
     def _check_eco_admin_index(self):
         for record in self:
-            if not record.l10n_it_has_eco_index:
-                continue
-            if not record.l10n_it_eco_index_office\
-               or not record.l10n_it_eco_index_number\
-               or not record.l10n_it_eco_index_share_capital\
-               or not record.l10n_it_eco_index_sole_shareholder\
-               or not record.l10n_it_eco_index_liquidation_state:
+            if (record.l10n_it_has_eco_index
+                and (not record.l10n_it_eco_index_office
+                     or not record.l10n_it_eco_index_number
+                     or not record.l10n_it_eco_index_liquidation_state)):
                 raise ValidationError(_("All fields about the Economic and Administrative Index must be completed."))
+
+    @api.constrains('l10n_it_has_eco_index',
+                    'l10n_it_eco_index_share_capital',
+                    'l10n_it_eco_index_sole_shareholder')
+    def _check_eco_incorporated(self):
+        """ If the business is incorporated, both these fields must be present.
+            We don't know whether the business is incorporated, but in any case the fields
+            must be both present or not present. """
+        for record in self:
+            if (record.l10n_it_has_eco_index
+                and bool(record.l10n_it_eco_index_share_capital) ^ bool(record.l10n_it_eco_index_sole_shareholder)):
+                raise ValidationError(_("If one of Share Capital or Sole Shareholder is present, "
+                                        "then they must be both filled out."))
 
     @api.constrains('l10n_it_has_tax_representative',
                     'l10n_it_tax_representative_partner_id')
@@ -108,3 +110,51 @@ class ResCompany(models.Model):
                 raise ValidationError(_("Your tax representative partner must have a tax number."))
             if not record.l10n_it_tax_representative_partner_id.country_id:
                 raise ValidationError(_("Your tax representative partner must have a country."))
+
+    @api.depends("account_edi_proxy_client_ids")
+    def _compute_l10n_it_edi_proxy_user_id(self):
+        for company in self:
+            company.l10n_it_edi_proxy_user_id = company.account_edi_proxy_client_ids.filtered(lambda x: x.proxy_type == 'l10n_it_edi')
+
+    def _l10n_it_edi_export_check(self):
+        checks = {
+            'company_vat_codice_fiscale_missing': {
+                'fields': [('vat', 'l10n_it_codice_fiscale')],
+                'message': _("Company/ies should have a VAT number or Codice Fiscale."),
+            },
+            'company_address_missing': {
+                'fields': [('street', 'street2'), ('zip',), ('city',), ('country_id',)],
+                'message': _("Company/ies should have a complete address, verify their Street, City, Zipcode and Country."),
+            },
+            'company_l10n_it_tax_system_missing': {
+                'fields': [('l10n_it_tax_system',)],
+                'message': _("Company/ies should have a Tax System"),
+            },
+        }
+        errors = {}
+        for key, check in checks.items():
+            for fields_tuple in check.pop('fields'):
+                if invalid_records := self.filtered(lambda record: not any(record[field] for field in fields_tuple)):
+                    errors[f"l10n_it_edi_{key}"] = {
+                        'message': check['message'],
+                        'action_text': _("View Company/ies"),
+                        'action': invalid_records._get_records_action(name=_("Check Company Data")),
+                    }
+        if self.filtered(lambda x: not x.l10n_it_edi_proxy_user_id):
+            errors['l10n_it_edi_settings_l10n_it_edi_proxy_user_id'] = {
+                'message': _("You must accept the terms and conditions in the Settings to use the IT EDI."),
+                'action_text': _("View Settings"),
+                'action': {
+                    'name': _("Settings"),
+                    'type': 'ir.actions.act_url',
+                    'target': 'self',
+                    'url': '/odoo/settings#italian_edi',
+                },
+            }
+        return errors
+
+    @api.onchange("l10n_it_has_tax_representative")
+    def _onchange_l10n_it_has_tax_represeentative(self):
+        for company in self:
+            if not company.l10n_it_has_tax_representative:
+                company.l10n_it_tax_representative_partner_id = False

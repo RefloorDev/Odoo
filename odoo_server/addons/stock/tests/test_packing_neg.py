@@ -20,13 +20,13 @@ class TestPackingNeg(TransactionCase):
         # Create a new "negative" storable product
         product_neg = self.env['product.product'].create({
             'name': 'Negative product',
-            'type': 'product',
+            'is_storable': True,
             'categ_id': self.ref('product.product_category_1'),
             'list_price': 100.0,
             'standard_price': 70.0,
             'seller_ids': [(0, 0, {
                 'delay': 1,
-                'name': res_partner_2.id,
+                'partner_id': res_partner_2.id,
                 'min_qty': 2.0,})],
             'uom_id': self.ref('uom.product_uom_unit'),
             'uom_po_id': self.ref('uom.product_uom_unit'),
@@ -39,7 +39,7 @@ class TestPackingNeg(TransactionCase):
             'picking_type_id': self.ref('stock.picking_type_in'),
             'location_id': self.ref('stock.stock_location_suppliers'),
             'location_dest_id': self.ref('stock.stock_location_stock'),
-            'move_lines': [(0, 0, {
+            'move_ids': [(0, 0, {
                 'name': 'NEG',
                 'product_id': product_neg.id,
                 'product_uom': product_neg.uom_id.id,
@@ -47,10 +47,11 @@ class TestPackingNeg(TransactionCase):
                 'location_id': self.ref('stock.stock_location_suppliers'),
                 'location_dest_id': self.ref('stock.stock_location_stock'),
             })],
+            'state': 'draft',
         }
         pick_neg = self.env['stock.picking'].create(vals)
-        pick_neg.onchange_picking_type()
-        pick_neg.move_lines.onchange_product_id()
+        pick_neg._onchange_picking_type()
+        pick_neg.move_ids._onchange_product_id()
 
         # Confirm and assign picking
         pick_neg.action_confirm()
@@ -58,20 +59,20 @@ class TestPackingNeg(TransactionCase):
 
         # Put 120 pieces on Palneg 1 (package), 120 pieces on Palneg 2 with lot A and 60 pieces on Palneg 3
         # create lot A
-        lot_a = self.env['stock.production.lot'].create({'name': 'Lot neg', 'product_id': product_neg.id, 'company_id': self.env.company.id})
+        lot_a = self.env['stock.lot'].create({'name': 'Lot neg', 'product_id': product_neg.id})
         # create package
         package1 = self.env['stock.quant.package'].create({'name': 'Palneg 1'})
         package2 = self.env['stock.quant.package'].create({'name': 'Palneg 2'})
         package3 = self.env['stock.quant.package'].create({'name': 'Palneg 3'})
         # Create package for each line and assign it as result_package_id
         # create pack operation
-        pick_neg.move_line_ids[0].write({'result_package_id': package1.id, 'qty_done': 120})
+        pick_neg.move_line_ids[0].write({'result_package_id': package1.id, 'quantity': 120})
         new_pack1 = self.env['stock.move.line'].create({
             'product_id': product_neg.id,
             'product_uom_id': self.ref('uom.product_uom_unit'),
             'picking_id': pick_neg.id,
             'lot_id': lot_a.id,
-            'qty_done': 120,
+            'quantity': 120,
             'result_package_id': package2.id,
             'location_id': self.ref('stock.stock_location_suppliers'),
             'location_dest_id': self.ref('stock.stock_location_stock')
@@ -81,13 +82,14 @@ class TestPackingNeg(TransactionCase):
             'product_uom_id': self.ref('uom.product_uom_unit'),
             'picking_id': pick_neg.id,
             'result_package_id': package3.id,
-            'qty_done': 60,
+            'quantity': 60,
             'location_id': self.ref('stock.stock_location_suppliers'),
             'location_dest_id': self.ref('stock.stock_location_stock')
         })
 
         # Transfer the receipt
-        pick_neg.action_done()
+        pick_neg.move_ids.picked = True
+        pick_neg._action_done()
 
         # Make a delivery order of 300 pieces to the customer
         vals = {
@@ -96,7 +98,7 @@ class TestPackingNeg(TransactionCase):
             'picking_type_id': self.ref('stock.picking_type_out'),
             'location_id': self.ref('stock.stock_location_stock'),
             'location_dest_id': self.ref('stock.stock_location_customers'),
-            'move_lines': [(0, 0, {
+            'move_ids': [(0, 0, {
                 'name': 'NEG',
                 'product_id': product_neg.id,
                 'product_uom': product_neg.uom_id.id,
@@ -104,10 +106,11 @@ class TestPackingNeg(TransactionCase):
                 'location_id': self.ref('stock.stock_location_stock'),
                 'location_dest_id': self.ref('stock.stock_location_customers'),
             })],
+            'state': 'draft',
         }
         delivery_order_neg = self.env['stock.picking'].create(vals)
-        delivery_order_neg.onchange_picking_type()
-        delivery_order_neg.move_lines.onchange_product_id()
+        delivery_order_neg._onchange_picking_type()
+        delivery_order_neg.move_ids._onchange_product_id()
 
         # Assign and confirm
         delivery_order_neg.action_confirm()
@@ -118,19 +121,19 @@ class TestPackingNeg(TransactionCase):
 
         for rec in delivery_order_neg.move_line_ids:
             if rec.package_id.name == 'Palneg 1':
-                rec.qty_done = rec.product_qty
                 rec.result_package_id = False
             elif rec.package_id.name == 'Palneg 2' and rec.lot_id.name == 'Lot neg':
                 rec.write({
-                  'qty_done': 140,
+                  'quantity': 140,
                   'result_package_id': False,
                 })
             elif rec.package_id.name == 'Palneg 3':
-                rec.qty_done = 10
+                rec.quantity = 10
                 rec.result_package_id = False
 
         # Process this picking
-        delivery_order_neg.action_done()
+        delivery_order_neg.move_ids.picked = True
+        delivery_order_neg._action_done()
 
         # Check the quants that you have -20 pieces pallet 2 in stock, and a total quantity
         # of 50 in stock from pallet 3 (should be 20+30, as it has been split by reservation)
@@ -153,7 +156,7 @@ class TestPackingNeg(TransactionCase):
             'picking_type_id': self.ref('stock.picking_type_in'),
             'location_id': self.ref('stock.stock_location_suppliers'),
             'location_dest_id': self.ref('stock.stock_location_stock'),
-            'move_lines': [(0, 0, {
+            'move_ids': [(0, 0, {
                 'name': 'NEG',
                 'product_id': product_neg.id,
                 'product_uom': product_neg.uom_id.id,
@@ -161,19 +164,21 @@ class TestPackingNeg(TransactionCase):
                 'location_id': self.ref('stock.stock_location_suppliers'),
                 'location_dest_id': self.ref('stock.stock_location_stock'),
             })],
+            'state': 'draft',
         }
         delivery_reconcile = self.env['stock.picking'].create(vals)
-        delivery_reconcile.onchange_picking_type()
-        delivery_reconcile.move_lines.onchange_product_id()
+        delivery_reconcile._onchange_picking_type()
+        delivery_reconcile.move_ids._onchange_product_id()
 
         # Receive 20 products with lot neg in stock with a new incoming shipment that should be on pallet 2
         delivery_reconcile.action_confirm()
-        lot = self.env["stock.production.lot"].search([
+        lot = self.env["stock.lot"].search([
             ('product_id', '=', product_neg.id),
             ('name', '=', 'Lot neg')], limit=1)
         pack = self.env["stock.quant.package"].search([('name', '=', 'Palneg 2')], limit=1)
-        delivery_reconcile.move_line_ids[0].write({'lot_id': lot.id, 'qty_done': 20.0, 'result_package_id': pack.id})
-        delivery_reconcile.action_done()
+        delivery_reconcile.move_line_ids[0].write({'lot_id': lot.id, 'quantity': 20.0, 'result_package_id': pack.id})
+        delivery_reconcile.move_ids.picked = True
+        delivery_reconcile._action_done()
 
         # Check the negative quant was reconciled
         neg_quants = self.env['stock.quant'].search([

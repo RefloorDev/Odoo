@@ -7,16 +7,36 @@
             <field name="arch" type="xml">
                 <form>
                     <sheet>
+                        <h1><field name="employee_id" readonly="1" options="{'no_open': True}"/></h1>
                         <group>
-                            <field name="plan_id"/>
-                            <field name="employee_id" invisible="1"/>
-                            <field name="departure_reason"/>
-                            <field name="departure_description"/>
+                            <group id="info">
+                                <field name="departure_reason_id" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                                <field name="departure_date"/>
+                            </group>
+                            <group id="action">
+                                <!-- Override invisible="1" when inheriting -->
+                                <div class="o_td_label" id="activities_label" invisible="1">
+                                    <span class="o_form_label o_hr_form_label cursor-default">Close Activities</span>
+                                </div>
+                                <!-- Override invisible="1" when inheriting -->
+                                <div class="column" id="activities" invisible="1">
+                                </div>
+                                <div class="o_td_label" id="label_info">
+                                    <span class="o_form_label o_hr_form_label cursor-default">HR Info</span>
+                                </div>
+                                <div class="column" id="info"/>
+                            </group>
+                        </group>
+                        <group>
+                            <div id="detailed_reason" colspan="2">
+                                <span class="o_form_label o_hr_form_label cursor-default">Detailed Reason</span>
+                                <field name="departure_description" placeholder="Give more details about the reason of archiving the employee."/>
+                            </div>
                         </group>
                     </sheet>
                     <footer>
-                        <button name="action_register_departure" string="Save" type="object" class="oe_highlight"/>
-                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                        <button name="action_register_departure" string="Apply" type="object" class="oe_highlight" data-hotkey="q"/>
+                        <button string="Discard" class="btn-secondary" special="cancel" data-hotkey="x"/>
                     </footer>
                 </form>
             </field>

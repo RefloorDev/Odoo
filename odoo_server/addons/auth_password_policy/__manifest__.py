@@ -1,12 +1,21 @@
 {
     'name': "Password Policy",
     "summary": "Implement basic password policy configuration & check",
-    'category': 'Tools',
+    'category': 'Hidden/Tools',
     'depends': ['base_setup', 'web'],
     'data': [
         'data/defaults.xml',
-        'views/assets.xml',
         'views/res_users.xml',
         'views/res_config_settings_views.xml',
-    ]
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'auth_password_policy/static/src/**/*',
+        ],
+        'web.assets_frontend': [
+            'auth_password_policy/static/src/css/password_field.css',
+            'auth_password_policy/static/src/password_policy.js',
+        ],
+    },
+    'license': 'LGPL-3',
 }

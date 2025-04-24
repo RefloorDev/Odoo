@@ -3,6 +3,7 @@
 
 """ Modules dependency graph. """
 
+import functools
 import itertools
 import logging
 
@@ -10,6 +11,15 @@ import odoo
 import odoo.tools as tools
 
 _logger = logging.getLogger(__name__)
+
+
+@functools.lru_cache(maxsize=1)
+def _ignored_modules(cr):
+    result = ['studio_customization']
+    if tools.sql.column_exists(cr, 'ir_module_module', 'imported'):
+        cr.execute('SELECT name FROM ir_module_module WHERE imported')
+        result += [m[0] for m in cr.fetchall()]
+    return result
 
 class Graph(dict):
     """ Modules dependency graph.
@@ -58,13 +68,10 @@ class Graph(dict):
         packages = []
         len_graph = len(self)
         for module in module_list:
-            # This will raise an exception if no/unreadable descriptor file.
-            # NOTE The call to load_information_from_description_file is already
-            # done by db.initialize, so it is possible to not do it again here.
-            info = odoo.modules.module.load_information_from_description_file(module)
+            info = odoo.modules.module.get_manifest(module)
             if info and info['installable']:
                 packages.append((module, info)) # TODO directly a dict, like in get_modules_with_version
-            elif module != 'studio_customization':
+            elif module not in _ignored_modules(cr):
                 _logger.warning('module %s: not installable, skipped', module)
 
         dependencies = dict([(p, info['depends']) for p, info in packages])
@@ -117,7 +124,7 @@ class Node(object):
 
     Node acts as a per-module singleton. A node is constructed via
     Graph.add_module() or Graph.add_modules(). Some of its fields are from
-    ir_module_module (setted by Graph.update_from_db()).
+    ir_module_module (set by Graph.update_from_db()).
 
     """
     def __new__(cls, name, graph, info):

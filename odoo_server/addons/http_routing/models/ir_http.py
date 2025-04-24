@@ -1,271 +1,45 @@
-# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import logging
-import os
 import re
 import traceback
-import unicodedata
-import werkzeug
-
-# optional python-slugify import (https://github.com/un33k/python-slugify)
-try:
-    import slugify as slugify_lib
-except ImportError:
-    slugify_lib = None
+import typing
+import werkzeug.exceptions
+import werkzeug.routing
+import werkzeug.urls
+import urllib.parse
+from werkzeug.exceptions import HTTPException, NotFound
 
 import odoo
-from odoo import api, models, registry, exceptions
-from odoo.addons.base.models.ir_http import RequestUID, ModelConverter
-from odoo.addons.base.models.qweb import QWebException
-from odoo.http import request
+from odoo import api, models, exceptions, tools, http
+from odoo.addons.base.models import ir_http
+from odoo.addons.base.models.ir_http import RequestUID
+from odoo.addons.base.models.ir_qweb import keep_query, QWebException
+from odoo.addons.base.models.res_lang import LangData
+from odoo.exceptions import AccessError, MissingError
+from odoo.http import request, Response
 from odoo.osv import expression
-from odoo.tools import config, ustr, pycompat
-
-from ..geoipresolver import GeoIPResolver
 
 _logger = logging.getLogger(__name__)
 
-# global resolver (GeoIP API is thread-safe, for multithreaded workers)
-# This avoids blowing up open files limit
-odoo._geoip_resolver = None
+# NOTE: the second pattern is used for the ModelConverter, do not use nor flags nor groups
+_UNSLUG_RE = re.compile(r'(?:(\w{1,2}|\w[A-Za-z0-9-_]+?\w)-)?(-?\d+)(?=$|\/|#|\?)')
+_UNSLUG_ROUTE_PATTERN = r'(?:(?:\w{1,2}|\w[A-Za-z0-9-_]+?\w)-)?(?:-?\d+)(?=$|\/|#|\?)'
 
 
-# ------------------------------------------------------------
-# Slug API
-# ------------------------------------------------------------
-
-def _guess_mimetype(ext=False, default='text/html'):
-    exts = {
-        '.css': 'text/css',
-        '.less': 'text/less',
-        '.scss': 'text/scss',
-        '.js': 'text/javascript',
-        '.xml': 'text/xml',
-        '.csv': 'text/csv',
-        '.html': 'text/html',
-    }
-    return ext is not False and exts.get(ext, default) or exts
-
-
-def slugify_one(s, max_length=0):
-    """ Transform a string to a slug that can be used in a url path.
-        This method will first try to do the job with python-slugify if present.
-        Otherwise it will process string by stripping leading and ending spaces,
-        converting unicode chars to ascii, lowering all chars and replacing spaces
-        and underscore with hyphen "-".
-        :param s: str
-        :param max_length: int
-        :rtype: str
-    """
-    s = ustr(s)
-    if slugify_lib:
-        # There are 2 different libraries only python-slugify is supported
-        try:
-            return slugify_lib.slugify(s, max_length=max_length)
-        except TypeError:
-            pass
-    uni = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode('ascii')
-    slug_str = re.sub(r'[\W_]', ' ', uni).strip().lower()
-    slug_str = re.sub(r'[-\s]+', '-', slug_str)
-    return slug_str[:max_length] if max_length > 0 else slug_str
-
-
-def slugify(s, max_length=0, path=False):
-    if not path:
-        return slugify_one(s, max_length=max_length)
-    else:
-        res = []
-        for u in s.split('/'):
-            if slugify_one(u, max_length=max_length) != '':
-                res.append(slugify_one(u, max_length=max_length))
-        # check if supported extension
-        path_no_ext, ext = os.path.splitext(s)
-        if ext and ext in _guess_mimetype():
-            res[-1] = slugify_one(path_no_ext) + ext
-        return '/'.join(res)
-
-
-def slug(value):
-    if isinstance(value, models.BaseModel):
-        if not value.id:
-            raise ValueError("Cannot slug non-existent record %s" % value)
-        # [(id, name)] = value.name_get()
-        identifier, name = value.id, value.display_name
-    else:
-        # assume name_search result tuple
-        identifier, name = value
-    slugname = slugify(name or '').strip().strip('-')
-    if not slugname:
-        return str(identifier)
-    return "%s-%d" % (slugname, identifier)
-
-
-# NOTE: as the pattern is used as it for the ModelConverter (ir_http.py), do not use any flags
-_UNSLUG_RE = re.compile(r'(?:(\w{1,2}|\w[A-Za-z0-9-_]+?\w)-)?(-?\d+)(?=$|/)')
-
-
-def unslug(s):
-    """Extract slug and id from a string.
-        Always return un 2-tuple (str|None, int|None)
-    """
-    m = _UNSLUG_RE.match(s)
-    if not m:
-        return None, None
-    return m.group(1), int(m.group(2))
-
-
-def unslug_url(s):
-    """ From /blog/my-super-blog-1" to "blog/1" """
-    parts = s.split('/')
-    if parts:
-        unslug_val = unslug(parts[-1])
-        if unslug_val[1]:
-            parts[-1] = str(unslug_val[1])
-            return '/'.join(parts)
-    return s
-
-
-# ------------------------------------------------------------
-# Language tools
-# ------------------------------------------------------------
-
-def url_lang(path_or_uri, lang_code=None):
-    ''' Given a relative URL, make it absolute and add the required lang or
-        remove useless lang.
-        Nothing will be done for absolute URL.
-        If there is only one language installed, the lang will not be handled
-        unless forced with `lang` parameter.
-
-        :param lang_code: Must be the lang `code`. It could also be something
-                          else, such as `'[lang]'` (used for url_return).
-    '''
-    Lang = request.env['res.lang']
-    location = pycompat.to_text(path_or_uri).strip()
-    force_lang = lang_code is not None
-    url = werkzeug.urls.url_parse(location)
-    # relative URL with either a path or a force_lang
-    if not url.netloc and not url.scheme and (url.path or force_lang):
-        location = werkzeug.urls.url_join(request.httprequest.path, location)
-        lang_url_codes = [url_code for _, url_code, _ in Lang.get_available()]
-        lang_code = pycompat.to_text(lang_code or request.context['lang'])
-        lang_url_code = Lang._lang_code_to_urlcode(lang_code)
-        lang_url_code = lang_url_code if lang_url_code in lang_url_codes else lang_code
-
-        if (len(lang_url_codes) > 1 or force_lang) and is_multilang_url(location, lang_url_codes):
-            ps = location.split(u'/')
-            default_lg = request.env['ir.http']._get_default_lang()
-            if ps[1] in lang_url_codes:
-                # Replace the language only if we explicitly provide a language to url_for
-                if force_lang:
-                    ps[1] = lang_url_code
-                # Remove the default language unless it's explicitly provided
-                elif ps[1] == default_lg.url_code:
-                    ps.pop(1)
-            # Insert the context language or the provided language
-            elif lang_url_code != default_lg.url_code or force_lang:
-                ps.insert(1, lang_url_code)
-            location = u'/'.join(ps)
-    return location
-
-
-def url_for(url_from, lang_code=None, no_rewrite=False):
-    ''' Return the url with the rewriting applied.
-        Nothing will be done for absolute URL, or short URL from 1 char.
-
-        :param url_from: The URL to convert.
-        :param lang_code: Must be the lang `code`. It could also be something
-                          else, such as `'[lang]'` (used for url_return).
-        :param no_rewrite: don't try to match route with website.rewrite.
-    '''
-    new_url = False
-
-    # don't try to match route if we know that no rewrite has been loaded.
-    routing = getattr(request, 'website_routing', None)  # not modular, but not overridable
-    if not request.env['ir.http']._rewrite_len.get(routing):
-        no_rewrite = True
-
-    # avoid useless check for 1 char URL '/', '#', ... and absolute URL
-    if not no_rewrite and url_from and (len(url_from) > 1 or not url_from.startswith('http')):
-        path, _, qs = url_from.partition('?')
-        req = request.httprequest
-        router = req.app.get_db_router(request.db).bind('')
-        try:
-            _ = router.match(path, method='POST')
-        except werkzeug.exceptions.MethodNotAllowed as e:
-            _ = router.match(path, method='GET')
-        except werkzeug.routing.RequestRedirect as e:
-            # remove query string from current env
-            new_url = e.new_url.split('?')[0]
-            # remove scheme and add query_string from url_from
-            new_url = new_url[7:] + (qs and '?%s' % qs or '')
-        except werkzeug.exceptions.NotFound as e:
-            new_url = url_from
-        except Exception as e:
-            raise e
-
-    return url_lang(new_url or url_from, lang_code=lang_code)
-
-
-def is_multilang_url(local_url, lang_url_codes=None):
-    ''' Check if the given URL content is supposed to be translated.
-        To be considered as translatable, the URL should either:
-        1. Match a POST (non-GET actually) controller that is `website=True` and
-           either `multilang` specified to True or if not specified, with `type='http'`.
-        2. If not matching 1., everything not under /static/ will be translatable
-    '''
-    if not lang_url_codes:
-        lang_url_codes = [url_code for _, url_code, _ in request.env['res.lang'].get_available()]
-    spath = local_url.split('/')
-    # if a language is already in the path, remove it
-    if spath[1] in lang_url_codes:
-        spath.pop(1)
-        local_url = '/'.join(spath)
-
-    url = local_url.partition('#')[0].split('?')
-    path = url[0]
-    query_string = url[1] if len(url) > 1 else None
-    router = request.httprequest.app.get_db_router(request.db).bind('')
-
-    def is_multilang_func(func):
-        return (func and func.routing.get('website', False) and
-                func.routing.get('multilang', func.routing['type'] == 'http'))
-    # Try to match an endpoint in werkzeug's routing table
-    try:
-        func = router.match(path, method='POST', query_args=query_string)[0]
-        return is_multilang_func(func)
-    except werkzeug.exceptions.MethodNotAllowed:
-        func = router.match(path, method='GET', query_args=query_string)[0]
-        return is_multilang_func(func)
-    except werkzeug.exceptions.NotFound:
-        # Consider /static/ files as non-multilang
-        static_index = path.find('/static/', 1)
-        if static_index != -1 and static_index == path.find('/', 1):
-            return False
-        return True
-    except Exception:
-        return False
-
-
-class ModelConverter(ModelConverter):
+class ModelConverter(ir_http.ModelConverter):
 
     def __init__(self, url_map, model=False, domain='[]'):
         super(ModelConverter, self).__init__(url_map, model)
         self.domain = domain
-        self.regex = _UNSLUG_RE.pattern
+        self.regex = _UNSLUG_ROUTE_PATTERN
 
-    def to_url(self, value):
-        return slug(value)
-
-    def to_python(self, value):
-        matching = re.match(self.regex, value)
-        _uid = RequestUID(value=value, match=matching, converter=self)
-        record_id = int(matching.group(2))
-        env = api.Environment(request.cr, _uid, request.context)
-        if record_id < 0:
+    def to_python(self, value) -> models.BaseModel:
+        record = super().to_python(value)
+        if record.id < 0 and not record.browse(record.id).exists():
             # limited support for negative IDs due to our slug pattern, assume abs() if not found
-            if not env[self.model].browse(record_id).exists():
-                record_id = abs(record_id)
-        return env[self.model].browse(record_id)
+            record = record.browse(abs(record.id))
+        return record.with_context(_converter_value=value)
 
 
 class IrHttp(models.AbstractModel):
@@ -273,8 +47,47 @@ class IrHttp(models.AbstractModel):
 
     rerouting_limit = 10
 
+    # ------------------------------------------------------------
+    # Slug tools
+    # ------------------------------------------------------------
+
     @classmethod
-    def _get_converters(cls):
+    def _slug(cls, value: models.BaseModel | tuple[int, str]) -> str:
+        try:
+            identifier, name = value.id, value.display_name
+        except AttributeError:
+            # assume name_search result tuple
+            identifier, name = value
+        if not identifier:
+            raise ValueError("Cannot slug non-existent record %s" % value)
+        slugname = cls._slugify(name or '')
+        if not slugname:
+            return str(identifier)
+        return f"{slugname}-{identifier}"
+
+    @classmethod
+    def _unslug(cls, value: str) -> tuple[str | None, int] | tuple[None, None]:
+        """ Extract slug and id from a string.
+            Always return a 2-tuple (str|None, int|None)
+        """
+        m = _UNSLUG_RE.match(value)
+        if not m:
+            return None, None
+        return m.group(1), int(m.group(2))
+
+    @classmethod
+    def _unslug_url(cls, value: str) -> str:
+        """ From /blog/my-super-blog-1" to "blog/1" """
+        parts = value.split('/')
+        if parts:
+            unslug_val = cls._unslug(parts[-1])
+            if unslug_val[1]:
+                parts[-1] = str(unslug_val[1])
+                return '/'.join(parts)
+        return value
+
+    @classmethod
+    def _get_converters(cls) -> dict[str, type]:
         """ Get the converters list for custom url pattern werkzeug need to
             match Rule. This override adds the website ones.
         """
@@ -283,22 +96,180 @@ class IrHttp(models.AbstractModel):
             model=ModelConverter,
         )
 
+    # ------------------------------------------------------------
+    # Language tools
+    # ------------------------------------------------------------
+
     @classmethod
-    def _get_default_lang(cls):
-        lang_code = request.env['ir.default'].sudo().get('res.partner', 'lang')
+    def _url_localized(cls,
+            url: str | None = None,
+            lang_code: str | None = None,
+            canonical_domain: str | tuple[str, str, str, str, str] | None = None,
+            prefetch_langs: bool = False, force_default_lang: bool = False) -> str:
+        """ Returns the given URL adapted for the given lang, meaning that:
+        1. It will have the lang suffixed to it
+        2. The model converter parts will be translated
+
+        If it is not possible to rebuild a path, use the current one instead.
+        `url_quote_plus` is applied on the returned path.
+
+        It will also force the canonical domain is requested.
+        Eg:
+        - `_get_url_localized(lang_fr, '/shop/my-phone-14')` will return
+            `/fr/shop/mon-telephone-14`
+        - `_get_url_localized(lang_fr, '/shop/my-phone-14', True)` will return
+            `<base_url>/fr/shop/mon-telephone-14`
+        """
+        if not lang_code:
+            lang = request.lang
+        else:
+            lang = request.env['res.lang']._get_data(code=lang_code)
+
+        if not url:
+            qs = keep_query()
+            url = request.httprequest.path + ('?%s' % qs if qs else '')
+
+        # '/shop/furn-0269-chaise-de-bureau-noire-17?' to
+        # '/shop/furn-0269-chaise-de-bureau-noire-17', otherwise -> 404
+        url, sep, qs = url.partition('?')
+
+        try:
+            # Re-match the controller where the request path routes.
+            rule, args = request.env['ir.http']._match(url)
+            for key, val in list(args.items()):
+                if isinstance(val, models.BaseModel):
+                    if isinstance(val._uid, RequestUID):
+                        args[key] = val = val.with_user(request.uid)
+                    if val.env.context.get('lang') != lang.code:
+                        args[key] = val = val.with_context(lang=lang.code)
+                    if prefetch_langs:
+                        args[key] = val = val.with_context(prefetch_langs=True)
+            router = http.root.get_db_router(request.db).bind('')
+            path = router.build(rule.endpoint, args)
+        except (NotFound, AccessError, MissingError):
+            # The build method returns a quoted URL so convert in this case for consistency.
+            path = werkzeug.urls.url_quote_plus(url, safe='/')
+        if force_default_lang or lang != request.env['ir.http']._get_default_lang():
+            path = f'/{lang.url_code}{path if path != "/" else ""}'
+
+        if canonical_domain:
+            # canonical URLs should not have qs
+            return werkzeug.urls.url_join(canonical_domain, path)
+
+        return path + sep + qs
+
+    @classmethod
+    def _url_lang(cls, path_or_uri: str, lang_code: str | None = None) -> str:
+        ''' Given a relative URL, make it absolute and add the required lang or
+            remove useless lang.
+            Nothing will be done for absolute or invalid URL.
+            If there is only one language installed, the lang will not be handled
+            unless forced with `lang` parameter.
+
+            :param lang_code: Must be the lang `code`. It could also be something
+                              else, such as `'[lang]'` (used for url_return).
+        '''
+        Lang = request.env['res.lang']
+        location = path_or_uri.strip()
+        force_lang = lang_code is not None
+        try:
+            url = urllib.parse.urlparse(location)
+        except ValueError:
+            # e.g. Invalid IPv6 URL, `urllib.parse.urlparse('http://]')`
+            url = False
+        # relative URL with either a path or a force_lang
+        if url and not url.netloc and not url.scheme and (url.path or force_lang):
+            location = werkzeug.urls.url_join(request.httprequest.path, location)
+            lang_url_codes = [info.url_code for info in Lang._get_frontend().values()]
+            lang_code = lang_code or request.context['lang']
+            lang_url_code = Lang._get_data(code=lang_code).url_code
+            lang_url_code = lang_url_code if lang_url_code in lang_url_codes else lang_code
+            if (len(lang_url_codes) > 1 or force_lang) and cls._is_multilang_url(location, lang_url_codes):
+                loc, sep, qs = location.partition('?')
+                ps = loc.split('/')
+                default_lg = request.env['ir.http']._get_default_lang()
+                if ps[1] in lang_url_codes:
+                    # Replace the language only if we explicitly provide a language to url_for
+                    if force_lang:
+                        ps[1] = lang_url_code
+                    # Remove the default language unless it's explicitly provided
+                    elif ps[1] == default_lg.url_code:
+                        ps.pop(1)
+                # Insert the context language or the provided language
+                elif lang_url_code != default_lg.url_code or force_lang:
+                    ps.insert(1, lang_url_code)
+                    # Remove the last empty string to avoid trailing / after joining
+                    if not ps[-1]:
+                        ps.pop(-1)
+
+                location = '/'.join(ps) + sep + qs
+        return location
+
+    @classmethod
+    def _url_for(cls, url_from: str, lang_code: str | None = None) -> str:
+        ''' Return the url with the rewriting applied.
+            Nothing will be done for absolute URL, invalid URL, or short URL from 1 char.
+
+            :param url_from: The URL to convert.
+            :param lang_code: Must be the lang `code`. It could also be something
+                              else, such as `'[lang]'` (used for url_return).
+        '''
+        return cls._url_lang(url_from, lang_code=lang_code)
+
+    @classmethod
+    def _is_multilang_url(cls, local_url: str, lang_url_codes: list[str] | None = None) -> bool:
+        ''' Check if the given URL content is supposed to be translated.
+            To be considered as translatable, the URL should either:
+            1. Match a POST (non-GET actually) controller that is `website=True` and
+            either `multilang` specified to True or if not specified, with `type='http'`.
+            2. If not matching 1., everything not under /static/ or /web/ will be translatable
+        '''
+        if not lang_url_codes:
+            lang_url_codes = [lg.url_code for lg in request.env['res.lang']._get_frontend().values()]
+        spath = local_url.split('/')
+        # if a language is already in the path, remove it
+        if spath[1] in lang_url_codes:
+            spath.pop(1)
+            local_url = '/'.join(spath)
+
+        url = local_url.partition('#')[0].split('?')
+        path = url[0]
+
+        # Consider /static/ and /web/ files as non-multilang
+        if '/static/' in path or path.startswith('/web/'):
+            return False
+
+        query_string = url[1] if len(url) > 1 else None
+
+        # Try to match an endpoint in werkzeug's routing table
+        try:
+            _, func = request.env['ir.http'].url_rewrite(path, query_args=query_string)
+
+            # /page/xxx has no endpoint/func but is multilang
+            return (not func or (
+                func.routing.get('website', False)
+                and func.routing.get('multilang', func.routing['type'] == 'http')
+            ))
+        except Exception as exception:  # noqa: BLE001
+            _logger.warning(exception)
+            return False
+
+    @classmethod
+    def _get_default_lang(cls) -> LangData:
+        lang_code = request.env['ir.default'].sudo()._get('res.partner', 'lang')
         if lang_code:
-            return request.env['res.lang']._lang_get(lang_code)
-        return request.env['res.lang'].search([], limit=1)
+            return request.env['res.lang']._get_data(code=lang_code)
+        return next(iter(request.env['res.lang']._get_active_by('code').values()))
 
     @api.model
-    def get_frontend_session_info(self):
+    def get_frontend_session_info(self) -> dict:
         session_info = super(IrHttp, self).get_frontend_session_info()
 
         IrHttpModel = request.env['ir.http'].sudo()
         modules = IrHttpModel.get_translation_frontend_modules()
-        user_context = request.session.get_context() if request.session.uid else {}
+        user_context = request.session.context if request.session.uid else {}
         lang = user_context.get('lang')
-        translation_hash = request.env['ir.translation'].get_web_translations_hash(modules, lang)
+        translation_hash = request.env['ir.http'].get_web_translations_hash(modules, lang)
 
         session_info.update({
             'translationURL': '/website/translations',
@@ -309,7 +280,7 @@ class IrHttp(models.AbstractModel):
         return session_info
 
     @api.model
-    def get_translation_frontend_modules(self):
+    def get_translation_frontend_modules(self) -> list[str]:
         Modules = request.env['ir.module.module'].sudo()
         extra_modules_domain = self._get_translation_frontend_modules_domain()
         extra_modules_name = self._get_translation_frontend_modules_name()
@@ -321,246 +292,244 @@ class IrHttp(models.AbstractModel):
         return extra_modules_name
 
     @classmethod
-    def _get_translation_frontend_modules_domain(cls):
+    def _get_translation_frontend_modules_domain(cls) -> list[tuple[str, str, typing.Any]]:
         """ Return a domain to list the domain adding web-translations and
             dynamic resources that may be used frontend views
         """
         return []
 
     @classmethod
-    def _get_translation_frontend_modules_name(cls):
+    def _get_translation_frontend_modules_name(cls) -> list[str]:
         """ Return a list of module name where web-translations and
             dynamic resources may be used in frontend views
         """
         return ['web']
 
-    bots = "bot|crawl|slurp|spider|curl|wget|facebookexternalhit".split("|")
-
-    @classmethod
-    def is_a_bot(cls):
-        # We don't use regexp and ustr voluntarily
-        # timeit has been done to check the optimum method
-        user_agent = request.httprequest.environ.get('HTTP_USER_AGENT', '').lower()
-        try:
-            return any(bot in user_agent for bot in cls.bots)
-        except UnicodeDecodeError:
-            return any(bot in user_agent.encode('ascii', 'ignore') for bot in cls.bots)
-
-    @classmethod
-    def _get_frontend_langs(cls):
-        return [code for code, _ in request.env['res.lang'].get_installed()]
-
-    @classmethod
-    def get_nearest_lang(cls, lang_code):
+    @api.model
+    def get_nearest_lang(self, lang_code: str) -> str:
         """ Try to find a similar lang. Eg: fr_BE and fr_FR
             :param lang_code: the lang `code` (en_US)
         """
         if not lang_code:
-            return False
-        short_match = False
+            return None
+
+        frontend_langs = self.env['res.lang']._get_frontend()
+        if lang_code in frontend_langs:
+            return lang_code
+
         short = lang_code.partition('_')[0]
-        for code in cls._get_frontend_langs():
-            if code == lang_code:
-                return code
-            if not short_match and code.startswith(short):
-                short_match = code
-        return short_match
+        if not short:
+            return None
+        return next((code for code in frontend_langs if code.startswith(short)), None)
+
+    # ------------------------------------------------------------
+    # Routing and diplatch
+    # ------------------------------------------------------------
 
     @classmethod
-    def _geoip_setup_resolver(cls):
-        # Lazy init of GeoIP resolver
-        if odoo._geoip_resolver is not None:
-            return
-        geofile = config.get('geoip_database')
-        try:
-            odoo._geoip_resolver = GeoIPResolver.open(geofile) or False
-        except Exception as e:
-            _logger.warning('Cannot load GeoIP: %s', ustr(e))
-
-    @classmethod
-    def _geoip_resolve(cls):
-        if 'geoip' not in request.session:
-            record = {}
-            if odoo._geoip_resolver and request.httprequest.remote_addr:
-                record = odoo._geoip_resolver.resolve(request.httprequest.remote_addr) or {}
-            request.session['geoip'] = record
-
-    @classmethod
-    def _add_dispatch_parameters(cls, func):
-        Lang = request.env['res.lang']
-        # only called for is_frontend request
-        if request.routing_iteration == 1:
-            context = dict(request.context)
-            path = request.httprequest.path.split('/')
-            is_a_bot = cls.is_a_bot()
-
-            available_langs = Lang.get_available()
-            lang_codes = [code for code, _, _ in available_langs]
-            nearest_lang = not func and cls.get_nearest_lang(Lang._lang_get_code(path[1]))
-            cook_lang = request.httprequest.cookies.get('frontend_lang')
-            cook_lang = cook_lang in lang_codes and cook_lang
-
-            if nearest_lang:
-                lang = Lang._lang_get(nearest_lang)
-            else:
-                nearest_ctx_lg = not is_a_bot and cls.get_nearest_lang(request.env.context['lang'])
-                nearest_ctx_lg = nearest_ctx_lg in lang_codes and nearest_ctx_lg
-                preferred_lang = Lang._lang_get(cook_lang or nearest_ctx_lg)
-                lang = preferred_lang or cls._get_default_lang()
-
-            request.lang = lang
-            context['lang'] = lang.code
-
-            # bind modified context
-            request.context = context
-
-    @classmethod
-    def _dispatch(cls):
-        """ Before executing the endpoint method, add website params on request, such as
-                - current website (record)
-                - multilang support (set on cookies)
-                - geoip dict data are added in the session
-            Then follow the parent dispatching.
-            Reminder :  Do not use `request.env` before authentication phase, otherwise the env
-                        set on request will be created with uid=None (and it is a lazy property)
+    def _match(cls, path):
         """
-        request.routing_iteration = getattr(request, 'routing_iteration', 0) + 1
+        Grant multilang support to URL matching by using http 3xx
+        redirections and URL rewrite. This method also grants various
+        attributes such as ``lang`` and ``is_frontend`` on the current
+        ``request`` object.
 
-        func = None
-        routing_error = None
+        1/ Use the URL as-is when it matches a non-multilang compatible
+           endpoint.
 
-        # handle // in url
-        if request.httprequest.method == 'GET' and '//' in request.httprequest.path:
-            new_url = request.httprequest.path.replace('//', '/') + '?' + request.httprequest.query_string.decode('utf-8')
-            return werkzeug.utils.redirect(new_url, 301)
+        2/ Use the URL as-is when the lang is not present in the URL and
+           that the default lang has been requested.
 
-        # locate the controller method
+        3/ Use the URL as-is saving the requested lang when the user is
+           a bot and that the lang is missing from the URL.
+
+        4) Use the url as-is when the lang is missing from the URL, that
+           another lang than the default one has been requested but that
+           it is forbidden to redirect (e.g. POST)
+
+        5/ Redirect the browser when the lang is missing from the URL
+           but another lang than the default one has been requested. The
+           requested lang is injected before the original path.
+
+        6/ Redirect the browser when the lang is present in the URL but
+           it is the default lang. The lang is removed from the original
+           URL.
+
+        7/ Redirect the browser when the lang present in the URL is an
+           alias of the preferred lang url code (e.g. fr_FR -> fr)
+
+        8/ Redirect the browser when the requested page is the homepage
+           but that there is a trailing slash.
+
+        9/ Rewrite the URL when the lang is present in the URL, that it
+           matches and that this lang is not the default one. The URL is
+           rewritten to remove the lang.
+
+        Note: The "requested lang" is (in order) either (1) the lang in
+              the URL or (2) the lang in the ``frontend_lang`` request
+              cookie or (3) the lang in the context or (4) the default
+              lang of the website.
+        """
+
+        # The URL has been rewritten already
+        if hasattr(request, 'is_frontend'):
+            return super()._match(path)
+
+        # See /1, match a non website endpoint
         try:
-            rule, arguments = cls._match(request.httprequest.path)
-            func = rule.endpoint
-            request.is_frontend = func.routing.get('website', False)
-        except werkzeug.exceptions.NotFound as e:
-            # either we have a language prefixed route, either a real 404
-            # in all cases, website processes them exept if second element is static
-            # Checking static will avoid to generate an expensive 404 web page since
-            # most of the time the browser is loading and inexisting assets or image. A standard 404 is enough.
-            # Earlier check would be difficult since we don't want to break data modules
-            path_components = request.httprequest.path.split('/')
-            request.is_frontend = len(path_components) < 3 or path_components[2] != 'static' or not '.' in path_components[-1]
-            routing_error = e
+            rule, args = super()._match(path)
+            routing = rule.endpoint.routing
+            request.is_frontend = routing.get('website', False)
+            request.is_frontend_multilang = request.is_frontend and routing.get('multilang', routing['type'] == 'http')
+            if not request.is_frontend:
+                return rule, args
+        except NotFound:
+            _, url_lang_str, *rest = path.split('/', 2)
+            path_no_lang = '/' + (rest[0] if rest else '')
+        else:
+            url_lang_str = ''
+            path_no_lang = path
 
-        request.is_frontend_multilang = not func or (func and request.is_frontend and func.routing.get('multilang', func.routing['type'] == 'http'))
+        allow_redirect = (
+            request.httprequest.method != 'POST'
+            and getattr(request, 'is_frontend_multilang', True)
+        )
 
-        # check authentication level
+        # Some URLs in website are concatenated, first url ends with /,
+        # second url starts with /, resulting url contains two following
+        # slashes that must be merged.
+        if allow_redirect and '//' in path:
+            new_url = path.replace('//', '/')
+            werkzeug.exceptions.abort(request.redirect(new_url, code=301, local=True))
+
+        # There is no user on the environment yet but the following code
+        # requires one to set the lang on the request. Temporary grant
+        # the public user. Don't try it at home!
+        real_env = request.env
         try:
-            if func:
-                cls._authenticate(func.routing['auth'])
-            elif request.uid is None and request.is_frontend:
-                cls._auth_method_public()
-        except Exception as e:
-            return cls._handle_exception(e)
+            request.registry['ir.http']._auth_method_public()  # it calls update_env
+            nearest_url_lang = request.env['ir.http'].get_nearest_lang(request.env['res.lang']._get_data(url_code=url_lang_str).code or url_lang_str)
+            cookie_lang = request.env['ir.http'].get_nearest_lang(request.cookies.get('frontend_lang'))
+            context_lang = request.env['ir.http'].get_nearest_lang(real_env.context.get('lang'))
+            default_lang = cls._get_default_lang()
+            request.lang = request.env['res.lang']._get_data(code=(
+                nearest_url_lang or cookie_lang or context_lang or default_lang.code
+            ))
+            request_url_code = request.lang.url_code
+        finally:
+            request.env = real_env
 
-        cls._geoip_setup_resolver()
-        cls._geoip_resolve()
+        if not nearest_url_lang:
+            url_lang_str = None
 
-        # For website routes (only), add website params on `request`
+        # See /2, no lang in url and default website
+        if not url_lang_str and request.lang == default_lang:
+            _logger.debug("%r (lang: %r) no lang in url and default website, continue", path, request_url_code)
+
+        # See /3, missing lang in url but user-agent is a bot
+        elif not url_lang_str and request.env['ir.http'].is_a_bot():
+            _logger.debug("%r (lang: %r) missing lang in url but user-agent is a bot, continue", path, request_url_code)
+            request.lang = default_lang
+
+        # See /4, no lang in url and should not redirect (e.g. POST), continue
+        elif not url_lang_str and not allow_redirect:
+            _logger.debug("%r (lang: %r) no lang in url and should not redirect (e.g. POST), continue", path, request_url_code)
+
+        # See /5, missing lang in url, /home -> /fr/home
+        elif not url_lang_str:
+            _logger.debug("%r (lang: %r) missing lang in url, redirect", path, request_url_code)
+            redirect = request.redirect_query(f'/{request_url_code}{path}', request.httprequest.args)
+            redirect.set_cookie('frontend_lang', request.lang.code)
+            werkzeug.exceptions.abort(redirect)
+
+        # See /6, default lang in url, /en/home -> /home
+        elif url_lang_str == default_lang.url_code and allow_redirect:
+            _logger.debug("%r (lang: %r) default lang in url, redirect", path, request_url_code)
+            redirect = request.redirect_query(path_no_lang, request.httprequest.args)
+            redirect.set_cookie('frontend_lang', default_lang.code)
+            werkzeug.exceptions.abort(redirect)
+
+        # See /7, lang alias in url, /fr_FR/home -> /fr/home
+        elif url_lang_str != request_url_code and allow_redirect:
+            _logger.debug("%r (lang: %r) lang alias in url, redirect", path, request_url_code)
+            redirect = request.redirect_query(f'/{request_url_code}{path_no_lang}', request.httprequest.args, code=301)
+            redirect.set_cookie('frontend_lang', request.lang.code)
+            werkzeug.exceptions.abort(redirect)
+
+        # See /8, homepage with trailing slash. /fr_BE/ -> /fr_BE
+        elif path == f'/{url_lang_str}/' and allow_redirect:
+            _logger.debug("%r (lang: %r) homepage with trailing slash, redirect", path, request_url_code)
+            redirect = request.redirect_query(path[:-1], request.httprequest.args, code=301)
+            redirect.set_cookie('frontend_lang', default_lang.code)
+            werkzeug.exceptions.abort(redirect)
+
+        # See /9, valid lang in url
+        elif url_lang_str == request_url_code:
+            # Rewrite the URL to remove the lang
+            _logger.debug("%r (lang: %r) valid lang in url, rewrite url and continue", path, request_url_code)
+            request.reroute(path_no_lang)
+            path = path_no_lang
+
+        else:
+            _logger.warning("%r (lang: %r) couldn't not correctly route this frontend request, url used as-is.", path, request_url_code)
+
+        # Re-match using rewritten route and really raise for 404 errors
+        try:
+            rule, args = super()._match(path)
+            routing = rule.endpoint.routing
+            request.is_frontend = routing.get('website', False)
+            request.is_frontend_multilang = request.is_frontend and routing.get('multilang', routing['type'] == 'http')
+            return rule, args
+        except NotFound:
+            # Use website to render a nice 404 Not Found html page
+            request.is_frontend = True
+            request.is_frontend_multilang = True
+            raise
+
+    @classmethod
+    def _pre_dispatch(cls, rule, args):
+        super()._pre_dispatch(rule, args)
+
         if request.is_frontend:
-            request.redirect = lambda url, code=302: werkzeug.utils.redirect(url_for(url), code)
+            cls._frontend_pre_dispatch()
 
-            cls._add_dispatch_parameters(func)
+            # update the context of "<model(...):...>" args
+            for key, val in list(args.items()):
+                if isinstance(val, models.BaseModel):
+                    args[key] = val.with_context(request.context)
 
-            path = request.httprequest.path.split('/')
-            default_lg_id = cls._get_default_lang()
-            if request.routing_iteration == 1:
-                is_a_bot = cls.is_a_bot()
-                nearest_lang = not func and cls.get_nearest_lang(request.env['res.lang']._lang_get_code(path[1]))
-                url_lg = nearest_lang and path[1]
-
-                # The default lang should never be in the URL, and a wrong lang
-                # should never be in the URL.
-                wrong_url_lg = url_lg and (url_lg != request.lang.url_code or url_lg == default_lg_id.url_code)
-                # The lang is missing from the URL if multi lang is enabled for
-                # the route and the current lang is not the default lang.
-                # POST requests are excluded from this condition.
-                missing_url_lg = not url_lg and request.is_frontend_multilang and request.lang != default_lg_id and request.httprequest.method != 'POST'
-                # Bots should never be redirected when the lang is missing
-                # because it is the only way for them to index the default lang.
-                if wrong_url_lg or (missing_url_lg and not is_a_bot):
-                    if url_lg:
-                        path.pop(1)
-                    if request.lang != default_lg_id:
-                        path.insert(1, request.lang.url_code)
-                    path = '/'.join(path) or '/'
-                    routing_error = None
-                    redirect = request.redirect(path + '?' + request.httprequest.query_string.decode('utf-8'))
-                    redirect.set_cookie('frontend_lang', request.lang.code)
-                    return redirect
-                elif url_lg:
-                    request.uid = None
-                    path.pop(1)
-                    routing_error = None
-                    return cls.reroute('/'.join(path) or '/')
-                elif missing_url_lg and is_a_bot:
-                    # Ensure that if the URL without lang is not redirected, the
-                    # current lang is indeed the default lang, because it is the
-                    # lang that bots should index in that case.
-                    request.lang = default_lg_id
-                    request.context = dict(request.context, lang=default_lg_id.code)
-
-            if request.lang == default_lg_id:
-                context = dict(request.context)
-                context['edit_translations'] = False
-                request.context = context
-
-        if routing_error:
-            return cls._handle_exception(routing_error)
-
-        # removed cache for auth public
-        result = super(IrHttp, cls)._dispatch()
-
-        cook_lang = request.httprequest.cookies.get('frontend_lang')
-        if request.is_frontend and cook_lang != request.lang.code and hasattr(result, 'set_cookie'):
-            result.set_cookie('frontend_lang', request.lang.code)
-
-        return result
+        if request.is_frontend_multilang:
+            # A product with id 1 and named 'egg' is accessible via a
+            # frontend multilang enpoint 'foo' at the URL '/foo/1'.
+            # The preferred URL to access the product (and to generate
+            # URLs pointing it) should instead be the sluggified URL
+            # '/foo/egg-1'. This code is responsible of redirecting the
+            # browser from '/foo/1' to '/foo/egg-1', or '/fr/foo/1' to
+            # '/fr/foo/oeuf-1'. While it is nice (for humans) to have a
+            # pretty URL, the real reason of this redirection is SEO.
+            if request.httprequest.method in ('GET', 'HEAD'):
+                try:
+                    _, path = rule.build(args)
+                except odoo.exceptions.MissingError:
+                    raise werkzeug.exceptions.NotFound()
+                assert path is not None
+                generated_path = werkzeug.urls.url_unquote_plus(path)
+                current_path = werkzeug.urls.url_unquote_plus(request.httprequest.path)
+                if generated_path != current_path:
+                    if request.lang != cls._get_default_lang():
+                        path = f'/{request.lang.url_code}{path}'
+                    redirect = request.redirect_query(path, request.httprequest.args, code=301)
+                    werkzeug.exceptions.abort(redirect)
 
     @classmethod
-    def reroute(cls, path):
-        if not hasattr(request, 'rerouting'):
-            request.rerouting = [request.httprequest.path]
-        if path in request.rerouting:
-            raise Exception("Rerouting loop is forbidden")
-        request.rerouting.append(path)
-        if len(request.rerouting) > cls.rerouting_limit:
-            raise Exception("Rerouting limit exceeded")
-        request.httprequest.environ['PATH_INFO'] = path
-        # void werkzeug cached_property. TODO: find a proper way to do this
-        for key in ('path', 'full_path', 'url', 'base_url'):
-            request.httprequest.__dict__.pop(key, None)
+    def _frontend_pre_dispatch(cls):
+        request.update_context(lang=request.lang.code)
+        if request.cookies.get('frontend_lang') != request.lang.code:
+            request.future_response.set_cookie('frontend_lang', request.lang.code)
 
-        return cls._dispatch()
-
-    @classmethod
-    def _postprocess_args(cls, arguments, rule):
-        super(IrHttp, cls)._postprocess_args(arguments, rule)
-
-        try:
-            _, path = rule.build(arguments)
-            assert path is not None
-        except odoo.exceptions.MissingError:
-            return cls._handle_exception(werkzeug.exceptions.NotFound())
-        except Exception as e:
-            return cls._handle_exception(e)
-
-        if getattr(request, 'is_frontend_multilang', False) and request.httprequest.method in ('GET', 'HEAD'):
-            generated_path = werkzeug.url_unquote_plus(path)
-            current_path = werkzeug.url_unquote_plus(request.httprequest.path)
-            if generated_path != current_path:
-                if request.lang != cls._get_default_lang():
-                    path = '/' + request.lang.url_code + path
-                if request.httprequest.query_string:
-                    path += '?' + request.httprequest.query_string.decode('utf-8')
-                return werkzeug.utils.redirect(path, code=301)
+    # ------------------------------------------------------------
+    # Exception
+    # ------------------------------------------------------------
 
     @classmethod
     def _get_exception_code_values(cls, exception):
@@ -570,9 +539,10 @@ class IrHttp(models.AbstractModel):
             exception=exception,
             traceback=traceback.format_exc(),
         )
-        # only except_orm exceptions contain a message
-        if isinstance(exception, exceptions.except_orm):
-            values['error_message'] = exception.name
+        if isinstance(exception, exceptions.AccessDenied):
+            code = 403
+        elif isinstance(exception, exceptions.UserError):
+            values['error_message'] = exception.args[0]
             code = 400
             if isinstance(exception, exceptions.AccessError):
                 code = 403
@@ -580,14 +550,17 @@ class IrHttp(models.AbstractModel):
         elif isinstance(exception, QWebException):
             values.update(qweb_exception=exception)
 
-            if type(exception.error) == exceptions.AccessError:
-                code = 403
+            if isinstance(exception.__context__, exceptions.UserError):
+                code = 400
+                values['error_message'] = exception.__context__.args[0]
+                if isinstance(exception.__context__, exceptions.AccessError):
+                    code = 403
 
         elif isinstance(exception, werkzeug.exceptions.HTTPException):
             code = exception.code
 
         values.update(
-            status_message=werkzeug.http.HTTP_STATUS_CODES[code],
+            status_message=werkzeug.http.HTTP_STATUS_CODES.get(code, ''),
             status_code=code,
         )
 
@@ -600,63 +573,65 @@ class IrHttp(models.AbstractModel):
 
     @classmethod
     def _get_error_html(cls, env, code, values):
-        return env['ir.ui.view'].render_template('http_routing.%s' % code, values)
+        return code, env['ir.ui.view']._render_template('http_routing.%s' % code, values)
 
     @classmethod
-    def _handle_exception(cls, exception):
-        is_frontend_request = bool(getattr(request, 'is_frontend', False))
-        if not is_frontend_request:
-            # Don't touch non frontend requests exception handling
-            return super(IrHttp, cls)._handle_exception(exception)
-        try:
-            response = super(IrHttp, cls)._handle_exception(exception)
+    def _handle_error(cls, exception):
+        response = super()._handle_error(exception)
 
-            if isinstance(response, Exception):
-                exception = response
-            else:
-                # if parent excplicitely returns a plain response, then we don't touch it
-                return response
-        except Exception as e:
-            if 'werkzeug' in config['dev_mode']:
-                raise e
-            exception = e
+        is_frontend_request = bool(getattr(request, 'is_frontend', False))
+        if not is_frontend_request or not isinstance(response, HTTPException):
+            # neither handle backend requests nor plain responses
+            return response
+
+        # minimal setup to serve frontend pages
+        if not request.uid:
+            cls._auth_method_public()
+        cls._handle_debug()
+        cls._frontend_pre_dispatch()
+        request.params = request.get_http_params()
 
         code, values = cls._get_exception_code_values(exception)
 
-        if code is None:
-            # Hand-crafted HTTPException likely coming from abort(),
-            # usually for a redirect response -> return it directly
-            return exception
-
-        if not request.uid:
-            cls._auth_method_public()
-
-        # We rollback the current transaction before initializing a new
-        # cursor to avoid potential deadlocks.
-
-        # If the current (failed) transaction was holding a lock, the new
-        # cursor might have to wait for this lock to be released further
-        # down the line. However, this will only happen after the
-        # request is done (and in fact it won't happen). As a result, the
-        # current thread/worker is frozen until its timeout is reached.
-
-        # So rolling back the transaction will release any potential lock
-        # and, since we are in a case where an exception was raised, the
-        # transaction shouldn't be committed in the first place.
-        request.env.cr.rollback()
-
-        with registry(request.env.cr.dbname).cursor() as cr:
-            env = api.Environment(cr, request.uid, request.env.context)
-            if code == 500:
-                _logger.error("500 Internal Server Error:\n\n%s", values['traceback'])
-                values = cls._get_values_500_error(env, values, exception)
-            elif code == 403:
-                _logger.warn("403 Forbidden:\n\n%s", values['traceback'])
-            elif code == 400:
-                _logger.warn("400 Bad Request:\n\n%s", values['traceback'])
+        request.cr.rollback()
+        if code in (404, 403):
             try:
-                html = cls._get_error_html(env, code, values)
-            except Exception:
-                html = env['ir.ui.view'].render_template('http_routing.http_error', values)
+                response = cls._serve_fallback()
+                if response:
+                    cls._post_dispatch(response)
+                    return response
+            except werkzeug.exceptions.Forbidden:
+                # Rendering does raise a Forbidden if target is not visible.
+                pass # Use default error page handling.
+        elif code == 500:
+            values = cls._get_values_500_error(request.env, values, exception)
+        try:
+            code, html = cls._get_error_html(request.env, code, values)
+        except Exception:
+            code, html = 418, request.env['ir.ui.view']._render_template('http_routing.http_error', values)
 
-        return werkzeug.wrappers.Response(html, status=code, content_type='text/html;charset=utf-8')
+        response = Response(html, status=code, content_type='text/html;charset=utf-8')
+        cls._post_dispatch(response)
+        return response
+
+    # ------------------------------------------------------------
+    # Rewrite
+    # ------------------------------------------------------------
+
+    @api.model
+    @tools.ormcache('path', 'query_args', cache='routing.rewrites')
+    def url_rewrite(self, path, query_args=None):
+        new_url = False
+        router = http.root.get_db_router(request.db).bind('')
+        endpoint = False
+        try:
+            endpoint = router.match(path, method='POST', query_args=query_args)
+        except werkzeug.exceptions.MethodNotAllowed:
+            endpoint = router.match(path, method='GET', query_args=query_args)
+        except werkzeug.routing.RequestRedirect as e:
+            new_url = e.new_url.split('?')[0][7:]  # remove scheme
+            _, endpoint = self.url_rewrite(new_url, query_args)
+            endpoint = endpoint and [endpoint]
+        except werkzeug.exceptions.NotFound:
+            new_url = path
+        return new_url or path, endpoint and endpoint[0]

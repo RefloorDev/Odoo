@@ -2,9 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 {
     'name': "Product Matrix",
-    'summary': """
-       Technical module: Matrix Implementation
-    """,
+    'summary': "Technical module: Matrix Implementation",
     'description': """
 Please refer to Sale Matrix or Purchase Matrix for the use of this module.
     """,
@@ -12,14 +10,18 @@ Please refer to Sale Matrix or Purchase Matrix for the use of this module.
     'version': '1.0',
     'depends': ['account'],
     # Account dependency for section_and_note widget.
-    'qweb': [
-        "static/src/xml/product_matrix.xml",
-    ],
     'data': [
-        'views/assets.xml',
         'views/matrix_templates.xml',
     ],
     'demo': [
         'data/product_matrix_demo.xml',
-    ]
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'product_matrix/static/src/js/product_matrix_dialog.js',
+            'product_matrix/static/src/scss/product_matrix.scss',
+            'product_matrix/static/src/xml/**/*',
+        ],
+    },
+    'license': 'LGPL-3',
 }

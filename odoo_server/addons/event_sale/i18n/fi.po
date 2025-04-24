@@ -3,25 +3,27 @@
 # 	* event_sale
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2019
-# Miku Laitinen <miku.laitinen@gmail.com>, 2019
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2019
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2019
-# Veikko Väätäjä <veikko.vaataja@gmail.com>, 2019
-# Pekko Tuomisto <pekko.tuomisto@web-veistamo.fi>, 2019
-# Tuomas Lyyra <tuomas.lyyra@legenda.fi>, 2019
-# Jenni Heikkilä <jenni.heikkila@sv-oy.fi>, 2019
-# Henri Komulainen <henri.komulainen@web-veistamo.fi>, 2019
+# Tiffany Chang, 2024
+# Miku Laitinen <miku.laitinen@gmail.com>, 2024
+# Pekko Tuomisto <pekko.tuomisto@web-veistamo.fi>, 2024
+# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
+# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
+# Simo Suurla <simo@suurla.fi>, 2024
+# Mikko Salmela <salmemik@gmail.com>, 2024
+# Miika Nissi <miika.nissi@tawasta.fi>, 2024
+# Svante Suominen <svante.suominen@web-veistamo.fi>, 2024
+# Martin Trigaux, 2024
+# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
+# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:12+0000\n"
-"PO-Revision-Date: 2019-08-26 09:10+0000\n"
-"Last-Translator: Henri Komulainen <henri.komulainen@web-veistamo.fi>, 2019\n"
-"Language-Team: Finnish (https://www.transifex.com/odoo/teams/41243/fi/)\n"
+"POT-Creation-Date: 2024-10-25 07:49+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025\n"
+"Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -29,34 +31,90 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: event_sale
+#. odoo-python
+#: code:addons/event_sale/models/sale_order.py:0
+msgid "%(event_name)s - Tickets"
+msgstr "%(event_name)s - Liput"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_ticket_id_change_exception
+msgid ""
+".\n"
+"            <span>Manual actions may be needed.</span>"
+msgstr ""
+".\n"
+"            <span>Manuaalisia toimenpiteitä saatetaan tarvita.</span>"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_configurator_view_form
+msgid "<i class=\"fa fa-arrow-right\"/> Configure Events &amp; Tickets"
+msgstr "<i class=\"fa fa-arrow-right\"/> Tapahtumien ja lippujen määrittäminen"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_registration_ticket_view_form
+msgid "<span class=\"o_stat_text\">Sale Order</span>"
+msgstr "<span class=\"o_stat_text\">Myyntitilaus</span>"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.view_event_form_inherit_ticket
+msgid "<span class=\"o_stat_text\">Sales</span>"
+msgstr "<span class=\"o_stat_text\">Myynti</span>"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_ticket_id_change_exception
+msgid "<span>Registration modification for attendee:</span>"
+msgstr "<span>Rekisteröinnin muutos osallistujalle:</span>"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_configurator_view_form
+msgid "Add"
+msgstr "Lisää"
+
+#. module: event_sale
+#: model:ir.model.fields,field_description:event_sale.field_event_event__sale_order_lines_ids
+msgid "All sale order lines pointing to this event"
+msgstr "Kaikki tähän tapahtumaan liittyvät myyntitilaukset"
+
+#. module: event_sale
+#: model:ir.model.fields.selection,name:event_sale.selection__event_sale_report__event_registration_state__done
+msgid "Attended"
+msgstr "Osallistuttu"
+
+#. module: event_sale
+#: model:ir.model.fields,field_description:event_sale.field_sale_order__attendee_count
+msgid "Attendee Count"
+msgstr "Osallistujien määrä"
+
+#. module: event_sale
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__event_registration_name
+msgid "Attendee Name"
+msgstr "Osallistujan nimi"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.sale_order_view_form
+msgid "Attendees"
+msgstr "Osallistujat"
+
+#. module: event_sale
 #: model_terms:ir.ui.view,arch_db:event_sale.view_event_registration_editor_form
-msgid "Apply"
-msgstr "Käytä"
+msgid "Before updating the linked registrations of"
+msgstr "Ennen kuin linkitetyt ilmoittautumiset päivitetään"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__seats_availability
-msgid "Available Seat"
-msgstr "Vapaa paikka"
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Booked by"
+msgstr "Varaaja"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__seats_available
-msgid "Available Seats"
-msgstr "Saatavilla olevat paikat"
-
-#. module: event_sale
-#: model_terms:ir.ui.view,arch_db:event_sale.view_event_registration_editor_form
-msgid "Before confirming"
-msgstr "Ennen vahvistamista"
-
-#. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_registration__campaign_id
+#: model:ir.model.fields,field_description:event_sale.field_event_registration__utm_campaign_id
 msgid "Campaign"
 msgstr "Kampanja"
 
 #. module: event_sale
-#: model_terms:ir.ui.view,arch_db:event_sale.event_configurator_view_form
-msgid "Cancel"
-msgstr "Peruuta"
+#: model:ir.model.fields.selection,name:event_sale.selection__event_sale_report__event_registration_state__cancel
+#: model:ir.model.fields.selection,name:event_sale.selection__event_sale_report__sale_order_state__cancel
+msgid "Cancelled"
+msgstr "Peruttu"
 
 #. module: event_sale
 #: model:ir.model.fields,help:event_sale.field_sale_order_line__event_id
@@ -76,18 +134,41 @@ msgstr ""
 "Valitsemalla tapahtuman lipun rekisteröityminen luodaan automaattisesti."
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__company_id
+#: model_terms:ir.ui.view,arch_db:event_sale.event_configurator_view_form
+msgid "Close"
+msgstr "Sulje"
+
+#. module: event_sale
+#: model_terms:ir.actions.act_window,help:event_sale.event_sale_report_action
+msgid "Come back once tickets have been sold to overview your sales income."
+msgstr ""
+"Palaa takaisin, kun tapahtumaan on myyty lippuja. Näet sitten tapahtuman "
+"liikevaihdon."
+
+#. module: event_sale
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__company_id
+#: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__company_id
 msgid "Company"
 msgstr "Yritys"
 
 #. module: event_sale
-#: model:ir.actions.act_window,name:event_sale.event_configurator_action
-msgid "Configure an event"
-msgstr ""
+#: model:ir.model.fields.selection,name:event_sale.selection__event_sale_report__event_registration_state__open
+msgid "Confirmed"
+msgstr "Vahvistettu"
+
+#. module: event_sale
+#. odoo-python
+#: code:addons/event_sale/models/product_template.py:0
+msgid "Create an Attendee for the selected Event."
+msgstr "Luo osallistuja valittuun tapahtumaan."
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.view_event_registration_editor_form
+msgid "Create/Update registrations"
+msgstr "Luo tai päivitä ilmoittautumisia"
 
 #. module: event_sale
 #: model:ir.model.fields,field_description:event_sale.field_event_event_configurator__create_uid
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__create_uid
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor__create_uid
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__create_uid
 msgid "Created by"
@@ -95,25 +176,25 @@ msgstr "Luonut"
 
 #. module: event_sale
 #: model:ir.model.fields,field_description:event_sale.field_event_event_configurator__create_date
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__create_date
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor__create_date
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__create_date
 msgid "Created on"
 msgstr "Luotu"
 
 #. module: event_sale
-#: model:ir.model.fields,help:event_sale.field_event_event_ticket__seats_max
-msgid ""
-"Define the number of available tickets. If you have too much registrations "
-"you will not be able to sell tickets anymore. Set 0 to ignore this rule set "
-"as unlimited."
-msgstr ""
-"Määritä lippujen määrä. Jos ilmoittautumisia on liikaa, et voi enää myydä "
-"lippuja. Aseta 0, jos et halua määrärajoitusta."
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__sale_order_partner_id
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Customer"
+msgstr "Asiakas"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_configurator_view_form
+msgid "Discard"
+msgstr "Hylkää"
 
 #. module: event_sale
 #: model:ir.model.fields,field_description:event_sale.field_event_event_configurator__display_name
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__display_name
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__display_name
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor__display_name
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__display_name
 msgid "Display Name"
@@ -122,12 +203,12 @@ msgstr "Näyttönimi"
 #. module: event_sale
 #: model:ir.model,name:event_sale.model_registration_editor
 msgid "Edit Attendee Details on Sales Confirmation"
-msgstr ""
+msgstr "Muokkaa osallistujatietoja myyntivahvistuksessa"
 
 #. module: event_sale
 #: model:ir.model,name:event_sale.model_registration_editor_line
 msgid "Edit Attendee Line on Sales Confirmation"
-msgstr ""
+msgstr "Muokkaa osallistujariviä myyntivahvistuksessa"
 
 #. module: event_sale
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__editor_id
@@ -142,194 +223,169 @@ msgstr "Sähköposti"
 #. module: event_sale
 #: model:ir.model,name:event_sale.model_event_event
 #: model:ir.model.fields,field_description:event_sale.field_event_event_configurator__event_id
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__event_id
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__event_id
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__event_id
 #: model:ir.model.fields,field_description:event_sale.field_sale_order_line__event_id
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_form
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
 msgid "Event"
 msgstr "Tapahtuma"
 
 #. module: event_sale
-#: model:ir.model,name:event_sale.model_event_type
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__event_type_id
-msgid "Event Category"
-msgstr "Tapahtumaryhmä"
-
-#. module: event_sale
 #: model:ir.model,name:event_sale.model_event_event_configurator
 msgid "Event Configurator"
-msgstr ""
+msgstr "Tapahtuman konfiguraattori"
 
 #. module: event_sale
-#: model_terms:ir.ui.view,arch_db:event_sale.event_ticket_form_view
-msgid "Event Name"
-msgstr "Tapahtuman nimi"
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__event_date_end
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Event End Date"
+msgstr "Tapahtuman päättymispäivä"
 
 #. module: event_sale
 #: model:ir.model,name:event_sale.model_event_registration
-#: model:product.product,name:event_sale.product_product_event
-#: model:product.template,name:event_sale.product_product_event_product_template
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__event_registration_id
 msgid "Event Registration"
-msgstr "Tapahtuman rekisteröinti"
+msgstr "Tapahtuman ilmoittautuminen"
 
 #. module: event_sale
 #: model:ir.actions.act_window,name:event_sale.action_sale_order_event_registration
 msgid "Event Registrations"
-msgstr "Tapahtuman rekisteröinnit"
+msgstr "Tapahtuman ilmoittautumiset"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Event Sales Analysis"
+msgstr "Tapahtumien myynnin analyysi"
+
+#. module: event_sale
+#: model:ir.model,name:event_sale.model_event_sale_report
+msgid "Event Sales Report"
+msgstr "Tapahtumien myynnin raportti"
+
+#. module: event_sale
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__event_date_begin
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Event Start Date"
+msgstr "Tapahtuman aloituspäivä"
 
 #. module: event_sale
 #: model:ir.model,name:event_sale.model_event_event_ticket
-#: model:ir.model.fields,field_description:event_sale.field_event_event__event_ticket_ids
-#: model:ir.model.fields,field_description:event_sale.field_event_event_configurator__event_ticket_id
-#: model:ir.model.fields,field_description:event_sale.field_event_registration__event_ticket_id
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__event_ticket_id
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__event_ticket_id
-#: model:ir.model.fields,field_description:event_sale.field_sale_order_line__event_ticket_id
 msgid "Event Ticket"
 msgstr "Tapahtuman lippu"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_product_product__event_ticket_ids
-msgid "Event Tickets"
-msgstr "Tapahtuman liput"
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__event_type_id
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Event Type"
+msgstr "Tapahtumatyyppi"
 
 #. module: event_sale
-#: model_terms:ir.ui.view,arch_db:event_sale.event_ticket_form_view
-msgid "Event's Ticket"
-msgstr "Tapahtuman lippu"
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Events that have ended"
+msgstr "Tapahtumat, joiden olisi pitänyt loppua"
 
 #. module: event_sale
-#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_product_template_form
-msgid "Events"
-msgstr "Tapahtumat"
+#: model_terms:ir.ui.view,arch_db:event_sale.event_ticket_id_change_exception
+msgid "Exception:"
+msgstr "Poikkeus:"
 
 #. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#, python-format
+#: model:ir.model.fields.selection,name:event_sale.selection__event_registration__sale_status__free
+#: model:ir.model.fields.selection,name:event_sale.selection__event_sale_report__sale_status__free
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
 msgid "Free"
-msgstr "Vapaa"
+msgstr "Ilmainen"
 
 #. module: event_sale
-#: model:event.event.ticket,name:event_sale.event_4_ticket_1
-msgid "General Admission"
-msgstr ""
+#. odoo-python
+#: code:addons/event_sale/models/sale_order.py:0
+msgid "Get Your Tickets"
+msgstr "Hanki liput"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Group By"
+msgstr "Ryhmittely"
+
+#. module: event_sale
+#: model:ir.model.fields,field_description:event_sale.field_event_event_configurator__has_available_tickets
+msgid "Has Available Tickets"
+msgstr "On saatavilla lippuja"
 
 #. module: event_sale
 #: model:ir.model.fields,field_description:event_sale.field_event_event_configurator__id
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__id
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__id
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor__id
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__id
 msgid "ID"
-msgstr "Tunniste (ID)"
+msgstr "ID"
 
 #. module: event_sale
-#: model:ir.model.fields,help:event_sale.field_product_product__event_ok
-#: model:ir.model.fields,help:event_sale.field_product_template__event_ok
-#: model:ir.model.fields,help:event_sale.field_sale_order_line__event_ok
-msgid ""
-"If checked this product automatically creates an event registration at the "
-"sales order confirmation."
+#. odoo-python
+#: code:addons/event_sale/wizard/event_configurator.py:0
+msgid "Invalid ticket choice \"%(ticket_name)s\" for event \"%(event_name)s\"."
 msgstr ""
+"Virheellinen lipun valinta \"%(ticket_name)s\" tapahtumalle "
+"\"%(event_name)s\"."
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__is_expired
-msgid "Is Expired"
-msgstr "Vanhentunut"
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__invoice_partner_id
+msgid "Invoice Address"
+msgstr "Laskutusosoite"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_product_product__event_ok
-#: model:ir.model.fields,field_description:event_sale.field_product_template__event_ok
-#: model:ir.model.fields,field_description:event_sale.field_sale_order_line__event_ok
-msgid "Is an Event Ticket"
-msgstr ""
-
-#. module: event_sale
-#: model:ir.model,name:event_sale.model_account_move
-msgid "Journal Entries"
-msgstr "Päiväkirjaviennit"
-
-#. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_configurator____last_update
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket____last_update
-#: model:ir.model.fields,field_description:event_sale.field_registration_editor____last_update
-#: model:ir.model.fields,field_description:event_sale.field_registration_editor_line____last_update
-msgid "Last Modified on"
-msgstr "Viimeksi muokattu"
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__active
+msgid "Is registration active (not archived)?"
+msgstr "Onko ilmoittautuminen aktiivinen (ei arkistoitu)?"
 
 #. module: event_sale
 #: model:ir.model.fields,field_description:event_sale.field_event_event_configurator__write_uid
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__write_uid
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor__write_uid
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__write_uid
 msgid "Last Updated by"
-msgstr "Viimeksi päivitetty"
+msgstr "Viimeksi päivittänyt"
 
 #. module: event_sale
 #: model:ir.model.fields,field_description:event_sale.field_event_event_configurator__write_date
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__write_date
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor__write_date
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__write_date
 msgid "Last Updated on"
 msgstr "Viimeksi päivitetty"
 
 #. module: event_sale
-#: model:ir.model.fields.selection,name:event_sale.selection__event_event_ticket__seats_availability__limited
-msgid "Limited"
-msgstr "Rajattu"
-
-#. module: event_sale
-#: model_terms:ir.ui.view,arch_db:event_sale.view_event_registration_ticket_form
-msgid "Marketing"
-msgstr "Markkinointi"
-
-#. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__seats_max
-msgid "Maximum Available Seats"
-msgstr "Maksimimäärä varattavia paikkoja"
-
-#. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_registration__medium_id
+#: model:ir.model.fields,field_description:event_sale.field_event_registration__utm_medium_id
 msgid "Medium"
 msgstr "Media"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__mobile
-msgid "Mobile"
-msgstr "Matkapuhelin"
-
-#. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__name
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__name
-#, python-format
 msgid "Name"
 msgstr "Nimi"
 
 #. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#, python-format
-msgid "No more available seats for this ticket"
-msgstr "Ei vapaita paikkoja tälle lipulle"
+#: model_terms:ir.actions.act_window,help:event_sale.event_sale_report_action
+msgid "No Event Revenues yet!"
+msgstr "Ei vielä tapahtuman liikevaihtoa!"
 
 #. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#, python-format
-msgid "No more available seats for this ticket type."
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Non-free tickets"
+msgstr "Ei-maksuttomia lippuja"
 
 #. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#, python-format
-msgid "None"
-msgstr "Ei mitään"
+#: model:ir.model.fields.selection,name:event_sale.selection__event_registration__sale_status__to_pay
+#: model:ir.model.fields.selection,name:event_sale.selection__event_sale_report__sale_status__to_pay
+#: model_terms:ir.ui.view,arch_db:event_sale.event_registration_ticket_view_form
+msgid "Not Sold"
+msgstr "Ei myyty"
 
 #. module: event_sale
-#: model_terms:ir.ui.view,arch_db:event_sale.event_configurator_view_form
-msgid "Ok"
-msgstr "OK"
-
-#. module: event_sale
-#: model_terms:ir.ui.view,arch_db:event_sale.view_event_registration_ticket_form
-msgid "Origin"
-msgstr "Lähde"
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__sale_order_date
+msgid "Order Date"
+msgstr "Tilauksen pvm"
 
 #. module: event_sale
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__registration_id
@@ -337,16 +393,24 @@ msgid "Original Registration"
 msgstr "Alkuperäinen rekisteröinti"
 
 #. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#, python-format
-msgid "Paid"
-msgstr "Maksettu"
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Participant"
+msgstr "Osallistuja"
 
 #. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#, python-format
-msgid "Payment"
-msgstr "Maksu"
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Past Events"
+msgstr "Menneet tapahtumat"
+
+#. module: event_sale
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__sale_status
+msgid "Payment Status"
+msgstr "Maksun tila"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Pending payment"
+msgstr "Odottaa maksua"
 
 #. module: event_sale
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor_line__phone
@@ -354,51 +418,60 @@ msgid "Phone"
 msgstr "Puhelin"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__price
-msgid "Price"
-msgstr "Hinta"
+#. odoo-python
+#: code:addons/event_sale/models/sale_order.py:0
+msgid ""
+"Please make sure all your event related lines are configured before "
+"confirming this order:%s"
+msgstr ""
+"Varmista, että kaikki tapahtumaan liittyvät rivit on määritetty ennen tämän "
+"tilauksen vahvistamista:%s"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__price_reduce
-msgid "Price Reduce"
-msgstr "Hinnan alennus"
-
-#. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__price_reduce_taxinc
-msgid "Price Reduce Tax inc"
-msgstr "Hinnan alennus verot sis."
-
-#. module: event_sale
-#: model:ir.model,name:event_sale.model_product_product
+#: model:ir.model,name:event_sale.model_product_template
 #: model:ir.model.fields,field_description:event_sale.field_event_event_configurator__product_id
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__product_id
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__product_id
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
 msgid "Product"
 msgstr "Tuote"
 
 #. module: event_sale
-#: model:ir.model,name:event_sale.model_product_template
-msgid "Product Template"
-msgstr "Tuotemalli"
+#: model:ir.model.fields.selection,name:event_sale.selection__event_sale_report__sale_order_state__draft
+msgid "Quotation"
+msgstr "Tarjous"
 
 #. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#: code:addons/event_sale/models/event.py:0
+#: model:ir.model.fields.selection,name:event_sale.selection__event_sale_report__sale_order_state__sent
+msgid "Quotation Sent"
+msgstr "Myyntitarjous lähetetty"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_form
 #: model_terms:ir.ui.view,arch_db:event_sale.view_event_registration_editor_form
-#, python-format
 msgid "Registration"
-msgstr "Rekisteröinti"
+msgstr "Ilmoittautuminen"
 
 #. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#: code:addons/event_sale/models/event.py:0
-#, python-format
-msgid "Registration for %s"
-msgstr ""
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__event_registration_create_date
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Registration Date"
+msgstr "Ilmottautumispäivä"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__registration_ids
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__event_registration_state
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Registration Status"
+msgstr "Ilmoittautumisen tila"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_form
+msgid "Registration revenues"
+msgstr "Ilmoittautumisten liikevaihto"
+
+#. module: event_sale
+#: model:ir.model.fields,field_description:event_sale.field_sale_order_line__registration_ids
 msgid "Registrations"
-msgstr "Rekisteröinnit"
+msgstr "Ilmoittautumiset"
 
 #. module: event_sale
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor__event_registration_ids
@@ -406,18 +479,53 @@ msgid "Registrations to Edit"
 msgstr "Muokattavat rekisteröinnit"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__seats_reserved
-msgid "Reserved Seats"
-msgstr "Varatut paikat"
+#: model:ir.actions.act_window,name:event_sale.event_sale_report_action
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__sale_price
+#: model:ir.ui.menu,name:event_sale.menu_action_show_revenues
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_form
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_graph
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_pivot
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_tree
+msgid "Revenues"
+msgstr "Tulot"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__deadline
-msgid "Sales End"
-msgstr "Myynti päättyy"
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__sale_order_id
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_form
+msgid "Sale Order"
+msgstr "Myyntitilaus"
+
+#. module: event_sale
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__sale_order_line_id
+msgid "Sale Order Line"
+msgstr "Myyntitilausrivi"
+
+#. module: event_sale
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__sale_order_state
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Sale Order Status"
+msgstr "Myyntitilauksen tila"
+
+#. module: event_sale
+#: model:ir.model.fields,field_description:event_sale.field_event_registration__sale_status
+msgid "Sale Status"
+msgstr "Myynnin tila"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.view_event_form_inherit_ticket
+msgid "Sales"
+msgstr "Myynti"
+
+#. module: event_sale
+#: model:ir.model.fields,field_description:event_sale.field_event_event__sale_price_subtotal
+msgid "Sales (Tax Excluded)"
+msgstr "Myynti (Veroton)"
 
 #. module: event_sale
 #: model:ir.model,name:event_sale.model_sale_order
+#: model:ir.model.fields,field_description:event_sale.field_event_registration__sale_order_id
 #: model:ir.model.fields,field_description:event_sale.field_registration_editor__sale_order_id
+#: model:ir.model.fields.selection,name:event_sale.selection__event_sale_report__sale_order_state__sale
 msgid "Sales Order"
 msgstr "Myyntitilaus"
 
@@ -429,133 +537,118 @@ msgid "Sales Order Line"
 msgstr "Myyntitilausrivi"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__seats_used
-msgid "Seats Used"
-msgstr ""
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__sale_order_user_id
+msgid "Salesperson"
+msgstr "Myyjä"
 
 #. module: event_sale
-#: model:event.type,name:event_sale.event_type_data_sale
-msgid "Sell Online"
-msgstr ""
+#: model:ir.actions.act_window,name:event_sale.event_configurator_action
+msgid "Select an Event"
+msgstr "Valitse tapahtuma"
 
 #. module: event_sale
-#: model_terms:ir.ui.view,arch_db:event_sale.view_event_registration_editor_form
-msgid "Skip"
-msgstr "Ohita"
+#: model:ir.model.fields.selection,name:event_sale.selection__event_registration__sale_status__sold
+#: model:ir.model.fields.selection,name:event_sale.selection__event_sale_report__sale_status__sold
+#: model_terms:ir.ui.view,arch_db:event_sale.event_registration_ticket_view_form
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Sold"
+msgstr "Myyty"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_registration__source_id
+#: model:ir.model.fields,field_description:event_sale.field_event_registration__utm_source_id
 msgid "Source"
 msgstr "Lähde"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_registration__sale_order_id
-msgid "Source Sales Order"
-msgstr ""
+#: model:ir.model.fields,field_description:event_sale.field_event_registration__state
+msgid "Status"
+msgstr "Tila"
 
 #. module: event_sale
-#: model:event.event.ticket,name:event_sale.event_0_ticket_1
-#: model:event.event.ticket,name:event_sale.event_2_ticket_1
-msgid "Standard"
-msgstr "Normaali"
-
-#. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#, python-format
-msgid "The registration must be paid"
-msgstr ""
-
-#. module: event_sale
-#: model:ir.model.fields,help:event_sale.field_event_registration__campaign_id
+#. odoo-python
+#: code:addons/event_sale/models/sale_order_line.py:0
 msgid ""
-"This is a name that helps you keep track of your different campaign efforts,"
-" e.g. Fall_Drive, Christmas_Special"
+"The sale order line with the product %(product_name)s needs an event and a "
+"ticket."
 msgstr ""
-"Nimi, joka auttaa luokittelemaan erilaiset kampanjatoimet esim. "
-"joulutervehdys, kesäkampanja"
+"Myyntitilausrivi, jossa on tuote %(product_name)s, tarvitsee tapahtuman ja "
+"lipun."
 
 #. module: event_sale
-#: model:ir.model.fields,help:event_sale.field_event_registration__medium_id
-msgid "This is the method of delivery, e.g. Postcard, Email, or Banner Ad"
-msgstr "Toimitustapa, esim. postitus, sähköposti tai mainosbanneri."
-
-#. module: event_sale
-#: model:ir.model.fields,help:event_sale.field_event_registration__source_id
-msgid ""
-"This is the source of the link, e.g. Search Engine, another domain, or name "
-"of email list"
-msgstr ""
-"Linkin lähde, esim. hakukone, toinen verkkotunnus tai sähköpostilistan nimi"
-
-#. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
 msgid "Ticket"
-msgstr "Tiketti"
+msgstr "Lippu"
 
 #. module: event_sale
-#: model_terms:ir.ui.view,arch_db:event_sale.event_event_report_template_badge
-#: model_terms:ir.ui.view,arch_db:event_sale.view_event_registration_ticket_search
+#: model:ir.model.fields,field_description:event_sale.field_event_event_configurator__event_ticket_id
+#: model:ir.model.fields,field_description:event_sale.field_sale_order_line__event_ticket_id
 msgid "Ticket Type"
-msgstr "Tikettityyppi"
+msgstr "Lipputyyppi"
 
 #. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#, python-format
-msgid "Ticket cannot belong to both the event category and the event itself."
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:event_sale.event_ticket_id_change_exception
+msgid "Ticket changed from"
+msgstr "Lippu vaihdettu"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_type__use_ticketing
-msgid "Ticketing"
-msgstr ""
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__event_ticket_price
+msgid "Ticket price"
+msgstr "Lipun hinta"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_type__event_ticket_ids
-#: model_terms:ir.ui.view,arch_db:event_sale.event_type_view_form_inherit_sale
 #: model_terms:ir.ui.view,arch_db:event_sale.view_event_form_inherit_ticket
-msgid "Tickets"
-msgstr "Pääsyliput"
+msgid "Total sales for this event"
+msgstr "Tämän tapahtuman kokonaismyynti"
 
 #. module: event_sale
-#: code:addons/event_sale/models/event.py:0
-#, python-format
-msgid "To pay"
-msgstr "Maksettava"
+#: model_terms:ir.ui.view,arch_db:event_sale.event_registration_ticket_view_form
+msgid "Transaction"
+msgstr "Tapahtuma"
 
 #. module: event_sale
-#: model:ir.model.fields,field_description:event_sale.field_event_event_ticket__seats_unconfirmed
-msgid "Unconfirmed Seat Reservations"
-msgstr "Vahvistamattomat paikkavaraukset"
+#: model:ir.model.fields.selection,name:event_sale.selection__event_sale_report__event_registration_state__draft
+msgid "Unconfirmed"
+msgstr "Vahvistamaton"
 
 #. module: event_sale
-#: model:product.product,uom_name:event_sale.product_product_event
-#: model:product.template,uom_name:event_sale.product_product_event_product_template
-msgid "Units"
-msgstr "Yksiköt"
+#: model:ir.model.fields,help:event_sale.field_event_registration__state
+msgid ""
+"Unconfirmed: registrations in a pending state waiting for an action (specific case, notably with sale status)\n"
+"Registered: registrations considered taken by a client\n"
+"Attended: registrations for which the attendee attended the event\n"
+"Cancelled: registrations cancelled manually"
+msgstr ""
+"Vahvistamattomat: rekisteröinnit, jotka odottavat toimenpiteitä (erityistapaus, erityisesti myyntitilanne)\n"
+"Rekisteröity: rekisteröinnit, jotka asiakas on ottanut vastaan\n"
+"Osallistuneet: rekisteröinnit, joiden osalta osallistuja osallistui tapahtumaan\n"
+"Peruutettu: manuaalisesti peruutetut rekisteröinnit"
 
 #. module: event_sale
-#: model:ir.model.fields.selection,name:event_sale.selection__event_event_ticket__seats_availability__unlimited
-msgid "Unlimited"
-msgstr "Rajoittamaton"
+#: model:ir.model.fields,field_description:event_sale.field_event_sale_report__sale_price_untaxed
+msgid "Untaxed Revenues"
+msgstr "Veroton liikevaihto"
 
 #. module: event_sale
-#: model:event.event.ticket,name:event_sale.event_0_ticket_2
-#: model:event.event.ticket,name:event_sale.event_2_ticket_2
-msgid "VIP"
-msgstr "VIP"
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Upcoming events from today"
+msgstr "Tulevia tapahtumia tänään"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_sale_report_view_search
+msgid "Upcoming/Running"
+msgstr "Tulossa/Meneillään"
+
+#. module: event_sale
+#: model_terms:ir.ui.view,arch_db:event_sale.event_configurator_view_form
+msgid "We could not find a matching event ticket for this product. <br/>"
+msgstr "Emme löytäneet vastaavaa tapahtumalippua tälle tuotteelle. <br/>"
 
 #. module: event_sale
 #: model_terms:ir.ui.view,arch_db:event_sale.view_event_registration_editor_form
-msgid "please give details about the registrations"
-msgstr "anna lisätietoja rekisteröitymisistä"
+msgid "please provide attendee details."
+msgstr "ilmoita osallistujan tiedot."
 
 #. module: event_sale
-#: model_terms:ir.ui.view,arch_db:event_sale.view_event_form_inherit_ticket
-msgid "reserved +"
-msgstr ""
-
-#. module: event_sale
-#: model_terms:ir.ui.view,arch_db:event_sale.view_event_form_inherit_ticket
-msgid "unconfirmed"
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:event_sale.event_ticket_id_change_exception
+msgid "to"
+msgstr "->"

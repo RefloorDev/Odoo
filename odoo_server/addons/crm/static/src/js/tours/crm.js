@@ -1,100 +1,104 @@
-odoo.define('crm.tour', function(require) {
-"use strict";
+/** @odoo-module **/
 
-var core = require('web.core');
-var tour = require('web_tour.tour');
+import { _t } from "@web/core/l10n/translation";
+import { registry } from "@web/core/registry";
+import { stepUtils } from "@web_tour/tour_service/tour_utils";
 
-var _t = core._t;
+import { markup } from "@odoo/owl";
 
-tour.register('crm_tour', {
-    url: "/web",
-}, [tour.STEPS.SHOW_APPS_MENU_ITEM, {
+registry.category("web_tour.tours").add('crm_tour', {
+    url: "/odoo",
+    steps: () => [stepUtils.showAppsMenuItem(), {
+    isActive: ["community"],
     trigger: '.o_app[data-menu-xmlid="crm.crm_menu_root"]',
-    content: _t("Ready to boost your sales? Your <b>Pipeline</b> can be found here, under the <b>CRM</b> app."),
-    position: 'right',
-    edition: 'community'
+    content: markup(_t('Ready to boost your sales? Let\'s have a look at your <b>Pipeline</b>.')),
+    tooltipPosition: 'bottom',
+    run: "click",
 }, {
+    isActive: ["enterprise"],
     trigger: '.o_app[data-menu-xmlid="crm.crm_menu_root"]',
-    content: _t("Ready to boost your sales? Your <b>Pipeline</b> can be found here, under the <b>CRM</b> app."),
-    position: 'bottom',
-    edition: 'enterprise',
+    content: markup(_t('Ready to boost your sales? Let\'s have a look at your <b>Pipeline</b>.')),
+    tooltipPosition: 'bottom',
+    run: "click",
+},
+{
+    trigger: ".o_opportunity_kanban",
+},
+{
+    trigger: '.o_opportunity_kanban .o-kanban-button-new',
+    content: markup(_t("<b>Create your first opportunity.</b>")),
+    tooltipPosition: 'bottom',
+    run: "click",
 }, {
-    trigger: ".o-kanban-button-new",
-    extra_trigger: '.o_opportunity_kanban',
-    content: _t("Click here to <b>create your first opportunity</b> and add it to your pipeline."),
-    position: "bottom",
+    trigger: ".o_kanban_quick_create .o_field_widget[name='partner_id'] input",
+    content: markup(_t('<b>Write a few letters</b> to look for a company, or create a new one.')),
+    tooltipPosition: "top",
+    run: "edit Brandon Freeman",
 }, {
-    trigger: ".o_kanban_quick_create input:first",
-    content: _t("<b>Choose a name</b> for your opportunity, example: <i>'Need a new website'</i>"),
-    position: "right",
+    isActive: ["auto"],
+    trigger: ".ui-menu-item > a",
+    run: "click",
 }, {
     trigger: ".o_kanban_quick_create .o_kanban_add",
-    content: _t("Click here to <b>add your opportunity</b>."),
-    position: "bottom",
+    content: markup(_t("Now, <b>add your Opportunity</b> to your Pipeline.")),
+    tooltipPosition: "bottom",
+    run: "click",
+},
+{
+    trigger: ".o_opportunity_kanban",
+},
+{
+    trigger: ".o_opportunity_kanban .o_kanban_group:first-child .o_kanban_record:last-of-type",
+    content: markup(_t("<b>Drag &amp; drop opportunities</b> between columns as you progress in your sales cycle.")),
+    tooltipPosition: "right",
+    run: "drag_and_drop(.o_opportunity_kanban .o_kanban_group:eq(2))",
+},
+{
+    trigger: ".o_opportunity_kanban",
+},
+{
+    // Choose the element that is not going to be moved by the previous step.
+    trigger: ".o_opportunity_kanban .o_kanban_group .o_kanban_record .o-mail-ActivityButton",
+    content: markup(_t("Looks like nothing is planned. :(<br><br><i>Tip: Schedule activities to keep track of everything you have to do!</i>")),
+    tooltipPosition: "bottom",
+    run: "click",
+},
+{
+    trigger: ".o_opportunity_kanban",
+},
+{
+    trigger: ".o-mail-ActivityListPopover button:contains(Schedule an activity)",
+    content: markup(_t("Let's <b>Schedule an Activity.</b>")),
+    tooltipPosition: "bottom",
+    run: "click",
 }, {
-    trigger: ".o_opportunity_kanban .o_kanban_group:first-child .o_kanban_record:last-child",
-    content: _t("<b>Drag &amp; drop opportunities</b> between columns as you progress in your sales cycle."),
-    position: "right",
-    run: "drag_and_drop .o_opportunity_kanban .o_kanban_group:eq(2) ",
+    trigger: '.modal-footer button[name="action_schedule_activities"]',
+    content: markup(_t("All set. Let’s <b>Schedule</b> it.")),
+    tooltipPosition: "top",  // dot NOT move to bottom, it would cause a resize flicker, see task-2476595
+    run: "click",
 }, {
-    trigger: ".o_kanban_record:not(.o_updating) .o_activity_color_default",
-    extra_trigger: ".o_opportunity_kanban",
-    content: _t("This opportunity has <b>no activity planned</b>."),
-    position: "bottom"
-}, {
-    trigger: ".o_schedule_activity",
-    extra_trigger: ".o_opportunity_kanban",
-    content: _t("Let's schedule an activity."),
-    position: "bottom"
-}, {
-    trigger: '.modal-body .o_field_many2one',
-    extra_trigger: ".o_opportunity_kanban",
-    content: _t("Choose an activity type.<br/>You can customize them in the general settings."),
-    position: "bottom",
-    run: function (actions) {
-        actions.auto('.modal-footer button[special=cancel]');
-    },
-}, {
+    id: "drag_opportunity_to_won_step",
+    trigger: ".o_opportunity_kanban .o_kanban_record:last-of-type",
+    content: markup(_t("Drag your opportunity to <b>Won</b> when you get the deal. Congrats!")),
+    tooltipPosition: "right",
+    run: "drag_and_drop(.o_opportunity_kanban .o_kanban_group:eq(3))",
+},
+{
+    trigger: ".o_opportunity_kanban",
+},
+{
     trigger: ".o_kanban_record",
-    extra_trigger: ".o_opportunity_kanban",
-    content: _t("Click on the opportunity to zoom in."),
-    position: "bottom",
-    run: function (actions) {
-        actions.auto(".o_kanban_record .oe_kanban_action[data-type=edit]");
-    },
+    content: _t("Let’s have a look at an Opportunity."),
+    tooltipPosition: "right",
+    run: "click",
 }, {
-    trigger: ".o_lead_opportunity_form .o_chatter_button_new_message",
-    content: _t('<p><b>Send messages</b> to your prospect and get replies automatically attached to this opportunity.</p><p class="mb0">Type <i>\'@\'</i> to mention people - it\'s like cc-ing on emails.</p>'),
-    position: "bottom"
+    trigger: ".o_lead_opportunity_form .o_statusbar_status",
+    content: _t("You can make your opportunity advance through your pipeline from here."),
+    tooltipPosition: "bottom",
+    run: "click",
 }, {
-    trigger: ".breadcrumb-item:not(.active):last",
-    extra_trigger: '.o_lead_opportunity_form',
-    content: _t("Use the breadcrumbs to <b>go back to your sales pipeline</b>."),
-    position: "bottom"
-}, tour.STEPS.TOGGLE_HOME_MENU, tour.STEPS.SHOW_APPS_MENU_ITEM, {
-    trigger: '.o_app[data-menu-xmlid="base.menu_administration"]',
-    content: _t("Configuration options are available in the Settings app."),
-    position: "bottom",
-    edition: 'community'
-}, {
-    trigger: '.o_app[data-menu-xmlid="base.menu_administration"]',
-    content: _t("Configuration options are available in the Settings app."),
-    position: "bottom",
-    edition: 'enterprise'
-}, {
-    trigger: "div#invite_users .o_user_emails",
-    content: _t("<b>Invite coworkers</b> via email.<br/><i>Enter one email per line.</i>"),
-    position: "right"
-}, tour.STEPS.TOGGLE_HOME_MENU, tour.STEPS.SHOW_APPS_MENU_ITEM, {
-    trigger: '.o_app[data-menu-xmlid="crm.crm_menu_root"]',
-    content: _t("Good job! You completed the tour of the CRM app."),
-    position: 'right',
-    edition: 'community'
-}, {
-    trigger: '.o_app[data-menu-xmlid="crm.crm_menu_root"]',
-    content: _t("Good job! You completed the tour of the CRM app."),
-    position: 'bottom',
-    edition: 'enterprise'
-}]);
-
-});
+    trigger: ".breadcrumb-item:not(.active):first",
+    content: _t("Click on the breadcrumb to go back to your Pipeline. Odoo will save all modifications as you navigate."),
+    tooltipPosition: "bottom",
+    run: "click .breadcrumb-item:not(.active):last",
+}]});

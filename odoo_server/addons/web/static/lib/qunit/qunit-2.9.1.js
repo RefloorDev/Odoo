@@ -8,10 +8,13 @@
  *
  * Date: 2019-01-07T16:37Z
  */
+
 (function (global$1) {
   'use strict';
 
   global$1 = global$1 && global$1.hasOwnProperty('default') ? global$1['default'] : global$1;
+
+  const debug = odoo.debug;
 
   var window$1 = global$1.window;
   var self$1 = global$1.self;
@@ -21,6 +24,7 @@
 
   var document$1 = window$1 && window$1.document;
   var navigator = window$1 && window$1.navigator;
+  var lastError = null;
 
   var localSessionStorage = function () {
   	var x = "qunit-test-string";
@@ -1247,7 +1251,7 @@
 
   var LISTENERS = Object.create(null);
   var SUPPORTED_EVENTS = ["runStart", "suiteStart", "testStart", "assertion", "testEnd", "suiteEnd", "runEnd"];
-  SUPPORTED_EVENTS.push("OdooAfterTestHook"); // Odoo customization
+  SUPPORTED_EVENTS.push("OdooBeforeTestHook", "OdooAfterTestHook"); // Odoo customization
 
   /**
    * Emits an event with the specified data to all currently registered listeners.
@@ -2977,6 +2981,7 @@
   }
 
   Test.prototype = {
+  	get moduleName() { return this.module.name; },
   	before: function before() {
   		var _this = this;
 
@@ -3001,7 +3006,8 @@
   			_this.testEnvironment = extend({}, module.testEnvironment);
 
   			_this.started = now();
-  			emit("testStart", _this.testReport.start(true));
+			emit("testStart", _this.testReport.start(true));
+			emit("OdooBeforeTestHook"); // Odoo customization
   			return runLoggingCallbacks("testStart", {
   				name: _this.testName,
   				module: module.name,
@@ -3030,6 +3036,7 @@
   		try {
   			runTest(this);
   		} catch (e) {
+  			lastError = e;
   			this.pushFailure("Died on test #" + (this.assertions.length + 1) + " " + this.stack + ": " + (e.message || e), extractStacktrace(e, 0));
 
   			// Else next test will carry the responsibility
@@ -3121,7 +3128,7 @@
   	},
 
 
-  	finish: function finish() {
+  	finish: async function finish() {
   		config.current = this;
 
   		// Release the test callback to ensure that anything referenced has been
@@ -3141,7 +3148,13 @@
   			this.pushFailure("Expected at least one assertion, but none were run - call " + "expect(0) to accept zero assertions.", this.stack);
   		}
 
-        emit("OdooAfterTestHook"); // Odoo customization
+  		// Odoo customization
+  		// wait for the task queue to be fully consummed, s.t. if there has been rejected promises
+  		// during the test, the unhandledrejection handlers have been called before the cleanups
+  		// have been executed, for the errors to be properly preventDefaulted if necessary (see
+  		// qunit.js, Error management section).
+  		await new Promise((r) => setTimeout(r, 0));
+  		emit("OdooAfterTestHook", this);
 
   		var i,
   		    module = this.module,
@@ -3372,6 +3385,7 @@
   					then.call(promise, function () {
   						resume();
   					}, function (error) {
+  						lastError = error;
   						message = "Promise rejected " + (!phase ? "during" : phase.replace(/Each$/, "")) + " \"" + test.testName + "\": " + (error && error.message || error);
   						test.pushFailure(message, extractStacktrace(error, 0));
 
@@ -4895,9 +4909,11 @@
   		var i,
   		    checked,
   		    html = "";
-
+		const names = new Set();
   		for (i = 0; i < config.modules.length; i++) {
-  			if (config.modules[i].name !== "") {
+			const name = config.modules[i].name;
+  			if (name !== "" && !names.has(name)) {
+				names.add(name);
   				checked = config.moduleId.indexOf(config.modules[i].moduleId) > -1;
   				html += "<li><label class='clickable" + (checked ? " checked" : "") + "'><input type='checkbox' " + "value='" + config.modules[i].moduleId + "'" + (checked ? " checked='checked'" : "") + " />" + escapeText(config.modules[i].name) + "</label></li>";
   			}
@@ -5330,7 +5346,18 @@
   		assertLi.className = details.result ? "pass" : "fail";
   		assertLi.innerHTML = message;
   		assertList.appendChild(assertLi);
-  	});
+
+      // Odoo Customisation!!!
+      // Crappy hack to display full tracebacks (with sourcemaps if debug=assets)
+      if (lastError && QUnit.annotateTraceback) {
+          const pre = assertLi.querySelector("pre");
+          details.annotateProm = QUnit.annotateTraceback(lastError).then(traceback => {
+            pre.innerText = traceback;
+            details.source = traceback;
+          });
+          lastError = null;
+      }
+    });
 
   	QUnit.testDone(function (details) {
   		var testTitle,

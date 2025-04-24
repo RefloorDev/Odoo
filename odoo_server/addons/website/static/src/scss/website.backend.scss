@@ -1,227 +1,150 @@
 .o_dashboards {
-    background-color: #ececec;
+    background-color: $o-view-background-color;
+    height: 100%;
+    display: flex;
+    flex-flow: column nowrap;
 
+    .o_content {
+        overflow: scroll;
+    }
     .o_website_dashboard {
-        background-color: #ececec;
-        div.o_box {
-            @include clearfix;
-            color: $o-main-color-muted;
-            background-color: $o-view-background-color;
-            background-size: cover;
-            margin-top: $o-horizontal-padding;
-            position: static;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+        background-color: $o-view-background-color;
+    }
+    &.has_plausible {
+        background-color: #f9fafb; // Copied from iframe.
+        .o_website_dashboard {
+            background-color: #f9fafb; // Copied from iframe.
+            iframe {
+                // TODO: Find another way to set the height, not robust enough,
+                // especially if plausible change those values later.
+                height: 2950px; // Copied from iframe.
+                top: 2px; // Do not cover eCommerce dashboard border.
 
-            h2, h4 {
-                text-transform: uppercase;
-                margin-top: 0;
-                color: $o-brand-odoo;
-            }
-
-            h4 { margin: 0 0 0 8px; }
-
-            .col-lg-7, .col-12 {
-                padding: 15px;
-
-                .js_field_selection {
-                    width: 30%;
-                    margin: 0 0 20px 0;
-                    float: right;
-                    border-radius: 0;
+                @include media-breakpoint-only(md) {
+                    height: 2855px; // Copied from iframe.
                 }
-
-                .table-responsive {
-                    border: none;
+                @include media-breakpoint-only(lg) {
+                    height: 2040px; // Copied from iframe.
                 }
-
-                table {
-
-                    tr:first-child {
-                        background: white;
-                    }
-
-                    tr:nth-child(even):not(:hover) {
-                        background: #f5f6f7;
-                    }
-
-                    th {
-                        text-transform: uppercase;
-                        color: $o-main-text-color;
-                        border-top-width: 0px;
-                    }
-                    td, th {
-                        text-align: right;
-                        border-left: none;
-
-                        &:first-child {
-                            text-align: left;
-                        }
-                    }
-                    .o_tooltip_key {
-                        text-align: left;
-                    }
+                @include media-breakpoint-only(xl) {
+                    height: 1875px; // Copied from iframe.
+                }
+                @include media-breakpoint-only(xxl) {
+                    height: 1875px; // Copied from iframe.
                 }
             }
         }
+    }
+    .o_dashboard_common {
+        .o_box {
+            display: flex;
+            flex-flow: row wrap;
+            justify-content: flex-start;
 
-        .o_dashboard_common {
-            .o_box {
-                display: flex;
-                flex-flow: row wrap;
-                justify-content: flex-start;
-                > .o_inner_box {
-                    @include media-breakpoint-down(sm) {
-                        flex: 1 1 200px;
-                        display: block !important;
-                    }
-                    @include media-breakpoint-up(md) {
-                        flex: 0 0 16.6%;
-                    }
+            > .o_inner_box {
+                @include media-breakpoint-down(md) {
+                    flex: 1 1 200px;
+                    display: block !important;
                 }
-            }
-            .o_inner_box {
-                padding-top: 10px;
-                text-align: center;
-                border: 1px solid $o-view-background-color;
-                height: 80px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                cursor: pointer;
-                color: white;
-                background-color: $o-brand-primary;
-                    &:hover {
-                        background-color: darken($o-brand-primary, 10%);
-                    }
-                &.o_primary {
-                    background-color: $o-brand-odoo;
-                    color: white;
-                    &:hover {
-                        background-color: darken($o-brand-odoo, 10%);
-                    }
-                }
-                .o_highlight {
-                    font-size: 27px;
+                @include media-breakpoint-up(md) {
+                    flex: 0 0 16.6%;
                 }
             }
         }
+    }
+    .o_dashboard_visits {
 
-        .o_graph_sales {
-            direction: ltr#{"/*rtl:ignore*/"};
-            .o_legend0 {
-                background-color: $o-brand-primary;
-            }
-            .o_legend1 {
-                background-color: $o-main-color-muted;
-            }
-        }
+        .o_demo_background {
 
-        .o_dashboard_visits {
+            margin-top: 16px;
+            height: 300px;
+            background-size: 100% !important;
+            background: var(--Dashboard__demoBackground, url("/website/static/src/img/website_dashboard_visit_demo.png")) no-repeat;
+            position: relative;
 
-            h2 {
-                padding: 15px;
-            }
-
-            .o_demo_background {
-
-                margin-top: 16px;
-                height: 300px;
-                background-size: 100% !important;
-                background: url("/website/static/src/img/website_dashboard_visit_demo.png") no-repeat;
+            .o_buttons {
                 position: relative;
-
-                .o_buttons {
-                    position: relative;
-
-                    > button {
-                        display: block;
-                    }
-                }
-
-                .o_layer {
-                    background-color: rgba(255,255,255,.3);
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                }
             }
 
-            .o_properties_selection {
-
-                @include media-breakpoint-up(lg) {
-                    display: flex;
-                }
-
-                margin-top: 10px;
-                margin-bottom: 10px;
+            .o_layer {
+                background-color: rgba($o-view-background-color,.3);
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
             }
-
-            .gapi-analytics-auth-styles-signinbutton {
-                cursor: pointer;
-            }
-
-            .ActiveUsers {
-                position: relative;
-                float: right;
-                right: 10px;
-                border: 1px solid gray('200');
-                font-weight: 300;
-                white-space: nowrap;
-                padding: .5em 1.5em;
-                margin: .5em;
-                text-transform: uppercase;
-            }
-
-            .ActiveUsers-value {
-              font-weight: 300;
-              margin-right: -.25em;
-            }
-
-            .ActiveUsers.is-increasing {
-              animation: increase 3s;
-            }
-
-            .ActiveUsers.is-decreasing {
-              animation: decrease 3s;
-            }
-
-            @keyframes increase {
-              10% {
-                background-color: lighten($o-brand-primary, 30%);
-                border-color: $o-brand-primary;
-                color: $o-brand-primary;
-              }
-            }
-
-            @keyframes decrease {
-              10% {
-                background-color: lighten($o-brand-primary, 30%);
-                border-color: $o-brand-primary;
-                color: $o-brand-primary;
-              }
-            }
-        }
-
-        tr.o_product_template {
-            cursor: pointer;
-            color: $o-main-text-color;
-        }
-
-        .o_loader {
-            text-align: center;
-            width: 100%;
-            height: 20em;
         }
     }
 }
 
-.oe_stat_button {
-    &.o_stat_button_info:hover {
-        color: #666666 !important;
-        background-color: transparent !important;
-        opacity: 0.8 !important;
-        cursor: default !important;
+.oe_stat_button.o_stat_button_info {
+    pointer-events: none;
+}
+
+.o_field_website_redirect_button {
+    display: contents;
+}
+
+// Mobile preview
+%o-mobile-phone {
+    @include media-breakpoint-up(md) {
+        height: 735px !important;
+        width: 362px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+
+        // Below the following height, the preview size decreases to ensure it
+        // will always be fully visible.
+        @media(max-height: calc(800px + #{$o-navbar-height})) {
+            height: 602px !important;
+            width: 310px;
+
+            div.o_mobile_preview_layout, img.img_mobile {
+                height: 659px;
+                width: 342px;
+                top: -30px;
+                left: -17px;
+            }
+        }
+
+        .o_mobile_preview_layout, .img_mobile {
+            position: absolute;
+            pointer-events: none;
+            // The mobile phone image placed on top of the iframe must be moved
+            // to align the outlines of the iframe with the outlines of the
+            // mobile screen.
+            top: -36px;
+            left: -20px;
+        }
     }
+}
+
+.o_view_form_theme_preview_controller {
+    div.o_form_nosheet {
+        padding: 0px;
+        height:100%;
+        width:100%;
+    }
+
+    .o_field_iframe {
+        width: 100%;
+        height: 100%;
+
+        div.is_mobile {
+            @extend %o-mobile-phone;
+            @include media-breakpoint-up(md) {
+                position: relative;
+            }
+        }
+    }
+}
+
+// TODO adapt theme previews then remove this
+.o_preview_frame::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 0 0;
+    background-color: white;
 }

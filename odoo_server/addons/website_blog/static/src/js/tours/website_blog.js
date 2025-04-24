@@ -1,75 +1,105 @@
-odoo.define("website_blog.tour", function (require) {
-    "use strict";
+/** @odoo-module **/
 
-    var core = require("web.core");
-    var tour = require("web_tour.tour");
+import { _t } from "@web/core/l10n/translation";
+import {
+    clickOnSave,
+    registerWebsitePreviewTour,
+} from '@website/js/tours/tour_utils';
 
-    var _t = core._t;
+import { markup } from "@odoo/owl";
 
-    tour.register("blog", {
-        url: "/",
-    }, [tour.STEPS.WEBSITE_NEW_PAGE, {
-        trigger: "a[data-action=new_blog_post]",
-        content: _t("Select this menu item to create a new blog post."),
-        position: "bottom",
-    }, {
-        trigger: "button.btn-continue",
-        extra_trigger: "form[id=\"editor_new_blog\"]",
-        content: _t("Select the blog you want to add the post to."),
-    }, {
-        trigger: "div[data-oe-expression=\"blog_post.name\"]",
-        extra_trigger: "#oe_snippets.o_loaded",
-        content: _t("Write a title, the subtitle is optional."),
-        position: "top",
-        run: "text",
-    }, {
-        trigger: "we-button:containsExact(" + _t("Change Cover") + "):visible",
-        extra_trigger: "#wrap div[data-oe-expression=\"blog_post.name\"]:not(:containsExact(\"\"))",
-        content: _t("Set a blog post <b>cover</b>."),
-        position: "right",
-    }, {
-        trigger: ".o_select_media_dialog .o_existing_attachment_cell:nth(1) img",
-        extra_trigger: '.modal:has(.o_existing_attachment_cell:nth(1))',
-        content: _t("Choose an image from the library."),
-        position: "top",
-    }, {
-        trigger: ".o_select_media_dialog .modal-footer > .btn-primary",
-        extra_trigger: ".o_existing_attachment_cell.o_we_attachment_selected",
-        content: _t("Click on <b>Save</b> to set the picture as cover."),
-        position: "top",
-    }, {
-        trigger: "#o_wblog_post_content",
-        content: _t("<b>Write your story here.</b> Use the top toolbar to style your text: add an image or table, set bold or italic, etc. Drag and drop building blocks for more graphical blogs."),
-        position: "top",
-        run: function (actions) {
-            actions.auto();
-            actions.text("Blog content", this.$anchor.find("p"));
-        },
-    }, {
-        trigger: "button[data-action=save]",
-        extra_trigger: "#o_wblog_post_content .o_wblog_post_content_field p:first:not(:containsExact(" + _t("Start writing here...") + "))",
-        content: _t("<b>Click on Save</b> to record your changes."),
-        position: "bottom",
-    }, {
-        trigger: "a[data-action=show-mobile-preview]",
-        extra_trigger: "body:not(.editor_enable)",
-        content: _t("Use this icon to preview your blog post on <b>mobile devices</b>."),
-        position: "bottom",
-    }, {
-        trigger: "button[data-dismiss=modal]",
-        extra_trigger: '.modal:has(#mobile-viewport)',
-        content: _t("Once you have reviewed the content on mobile, close the preview."),
-        position: "right",
-    }, {
-        trigger: ".js_publish_management .js_publish_btn",
-        extra_trigger: "body:not(.editor_enable)",
-        position: "bottom",
-        content: _t("<b>Publish your blog post</b> to make it visible to your visitors."),
-    }, {
-        trigger: "#customize-menu > a",
-        extra_trigger: ".js_publish_management .js_publish_btn .css_unpublish:visible",
-        content: _t("<b>That's it, your blog post is published!</b> Discover more features through the <i>Customize</i> menu."),
-        position: "bottom",
-        width: 500,
-    }]);
-});
+registerWebsitePreviewTour("blog", {
+    url: "/",
+}, () => [{
+    trigger: "body:not(:has(#o_new_content_menu_choices)) .o_new_content_container > a",
+    content: _t("Click here to add new content to your website."),
+    tooltipPosition: 'bottom',
+    run: "click",
+}, {
+    trigger: 'a[data-module-xml-id="base.module_website_blog"]',
+    content: _t("Select this menu item to create a new blog post."),
+    tooltipPosition: "bottom",
+    run: "click",
+}, {
+    trigger: 'div[name="name"] input',
+    content: _t("Enter your post's title"),
+    tooltipPosition: "bottom",
+    run: "edit Test",
+},
+{
+    trigger: 'div.o_field_widget[name="blog_id"]',
+},
+{
+    trigger: "button.o_form_button_save",
+    content: _t("Select the blog you want to add the post to."),
+    // Without demo data (and probably in most user cases) there is only
+    // one blog so this step would not be needed and would block the tour.
+    // We keep the step with "auto: true", so that the main python test
+    // still works but never display this to the user anymore. We suppose
+    // the user does not need guidance once that modal is opened. Note: if
+    // you run the tour via your console without demo data, the tour will
+    // thus fail as this will be considered.
+    run: "click",
+},
+{
+    trigger: "#oe_snippets.o_loaded",
+    timeout: 15000,
+},
+{
+    trigger: ":iframe h1[data-oe-expression=\"blog_post.name\"]",
+    content: _t("Edit your title, the subtitle is optional."),
+    tooltipPosition: "top",
+    run: "editor Test",
+},
+{
+    trigger: `:iframe #wrap h1[data-oe-expression="blog_post.name"]:not(:contains(''))`,
+},
+{
+    trigger: "we-button[data-background]:eq(0)",
+    content: markup(_t("Set a blog post <b>cover</b>.")),
+    tooltipPosition: "top",
+    run: "click",
+}, {
+    trigger: ".o_select_media_dialog .o_we_search",
+    content: _t("Search for an image. (eg: type \"business\")"),
+    tooltipPosition: "top",
+},
+{
+    trigger: ".o_select_media_dialog .o_existing_attachment_cell:first img",
+    content: _t("Choose an image from the library."),
+    tooltipPosition: "top",
+    run: "click",
+}, {
+    trigger: ":iframe #o_wblog_post_content p",
+    content: markup(_t("<b>Write your story here.</b> Use the top toolbar to style your text: add an image or table, set bold or italic, etc. Drag and drop building blocks for more graphical blogs.")),
+    tooltipPosition: "top",
+    run: "editor Blog content",
+},
+...clickOnSave(),
+{
+    trigger: ".o_menu_systray_item.o_mobile_preview > a",
+    content: markup(_t("Use this icon to preview your blog post on <b>mobile devices</b>.")),
+    tooltipPosition: "bottom",
+    run: "click",
+},
+{
+    trigger: ".o_website_preview.o_is_mobile",
+},
+{
+    trigger: ".o_menu_systray_item.o_mobile_preview > a",
+    content: _t("Once you have reviewed the content on mobile, you can switch back to the normal view by clicking here again"),
+    tooltipPosition: "right",
+    run: "click",
+},
+{
+    trigger: ":iframe body:not(.editor_enable)",
+},
+{
+    trigger: '.o_menu_systray_item a:contains("Unpublished")',
+    tooltipPosition: "bottom",
+    content: markup(_t("<b>Publish your blog post</b> to make it visible to your visitors.")),
+    run: "click",
+}, {
+    trigger: '.o_menu_systray_item a:contains("Published")',
+}
+]);

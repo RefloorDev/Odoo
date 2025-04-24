@@ -1,190 +1,190 @@
-odoo.define('payment_stripe.payment_form', function (require) {
-"use strict";
+/** @odoo-module */
+/* global Stripe */
 
-var ajax = require('web.ajax');
-var core = require('web.core');
-var Dialog = require('web.Dialog');
-var PaymentForm = require('payment.payment_form');
+import { _t } from '@web/core/l10n/translation';
+import { StripeOptions } from '@payment_stripe/js/stripe_options';
+import paymentForm from '@payment/js/payment_form';
 
-var qweb = core.qweb;
-var _t = core._t;
+paymentForm.include({
 
-ajax.loadXML('/payment_stripe/static/src/xml/stripe_templates.xml', qweb);
-
-PaymentForm.include({
-
-    willStart: function () {
-        return this._super.apply(this, arguments).then(function () {
-            return ajax.loadJS("https://js.stripe.com/v3/");
-        })
-    },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
+    // #=== DOM MANIPULATION ===#
 
     /**
-     * called when clicking on pay now or add payment event to create token for credit card/debit card.
+     * Prepare the inline form of Stripe for direct payment.
      *
+     * @override method from @payment/js/payment_form
      * @private
-     * @param {Event} ev
-     * @param {DOMElement} checkedRadio
-     * @param {Boolean} addPmEvent
+     * @param {number} providerId - The id of the selected payment option's provider.
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {string} flow - The online payment flow of the selected payment option.
+     * @return {void}
      */
-    _createStripeToken: function (ev, $checkedRadio, addPmEvent) {
-        var self = this;
-        if (ev.type === 'submit') {
-            var button = $(ev.target).find('*[type="submit"]')[0]
-        } else {
-            var button = ev.target;
-        }
-        this.disableButton(button);
-        var acquirerID = this.getAcquirerIdFromRadio($checkedRadio);
-        var acquirerForm = this.$('#o_payment_add_token_acq_' + acquirerID);
-        var inputsForm = $('input', acquirerForm);
-        if (this.options.partnerId === undefined) {
-            console.warn('payment_form: unset partner_id when adding new token; things could go wrong');
-        }
-
-        var formData = self.getFormData(inputsForm);
-        var stripe = this.stripe;
-        var card = this.stripe_card_element;
-        if (card._invalid) {
+    async _prepareInlineForm(providerId, providerCode, paymentOptionId, paymentMethodCode, flow) {
+        if (providerCode !== 'stripe') {
+            this._super(...arguments);
             return;
         }
-        return this._rpc({
-            route: '/payment/stripe/s2s/create_setup_intent',
-            params: {'acquirer_id': formData.acquirer_id}
-        }).then(function(intent_secret){
-            return stripe.handleCardSetup(intent_secret, card);
-        }).then(function(result) {
-            if (result.error) {
-                return Promise.reject({"message": {"data": { "arguments": [result.error.message]}}});
-            } else {
-                _.extend(formData, {"payment_method": result.setupIntent.payment_method});
-                return self._rpc({
-                    route: formData.data_set,
-                    params: formData,
-                })
-            }
-        }).then(function(result) {
-            if (addPmEvent) {
-                if (formData.return_url) {
-                    window.location = formData.return_url;
-                } else {
-                    window.location.reload();
-                }
-            } else {
-                $checkedRadio.val(result.id);
-                self.el.submit();
-            }
-        }).guardedCatch(function (error) {
-            // We don't want to open the Error dialog since
-            // we already have a container displaying the error
-            if (error.event) {
-                error.event.preventDefault();
-            }
-            // if the rpc fails, pretty obvious
-            self.enableButton(button);
-            self.displayError(
-                _t('Unable to save card'),
-                _t("We are not able to add your payment method at the moment. ") +
-                    self._parseError(error)
-            );
-        });
-    },
-    /**
-     * called when clicking a Stripe radio if configured for s2s flow; instanciates the card and bind it to the widget.
-     *
-     * @private
-     * @param {DOMElement} checkedRadio
-     */
-    _bindStripeCard: function ($checkedRadio) {
-        var acquirerID = this.getAcquirerIdFromRadio($checkedRadio);
-        var acquirerForm = this.$('#o_payment_add_token_acq_' + acquirerID);
-        var inputsForm = $('input', acquirerForm);
-        var formData = this.getFormData(inputsForm);
-        var stripe = Stripe(formData.stripe_publishable_key);
-        var element = stripe.elements();
-        var card = element.create('card', {hidePostalCode: true});
-        card.mount('#card-element');
-        card.on('ready', function(ev) {
-            card.focus();
-        });
-        card.addEventListener('change', function (event) {
-            var displayError = document.getElementById('card-errors');
-            displayError.textContent = '';
-            if (event.error) {
-                displayError.textContent = event.error.message;
-            }
-        });
-        this.stripe = stripe;
-        this.stripe_card_element = card;
-    },
-    /**
-     * destroys the card element and any stripe instance linked to the widget.
-     *
-     * @private
-     */
-    _unbindStripeCard: function () {
-        if (this.stripe_card_element) {
-            this.stripe_card_element.destroy();
-        }
-        this.stripe = undefined;
-        this.stripe_card_element = undefined;
-    },
-    /**
-     * @override
-     */
-    updateNewPaymentDisplayStatus: function () {
-        var $checkedRadio = this.$('input[type="radio"]:checked');
 
-        if ($checkedRadio.length !== 1) {
+        // Check if instantiation of the element is needed.
+        this.stripeElements ??= {}; // Store the element of each instantiated payment method.
+        // Check if instantiation of the element is needed.
+        if (flow === 'token') {
+            return; // No elements for tokens.
+        } else if (this.stripeElements[paymentOptionId]) {
+            this._setPaymentFlow('direct'); // Overwrite the flow even if no re-instantiation.
+            return; // Don't re-instantiate if already done for this provider.
+        }
+
+        // Overwrite the flow of the select payment option.
+        this._setPaymentFlow('direct');
+
+        // Extract and deserialize the inline form values.
+        const radio = document.querySelector('input[name="o_payment_radio"]:checked');
+        const inlineForm = this._getInlineForm(radio);
+        const stripeInlineForm = inlineForm.querySelector('[name="o_stripe_element_container"]');
+        this.stripeInlineFormValues = JSON.parse(
+            stripeInlineForm.dataset['stripeInlineFormValues']
+        );
+
+        // Instantiate Stripe object if needed.
+        this.stripeJS ??= Stripe(
+            this.stripeInlineFormValues['publishable_key'],
+            // The values required by Stripe Connect are inserted into the dataset.
+            new StripeOptions()._prepareStripeOptions(stripeInlineForm.dataset),
+        );
+
+        // Instantiate the elements.
+        let elementsOptions =  {
+            appearance: { theme: 'stripe' },
+            currency: this.stripeInlineFormValues['currency_name'],
+            captureMethod: this.stripeInlineFormValues['capture_method'],
+            paymentMethodTypes: [
+                this.stripeInlineFormValues['payment_methods_mapping'][paymentMethodCode]
+                ?? paymentMethodCode
+            ],
+        };
+        if (this.paymentContext['mode'] === 'payment') {
+            elementsOptions.mode = 'payment';
+            elementsOptions.amount = parseInt(this.stripeInlineFormValues['minor_amount']);
+            if (this.stripeInlineFormValues['is_tokenization_required']) {
+                elementsOptions.setupFutureUsage = 'off_session';
+            }
+        }
+        else {
+            elementsOptions.mode = 'setup';
+            elementsOptions.setupFutureUsage = 'off_session';
+        }
+        this.stripeElements[paymentOptionId] = this.stripeJS.elements(elementsOptions);
+
+        // Instantiate the payment element.
+        const paymentElementOptions = {
+            defaultValues: {
+                billingDetails: this.stripeInlineFormValues['billing_details'],
+            },
+        };
+        const paymentElement = this.stripeElements[paymentOptionId].create(
+            'payment', paymentElementOptions
+        );
+        paymentElement.on('loaderror', response => {
+            this._displayErrorDialog(_t("Cannot display the payment form"), response.error.message);
+        });
+        paymentElement.mount(stripeInlineForm);
+
+        const tokenizationCheckbox = inlineForm.querySelector(
+            'input[name="o_payment_tokenize_checkbox"]'
+        );
+        if (tokenizationCheckbox) {
+            // Display tokenization-specific inputs when the tokenization checkbox is checked.
+            this.stripeElements[paymentOptionId].update({
+                setupFutureUsage: tokenizationCheckbox.checked ? 'off_session' : null,
+            }); // Force sync the states of the API and the checkbox in case they were inconsistent.
+            tokenizationCheckbox.addEventListener('input', () => {
+                this.stripeElements[paymentOptionId].update({
+                    setupFutureUsage: tokenizationCheckbox.checked ? 'off_session' : null,
+                });
+            });
+        }
+    },
+
+    // #=== PAYMENT FLOW ===#
+
+    /**
+     * Trigger the payment processing by submitting the elements.
+     *
+     * @override method from @payment/js/payment_form
+     * @private
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {string} flow - The payment flow of the selected payment option.
+     * @return {void}
+     */
+    async _initiatePaymentFlow(providerCode, paymentOptionId, paymentMethodCode, flow) {
+        if (providerCode !== 'stripe' || flow === 'token') {
+            await this._super(...arguments); // Tokens are handled by the generic flow.
             return;
         }
-        var provider = $checkedRadio.data('provider')
-        if (provider === 'stripe') {
-            // always re-init stripe (in case of multiple acquirers for stripe, make sure the stripe instance is using the right key)
-            this._unbindStripeCard();
-            if (this.isNewPaymentRadio($checkedRadio)) {
-                this._bindStripeCard($checkedRadio);
-            }
-        }
-        return this._super.apply(this, arguments);
-    },
 
-    //--------------------------------------------------------------------------
-    // Handlers
-    //--------------------------------------------------------------------------
+        // Trigger form validation and wallet collection.
+        const _super = this._super.bind(this);
+        try {
+            await this.stripeElements[paymentOptionId].submit();
+        } catch (error) {
+            this._displayErrorDialog(_t("Incorrect payment details"), error.message);
+            this._enableButton();
+            return
+        }
+        return await _super(...arguments);
+    },
 
     /**
-     * @override
+     * Process Stripe implementation of the direct payment flow.
+     *
+     * @override method from payment.payment_form
+     * @private
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {object} processingValues - The processing values of the transaction.
+     * @return {void}
      */
-    payEvent: function (ev) {
-        ev.preventDefault();
-        var $checkedRadio = this.$('input[type="radio"]:checked');
+    async _processDirectFlow(providerCode, paymentOptionId, paymentMethodCode, processingValues) {
+        if (providerCode !== 'stripe') {
+            await this._super(...arguments);
+            return;
+        }
 
-        // first we check that the user has selected a stripe as s2s payment method
-        if ($checkedRadio.length === 1 && this.isNewPaymentRadio($checkedRadio) && $checkedRadio.data('provider') === 'stripe') {
-            return this._createStripeToken(ev, $checkedRadio);
-        } else {
-            return this._super.apply(this, arguments);
+        const { error } = await this._stripeConfirmIntent(processingValues, paymentOptionId);
+        if (error) {
+            this._displayErrorDialog(_t("Payment processing failed"), error.message);
+            this._enableButton();
         }
     },
+
     /**
-     * @override
+     * Confirm the intent on Stripe's side and handle any next action.
+     *
+     * @private
+     * @param {object} processingValues - The processing values of the transaction.
+     * @param {number} paymentOptionId - The id of the payment option handling the transaction.
+     * @return {object} The processing error, if any.
      */
-    addPmEvent: function (ev) {
-        ev.stopPropagation();
-        ev.preventDefault();
-        var $checkedRadio = this.$('input[type="radio"]:checked');
-
-        // first we check that the user has selected a stripe as add payment method
-        if ($checkedRadio.length === 1 && this.isNewPaymentRadio($checkedRadio) && $checkedRadio.data('provider') === 'stripe') {
-            return this._createStripeToken(ev, $checkedRadio, true);
-        } else {
-            return this._super.apply(this, arguments);
+    async _stripeConfirmIntent(processingValues, paymentOptionId) {
+        const confirmOptions = {
+            elements: this.stripeElements[paymentOptionId],
+            clientSecret: processingValues['client_secret'],
+            confirmParams: {
+                return_url: processingValues['return_url'],
+            },
+        };
+        if (this.paymentContext['mode'] === 'payment'){
+             return await this.stripeJS.confirmPayment(confirmOptions);
+        }
+        else {
+            return await this.stripeJS.confirmSetup(confirmOptions);
         }
     },
-});
+
 });

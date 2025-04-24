@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
-from odoo import api, models
+from odoo.addons.account.models.chart_template import template
+from odoo import models
 
-
-class AccountChartTemplate(models.Model):
+class AccountChartTemplate(models.AbstractModel):
     _inherit = 'account.chart.template'
 
-    @api.model
-    def _prepare_transfer_account_for_direct_creation(self, name, company):
-        res = super(AccountChartTemplate, self)._prepare_transfer_account_for_direct_creation(name, company)
-        if company.country_id.code == 'DE':
-            xml_id = self.env.ref('l10n_de.tag_de_asset_bs_B_III_2').id
-            res.setdefault('tag_ids', [])
-            res['tag_ids'].append((4, xml_id))
-        return res
+    @template('de_skr03', 'res.company')
+    @template('de_skr04', 'res.company')
+    def _get_de_res_company(self):
+        return {
+            self.env.company.id: {
+                'external_report_layout_id': 'l10n_din5008.external_layout_din5008',
+                'paperformat_id': 'l10n_din5008.paperformat_euro_din',
+                'check_account_audit_trail': True,
+            }
+        }
 
-    # Write paperformat and report template used on company
-    def _load(self, sale_tax_rate, purchase_tax_rate, company):
-        res = super(AccountChartTemplate, self)._load(sale_tax_rate, purchase_tax_rate, company)
-        if company.country_id.code == 'DE':
-            company.write({'external_report_layout_id': self.env.ref('l10n_de.external_layout_din5008').id,
-            'paperformat_id': self.env.ref('l10n_de.paperformat_euro_din').id})
-        return res
+    def _setup_utility_bank_accounts(self, template_code, company, template_data):
+        super()._setup_utility_bank_accounts(template_code, company, template_data)
+        if template_code in ["de_skr03", "de_skr04"]:
+            company.account_journal_suspense_account_id.tag_ids = self.env.ref('l10n_de.tag_de_asset_bs_B_II_4')
+            company.transfer_account_id.tag_ids = self.env.ref('l10n_de.tag_de_asset_bs_B_IV')

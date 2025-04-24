@@ -3,6 +3,7 @@
 
 from odoo import api, fields, models, _
 from odoo.tools import float_is_zero
+from odoo.exceptions import UserError
 
 
 class PosMakePayment(models.TransientModel):
@@ -19,7 +20,11 @@ class PosMakePayment(models.TransientModel):
         active_id = self.env.context.get('active_id')
         if active_id:
             order = self.env['pos.order'].browse(active_id)
-            return order.amount_total - order.amount_paid
+            amount_total = order.amount_total
+            # If we refund the entire order, we refund what was paid originally, else we refund the value of the items returned
+            if float_is_zero(order.refunded_order_id.amount_total + order.amount_total, precision_rounding=order.currency_id.rounding):
+                amount_total = -order.refunded_order_id.amount_paid
+            return amount_total - order.amount_paid
         return False
 
     def _default_payment_method(self):
@@ -43,19 +48,28 @@ class PosMakePayment(models.TransientModel):
         self.ensure_one()
 
         order = self.env['pos.order'].browse(self.env.context.get('active_id', False))
+        if self.payment_method_id.split_transactions and not order.partner_id:
+            raise UserError(_(
+                "Customer is required for %s payment method.",
+                self.payment_method_id.name
+            ))
+
         currency = order.currency_id
 
         init_data = self.read()[0]
+        payment_method = self.env['pos.payment.method'].browse(init_data['payment_method_id'][0])
         if not float_is_zero(init_data['amount'], precision_rounding=currency.rounding):
             order.add_payment({
                 'pos_order_id': order.id,
-                'amount': currency.round(init_data['amount']) if currency else init_data['amount'],
+                'amount': order._get_rounded_amount(init_data['amount'], payment_method.is_cash_count or not self.config_id.only_round_cash_method),
                 'name': init_data['payment_name'],
                 'payment_method_id': init_data['payment_method_id'][0],
             })
 
-        if float_is_zero(order.amount_total - order.amount_paid, precision_rounding=currency.rounding):
-            order.action_pos_order_paid()
+        if order.state == 'draft' and order._is_pos_order_paid():
+            order._process_saved_order(False)
+            if order.state in {'paid', 'done', 'invoiced'}:
+                order._send_order()
             return {'type': 'ir.actions.act_window_close'}
 
         return self.launch_payment()

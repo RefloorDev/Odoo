@@ -1,14 +1,15 @@
-odoo.define('website_links.code_editor', function (require) {
-'use strict';
+/** @odoo-module **/
 
-var core = require('web.core');
-var publicWidget = require('web.public.widget');
-
-var _t = core._t;
+import { _t } from "@web/core/l10n/translation";
+import { browser } from "@web/core/browser/browser";
+import publicWidget from "@web/legacy/js/public/public_widget";
+import { rpc } from "@web/core/network/rpc";
 
 publicWidget.registry.websiteLinksCodeEditor = publicWidget.Widget.extend({
-    selector: '#wrapwrap:has(.o_website_links_edit_code)',
+    selector: '#wrapwrap',
+    selectorHas: '.o_website_links_edit_code',
     events: {
+        'click .copy-to-clipboard': '_onCopyToClipboardClick',
         'click .o_website_links_edit_code': '_onEditCodeClick',
         'click .o_website_links_cancel_edit': '_onCancelEditClick',
         'submit #edit-code-form': '_onEditCodeFormSubmit',
@@ -18,6 +19,25 @@ publicWidget.registry.websiteLinksCodeEditor = publicWidget.Widget.extend({
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
+
+    /**
+     * @private
+     * @param {Event} ev
+     */
+    _onCopyToClipboardClick: async function (ev) {
+        ev.preventDefault();
+        const copyBtn = ev.currentTarget;
+        const tooltip = Tooltip.getOrCreateInstance(copyBtn, {
+            title: _t("Link Copied!"),
+            trigger: "manual",
+            placement: "right",
+        });
+        setTimeout(
+            async () => await browser.navigator.clipboard.writeText(copyBtn.dataset.clipboardText)
+        );
+        tooltip.show();
+        setTimeout(() => tooltip.hide(), 1200);
+    },
 
     /**
      * @private
@@ -61,12 +81,9 @@ publicWidget.registry.websiteLinksCodeEditor = publicWidget.Widget.extend({
         if (initCode === newCode) {
             this._showNewCode(newCode);
         } else {
-            return this._rpc({
-                route: '/website_links/add_code',
-                params: {
-                    init_code: initCode,
-                    new_code: newCode,
-                },
+            return rpc('/website_links/add_code', {
+                init_code: initCode,
+                new_code: newCode,
             }).then(function (result) {
                 self._showNewCode(result[0].code);
             }, function () {
@@ -117,5 +134,4 @@ publicWidget.registry.websiteLinksCodeEditor = publicWidget.Widget.extend({
         ev.preventDefault();
         this._submitCode();
     },
-});
 });

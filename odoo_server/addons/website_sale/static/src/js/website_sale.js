@@ -1,163 +1,21 @@
-odoo.define('website_sale.cart', function (require) {
-'use strict';
+/** @odoo-module **/
 
-var publicWidget = require('web.public.widget');
-var core = require('web.core');
-var _t = core._t;
+import publicWidget from "@web/legacy/js/public/public_widget";
+import VariantMixin from "@website_sale/js/sale_variant_mixin";
+import wSaleUtils from "@website_sale/js/website_sale_utils";
+const cartHandlerMixin = wSaleUtils.cartHandlerMixin;
+import "@website/libs/zoomodoo/zoomodoo";
+import {extraMenuUpdateCallbacks} from "@website/js/content/menu";
+import { ProductImageViewer } from "@website_sale/js/components/website_sale_image_viewer";
+import { rpc } from "@web/core/network/rpc";
+import { debounce, throttleForAnimation } from "@web/core/utils/timing";
+import { listenSizeChange, SIZES, utils as uiUtils } from "@web/core/ui/ui_service";
+import { isBrowserFirefox, hasTouch } from "@web/core/browser/feature_detection";
+import { Component } from "@odoo/owl";
 
-var timeout;
-
-publicWidget.registry.websiteSaleCartLink = publicWidget.Widget.extend({
-    selector: '#top_menu a[href$="/shop/cart"]',
-    events: {
-        'mouseenter': '_onMouseEnter',
-        'mouseleave': '_onMouseLeave',
-        'click': '_onClick',
-    },
-
-    /**
-     * @constructor
-     */
-    init: function () {
-        this._super.apply(this, arguments);
-        this._popoverRPC = null;
-    },
-    /**
-     * @override
-     */
-    start: function () {
-        this.$el.popover({
-            trigger: 'manual',
-            animation: true,
-            html: true,
-            title: function () {
-                return _t("My Cart");
-            },
-            container: 'body',
-            placement: 'auto',
-            template: '<div class="popover mycart-popover" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>'
-        });
-        return this._super.apply(this, arguments);
-    },
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    //--------------------------------------------------------------------------
-
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onMouseEnter: function (ev) {
-        var self = this;
-        clearTimeout(timeout);
-        $(this.selector).not(ev.currentTarget).popover('hide');
-        timeout = setTimeout(function () {
-            if (!self.$el.is(':hover') || $('.mycart-popover:visible').length) {
-                return;
-            }
-            self._popoverRPC = $.get("/shop/cart", {
-                type: 'popover',
-            }).then(function (data) {
-                self.$el.data("bs.popover").config.content = data;
-                self.$el.popover("show");
-                $('.popover').on('mouseleave', function () {
-                    self.$el.trigger('mouseleave');
-                });
-            });
-        }, 300);
-    },
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onMouseLeave: function (ev) {
-        var self = this;
-        setTimeout(function () {
-            if ($('.popover:hover').length) {
-                return;
-            }
-            if (!self.$el.is(':hover')) {
-               self.$el.popover('hide');
-            }
-        }, 1000);
-    },
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onClick: function (ev) {
-        // When clicking on the cart link, prevent any popover to show up (by
-        // clearing the related setTimeout) and, if a popover rpc is ongoing,
-        // wait for it to be completed before going to the link's href. Indeed,
-        // going to that page may perform the same computation the popover rpc
-        // is already doing.
-        clearTimeout(timeout);
-        if (this._popoverRPC && this._popoverRPC.state() === 'pending') {
-            ev.preventDefault();
-            var href = ev.currentTarget.href;
-            this._popoverRPC.then(function () {
-                window.location.href = href;
-            });
-        }
-    },
-});
-});
-
-odoo.define('website_sale.website_sale_category', function (require) {
-'use strict';
-
-var publicWidget = require('web.public.widget');
-
-publicWidget.registry.websiteSaleCategory = publicWidget.Widget.extend({
-    selector: '#o_shop_collapse_category',
-    events: {
-        'click .fa-chevron-right': '_onOpenClick',
-        'click .fa-chevron-down': '_onCloseClick',
-    },
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    //--------------------------------------------------------------------------
-
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onOpenClick: function (ev) {
-        var $fa = $(ev.currentTarget);
-        $fa.parent().siblings().find('.fa-chevron-down:first').click();
-        $fa.parents('li').find('ul:first').show('normal');
-        $fa.toggleClass('fa-chevron-down fa-chevron-right');
-    },
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onCloseClick: function (ev) {
-        var $fa = $(ev.currentTarget);
-        $fa.parent().find('ul:first').hide('normal');
-        $fa.toggleClass('fa-chevron-down fa-chevron-right');
-    },
-});
-});
-
-odoo.define('website_sale.website_sale', function (require) {
-'use strict';
-
-var core = require('web.core');
-var config = require('web.config');
-var concurrency = require('web.concurrency');
-var publicWidget = require('web.public.widget');
-var VariantMixin = require('sale.VariantMixin');
-var wSaleUtils = require('website_sale.utils');
-require("web.zoomodoo");
-
-var qweb = core.qweb;
-
-publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
+export const WebsiteSale = publicWidget.Widget.extend(VariantMixin, cartHandlerMixin, {
     selector: '.oe_website_sale',
-    events: _.extend({}, VariantMixin.events || {}, {
+    events: Object.assign({}, VariantMixin.events || {}, {
         'change form .js_product:first input[name="add_qty"]': '_onChangeAddQuantity',
         'mouseup .js_publish': '_onMouseupPublish',
         'touchend .js_publish': '_onMouseupPublish',
@@ -168,15 +26,18 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
         'change form.js_attributes input, form.js_attributes select': '_onChangeAttribute',
         'mouseup form.js_add_cart_json label': '_onMouseupAddCartLabel',
         'touchend form.js_add_cart_json label': '_onMouseupAddCartLabel',
-        'click .show_coupon': '_onClickShowCoupon',
         'submit .o_wsale_products_searchbar_form': '_onSubmitSaleSearch',
-        'change select[name="country_id"]': '_onChangeCountry',
-        'change #shipping_use_same': '_onChangeShippingUseSame',
         'click .toggle_summary': '_onToggleSummary',
-        'click #add_to_cart, #buy_now, #products_grid .o_wsale_product_btn .a-submit': 'async _onClickAdd',
+        'click #add_to_cart, .o_we_buy_now, #products_grid .o_wsale_product_btn .a-submit': 'async _onClickAdd',
         'click input.js_product_change': 'onChangeVariant',
         'change .js_main_product [data-attribute_exclusions]': 'onChangeVariant',
-        'change oe_optional_products_modal [data-attribute_exclusions]': 'onChangeVariant',
+        'click .o_product_page_reviews_link': '_onClickReviewsLink',
+        'mousedown .o_wsale_filmstip_wrapper': '_onMouseDown',
+        'mouseleave .o_wsale_filmstip_wrapper': '_onMouseLeave',
+        'mouseup .o_wsale_filmstip_wrapper': '_onMouseUp',
+        'mousemove .o_wsale_filmstip_wrapper': '_onMouseMove',
+        'click .o_wsale_filmstip_wrapper' : '_onClickHandler',
+        'submit': '_onClickConfirmOrder',
     }),
 
     /**
@@ -185,46 +46,59 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
     init: function () {
         this._super.apply(this, arguments);
 
-        this._changeCartQuantity = _.debounce(this._changeCartQuantity.bind(this), 500);
-        this._changeCountry = _.debounce(this._changeCountry.bind(this), 500);
+        this._changeCartQuantity = debounce(this._changeCartQuantity.bind(this), 500);
 
         this.isWebsite = true;
+        this.filmStripStartX = 0;
+        this.filmStripIsDown = false;
+        this.filmStripScrollLeft = 0;
+        this.filmStripMoved = false;
 
-        delete this.events['change .main_product:not(.in_cart) input.js_quantity'];
         delete this.events['change [data-attribute_exclusions]'];
     },
     /**
      * @override
      */
-    start: function () {
-        var self = this;
-        var def = this._super.apply(this, arguments);
+    start() {
+        const def = this._super(...arguments);
 
         this._applyHash();
-
-        _.each(this.$('div.js_product'), function (product) {
-            $('input.js_product_change', product).first().trigger('change');
-        });
 
         // This has to be triggered to compute the "out of stock" feature and the hash variant changes
         this.triggerVariantChange(this.$el);
 
-        this.$('select[name="country_id"]').change();
-
-        core.bus.on('resize', this, function () {
-            if (config.device.size_class === config.device.SIZES.XL) {
+        listenSizeChange(() => {
+            if (uiUtils.getSize() === SIZES.XL) {
                 $('.toggle_summary_div').addClass('d-none d-xl-block');
             }
-        });
+        })
 
         this._startZoom();
 
-        window.addEventListener('hashchange', function (e) {
-            self._applyHash();
-            self.triggerVariantChange($(self.el));
+        // Triggered when selecting a variant of a product in a carousel element
+        window.addEventListener("hashchange", (ev) => {
+            this._applyHash();
+            this.triggerVariantChange(this.$el);
         });
 
+        // This allows conditional styling for the filmstrip
+        const filmstripContainer = this.el.querySelector('.o_wsale_filmstip_container');
+        const filmstripContainerWidth = filmstripContainer
+            ? filmstripContainer.getBoundingClientRect().width : 0;
+        const filmstripWrapper = this.el.querySelector('.o_wsale_filmstip_wrapper');
+        const filmstripWrapperWidth = filmstripWrapper
+            ? filmstripWrapper.getBoundingClientRect().width : 0;
+        const isFilmstripScrollable = filmstripWrapperWidth < filmstripContainerWidth
+        if (isBrowserFirefox() || hasTouch() || isFilmstripScrollable) {
+            filmstripContainer?.classList.add('o_wsale_filmstip_fancy_disabled');
+        }
+
+        this.getRedirectOption();
         return def;
+    },
+    destroy() {
+        this._super.apply(this, arguments);
+        this._cleanupZoom();
     },
     /**
      * The selector is different when using list view of variants.
@@ -245,23 +119,58 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
     // Private
     //--------------------------------------------------------------------------
 
+    _onMouseDown: function (ev) {
+        this.filmStripIsDown = true;
+        this.filmStripStartX = ev.pageX - ev.currentTarget.offsetLeft;
+        this.filmStripScrollLeft = ev.currentTarget.scrollLeft;
+        this.formerTarget = ev.target;
+        this.filmStripMoved = false;
+    },
+    _onMouseLeave: function (ev) {
+        if (!this.filmStripIsDown) {
+            return;
+        }
+        ev.currentTarget.classList.remove('activeDrag');
+        this.filmStripIsDown = false
+    },
+    _onMouseUp: function (ev) {
+        this.filmStripIsDown = false;
+        ev.currentTarget.classList.remove('activeDrag');
+    },
+    _onMouseMove: function (ev) {
+        if (!this.filmStripIsDown) {
+            return;
+        }
+        ev.preventDefault();
+        ev.currentTarget.classList.add('activeDrag');
+        this.filmStripMoved = true;
+        const x = ev.pageX - ev.currentTarget.offsetLeft;
+        const walk = (x - this.filmStripStartX) * 2;
+        ev.currentTarget.scrollLeft = this.filmStripScrollLeft - walk;
+    },
+    _onClickHandler: function(ev) {
+        if(this.filmStripMoved) {
+            ev.stopPropagation();
+            ev.preventDefault();
+        }
+    },
     _applyHash: function () {
-        var hash = window.location.hash.substring(1);
-        if (hash) {
-            var params = $.deparam(hash);
-            if (params['attr']) {
-                var attributeIds = params['attr'].split(',');
-                var $inputs = this.$('input.js_variant_change, select.js_variant_change option');
-                _.each(attributeIds, function (id) {
-                    var $toSelect = $inputs.filter('[data-value_id="' + id + '"]');
-                    if ($toSelect.is('input[type="radio"]')) {
-                        $toSelect.prop('checked', true);
-                    } else if ($toSelect.is('option')) {
-                        $toSelect.prop('selected', true);
+        const params = new URLSearchParams(window.location.hash.substring(1));
+        if (params.get("attribute_values")) {
+            const attributeValueIds = params.get("attribute_values").split(',');
+            const inputs = document.querySelectorAll(
+                'input.js_variant_change, select.js_variant_change option'
+            );
+            inputs.forEach((element) => {
+                if (attributeValueIds.includes(element.dataset.attributeValueId)) {
+                    if (element.tagName === "INPUT") {
+                        element.checked = true;
+                    } else if (element.tagName === "OPTION") {
+                        element.selected = true;
                     }
-                });
-                this._changeColorAttribute();
-            }
+                }
+            });
+            this._changeAttribute(['.css_attribute_color', '.o_variant_pills']);
         }
     },
 
@@ -271,40 +180,43 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
      * @private
      */
     _setUrlHash: function ($parent) {
-        var $attributes = $parent.find('input.js_variant_change:checked, select.js_variant_change option:selected');
-        var attributeIds = _.map($attributes, function (elem) {
-            return $(elem).data('value_id');
-        });
-        history.replaceState(undefined, undefined, '#attr=' + attributeIds.join(','));
+        const inputs = document.querySelectorAll(
+            'input.js_variant_change:checked, select.js_variant_change option:checked'
+        );
+        let attributeIds = [];
+        inputs.forEach((element) => attributeIds.push(element.dataset.attributeValueId));
+        if (attributeIds.length > 0) {
+            // Avoid adding new entries in session history by replacing the current one
+            history.replaceState(null, '', '#attribute_values=' + attributeIds.join(','));
+        }
     },
     /**
-     * Set the checked color active.
+     * Set the checked values active.
      *
      * @private
+     * @param {Array} valueSelectors Selectors
      */
-    _changeColorAttribute: function () {
-        $('.css_attribute_color').removeClass("active")
-                                 .filter(':has(input:checked)')
-                                 .addClass("active");
+    _changeAttribute: function (valueSelectors) {
+        valueSelectors.forEach((selector) => {
+            $(selector).removeClass("active").filter(":has(input:checked)").addClass("active");
+        });
     },
     /**
      * @private
      */
     _changeCartQuantity: function ($input, value, $dom_optional, line_id, productIDs) {
-        _.each($dom_optional, function (elem) {
+        $($dom_optional).toArray().forEach((elem) => {
             $(elem).find('.js_quantity').text(value);
             productIDs.push($(elem).find('span[data-product-id]').data('product-id'));
         });
         $input.data('update_change', true);
 
-        this._rpc({
-            route: "/shop/cart/update_json",
-            params: {
-                line_id: line_id,
-                product_id: parseInt($input.data('product-id'), 10),
-                set_qty: value
-            },
-        }).then(function (data) {
+        rpc("/shop/cart/update_json", {
+            line_id: line_id,
+            product_id: parseInt($input.data('product-id'), 10),
+            set_qty: value,
+            display: true,
+        }).then((data) => {
             $input.data('update_change', false);
             var check_value = parseInt($input.val() || 0, 10);
             if (isNaN(check_value)) {
@@ -317,72 +229,13 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
             if (!data.cart_quantity) {
                 return window.location = '/shop/cart';
             }
-            wSaleUtils.updateCartNavBar(data);
             $input.val(data.quantity);
-            $('.js_quantity[data-line-id='+line_id+']').val(data.quantity).html(data.quantity);
+            $('.js_quantity[data-line-id='+line_id+']').val(data.quantity).text(data.quantity);
 
-            if (data.warning) {
-                var cart_alert = $('.oe_cart').parent().find('#data_warning');
-                if (cart_alert.length === 0) {
-                    $('.oe_cart').prepend('<div class="alert alert-danger alert-dismissable" role="alert" id="data_warning">'+
-                            '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button> ' + data.warning + '</div>');
-                }
-                else {
-                    cart_alert.html('<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button> ' + data.warning);
-                }
-                $input.val(data.quantity);
-            }
-        });
-    },
-    /**
-     * @private
-     */
-    _changeCountry: function () {
-        if (!$("#country_id").val()) {
-            return;
-        }
-        this._rpc({
-            route: "/shop/country_infos/" + $("#country_id").val(),
-            params: {
-                mode: 'shipping',
-            },
-        }).then(function (data) {
-            // placeholder phone_code
-            //$("input[name='phone']").attr('placeholder', data.phone_code !== 0 ? '+'+ data.phone_code : '');
-
-            // populate states and display
-            var selectStates = $("select[name='state_id']");
-            // dont reload state at first loading (done in qweb)
-            if (selectStates.data('init')===0 || selectStates.find('option').length===1) {
-                if (data.states.length) {
-                    selectStates.html('');
-                    _.each(data.states, function (x) {
-                        var opt = $('<option>').text(x[1])
-                            .attr('value', x[0])
-                            .attr('data-code', x[2]);
-                        selectStates.append(opt);
-                    });
-                    selectStates.parent('div').show();
-                } else {
-                    selectStates.val('').parent('div').hide();
-                }
-                selectStates.data('init', 0);
-            } else {
-                selectStates.data('init', 0);
-            }
-
-            // manage fields order / visibility
-            if (data.fields) {
-                if ($.inArray('zip', data.fields) > $.inArray('city', data.fields)){
-                    $(".div_zip").before($(".div_city"));
-                } else {
-                    $(".div_zip").after($(".div_city"));
-                }
-                var all_fields = ["street", "zip", "city", "country_name"]; // "state_code"];
-                _.each(all_fields, function (field) {
-                    $(".checkout_autoformat .div_" + field.split('_')[0]).toggle($.inArray(field, data.fields)>=0);
-                });
-            }
+            wSaleUtils.updateCartNavBar(data);
+            wSaleUtils.showWarning(data.notification_info.warning);
+            // Propagating the change to the express checkout forms
+            Component.env.bus.trigger('cart_amount_changed', [data.amount, data.minor_amount]);
         });
     },
     /**
@@ -403,38 +256,95 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
             return VariantMixin._getProductId.apply(this, arguments);
         }
     },
+    _getProductImageLayout: function () {
+        return document.querySelector("#product_detail_main").dataset.image_layout;
+    },
+    _getProductImageWidth: function () {
+        return document.querySelector("#product_detail_main").dataset.image_width;
+    },
+    _getProductImageContainerSelector: function () {
+        return {
+            'carousel': "#o-carousel-product",
+            'grid': "#o-grid-product",
+        }[this._getProductImageLayout()];
+    },
+    _getProductImageContainer: function () {
+        return document.querySelector(this._getProductImageContainerSelector());
+    },
+    _isEditorEnabled() {
+        return document.body.classList.contains("editor_enable");
+    },
     /**
      * @private
      */
     _startZoom: function () {
-        // Do not activate image zoom for mobile devices, since it might prevent users from scrolling the page
-        if (!config.device.isMobile) {
-            var autoZoom = $('.ecom-zoomable').data('ecom-zoom-auto') || false,
-            attach = '#o-carousel-product';
-            _.each($('.ecom-zoomable img[data-zoom]'), function (el) {
-                onImageLoaded(el, function () {
-                    var $img = $(el);
-                    $img.zoomOdoo({event: autoZoom ? 'mouseenter' : 'click', attach: attach});
-                    $img.attr('data-zoom', 1);
-                });
-            });
+        const salePage = document.querySelector(".o_wsale_product_page");
+        if (!salePage || this._getProductImageWidth() === "none") {
+            return;
         }
-
-        function onImageLoaded(img, callback) {
-            // On Chrome the load event already happened at this point so we
-            // have to rely on complete. On Firefox it seems that the event is
-            // always triggered after this so we can rely on it.
-            //
-            // However on the "complete" case we still want to keep listening to
-            // the event because if the image is changed later (eg. product
-            // configurator) a new load event will be triggered (both browsers).
-            $(img).on('load', function () {
-                callback();
-            });
-            if (img.complete) {
-                callback();
+        this._cleanupZoom();
+        this.zoomCleanup = [];
+        // Zoom on hover (except on mobile)
+        if (salePage.dataset.ecomZoomAuto && !uiUtils.isSmall()) {
+            const images = salePage.querySelectorAll("img[data-zoom]");
+            for (const image of images) {
+                const $image = $(image);
+                const callback = () => {
+                    $image.zoomOdoo({
+                        event: "mouseenter",
+                        attach: this._getProductImageContainerSelector(),
+                        preventClicks: salePage.dataset.ecomZoomClick,
+                        attachToTarget: this._getProductImageLayout() === "grid",
+                    });
+                    image.dataset.zoom = 1;
+                };
+                image.addEventListener('load', callback);
+                this.zoomCleanup.push(() => {
+                    image.removeEventListener('load', callback);
+                    const zoomOdoo = $image.data("zoomOdoo");
+                    if (zoomOdoo) {
+                        zoomOdoo.hide();
+                        $image.unbind();
+                    }
+                });
+                if (image.complete) {
+                    callback();
+                }
             }
         }
+        // Zoom on click
+        if (salePage.dataset.ecomZoomClick) {
+            // In this case we want all the images not just the ones that are "zoomables"
+            const images = salePage.querySelectorAll(".product_detail_img");
+            for (const image of images ) {
+                const handler = () => {
+                    if (salePage.dataset.ecomZoomAuto) {
+                        // Remove any flyout
+                        const flyouts = document.querySelectorAll(".zoomodoo-flyout");
+                        for (const flyout of flyouts) {
+                            flyout.remove();
+                        }
+                    }
+                    this.call("dialog", "add", ProductImageViewer, {
+                        selectedImageIdx: [...images].indexOf(image),
+                        images,
+                    });
+                };
+                image.addEventListener("click", handler);
+                this.zoomCleanup.push(() => {
+                    image.removeEventListener("click", handler);
+                });
+            }
+        }
+    },
+    _cleanupZoom() {
+        if (!this.zoomCleanup || !this.zoomCleanup.length) {
+            return;
+        }
+        for (const cleanup of this.zoomCleanup) {
+            cleanup();
+        }
+        this.zoomCleanup = undefined;
     },
     /**
      * On website, we display a carousel instead of only one image
@@ -442,22 +352,29 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
      * @override
      * @private
      */
-    _updateProductImage: function ($productContainer, displayImage, productId, productTemplateId, newCarousel, isCombinationPossible) {
-        var $carousel = $productContainer.find('#o-carousel-product');
+    _updateProductImage: function ($productContainer, displayImage, productId, productTemplateId, newImages, isCombinationPossible) {
+        let $images = $productContainer.find(this._getProductImageContainerSelector());
         // When using the web editor, don't reload this or the images won't
         // be able to be edited depending on if this is done loading before
         // or after the editor is ready.
-        if (window.location.search.indexOf('enable_editor') === -1) {
-            var $newCarousel = $(newCarousel);
-            $carousel.after($newCarousel);
-            $carousel.remove();
-            $carousel = $newCarousel;
-            $carousel.carousel(0);
+        if ($images.length && !this._isEditorEnabled()) {
+            const $newImages = $(newImages);
+            $images.after($newImages);
+            $images.remove();
+            $images = $newImages;
+            // Update the sharable image (only work for Pinterest).
+            const shareImageSrc = $images[0].querySelector('img').src;
+            document.querySelector('meta[property="og:image"]')
+                .setAttribute('content', shareImageSrc);
+
+            if ($images.attr('id') === 'o-carousel-product') {
+                $images.carousel(0);
+            }
             this._startZoom();
             // fix issue with carousel height
-            this.trigger_up('widgets_start_request', {$target: $carousel});
+            this.trigger_up('widgets_start_request', {$target: $images});
         }
-        $carousel.toggleClass('css_not_available', !isCombinationPossible);
+        $images.toggleClass('css_not_available', !isCombinationPossible);
     },
     /**
      * @private
@@ -465,8 +382,16 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
      */
     _onClickAdd: function (ev) {
         ev.preventDefault();
-        this.isBuyNow = $(ev.currentTarget).attr('id') === 'buy_now';
-        return this._handleAdd($(ev.currentTarget).closest('form'));
+        var def = () => {
+            this.getCartHandlerOptions(ev);
+            return this._handleAdd($(ev.currentTarget).closest('form'));
+        };
+        if ($('.js_add_cart_variants').children().length) {
+            return this._getCombinationInfo(ev).then(() => {
+                return !$(ev.target).closest('.js_product').hasClass("css_not_available") ? def() : Promise.resolve();
+            });
+        }
+        return def();
     },
     /**
      * Initializes the optional products modal
@@ -484,68 +409,54 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
             'input[type="radio"][name="product_id"]:checked'
         ];
 
+        const productTemplateId =
+            parseInt($form.find('input[type="hidden"][name="product_template_id"]').first().val());
         var productReady = this.selectOrCreateProduct(
             $form,
             parseInt($form.find(productSelector.join(', ')).first().val(), 10),
-            $form.find('.product_template_id').val(),
-            false
+            productTemplateId,
         );
 
         return productReady.then(function (productId) {
             $form.find(productSelector.join(', ')).val(productId);
-
-            self.rootProduct = {
-                product_id: productId,
-                quantity: parseFloat($form.find('input[name="add_qty"]').val() || 1),
-                product_custom_attribute_values: self.getCustomVariantValues($form.find('.js_product')),
-                variant_values: self.getSelectedVariantValues($form.find('.js_product')),
-                no_variant_attribute_values: self.getNoVariantAttributeValues($form.find('.js_product'))
-            };
-
-            return self._onProductReady();
+            self._updateRootProduct($form, productId, productTemplateId);
+            return self._onProductReady($form.closest('.o_wsale_product_page').length > 0);
         });
     },
 
-    _onProductReady: function () {
+    _onProductReady(isOnProductPage = false) {
         return this._submitForm();
     },
 
     /**
      * Add custom variant values and attribute values that do not generate variants
-     * in the form data and trigger submit.
+     * in the params to submit form if 'stay on page' option is disabled, or call
+     * '_addToCartInPage' otherwise.
      *
      * @private
-     * @returns {Promise} never resolved
+     * @returns {Promise}
      */
     _submitForm: function () {
-        var $productCustomVariantValues = $('<input>', {
-            name: 'product_custom_attribute_values',
-            type: "hidden",
-            value: JSON.stringify(this.rootProduct.product_custom_attribute_values)
-        });
-        this.$form.append($productCustomVariantValues);
+        const params = this.rootProduct;
 
-        var $productNoVariantAttributeValues = $('<input>', {
-            name: 'no_variant_attribute_values',
-            type: "hidden",
-            value: JSON.stringify(this.rootProduct.no_variant_attribute_values)
-        });
-        this.$form.append($productNoVariantAttributeValues);
-
-        if (this.isBuyNow) {
-            this.$form.append($('<input>', {name: 'express', type: "hidden", value: true}));
+        const $product = $('#product_detail');
+        const productTrackingInfo = $product.data('product-tracking-info');
+        if (productTrackingInfo) {
+            productTrackingInfo.quantity = params.quantity;
+            $product.trigger('add_to_cart_event', [productTrackingInfo]);
         }
 
-        this.$form.trigger('submit', [true]);
-
-        return new Promise(function () {});
+        params.add_qty = params.quantity;
+        params.product_custom_attribute_values = JSON.stringify(params.product_custom_attribute_values);
+        params.no_variant_attribute_values = JSON.stringify(params.no_variant_attribute_values);
+        delete params.quantity;
+        return this.addToCart(params);
     },
-
     /**
      * @private
      * @param {MouseEvent} ev
      */
-    _onClickAddCartJSON: function (ev){
+    _onClickAddCartJSON: function (ev) {
         this.onClickAddCartJSON(ev);
     },
     /**
@@ -593,22 +504,22 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
      * @private
      * @param {Event} ev
      */
-    _onClickSubmit: function (ev, forceSubmit) {
-        if ($(ev.currentTarget).is('#add_to_cart, #products_grid .a-submit') && !forceSubmit) {
+    _onClickSubmit: function (ev) {
+        if ($(ev.currentTarget).is('#add_to_cart, #products_grid .a-submit')) {
             return;
         }
         var $aSubmit = $(ev.currentTarget);
-        if (!ev.isDefaultPrevented() && !$aSubmit.is(".disabled")) {
+        if (!ev.defaultPrevented && !$aSubmit.is(".disabled")) {
             ev.preventDefault();
             $aSubmit.closest('form').submit();
         }
-        if ($aSubmit.hasClass('a-submit-disable')){
+        if ($aSubmit.hasClass('a-submit-disable')) {
             $aSubmit.addClass("disabled");
         }
-        if ($aSubmit.hasClass('a-submit-loading')){
+        if ($aSubmit.hasClass('a-submit-loading')) {
             var loading = '<span class="fa fa-cog fa-spin"/>';
             var fa_span = $aSubmit.find('span[class*="fa"]');
-            if (fa_span.length){
+            if (fa_span.length) {
                 fa_span.replaceWith(loading);
             } else {
                 $aSubmit.append(loading);
@@ -620,8 +531,12 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
      * @param {Event} ev
      */
     _onChangeAttribute: function (ev) {
-        if (!ev.isDefaultPrevented()) {
+        if (!ev.defaultPrevented) {
             ev.preventDefault();
+            const productGrid = this.el.querySelector(".o_wsale_products_grid_table_wrapper");
+            if (productGrid) {
+                productGrid.classList.add("opacity-50");
+            }
             $(ev.currentTarget).closest("form").submit();
         }
     },
@@ -644,43 +559,21 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
      * @private
      * @param {Event} ev
      */
-    _onClickShowCoupon: function (ev) {
-        $(ev.currentTarget).hide();
-        $('.coupon_form').removeClass('d-none');
-    },
-    /**
-     * @private
-     * @param {Event} ev
-     */
     _onSubmitSaleSearch: function (ev) {
         if (!this.$('.dropdown_sorty_by').length) {
             return;
         }
         var $this = $(ev.currentTarget);
-        if (!ev.isDefaultPrevented() && !$this.is(".disabled")) {
+        if (!ev.defaultPrevented && !$this.is(".disabled")) {
             ev.preventDefault();
             var oldurl = $this.attr('action');
             oldurl += (oldurl.indexOf("?")===-1) ? "?" : "";
+            if ($this.find('[name=noFuzzy]').val() === "true") {
+                oldurl += '&noFuzzy=true';
+            }
             var search = $this.find('input.search-query');
             window.location = oldurl + '&' + search.attr('name') + '=' + encodeURIComponent(search.val());
         }
-    },
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onChangeCountry: function (ev) {
-        if (!this.$('.checkout_autoformat').length) {
-            return;
-        }
-        this._changeCountry();
-    },
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onChangeShippingUseSame: function (ev) {
-        $('.ship_to_other').toggle(!$(ev.currentTarget).prop('checked'));
     },
     /**
      * Toggles the add to cart button depending on the possibility of the
@@ -691,7 +584,7 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
     _toggleDisable: function ($parent, isCombinationPossible) {
         VariantMixin._toggleDisable.apply(this, arguments);
         $parent.find("#add_to_cart").toggleClass('disabled', !isCombinationPossible);
-        $parent.find("#buy_now").toggleClass('disabled', !isCombinationPossible);
+        $parent.find(".o_we_buy_now").toggleClass('disabled', !isCombinationPossible);
     },
     /**
      * Write the properties of the form elements in the DOM to prevent the
@@ -721,13 +614,55 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
         $('.toggle_summary_div').toggleClass('d-none');
         $('.toggle_summary_div').removeClass('d-xl-block');
     },
+    /**
+     * @private
+     */
+    _onClickReviewsLink: function () {
+        $('#o_product_page_reviews_content').collapse('show');
+    },
+    /**
+     * Prevent multiclicks on confirm button when the form is submitted
+     *
+     * @private
+     */
+    _onClickConfirmOrder: function () {
+        // FIXME ANVFE this should only be triggered when we effectively click on that specific button no?
+        // should not impact the address page at least
+        const submitFormButton = $('form[name="o_wsale_confirm_order"]').find('button[type="submit"]');
+        submitFormButton.attr('disabled', true);
+        setTimeout(() => submitFormButton.attr('disabled', false), 5000);
+    },
+
+    // -------------------------------------
+    // Utils
+    // -------------------------------------
+    /**
+     * Update the root product during an Add process.
+     *
+     * @private
+     * @param {Object} $form
+     * @param {Number} productId
+     * @param {Number} productTemplateId
+     */
+    _updateRootProduct($form, productId, productTemplateId) {
+        this.rootProduct = {
+            product_id: productId,
+            product_template_id: productTemplateId,
+            quantity: parseFloat($form.find('input[name="add_qty"]').val() || 1),
+            product_custom_attribute_values: this.getCustomVariantValues($form.find('.js_product')),
+            variant_values: this.getSelectedVariantValues($form.find('.js_product')),
+            no_variant_attribute_values: this.getNoVariantAttributeValues($form.find('.js_product'))
+        };
+    },
 });
+
+publicWidget.registry.WebsiteSale = WebsiteSale
 
 publicWidget.registry.WebsiteSaleLayout = publicWidget.Widget.extend({
     selector: '.oe_website_sale',
     disabledInEditableMode: false,
     events: {
-        'change .o_wsale_apply_layout': '_onApplyShopLayoutChange',
+        'change .o_wsale_apply_layout input': '_onApplyShopLayoutChange',
     },
 
     //--------------------------------------------------------------------------
@@ -739,116 +674,98 @@ publicWidget.registry.WebsiteSaleLayout = publicWidget.Widget.extend({
      * @param {Event} ev
      */
     _onApplyShopLayoutChange: function (ev) {
-        var switchToList = $(ev.currentTarget).find('.o_wsale_apply_list input').is(':checked');
+        const wysiwyg = this.options.wysiwyg;
+        if (wysiwyg) {
+            wysiwyg.odooEditor.observerUnactive('_onApplyShopLayoutChange');
+        }
+        var clickedValue = $(ev.target).val();
+        var isList = clickedValue === 'list';
         if (!this.editableMode) {
-            this._rpc({
-                route: '/shop/save_shop_layout_mode',
-                params: {
-                    'layout_mode': switchToList ? 'list' : 'grid',
-                },
+            rpc('/shop/save_shop_layout_mode', {
+                'layout_mode': isList ? 'list' : 'grid',
             });
         }
+
+        const activeClasses = ev.target.parentElement.dataset.activeClasses.split(' ');
+        ev.target.parentElement.querySelectorAll('.btn').forEach((btn) => {
+            activeClasses.map(c => btn.classList.toggle(c));
+        });
+
         var $grid = this.$('#products_grid');
         // Disable transition on all list elements, then switch to the new
         // layout then reenable all transitions after having forced a redraw
         // TODO should probably be improved to allow disabling transitions
         // altogether with a class/option.
         $grid.find('*').css('transition', 'none');
-        $grid.toggleClass('o_wsale_layout_list', switchToList);
+        $grid.toggleClass('o_wsale_layout_list', isList);
         void $grid[0].offsetWidth;
         $grid.find('*').css('transition', '');
+        if (wysiwyg) {
+            wysiwyg.odooEditor.observerActive('_onApplyShopLayoutChange');
+        }
     },
 });
 
-publicWidget.registry.websiteSaleCart = publicWidget.Widget.extend({
-    selector: '.oe_website_sale .oe_cart',
-    events: {
-        'click .js_change_shipping': '_onClickChangeShipping',
-        'click .js_edit_address': '_onClickEditAddress',
-        'click .js_delete_product': '_onClickDeleteProduct',
-    },
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    //--------------------------------------------------------------------------
+publicWidget.registry.WebsiteSaleAccordionProduct = publicWidget.Widget.extend({
+    selector: "#product_accordion",
 
     /**
-     * @private
-     * @param {Event} ev
+     * @override
      */
-    _onClickChangeShipping: function (ev) {
-        var $old = $('.all_shipping').find('.card.border.border-primary');
-        $old.find('.btn-ship').toggle();
-        $old.addClass('js_change_shipping');
-        $old.removeClass('border border-primary');
-
-        var $new = $(ev.currentTarget).parent('div.one_kanban').find('.card');
-        $new.find('.btn-ship').toggle();
-        $new.removeClass('js_change_shipping');
-        $new.addClass('border border-primary');
-
-        var $form = $(ev.currentTarget).parent('div.one_kanban').find('form.d-none');
-        $.post($form.attr('action'), $form.serialize()+'&xhr=1');
+    async start() {
+        await this._super(...arguments);
+        this._updateAccordionActiveItem();
     },
+
     /**
+     * Replace the .SCSS styling applied awaiting Js for the default bootstrap classes,
+     * opening the first accordion entry and restoring flush behavior.
+     *
      * @private
-     * @param {Event} ev
      */
-    _onClickEditAddress: function (ev) {
-        ev.preventDefault();
-        $(ev.currentTarget).closest('div.one_kanban').find('form.d-none').attr('action', '/shop/address').submit();
-    },
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onClickDeleteProduct: function (ev) {
-        ev.preventDefault();
-        $(ev.currentTarget).closest('tr').find('.js_quantity').val(0).trigger('change');
+    _updateAccordionActiveItem() {
+        const firstAccordionItemEl = this.el.querySelector('.accordion-item');
+        if (!firstAccordionItemEl) return;
+
+        const firstAccordionItemButtonEl = firstAccordionItemEl.querySelector('.accordion-button');
+        firstAccordionItemButtonEl.classList.remove('collapsed');
+        firstAccordionItemButtonEl.setAttribute('aria-expanded', 'true');
+        firstAccordionItemEl.querySelector('.accordion-collapse').classList.add('show');
+        this.target.classList.remove('o_accordion_not_initialized');
     },
 });
 
-/**
- * @todo maybe the custom autocomplete logic could be extract to be reusable
- */
-publicWidget.registry.productsSearchBar = publicWidget.Widget.extend({
-    selector: '.o_wsale_products_searchbar_form',
-    xmlDependencies: ['/website_sale/static/src/xml/website_sale_utils.xml'],
+publicWidget.registry.websiteSaleCarouselProduct = publicWidget.Widget.extend({
+    selector: '#o-carousel-product',
+    disabledInEditableMode: false,
     events: {
-        'input .search-query': '_onInput',
-        'focusout': '_onFocusOut',
-        'keydown .search-query': '_onKeydown',
+        'wheel .o_carousel_product_indicators': '_onMouseWheel',
     },
-    autocompleteMinWidth: 300,
 
     /**
-     * @constructor
+     * @override
      */
-    init: function () {
-        this._super.apply(this, arguments);
-
-        this._dp = new concurrency.DropPrevious();
-
-        this._onInput = _.debounce(this._onInput, 400);
-        this._onFocusOut = _.debounce(this._onFocusOut, 100);
+    async start() {
+        await this._super(...arguments);
+        this._updateCarouselPosition();
+        this.throttleOnResize = throttleForAnimation(this._onSlideCarouselProduct.bind(this));
+        extraMenuUpdateCallbacks.push(this._updateCarouselPosition.bind(this));
+        if (this.$el.find('.carousel-indicators').length > 0) {
+            this.$el.on('slide.bs.carousel.carousel_product_slider', this._onSlideCarouselProduct.bind(this));
+            $(window).on('resize.carousel_product_slider', this.throttleOnResize);
+            this._updateJustifyContent();
+        }
     },
     /**
      * @override
      */
-    start: function () {
-        this.$input = this.$('.search-query');
-
-        this.order = this.$('.o_wsale_search_order_by').val();
-        this.limit = parseInt(this.$input.data('limit'));
-        this.displayDescription = !!this.$input.data('displayDescription');
-        this.displayPrice = !!this.$input.data('displayPrice');
-        this.displayImage = !!this.$input.data('displayImage');
-
-        if (this.limit) {
-            this.$input.attr('autocomplete', 'off');
+    destroy() {
+        this.$el.css('top', '');
+        this.$el.off('.carousel_product_slider');
+        if (this.throttleOnResize) {
+            this.throttleOnResize.cancel();
         }
-
-        return this._super.apply(this, arguments);
+        this._super(...arguments);
     },
 
     //--------------------------------------------------------------------------
@@ -858,41 +775,12 @@ publicWidget.registry.productsSearchBar = publicWidget.Widget.extend({
     /**
      * @private
      */
-    _fetch: function () {
-        return this._rpc({
-            route: '/shop/products/autocomplete',
-            params: {
-                'term': this.$input.val(),
-                'options': {
-                    'order': this.order,
-                    'limit': this.limit,
-                    'display_description': this.displayDescription,
-                    'display_price': this.displayPrice,
-                    'max_nb_chars': Math.round(Math.max(this.autocompleteMinWidth, parseInt(this.$el.width())) * 0.22),
-                },
-            },
-        });
-    },
-    /**
-     * @private
-     */
-    _render: function (res) {
-        var $prevMenu = this.$menu;
-        this.$el.toggleClass('dropdown show', !!res);
-        if (res) {
-            var products = res['products'];
-            this.$menu = $(qweb.render('website_sale.productsSearchBar.autocomplete', {
-                products: products,
-                hasMoreProducts: products.length < res['products_count'],
-                currency: res['currency'],
-                widget: this,
-            }));
-            this.$menu.css('min-width', this.autocompleteMinWidth);
-            this.$el.append(this.$menu);
+    _updateCarouselPosition() {
+        let size = 5;
+        for (const el of document.querySelectorAll('.o_top_fixed_element')) {
+            size += $(el).outerHeight();
         }
-        if ($prevMenu) {
-            $prevMenu.remove();
-        }
+        this.$el.css('top', size);
     },
 
     //--------------------------------------------------------------------------
@@ -900,39 +788,97 @@ publicWidget.registry.productsSearchBar = publicWidget.Widget.extend({
     //--------------------------------------------------------------------------
 
     /**
+     * Center the selected indicator to scroll the indicators list when it
+     * overflows.
+     *
      * @private
+     * @param {Event} ev
      */
-    _onInput: function () {
-        if (!this.limit) {
-            return;
-        }
-        this._dp.add(this._fetch()).then(this._render.bind(this));
+    _onSlideCarouselProduct: function (ev) {
+        const isReversed = this.$el.css('flex-direction') === "column-reverse";
+        const isLeftIndicators = this.$el.hasClass('o_carousel_product_left_indicators');
+        const $indicatorsDiv = isLeftIndicators ? this.$el.find('.o_carousel_product_indicators') : this.$el.find('.carousel-indicators');
+        let indicatorIndex = $(ev.relatedTarget).index();
+        indicatorIndex = indicatorIndex > -1 ? indicatorIndex : this.$el.find('li.active').index();
+        const $indicator = $indicatorsDiv.find('[data-bs-slide-to=' + indicatorIndex + ']');
+        const indicatorsDivSize = isLeftIndicators && !isReversed ? $indicatorsDiv.outerHeight() : $indicatorsDiv.outerWidth();
+        const indicatorSize = isLeftIndicators && !isReversed ? $indicator.outerHeight() : $indicator.outerWidth();
+        const indicatorPosition = isLeftIndicators && !isReversed ? $indicator.position().top : $indicator.position().left;
+        const scrollSize = isLeftIndicators && !isReversed ? $indicatorsDiv[0].scrollHeight : $indicatorsDiv[0].scrollWidth;
+        let indicatorsPositionDiff = (indicatorPosition + (indicatorSize/2)) - (indicatorsDivSize/2);
+        indicatorsPositionDiff = Math.min(indicatorsPositionDiff, scrollSize - indicatorsDivSize);
+        this._updateJustifyContent();
+        const indicatorsPositionX = isLeftIndicators && !isReversed ? '0' : '-' + indicatorsPositionDiff;
+        const indicatorsPositionY = isLeftIndicators && !isReversed ? '-' + indicatorsPositionDiff : '0';
+        const translate3D = indicatorsPositionDiff > 0 ? "translate3d(" + indicatorsPositionX + "px," + indicatorsPositionY + "px,0)" : '';
+        $indicatorsDiv.css("transform", translate3D);
     },
     /**
      * @private
      */
-    _onFocusOut: function () {
-        if (!this.$el.has(document.activeElement).length) {
-            this._render();
+     _updateJustifyContent: function () {
+        const $indicatorsDiv = this.$el.find('.carousel-indicators');
+        $indicatorsDiv.css('justify-content', 'start');
+        if (uiUtils.getSize() <= SIZES.MD) {
+            if (($indicatorsDiv.children().last().position().left + this.$el.find('li').outerWidth()) < $indicatorsDiv.outerWidth()) {
+                $indicatorsDiv.css('justify-content', 'center');
+            }
         }
     },
     /**
      * @private
+     * @param {Event} ev
      */
-    _onKeydown: function (ev) {
-        switch (ev.which) {
-            case $.ui.keyCode.ESCAPE:
-                this._render();
-                break;
-            case $.ui.keyCode.UP:
-                ev.preventDefault();
-                this.$menu.children().last().focus();
-                break;
-            case $.ui.keyCode.DOWN:
-                ev.preventDefault();
-                this.$menu.children().first().focus();
-                break;
+    _onMouseWheel: function (ev) {
+        ev.preventDefault();
+        if (ev.originalEvent.deltaY > 0) {
+            this.$el.carousel('next');
+        } else {
+            this.$el.carousel('prev');
         }
     },
 });
+
+publicWidget.registry.websiteSaleProductPageReviews = publicWidget.Widget.extend({
+    selector: '#o_product_page_reviews',
+    disabledInEditableMode: false,
+
+    /**
+     * @override
+     */
+    async start() {
+        await this._super(...arguments);
+        this._updateChatterComposerPosition();
+        extraMenuUpdateCallbacks.push(this._updateChatterComposerPosition.bind(this));
+    },
+    /**
+     * @override
+     */
+    destroy() {
+        this.$el.find('.o_portal_chatter_composer').css('top', '');
+        this._super(...arguments);
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * @private
+     */
+    _updateChatterComposerPosition() {
+        let size = 20;
+        for (const el of document.querySelectorAll('.o_top_fixed_element')) {
+            size += $(el).outerHeight();
+        }
+        this.$el.find('.o_portal_chatter_composer').css('top', size);
+    },
 });
+
+export default {
+    WebsiteSale: publicWidget.registry.WebsiteSale,
+    WebsiteSaleLayout: publicWidget.registry.WebsiteSaleLayout,
+    WebsiteSaleProductPage: publicWidget.registry.WebsiteSaleAccordionProduct,
+    WebsiteSaleCarouselProduct: publicWidget.registry.websiteSaleCarouselProduct,
+    WebsiteSaleProductPageReviews: publicWidget.registry.websiteSaleProductPageReviews,
+};

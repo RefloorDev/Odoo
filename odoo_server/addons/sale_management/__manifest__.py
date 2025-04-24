@@ -5,7 +5,7 @@
     'name': 'Sales',
     'version': '1.0',
     'category': 'Sales/Sales',
-    'sequence': 17,
+    'sequence': 5,
     'summary': 'From quotations to invoices',
     'description': """
 Manage sales quotations and orders
@@ -35,24 +35,37 @@ The Dashboard for the Sales Manager will include
 * My Quotations
 * Monthly Turnover (Graph)
     """,
-    'website': 'https://www.odoo.com/page/sales',
+    'website': 'https://www.odoo.com/app/sales',
     'depends': ['sale', 'digest'],
     'data': [
-        'security/sale_management_security.xml',
-        'views/sale_portal_templates.xml',
-        'views/sale_order_template_views.xml',
-        'security/ir.model.access.csv',
-        'views/res_config_settings_views.xml',
         'data/digest_data.xml',
-        'views/sale_management_views.xml',
-        'views/digest_views.xml',
-        'views/sale_order_views.xml',
+
+        'security/ir.model.access.csv',
+        'security/sale_management_security.xml',
+
         'report/sale_report_templates.xml',
+
+        # Define SO template views & actions before their place of use
+        'views/sale_order_template_views.xml',
+
+        'views/digest_views.xml',
+        'views/res_config_settings_views.xml',
+        'views/sale_order_views.xml',
+        'views/sale_portal_templates.xml',
+
+        'views/sale_management_menus.xml',
     ],
     'demo': [
         'data/sale_order_template_demo.xml',
     ],
+    'assets': {
+        'web.assets_frontend': [
+            'sale_management/static/src/js/**/*',
+        ],
+    },
     'application': True,
-    'uninstall_hook': 'uninstall_hook',
+    'pre_init_hook': 'pre_init_hook',
     'post_init_hook': 'post_init_hook',
+    'uninstall_hook': 'uninstall_hook',
+    'license': 'LGPL-3',
 }

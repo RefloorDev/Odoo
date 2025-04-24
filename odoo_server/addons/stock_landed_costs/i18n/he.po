@@ -3,37 +3,41 @@
 # 	* stock_landed_costs
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Fishfur A Banter <fishfurbanter@gmail.com>, 2019
-# ExcaliberX <excaliberx@gmail.com>, 2019
-# Yihya Hugirat <hugirat@gmail.com>, 2019
-# שהאב חוסיין <shhab89@gmail.com>, 2019
-# hed shefetr <hed@laylinetech.com>, 2019
-# דודי מלכה <Dudimalka6@gmail.com>, 2019
-# ZVI BLONDER <ZVIBLONDER@gmail.com>, 2020
+# Fishfur A Banter <fishfurbanter@gmail.com>, 2024
+# Leandro Noijovich <eliel.sorcerer@gmail.com>, 2024
+# שהאב חוסיין <shhab89@gmail.com>, 2024
+# NoaFarkash, 2024
+# Roy Sayag, 2024
+# Orel Nahmany, 2024
+# Ha Ketem <haketem@gmail.com>, 2024
+# Yihya Hugirat <hugirat@gmail.com>, 2024
+# Lilach Gilliam <lilach@apprcase.com>, 2024
+# Hed Shefer <hed@laylinetech.com>, 2024
+# ExcaliberX <excaliberx@gmail.com>, 2024
+# Lilach Gilliam <lilach.gilliam@gmail.com>, 2024
+# Martin Trigaux, 2024
+# דודי מלכה <Dudimalka6@gmail.com>, 2024
+# ZVI BLONDER <ZVIBLONDER@gmail.com>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-09 12:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:14+0000\n"
-"Last-Translator: ZVI BLONDER <ZVIBLONDER@gmail.com>, 2020\n"
-"Language-Team: Hebrew (https://www.transifex.com/odoo/teams/41243/he/)\n"
+"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: ZVI BLONDER <ZVIBLONDER@gmail.com>, 2024\n"
+"Language-Team: Hebrew (https://app.transifex.com/odoo/teams/41243/he/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: he\n"
-"Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: (n % 10 == 0 && n % 1 == 0 && n > 10) ? 2 : 3;\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: 2;\n"
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
-msgid " already out"
-msgstr "כבר בחוץ"
+msgid "%(product)s: %(quantity)s already out"
+msgstr ""
 
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.stock_landed_cost_view_kanban
@@ -41,15 +45,9 @@ msgid "<i class=\"fa fa-clock-o\" title=\"Date\" role=\"img\" aria-label=\"Date\
 msgstr "<i class=\"fa fa-clock-o\" title=\"Date\" role=\"img\" aria-label=\"Date\"/>"
 
 #. module: stock_landed_costs
-#: model:ir.model.fields,help:stock_landed_costs.field_account_move_line__product_type
-msgid ""
-"A storable product is a product for which you manage stock. The Inventory app has to be installed.\n"
-"A consumable product is a product for which stock is not managed.\n"
-"A service is a non-material product you provide."
+#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
+msgid "<span class=\"o_stat_text\">Valuation</span>"
 msgstr ""
-"מוצר מנוהל מלאי הוא מוצר שעבורו מתבצע ניהול מלאי במערכת. יש להתקין את יישום "
-"המלאי.מוצר שאינו מנוהל מלאי הוא מוצר שעבורו לא מתבצע ניהול מלאי במערכת.שירות"
-" הוא מוצר שאינו חומר שאתה מספק."
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines__account_id
@@ -82,6 +80,11 @@ msgid "Activity State"
 msgstr "מצב פעילות"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__activity_type_icon
+msgid "Activity Type Icon"
+msgstr "סוג פעילות"
+
+#. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
 msgid "Additional Costs"
 msgstr "עלויות נוספות"
@@ -92,26 +95,35 @@ msgid "Additional Landed Cost"
 msgstr "עלויות הוצאות הובלה נוספות"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__target_model
+msgid "Apply On"
+msgstr "החל על"
+
+#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_attachment_count
 msgid "Attachment Count"
 msgstr "כמות קבצים מצורפים"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields.selection,name:stock_landed_costs.selection__product_template__split_method_landed_cost__by_current_cost_price
 #: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost_lines__split_method__by_current_cost_price
 msgid "By Current Cost"
 msgstr "לפי עלות נוכחית"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields.selection,name:stock_landed_costs.selection__product_template__split_method_landed_cost__by_quantity
 #: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost_lines__split_method__by_quantity
 msgid "By Quantity"
 msgstr "לפי כמות"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields.selection,name:stock_landed_costs.selection__product_template__split_method_landed_cost__by_volume
 #: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost_lines__split_method__by_volume
 msgid "By Volume"
 msgstr "לפי נפח"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields.selection,name:stock_landed_costs.selection__product_template__split_method_landed_cost__by_weight
 #: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost_lines__split_method__by_weight
 msgid "By Weight"
 msgstr "לפי משקל"
@@ -124,7 +136,7 @@ msgstr "בטל"
 #. module: stock_landed_costs
 #: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost__state__cancel
 msgid "Cancelled"
-msgstr "מבוטל"
+msgstr "בוטל"
 
 #. module: stock_landed_costs
 #: model:ir.model,name:stock_landed_costs.model_res_company
@@ -135,11 +147,6 @@ msgstr "חברות"
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__company_id
 msgid "Company"
 msgstr "חברה"
-
-#. module: stock_landed_costs
-#: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__company_id
-msgid "Company related to this journal"
-msgstr "חברה הקשורה ליומן זה"
 
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
@@ -168,8 +175,8 @@ msgid "Cost Lines"
 msgstr "שורות עלות "
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
 msgid ""
 "Cost and adjustments lines do not match. You should maybe recompute the "
 "landed costs."
@@ -202,6 +209,7 @@ msgstr "נוצר ב-"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__currency_id
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines__currency_id
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__currency_id
 msgid "Currency"
 msgstr "מטבע"
@@ -219,6 +227,18 @@ msgid "Default Journal"
 msgstr "יומן ברירת מחדל"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_product_product__split_method_landed_cost
+#: model:ir.model.fields,field_description:stock_landed_costs.field_product_template__split_method_landed_cost
+msgid "Default Split Method"
+msgstr ""
+
+#. module: stock_landed_costs
+#: model:ir.model.fields,help:stock_landed_costs.field_product_product__split_method_landed_cost
+#: model:ir.model.fields,help:stock_landed_costs.field_product_template__split_method_landed_cost
+msgid "Default Split Method when used for Landed Cost"
+msgstr ""
+
+#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines__name
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__name
 msgid "Description"
@@ -229,11 +249,11 @@ msgstr "תיאור"
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines__display_name
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__display_name
 msgid "Display Name"
-msgstr "הצג שם"
+msgstr "שם לתצוגה"
 
 #. module: stock_landed_costs
-#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
 #: model:mail.message.subtype,name:stock_landed_costs.mt_stock_landed_cost_open
+#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
 msgid "Done"
 msgstr "בוצע"
 
@@ -244,14 +264,20 @@ msgid "Draft"
 msgstr "טיוטה"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields.selection,name:stock_landed_costs.selection__product_template__split_method_landed_cost__equal
 #: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost_lines__split_method__equal
 msgid "Equal"
 msgstr "שווה"
 
 #. module: stock_landed_costs
-#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
-msgid "Exception Activities"
-msgstr "פעולות חריגות"
+#: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost_lines__split_method
+msgid ""
+"Equal: Cost will be equally divided.\n"
+"By Quantity: Cost will be divided according to product's quantity.\n"
+"By Current cost: Cost will be divided according to product's current cost.\n"
+"By Weight: Cost will be divided depending on its weight.\n"
+"By Volume: Cost will be divided depending on its volume."
+msgstr ""
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_follower_ids
@@ -259,14 +285,14 @@ msgid "Followers"
 msgstr "עוקבים"
 
 #. module: stock_landed_costs
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_channel_ids
-msgid "Followers (Channels)"
-msgstr "עוקבים (ערוצים)"
-
-#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_partner_ids
 msgid "Followers (Partners)"
 msgstr "עוקבים (לקוחות/ספקים)"
+
+#. module: stock_landed_costs
+#: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__activity_type_icon
+msgid "Font awesome icon e.g. fa-tasks"
+msgstr "פונט מדהים למשל עבור משימות fa-tasks"
 
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
@@ -274,9 +300,21 @@ msgid "Future Activities"
 msgstr "פעילויות עתידיות"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields,help:stock_landed_costs.field_account_move_line__product_type
+msgid ""
+"Goods are tangible materials and merchandise you provide.\n"
+"A service is a non-material product you provide."
+msgstr ""
+
+#. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
 msgid "Group By"
 msgstr "קבץ לפי"
+
+#. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__has_message
+msgid "Has Message"
+msgstr "יש הודעה"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__id
@@ -297,7 +335,6 @@ msgstr "סמל לציון פעילות חריגה."
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__message_needaction
-#: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__message_unread
 msgid "If checked, new messages require your attention."
 msgstr "אם מסומן, הודעות חדשות דורשות את תשומת לבך."
 
@@ -310,8 +347,10 @@ msgstr "אם מסומן, בחלק מההודעות קיימת שגיאת משל�
 #. module: stock_landed_costs
 #: model:ir.model.fields,help:stock_landed_costs.field_product_product__landed_cost_ok
 #: model:ir.model.fields,help:stock_landed_costs.field_product_template__landed_cost_ok
-msgid "Indicates whether the product is a landed cost."
-msgstr "מציין אם המוצר הוא עלות הוצאת הובלה"
+msgid ""
+"Indicates whether the product is a landed cost: when receiving a vendor "
+"bill, you can allocate this cost on preceding receipts."
+msgstr ""
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_is_follower
@@ -341,10 +380,6 @@ msgstr "יומן"
 
 #. module: stock_landed_costs
 #: model:ir.model,name:stock_landed_costs.model_account_move
-msgid "Journal Entries"
-msgstr "פקודות יומן"
-
-#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__account_move_id
 msgid "Journal Entry"
 msgstr "פקודת יומן"
@@ -352,7 +387,7 @@ msgstr "פקודת יומן"
 #. module: stock_landed_costs
 #: model:ir.model,name:stock_landed_costs.model_account_move_line
 msgid "Journal Item"
-msgstr "פקודת יומן"
+msgstr "תנועת יומן"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines__cost_id
@@ -363,16 +398,11 @@ msgid "Landed Cost"
 msgstr "עלות הוצאת הובלה"
 
 #. module: stock_landed_costs
-#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
-msgid "Landed Cost Name"
-msgstr "שם עלויות הוצאות הובלה"
-
-#. module: stock_landed_costs
 #: model:ir.actions.act_window,name:stock_landed_costs.action_stock_landed_cost
+#: model:ir.model.fields,field_description:stock_landed_costs.field_account_bank_statement_line__landed_costs_ids
 #: model:ir.model.fields,field_description:stock_landed_costs.field_account_move__landed_costs_ids
 #: model:ir.ui.menu,name:stock_landed_costs.menu_stock_landed_cost
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.account_view_move_form_inherited
-#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_product_landed_cost_form
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_tree
@@ -381,6 +411,7 @@ msgid "Landed Costs"
 msgstr "עלויות הוצאות הובלה"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_account_bank_statement_line__landed_costs_visible
 #: model:ir.model.fields,field_description:stock_landed_costs.field_account_move__landed_costs_visible
 msgid "Landed Costs Visible"
 msgstr "עלויות הוצאות הובלה גלויות"
@@ -391,11 +422,11 @@ msgid "Landed cost validated"
 msgstr "עלויות הוצאות הובלה אומתו"
 
 #. module: stock_landed_costs
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost____last_update
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines____last_update
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines____last_update
-msgid "Last Modified on"
-msgstr "שינוי אחרון ב"
+#: model_terms:ir.actions.act_window,help:stock_landed_costs.action_stock_landed_cost
+msgid ""
+"Landed costs allow you to include additional costs (shipment, insurance, "
+"customs duties, etc) into the cost of the product."
+msgstr ""
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__write_uid
@@ -414,7 +445,7 @@ msgstr "עדכון אחרון ב"
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
 msgid "Late Activities"
-msgstr "פעילויות מאוחרות"
+msgstr "פעילויות באיחור"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_res_company__lc_journal_id
@@ -422,19 +453,19 @@ msgid "Lc Journal"
 msgstr "יומן עלויות הוצאות הובלה"
 
 #. module: stock_landed_costs
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_main_attachment_id
-msgid "Main Attachment"
-msgstr "קובץ ראשי מצורף "
-
-#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_has_error
 msgid "Message Delivery error"
-msgstr "הודעת שגיאת משלוח"
+msgstr "הודעת שגיאת שליחה"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_ids
 msgid "Messages"
 msgstr "הודעות"
+
+#. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__my_activity_date_deadline
+msgid "My Activity Deadline"
+msgstr "מועד אחרון לפעילות שלי"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__name
@@ -443,9 +474,8 @@ msgid "Name"
 msgstr "שם"
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
 msgid "New"
 msgstr "חדש"
 
@@ -455,14 +485,19 @@ msgid "New Value"
 msgstr "ערך חדש"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__activity_calendar_event_id
+msgid "Next Activity Calendar Event"
+msgstr "הפעילות הבאה ביומן"
+
+#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__activity_date_deadline
 msgid "Next Activity Deadline"
-msgstr "מועד האחרון לפעילות הבאה"
+msgstr "מועד אחרון לפעילות הבאה"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__activity_summary
 msgid "Next Activity Summary"
-msgstr "תקציר הפעילות הבאה "
+msgstr "תיאור הפעילות הבאה "
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__activity_type_id
@@ -472,7 +507,7 @@ msgstr "סוג הפעילות הבאה"
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_needaction_counter
 msgid "Number of Actions"
-msgstr "מספר הפעולות"
+msgstr "מספר פעולות"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_has_error_counter
@@ -481,8 +516,8 @@ msgstr "מספר השגיאות"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__message_needaction_counter
-msgid "Number of messages which requires an action"
-msgstr "מספר ההודעות המחייבות פעולה"
+msgid "Number of messages requiring action"
+msgstr "מספר הודעות הדורשות פעולה"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__message_has_error_counter
@@ -490,13 +525,8 @@ msgid "Number of messages with delivery error"
 msgstr "מספר הודעות עם שגיאת משלוח"
 
 #. module: stock_landed_costs
-#: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__message_unread_counter
-msgid "Number of unread messages"
-msgstr "מספר ההודעות שלא נקראו"
-
-#. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
 msgid "Only draft landed costs can be validated"
 msgstr "ניתן לאמת רק טיוטת עלויות הוצאות הובלה"
 
@@ -511,17 +541,16 @@ msgid "Picking"
 msgstr "ליקוט"
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
 msgid "Please configure Stock Expense Account for product: %s."
 msgstr "הגדר חשבון הוצאות מלאי עבור מוצר: %s."
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
-msgid ""
-"Please define the transfers on which those additional costs should apply."
-msgstr "אנא הגדר את ההעברות עליהן חלות עלויות נוספות אלה."
+msgid "Please define %s on which those additional costs should apply."
+msgstr ""
 
 #. module: stock_landed_costs
 #: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost__state__done
@@ -529,15 +558,11 @@ msgid "Posted"
 msgstr "נרשם"
 
 #. module: stock_landed_costs
+#: model:ir.model,name:stock_landed_costs.model_product_template
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines__product_id
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__product_id
 msgid "Product"
 msgstr "מוצר"
-
-#. module: stock_landed_costs
-#: model:ir.model,name:stock_landed_costs.model_product_template
-msgid "Product Template"
-msgstr "תבנית מוצר "
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_account_move_line__product_type
@@ -545,9 +570,19 @@ msgid "Product Type"
 msgstr "סוג מוצר"
 
 #. module: stock_landed_costs
+#: model:ir.model,name:stock_landed_costs.model_purchase_order_line
+msgid "Purchase Order Line"
+msgstr "שורת הזמנת רכש"
+
+#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__quantity
 msgid "Quantity"
 msgstr "כמות"
+
+#. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__rating_ids
+msgid "Ratings"
+msgstr "דירוגים"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__activity_user_id
@@ -557,12 +592,12 @@ msgstr "משתמש אחראי"
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_has_sms_error
 msgid "SMS Delivery error"
-msgstr "שגיאת שליחת SMS"
+msgstr "שגיאה בשליחת SMS"
 
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
 msgid "Show all records which has next action date is before today"
-msgstr "הצג את כל הרשומות שתאריך הפעולה הבא שלהם הוא עד היום"
+msgstr "הצג את כל הרשומות שתאריך הפעולה הבא שלהן הוא עד היום"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines__split_method
@@ -572,7 +607,7 @@ msgstr "שיטת פיצול"
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__state
 msgid "State"
-msgstr "מצב"
+msgstr "סטטוס"
 
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
@@ -603,6 +638,7 @@ msgid "Stock Landed Cost Line"
 msgstr "שורת מלאי עלויות הוצאות הובלה"
 
 #. module: stock_landed_costs
+#: model:ir.model,name:stock_landed_costs.model_stock_move
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__move_id
 msgid "Stock Move"
 msgstr "תנועת מלאי"
@@ -625,43 +661,29 @@ msgstr "סה\"כ"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__picking_ids
+#: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost__target_model__picking
 msgid "Transfers"
 msgstr "העברות"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__activity_exception_decoration
 msgid "Type of the exception activity on record."
-msgstr "סוג פעילות חריגה ברשומה."
-
-#. module: stock_landed_costs
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_unread
-msgid "Unread Messages"
-msgstr "הודעות שלא נקראו"
-
-#. module: stock_landed_costs
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_unread_counter
-msgid "Unread Messages Counter"
-msgstr "מספר הודעות שלא נקראו"
+msgstr "סוג הפעילות החריגה ברשומה."
 
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
 msgid "Validate"
-msgstr "אמת"
+msgstr "אשר"
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
 msgid ""
 "Validated landed costs cannot be cancelled, but you could create negative "
 "landed costs to reverse them"
 msgstr ""
 "לא ניתן לבטל עלויות הוצאות הובלה מאומתות, אך ניתן ליצור עלויות הוצאות הובלה "
 "שליליות כדי לבטל אותן"
-
-#. module: stock_landed_costs
-#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
-msgid "Valuation"
-msgstr "הערכת שווי"
 
 #. module: stock_landed_costs
 #: model:ir.model,name:stock_landed_costs.model_stock_valuation_adjustment_lines
@@ -692,7 +714,7 @@ msgstr "הודעות מאתר האינטרנט"
 #. module: stock_landed_costs
 #: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__website_message_ids
 msgid "Website communication history"
-msgstr "היסטוריית התקשרויות מאתר האינטרנט"
+msgstr "היסטורית התקשרויות מאתר האינטרנט"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__weight
@@ -700,13 +722,17 @@ msgid "Weight"
 msgstr "משקל"
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
 msgid ""
-"You cannot apply landed costs on the chosen transfer(s). Landed costs can "
-"only be applied for products with automated inventory valuation and FIFO or "
-"average costing method."
+"You cannot apply landed costs on the chosen %s(s). Landed costs can only be "
+"applied for products with FIFO or average costing method."
 msgstr ""
-"אינך יכול להחיל עלויות הוצאות הובלה על ההעברות שנבחרו. ניתן להחיל עלויות "
-"הוצאות הובלה רק על מוצרים בעלי הערכת מלאי אוטומטית ושיטת FIFO או בשיטת תמחור"
-" ממוצעת."
+
+#. module: stock_landed_costs
+#. odoo-python
+#: code:addons/stock_landed_costs/models/product.py:0
+msgid ""
+"You cannot change the product type or disable landed cost option because the"
+" product is used in an account move line."
+msgstr ""

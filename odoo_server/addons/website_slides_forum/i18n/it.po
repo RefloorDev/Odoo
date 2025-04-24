@@ -3,28 +3,22 @@
 # 	* website_slides_forum
 # 
 # Translators:
-# Francesco Garganese <francesco.garganese@aeromnia.aero>, 2019
-# Giovanni Perteghella <giovanni@perteghella.org>, 2019
-# Lorenzo Battistini <lorenzo.battistini@agilebg.com>, 2019
-# Paolo Valier, 2019
-# Petra <bop@odoo.com>, 2019
-# Sergio Zanchetta <primes2h@gmail.com>, 2019
-# Martin Trigaux, 2019
-# Léonie Bouchat <lbo@odoo.com>, 2019
+# Wil Odoo, 2024
+# Marianna Ciofani, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:13+0000\n"
-"PO-Revision-Date: 2019-08-26 09:16+0000\n"
-"Last-Translator: Léonie Bouchat <lbo@odoo.com>, 2019\n"
-"Language-Team: Italian (https://www.transifex.com/odoo/teams/41243/it/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Marianna Ciofani, 2024\n"
+"Language-Team: Italian (https://app.transifex.com/odoo/teams/41243/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: it\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -47,11 +41,11 @@ msgstr ""
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid ""
-"<b>Answers should not add or expand questions</b>. Insteadeither edit the "
+"<b>Answers should not add or expand questions</b>. Instead, either edit the "
 "question or add a comment."
 msgstr ""
-"<b>Le risposte non devono aggiungere o estendere le domande</b>. Modificare "
-"invece la domanda o aggiungere un commento."
+"<b>Le risposte non devono aggiungere o estendere le domande</b>. Modifica "
+"invece la domanda o aggiungi un commento."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -142,62 +136,68 @@ msgstr ""
 "rilevanti per questa comunità."
 
 #. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What kinds of questions can I ask here?</b> <i class=\"fa fa-caret-down "
-"float-right\"></i>"
-msgstr ""
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What should I avoid in my answers?</b> <i class=\"fa fa-caret-down float-"
-"right\"></i>"
-msgstr ""
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What should I avoid in my questions?</b> <i class=\"fa fa-caret-down "
-"float-right\"></i>"
-msgstr ""
-
-#. module: website_slides_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.slide_fullscreen
 msgid ""
-"<i class=\"fa fa-comments\"/><span class=\"ml-1 d-none d-md-inline-"
-"block\">Ask a question</span>"
+"<i class=\"fa fa-comments\"/><span class=\"ms-1 d-none d-md-inline-"
+"block\">Forum</span>"
 msgstr ""
-"<i class=\"fa fa-comments\"/><span class=\"ml-1 d-none d-md-inline-"
-"block\">Fai una domanda</span>"
+"<i class=\"fa fa-comments\"/><span class=\"ms-1 d-none d-md-inline-"
+"block\">Forum</span>"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
-msgid "<i class=\"fa fa-home\"/> Course"
-msgstr "<i class=\"fa fa-home\"/> Corso"
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What kind of questions can I ask here?</span>"
+msgstr "<span class=\"flex-grow-1\">Che tipo di domande è possibile fare?</span>"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What should I avoid in my answers?</span>"
+msgstr ""
+"<span class=\"flex-grow-1\">Cosa dovrei evitare nelle mie risposte?</span>"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What should I avoid in my questions?</span>"
+msgstr "<span class=\"flex-grow-1\">Cosa dovrei evitare nelle domande?</span>"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"<span class=\"flex-grow-1\">Why can other people edit my "
+"questions/answers?</span>"
+msgstr ""
+"<span class=\"flex-grow-1\">Perché altre persone possono modificare le mie "
+"domande/risposte?</span>"
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_breadcrumb
+msgid "<strong>Forum</strong>"
+msgstr "<strong>Forum</strong>"
 
 #. module: website_slides_forum
 #: model:forum.forum,name:website_slides_forum.forum_forum_demo_channel_0
 msgid "Basics of Gardening"
+msgstr "Tecniche di base del giardinaggio"
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_all_all_entries
+msgid "Check out our courses <i class=\"fa fa-long-arrow-right\"/>"
+msgstr "Consulta i nostri corsi <i class=\"fa fa-long-arrow-right\"/>"
+
+#. module: website_slides_forum
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
+msgid "Come back later to monitor and moderate what is posted on your Forums."
 msgstr ""
+"Torna più tardi per monitorare e moderare le pubblicazioni nei tuoi forum."
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Check our Courses <i class=\"fa fa-chevron-right\"/>"
-msgstr ""
-
-#. module: website_slides_forum
-#. openerp-web
-#: code:addons/website_slides_forum/static/src/xml/website_slides_forum_channel.xml:0
-#, python-format
-msgid "Communication"
-msgstr "Comunicazione"
-
-#. module: website_slides_forum
+#: model:ir.model,name:website_slides_forum.model_slide_channel
 #: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__slide_channel_id
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_all_all_entries
 msgid "Course"
 msgstr "Corso"
 
@@ -212,26 +212,26 @@ msgid "Courses"
 msgstr "Corsi"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Courses Discussions"
-msgstr ""
-
-#. module: website_slides_forum
-#. openerp-web
-#: code:addons/website_slides_forum/static/src/xml/website_slides_forum_channel.xml:0
-#, python-format
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_forum_action_channel
 msgid "Create a Forum"
-msgstr "Creare un Forum"
+msgstr "Crea un forum"
 
 #. module: website_slides_forum
-#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
-msgid "Create a new forum post"
-msgstr "Creare un post sul forum"
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Dismiss"
+msgstr "Scarta"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Description"
-msgstr "Descrizione"
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Dismiss message"
+msgstr "Ignora messaggio"
+
+#. module: website_slides_forum
+#: model:ir.model.fields,help:website_slides_forum.field_forum_forum__slide_channel_ids
+msgid "Edit the course linked to this forum on the course form."
+msgstr "Modifica, nella relativa scheda, il corso collegato al forum."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -240,43 +240,67 @@ msgid ""
 "For example, if you ask an interesting question or give a helpful answer, "
 "your input will be upvoted. On the other hand if the answer is misleading - "
 "it will be downvoted. Each vote in favor will generate 10 points, each vote "
-"against will subtract 10 points. There is a limit of 200 points that can be "
+"against will subtract 2 points. There is a limit of 200 points that can be "
 "accumulated for a question or answer per day. The table given at the end "
 "explains reputation point requirements for each type of moderation task."
 msgstr ""
-"Ad esempio, se viene posta una domanda interessante o fornita una risposta "
-"utile, il contributo verrà votato positivamente. Se invece la risposta è "
-"fuorviante, otterrà un voto negativo. Ciascun voto a favore genera 10 punti,"
-" quelli  contrari tolgono 10 punti. Per una singola domanda o risposta "
-"possono essere accumulati un massimo di 200 punti al giorno. La tabella "
-"riportata in fondo illustra i punti reputazione necessari per ciascun tipo "
-"di attività di moderazione."
+"Ad esempio, se poni una domanda interessante o dai una risposta utile, il "
+"tuo  contributo riceverà voti a favore. Tuttavia, se la risposta è "
+"fuorviante riceverà voti a sfavore. Ogni voto in favore genererà 10 punti, "
+"ogni voto a sfavore comporterà una perdita di 2 punti. Per ogni domanda o "
+"risposta, ogni giorno possono essere accumulati un massimo di 200 punti. La "
+"tabella alla fine spiega i requisiti per i punti di reputazione, per ogni "
+"tipo di attività di moderazione."
 
 #. module: website_slides_forum
 #: model:ir.model,name:website_slides_forum.model_forum_forum
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum
-#: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_report_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.course_main
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.slide_fullscreen
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_breadcrumb
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
 msgid "Forum"
 msgstr "Forum"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
-msgid "Forum Posts"
-msgstr "Messaggi del forum"
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.snippet_options
+msgid "Forum Page"
+msgstr "Pagina forum"
 
 #. module: website_slides_forum
+#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_channel
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
+msgid "Forum Posts"
+msgstr "Messaggi forum"
+
+#. module: website_slides_forum
+#: model:ir.model.fields,help:website_slides_forum.field_forum_forum__visibility
+msgid ""
+"Forum linked to a Course, the visibility is the one applied on the course."
+msgstr "Forum collegato a un corso, la visibilità è quella in uso nel corso."
+
+#. module: website_slides_forum
+#: model:ir.actions.act_window,name:website_slides_forum.forum_forum_action_channel
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum_forum
 msgid "Forums"
 msgstr "Forum"
 
 #. module: website_slides_forum
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid "Hide Intro"
-msgstr "Nescondere intro"
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_forum_action_channel
+msgid "Forums allow your attendees to ask questions to your community."
+msgstr "I forum permettono ai partecipanti di porre domande alla community."
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "Here a table with the privileges and the karma level"
+msgstr "Qui una tabella con privilegi e livello del karma"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "If this approach is not for you, please respect the community."
+msgstr "Se questo approccio non fa per te, rispetta la comunità."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -295,20 +319,35 @@ msgstr ""
 "probabilmente il posto giusto."
 
 #. module: website_slides_forum
+#: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__image_1920
+msgid "Image"
+msgstr "Immagine"
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.res_config_settings_view_form
+msgid "Manage Forums"
+msgstr "Gestisci forum"
+
+#. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "More over:"
 msgstr "Inoltre:"
 
 #. module: website_slides_forum
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
+msgid "No Forum Post yet!"
+msgstr "Non c'è ancora un post sul forum!"
+
+#. module: website_slides_forum
 #: model:ir.model.fields,field_description:website_slides_forum.field_slide_channel__forum_total_posts
 msgid "Number of active forum posts"
-msgstr "Numero di post attivi nel forum"
+msgstr "Numero di messaggi attivi nel forum"
 
 #. module: website_slides_forum
 #: model:ir.model.constraint,message:website_slides_forum.constraint_slide_channel_forum_uniq
-msgid "Only one forum per slide channel!"
-msgstr "Solo un forum per gruppo di slide!"
+msgid "Only one course per forum!"
+msgstr "Un solo corso per forum."
 
 #. module: website_slides_forum
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum_post
@@ -316,25 +355,55 @@ msgid "Posts"
 msgstr "Messaggi"
 
 #. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.snippet_options
+msgid "Separate Courses"
+msgstr "Separa corsi"
+
+#. module: website_slides_forum
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid "Register"
-msgstr "Registra"
-
-#. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
-msgid "Review"
-msgstr "Recensire"
-
-#. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "See all Courses"
+msgid ""
+"Share and discuss the best content and new marketing ideas, build your "
+"professional profile and become a better marketer together."
 msgstr ""
+"Condividi e parla dei contenuti migliori e di nuove idee di marketing, "
+"costruisci il tuo profilo professionale e diventa un venditore megliore."
 
 #. module: website_slides_forum
-#: model:ir.model,name:website_slides_forum.model_slide_channel
-msgid "Slide Channel"
-msgstr "Canale Slide"
+#: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__visibility
+msgid "Show Course To"
+msgstr "Mostra corso a"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Sign up"
+msgstr "Registrati"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"The goal of this site is create a relevant knowledge base that would answer "
+"questions related to Odoo."
+msgstr ""
+"L'obiettivo di questo sito è di creare una base rilevante di conoscenze che "
+"risponda a domande relative a Odoo."
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"Therefore questions and answers can be edited like wiki pages by experienced"
+" users of this site in order to improve the overall quality of the knowledge"
+" base content. Such privileges are granted based on user karma level: you "
+"will be able to do the same once your karma gets high enough."
+msgstr ""
+"Pertanto le domande e le risposte possono essere modificate, come pagine "
+"wiki, da utenti esperti di questo sito per migliorare la qualità complessiva"
+" dei contenuti per questa base di conoscenze. Tali privilegi sono concessi "
+"in base al livello di karma dell'utente, con un livello sufficiente si "
+"potranno ottenere gli stessi vantaggi."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -343,18 +412,8 @@ msgid ""
 "This community is for professional and enthusiast users, partners and "
 "programmers. You can ask questions about:"
 msgstr ""
-"Questa comunità è per utenti professionali e appassionati, partner e "
-"programmatori. È possibile porre domande riguardo:"
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"This community is for professionals and enthusiasts of our products and services.\n"
-"                                        <br>Share and discuss the best content and new marketing ideas, build your professional profile and become a better marketer together."
-msgstr ""
-"Questa comunità è per professionisti ed entusiasti dei nostri prodotti e servizi.\n"
-"                                        <br>Condividi e discuti i migliori contenuti e le nuove idee di marketing, crea il tuo profilo personale e diventa insieme a noi un promotore migliore."
+"Questa comunità è per utenti, partner e programmatori professionisti e "
+"appassionati. È possibile porre domande riguardo:"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -369,7 +428,7 @@ msgstr ""
 #. module: website_slides_forum
 #: model:forum.forum,name:website_slides_forum.forum_forum_demo_channel_2
 msgid "Trees, Wood and Gardens"
-msgstr ""
+msgstr "Alberi, boschi e giardini"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
@@ -407,19 +466,12 @@ msgstr ""
 #. module: website_slides_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_forum_view_form
 msgid "eLearning"
-msgstr "eLearning"
+msgstr "E-learning"
 
 #. module: website_slides_forum
-#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_channel
-#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_report
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_post_view_graph_slides
 msgid "eLearning Forum Posts"
-msgstr "Post del forum eLearning"
-
-#. module: website_slides_forum
-#: model:ir.actions.act_window,name:website_slides_forum.forum_forum_action_channel
-msgid "eLearning Forums"
-msgstr "Forum eLearning"
+msgstr "E-learning - Messaggi forum"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0

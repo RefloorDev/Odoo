@@ -3,17 +3,17 @@
 # 	* web_unsplash
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Marius Stedjan <marius@stedjan.com>, 2019
+# Marius Stedjan <marius@stedjan.com>, 2024
+# Martin Trigaux, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:33+0000\n"
-"PO-Revision-Date: 2019-08-26 09:15+0000\n"
-"Last-Translator: Marius Stedjan <marius@stedjan.com>, 2019\n"
-"Language-Team: Norwegian Bokmål (https://www.transifex.com/odoo/teams/41243/nb/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Martin Trigaux, 2024\n"
+"Language-Team: Norwegian Bokmål (https://app.transifex.com/odoo/teams/41243/nb/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -21,85 +21,86 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: web_unsplash
-#: model_terms:ir.ui.view,arch_db:web_unsplash.res_config_settings_view_form
-msgid "<i class=\"fa fa-arrow-right\"/> Generate an Access Key"
-msgstr ""
-
-#. module: web_unsplash
 #: model:ir.model.fields,field_description:web_unsplash.field_res_config_settings__unsplash_access_key
 msgid "Access Key"
 msgstr ""
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:57
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+#: model:ir.model.fields,field_description:web_unsplash.field_res_config_settings__unsplash_app_id
+msgid "Application ID"
+msgstr ""
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
 msgid "Apply"
 msgstr "Bruk"
 
 #. module: web_unsplash
-#: model:ir.model,name:web_unsplash.model_res_config_settings
-msgid "Config Settings"
-msgstr "Konfigurasjonsinnstillinger"
+#: model:ir.model,name:web_unsplash.model_ir_attachment
+msgid "Attachment"
+msgstr "Vedlegg"
 
 #. module: web_unsplash
-#: code:addons/web_unsplash/controllers/main.py:86
-#, python-format
+#: model:ir.model,name:web_unsplash.model_res_config_settings
+msgid "Config Settings"
+msgstr "Innstillinger"
+
+#. module: web_unsplash
+#. odoo-python
+#: code:addons/web_unsplash/controllers/main.py:0
 msgid "ERROR: Unknown Unsplash URL!"
 msgstr ""
 
 #. module: web_unsplash
-#: code:addons/web_unsplash/controllers/main.py:34
-#, python-format
+#. odoo-python
+#: code:addons/web_unsplash/controllers/main.py:0
 msgid "ERROR: Unknown Unsplash notify URL!"
 msgstr ""
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:52
-#, python-format
-msgid "Generate an access key"
+#: model_terms:ir.ui.view,arch_db:web_unsplash.res_config_settings_view_form
+msgid "Generate an Access Key"
 msgstr ""
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:56
-#, python-format
-msgid "How to find my Unsplash Application ID?"
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+msgid "Get an Access key"
 msgstr ""
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:50
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
 msgid "Paste your access key here"
 msgstr ""
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:54
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
 msgid "Paste your application ID here"
 msgstr ""
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:40
-#, python-format
-msgid "Photos not found"
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/media_dialog.xml:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.xml:0
+msgid "Photos (via Unsplash)"
 msgstr ""
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:84
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
 msgid "Please check your Unsplash access key and application ID."
 msgstr ""
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:93
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
 msgid "Please check your internet connection or contact administrator."
 msgstr ""
 
@@ -109,57 +110,80 @@ msgid "Qweb Field Image"
 msgstr "Qweb Felt-bilde"
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:17
-#, python-format
-msgid "Search among my images for:"
-msgstr ""
-
-#. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:21
-#, python-format
-msgid "Search from Unsplash for:"
-msgstr ""
-
-#. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:72
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
 msgid "Search is temporarily unavailable"
 msgstr ""
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:90
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
+msgid "Setup Unsplash to access royalty free photos."
+msgstr ""
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
 msgid "Something went wrong"
 msgstr ""
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:75
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
 msgid ""
 "The max number of searches is exceeded. Please retry in an hour or extend to"
 " a better account."
 msgstr ""
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:81
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
 msgid "Unauthorized Key"
 msgstr ""
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:66
-#, python-format
-msgid "Unsplash requires an access key and an application ID"
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_service.js:0
+msgid "Uploading %(count)s '%(query)s' images."
+msgstr ""
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_service.js:0
+msgid "Uploading '%s' image."
 msgstr ""
 
 #. module: web_unsplash
 #: model:ir.model,name:web_unsplash.model_res_users
-msgid "Users"
-msgstr "Brukere"
+msgid "User"
+msgstr "Bruker"
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+msgid "and paste"
+msgstr ""
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+msgid "and paste it here:"
+msgstr ""
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+msgid "here:"
+msgstr ""
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/media_dialog.xml:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.xml:0
+msgid "unsplash"
+msgstr ""

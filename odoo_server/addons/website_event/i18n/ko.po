@@ -3,20 +3,18 @@
 # 	* website_event
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Link Up링크업 <linkup.way@gmail.com>, 2019
-# Linkup <link-up@naver.com>, 2019
-# Seongseok Shin <shinss61@hotmail.com>, 2019
-# JH CHOI <hwangtog@gmail.com>, 2020
+# Daye Jeong, 2024
+# Wil Odoo, 2024
+# Sarah Park, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-30 09:42+0000\n"
-"PO-Revision-Date: 2019-08-26 09:15+0000\n"
-"Last-Translator: JH CHOI <hwangtog@gmail.com>, 2020\n"
-"Language-Team: Korean (https://www.transifex.com/odoo/teams/41243/ko/)\n"
+"POT-Creation-Date: 2024-12-16 13:39+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Sarah Park, 2025\n"
+"Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -24,14 +22,34 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_template
-msgid "<b>Event registration is closed.</b>"
-msgstr "<b>행사 등록이 마감되었습니다.</b>"
+#: model:ir.model.fields,field_description:website_event.field_website_visitor__event_registration_count
+msgid "# Registrations"
+msgstr "# 등록"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.events_list
+msgid "'. Showing results for '"
+msgstr "'. 다음에 대한 결과 표시 중 '"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
+msgid "(only"
+msgstr "(한정"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.registration_template
-msgid "<b>Event registration not yet started.</b>"
-msgstr "<b>행사 등록이 아직 시작되지 않았습니다.</b>"
+msgid ", at"
+msgstr ", "
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
+msgid "<b>End</b>"
+msgstr "<b>종료</b>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.registration_template
+msgid "<b>Sold Out</b>"
+msgstr "<b>매진</b>"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.registration_complete
@@ -39,14 +57,14 @@ msgid "<b>Start</b>"
 msgstr "<b>시작</b>"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.country_events_list
-msgid "<b>View all</b>"
-msgstr "<b>모두 보기</b>"
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
+msgid "<em>Hidden for visitors</em>"
+msgstr "<em>방문자에게 숨김</em>"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
-msgid "<br/> <b>End</b>"
-msgstr "<br/> <b>종료</b>"
+#: model_terms:ir.ui.view,arch_db:website_event.registration_template
+msgid "<em>Registrations <b>Closed</b></em>"
+msgstr "<em>등록이 <b>마감</b>되었습니다.</em>"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_quotes
@@ -56,15 +74,24 @@ msgid ""
 msgstr "<em>참석자 중 한 사람의 인용문을 여기에 쓰십시오. 그것은 당신의 행사에 대한 자신감을 줍니다.</em>"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.events_list
-msgid "<i class=\"fa fa-ban mr-2\"/>Unpublished"
-msgstr "<i class=\"fa fa-ban mr-2\"/>게시 안함"
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
+msgid "<i class=\"fa fa-ban me-2\"/>Sold Out"
+msgstr "<i class=\"fa fa-ban me-2\"/>품절"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.event_details
 #: model_terms:ir.ui.view,arch_db:website_event.events_list
-msgid "<i class=\"fa fa-check mr-2\"/>Registered"
-msgstr "<i class=\"fa fa-check mr-2\"/>등록된"
+msgid "<i class=\"fa fa-ban me-2\"/>Unpublished"
+msgstr "<i class=\"fa fa-ban me-2\"/>게시 안 됨"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
+msgid "<i class=\"fa fa-check me-2\" role=\"img\"/>Registered"
+msgstr "<i class=\"fa fa-check me-2\" role=\"img\"/>등록됨"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.events_list
+msgid "<i class=\"fa fa-check me-2\"/>Registered"
+msgstr "<i class=\"fa fa-check me-2\"/>등록됨"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_follow_us
@@ -76,19 +103,13 @@ msgstr ""
 "title=\"Facebook\"/>"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.country_events_list
-msgid "<i class=\"fa fa-flag mr-2\"/>Events:"
-msgstr "<i class=\"fa fa-flag mr-2\"/>행사 :"
-
-#. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
-msgid "<i class=\"fa fa-fw fa-calendar\"/> Add to Google Calendar"
-msgstr "<i class=\"fa fa-fw fa-calendar\"/> 구글 캘린더에 추가하기"
-
-#. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
-msgid "<i class=\"fa fa-fw fa-calendar\"/> Add to iCal/Outlook"
-msgstr "<i class=\"fa fa-fw fa-calendar\"/> iCal/Outlook에 추가하기"
+#: model_terms:ir.ui.view,arch_db:website_event.registration_configure_tickets_button
+msgid ""
+"<i class=\"fa fa-gear me-1\" role=\"img\" aria-label=\"Configure\" "
+"title=\"Configure event tickets\"/><em>Configure Tickets</em>"
+msgstr ""
+"<i class=\"fa fa-gear me-1\" role=\"img\" aria-label=\"설정\" title=\"행사 티켓 "
+"설정\"/><em>티켓 설정</em>"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_follow_us
@@ -96,10 +117,9 @@ msgid "<i class=\"fa fa-github text-github\" aria-label=\"Github\" title=\"Githu
 msgstr "<i class=\"fa fa-github text-github\" aria-label=\"Github\" title=\"Github\"/>"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.country_events_list
-#: model_terms:ir.ui.view,arch_db:website_event.s_country_events
-msgid "<i class=\"fa fa-globe mr-2\"/>Upcoming Events"
-msgstr "<i class=\"fa fa-globe mr-2\"/>다가오는 행사"
+#: model_terms:ir.ui.view,arch_db:website_event.event_pages_kanban_view
+msgid "<i class=\"fa fa-globe me-1\" title=\"Website\"/>"
+msgstr "<i class=\"fa fa-globe me-1\" title=\"Website\"/>"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_follow_us
@@ -120,25 +140,24 @@ msgstr ""
 "title=\"LinkedIn\"/>"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.layout
-msgid "<i class=\"fa fa-long-arrow-left text-primary mr-2\"/>All Events"
-msgstr "<i class=\"fa fa-long-arrow-left text-primary mr-2\"/>모든 행사"
+#: model_terms:ir.ui.view,arch_db:website_event.events_list
+msgid "<i class=\"fa fa-map-marker me-2\" title=\"Location\"/>"
+msgstr "<i class=\"fa fa-map-marker me-2\" title=\"Location\"/>"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_template
-msgid ""
-"<i class=\"fa fa-pencil mr-2\" role=\"img\" aria-label=\"Create\" "
-"title=\"Create\"/><em>Configure Event Registration</em>"
-msgstr ""
-"<i class=\"fa fa-pencil mr-2\" role=\"img\" aria-label=\"Create\" "
-"title=\"Create\"/><em>행사 등록 구성</em>"
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
+msgid "<i class=\"fa fa-map-marker\" title=\"Location\"/> Online event"
+msgstr "<i class=\"fa fa-map-marker\" title=\"위치\"/> 온라인 행사"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_follow_us
-msgid "<i class=\"fa fa-twitter text-twitter\" aria-label=\"Twitter\" title=\"Twitter\"/>"
-msgstr ""
-"<i class=\"fa fa-twitter text-twitter\" aria-label=\"Twitter\" "
-"title=\"Twitter\"/>"
+msgid "<i class=\"fa fa-tiktok text-tiktok\" aria-label=\"TikTok\" title=\"TikTok\"/>"
+msgstr "<i class=\"fa fa-tiktok text-tiktok\" aria-label=\"틱톡\" title=\"틱톡\"/>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_follow_us
+msgid "<i class=\"fa fa-twitter text-twitter\" aria-label=\"X\" title=\"X\"/>"
+msgstr "<i class=\"fa fa-twitter text-twitter\" aria-label=\"X\" title=\"X\"/>"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_follow_us
@@ -148,55 +167,96 @@ msgid ""
 msgstr ""
 "<i class=\"fa fa-youtube-play text-youtube\" aria-label=\"Youtube\" "
 "title=\"Youtube\"/>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.navbar
+msgid ""
+"<i class=\"oi oi-chevron-left\"/>\n"
+"                <span>All Events</span>"
+msgstr ""
+"<i class=\"oi oi-chevron-left\"/>\n"
+"                <span>모든 행사</span>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_dates
+msgid "<small class=\"fw-bold\">Ends</small>"
+msgstr "<small class=\"fw-bold\">종료</small>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_dates
+msgid "<small class=\"fw-bold\">Starts</small>"
+msgstr "<small class=\"fw-bold\">시작</small>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_dates
+msgid "<small class=\"text-muted\">Add to calendar:</small>"
+msgstr "<small class=\"text-muted\">캘린더에 추가:</small>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
+msgid "<small>Add this event to your calendar</small>"
+msgstr "<small>이 행사를 캘린더에 추가하기</small>"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.s_speaker_bio
 msgid ""
-"<span class=\"badge badge-secondary text-uppercase "
+"<span class=\"badge text-bg-secondary text-uppercase "
 "o_wevent_badge\">Speaker</span>"
 msgstr ""
-"<span class=\"badge badge-secondary text-uppercase "
-"o_wevent_badge\">연사</span>"
-
-#. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.ticket
-msgid "<span class=\"font-weight-bold align-middle pr-2\">Qty</span>"
-msgstr "<span class=\"font-weight-bold align-middle pr-2\">수량</span>"
-
-#. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.index_topbar
-msgid "<span class=\"navbar-brand h4 my-0 mr-4\">Events</span>"
-msgstr "<span class=\"navbar-brand h4 my-0 mr-4\">행사</span>"
+"<span class=\"badge text-bg-secondary text-uppercase "
+"o_wevent_badge\">발표자</span>"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.events_list
-msgid "<span content=\"0\" class=\"font-weight-bold text-uppercase\">Free</span>"
-msgstr "<span content=\"0\" class=\"font-weight-bold text-uppercase\">무료</span>"
+msgid "<span class=\"fa fa-plus me-1\"/> Create an Event"
+msgstr "<span class=\"fa fa-plus me-1\"/> 행사 만들기"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_template
+#: model_terms:ir.ui.view,arch_db:website_event.display_timer_widget
 msgid ""
-"<span content=\"0\" itemprop=\"price\" class=\"font-weight-bold text-"
-"uppercase\">Free</span>"
+"<span class=\"o_countdown_remaining o_timer_days pe-1\">0</span><span "
+"class=\"o_countdown_metric pe-1\">days</span>"
 msgstr ""
-"<span content=\"0\" itemprop=\"price\" class=\"font-weight-bold text-"
-"uppercase\">무료</span>"
+"<span class=\"o_countdown_remaining o_timer_days pe-1\">0</span><span "
+"class=\"o_countdown_metric pe-1\">일</span>"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.ticket
+#: model_terms:ir.ui.view,arch_db:website_event.display_timer_widget
+msgid ""
+"<span class=\"o_countdown_remaining o_timer_hours\">00</span><span "
+"class=\"o_countdown_metric\">:</span>"
+msgstr ""
+"<span class=\"o_countdown_remaining o_timer_hours\">00</span><span "
+"class=\"o_countdown_metric\">:</span>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.display_timer_widget
+msgid ""
+"<span class=\"o_countdown_remaining o_timer_minutes\">00</span><span "
+"class=\"o_countdown_metric\">:</span>"
+msgstr ""
+"<span class=\"o_countdown_remaining o_timer_minutes\">00</span><span "
+"class=\"o_countdown_metric\">:</span>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.display_timer_widget
+msgid ""
+"<span class=\"o_countdown_remaining o_timer_seconds\">00</span><span "
+"class=\"o_countdown_metric\"/>"
+msgstr ""
+"<span class=\"o_countdown_remaining o_timer_seconds\">00</span><span "
+"class=\"o_countdown_metric\"/>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
 msgid ""
 "<span itemprop=\"availability\" content=\"http://schema.org/SoldOut\" class=\"text-danger\">\n"
-"                        <i class=\"fa fa-ban mr-2\"/>Sold Out\n"
-"                    </span>"
+"                                        <i class=\"fa fa-ban me-2\"/>Sold Out\n"
+"                                    </span>"
 msgstr ""
 "<span itemprop=\"availability\" content=\"http://schema.org/SoldOut\" class=\"text-danger\">\n"
-"                        <i class=\"fa fa-ban mr-2\"/>매진\n"
-"                    </span>"
-
-#. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_attendee_details
-msgid "<span>&amp;times;</span>"
-msgstr "<span>&amp;times;</span>"
+"                                        <i class=\"fa fa-ban me-2\"/>판매 완료\n"
+"                                    </span>"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.event_location
@@ -204,9 +264,81 @@ msgid "<span>Online Events</span>"
 msgstr "<span>온라인 행사</span>"
 
 #. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.registration_attendee_details
+msgid "<strong> You ordered more tickets than available seats</strong>"
+msgstr "<strong> 티켓 주문 수량이 이용 가능 수량을 초과합니다</strong>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.s_event_upcoming_snippet_preview_data
+msgid ""
+"<time class=\"text-white\" datetime=\"2024-08-05 07:00:00\">\n"
+"                                <span>July 26, 2024</span>\n"
+"                                <span class=\"s_events_event_time\">\n"
+"                                    - <span>9:00 AM</span>\n"
+"                                    (Europe/Brussels)\n"
+"                                </span>\n"
+"                            </time>"
+msgstr ""
+"<time class=\"text-white\" datetime=\"2024-08-05 07:00:00\">\n"
+"                                <span>2024년 7월 26일</span>\n"
+"                                <span class=\"s_events_event_time\">\n"
+"                                    - <span>9:00 AM</span>\n"
+"                                    (Europe/Brussels)\n"
+"                                </span>\n"
+"                            </time>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.s_event_upcoming_snippet_preview_data
+msgid ""
+"<time class=\"text-white\" datetime=\"2024-08-10 08:00:00\">\n"
+"                                <span>October 24, 2024</span>\n"
+"                                <span class=\"s_events_event_time\">\n"
+"                                    - <span>1:15 AM</span>\n"
+"                                    (Europe/Brussels)\n"
+"                                </span>\n"
+"                            </time>"
+msgstr ""
+"<time class=\"text-white\" datetime=\"2024-08-10 08:00:00\">\n"
+"                                <span>2024년 10월 24일</span>\n"
+"                                <span class=\"s_events_event_time\">\n"
+"                                    - <span>1:15 AM</span>\n"
+"                                    (Europe/Brussels)\n"
+"                                </span>\n"
+"                            </time>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.s_event_upcoming_snippet_preview_data
+msgid ""
+"<time class=\"text-white\" datetime=\"2024-11-08 20:15:00\">\n"
+"                                <span>November 23, 2024</span>\n"
+"                                <span class=\"s_events_event_time\">\n"
+"                                    - <span>8:15 PM</span>\n"
+"                                    (Europe/Brussels)\n"
+"                                </span>\n"
+"                            </time>"
+msgstr ""
+"<time class=\"text-white\" datetime=\"2024-11-08 20:15:00\">\n"
+"                                <span>2024년 11월 23일</span>\n"
+"                                <span class=\"s_events_event_time\">\n"
+"                                    - <span>8:15 PM</span>\n"
+"                                    (Europe/Brussels)\n"
+"                                </span>\n"
+"                            </time>"
+
+#. module: website_event
+#: model:event.question.answer,name:website_event.event_0_question_2_answer_2
+msgid "A friend"
+msgstr "친구"
+
+#. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_photos
 msgid "A past event"
 msgstr "지난 행사"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "About Us"
+msgstr "회사 소개"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_about_us
@@ -214,22 +346,47 @@ msgid "About us"
 msgstr "회사 소개"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
-msgid "Add to Calendar"
-msgstr "일정표에 추가하기"
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_dates
+msgid "Add to Google"
+msgstr "Google에 추가"
 
 #. module: website_event
-#: code:addons/website_event/controllers/main.py:0
-#: model_terms:ir.ui.view,arch_db:website_event.event_category
-#, python-format
-msgid "All Categories"
-msgstr "모든 범주"
+#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
+msgid "Add to Google Agenda"
+msgstr "Google 아젠다 추가"
 
 #. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_dates
+msgid "Add to Outlook"
+msgstr "Outlook에 추가"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_dates
+msgid "Add to iCal"
+msgstr "iCal에 추가"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
+msgid "Add to iCal/Outlook"
+msgstr "iCal/아웃룩에 추가"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.index_topbar
+msgid "All"
+msgstr "전체"
+
+#. module: website_event
+#. odoo-python
 #: code:addons/website_event/controllers/main.py:0
-#, python-format
 msgid "All Countries"
 msgstr "모든 국가"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/event_event.py:0
+#: model_terms:ir.ui.view,arch_db:website_event.navbar
+msgid "All Events"
+msgstr "모든 일정"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.event_location
@@ -237,9 +394,14 @@ msgid "All countries"
 msgstr "모든 국가"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.res_config_settings_view_form
-msgid "Ask questions to attendees when registering online"
-msgstr "온라인 등록시 참석자에게 질문"
+#: model:event.question,title:website_event.event_0_question_1
+msgid "Allergies"
+msgstr "알레르기"
+
+#. module: website_event
+#: model:ir.model.fields,help:website_event.field_event_event__website_menu
+msgid "Allows to display and manage event-specific menus on website."
+msgstr "웹사이트에 행사별 메뉴를 표시하고 관리할 수 있습니다."
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.s_speaker_bio
@@ -256,7 +418,7 @@ msgstr ""
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.registration_attendee_details
 msgid "Attendees"
-msgstr "참가자"
+msgstr "참석자"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_quotes
@@ -264,56 +426,72 @@ msgid "Author"
 msgstr "작성자"
 
 #. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.navbar
+msgid "Back to All Events"
+msgstr "모든 행사로 돌아가기"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.navbar
+msgid "Back to {{event.name}}"
+msgstr "{{event.name}}으로 돌아가기"
+
+#. module: website_event
+#: model:event.question.answer,name:website_event.event_1_question_0_answer_1
+#: model:event.question.answer,name:website_event.event_5_question_0_answer_1
+#: model:event.question.answer,name:website_event.event_type_data_sports_question_0_answer_1
+msgid "Blog Post"
+msgstr "블로그 게시물"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/website_snippet_filter.py:0
+msgid "Business Workshops"
+msgstr "비즈니스 워크샵"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__can_publish
+#: model:ir.model.fields,field_description:website_event.field_event_tag__can_publish
+#: model:ir.model.fields,field_description:website_event.field_event_tag_category__can_publish
+msgid "Can Publish"
+msgstr "게시 가능"
+
+#. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.registration_attendee_details
 msgid "Cancel"
 msgstr "취소"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_categories
-msgid "Categories"
-msgstr "범주"
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Card design"
+msgstr "카드 디자인"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.event_type_view_form_inherit_website
-msgid ""
-"Check this option to have menus for your event on the\n"
-"                                website: registrations, schedule, map, ..."
-msgstr ""
-"웹 사이트에 행사에 대한 메뉴 - 등록, 일정, 지도 등을 \n"
-"                                   표시하려면 이 옵션을 선택합니다."
-
-#. module: website_event
-#. openerp-web
-#: code:addons/website_event/static/src/js/tours/website_event.js:0
-#, python-format
-msgid "Click <em>Continue</em> to create the event."
-msgstr "일정을 작성하려면 <em>계속</em>을 클릭하십시오."
-
-#. module: website_event
-#. openerp-web
-#: code:addons/website_event/static/src/js/tours/website_event.js:0
-#, python-format
-msgid "Click here to create a new event."
-msgstr "새로운 일정을 작성하려면 여기를 클릭하십시오."
-
-#. module: website_event
-#. openerp-web
-#: code:addons/website_event/static/src/js/tours/website_event.js:0
-#, python-format
-msgid "Click here to customize your event further."
-msgstr "추가 일정을 사용자 지정하려면 여기를 클릭하십시오."
-
-#. module: website_event
-#. openerp-web
-#: code:addons/website_event/static/src/js/tours/website_event.js:0
-#, python-format
-msgid "Click to publish your event."
-msgstr "일정을 게시하려면 클릭하십시오."
-
-#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.display_timer_alert_widget
+#: model_terms:ir.ui.view,arch_db:website_event.index_topbar
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
 #: model_terms:ir.ui.view,arch_db:website_event.registration_attendee_details
 msgid "Close"
 msgstr "닫기"
+
+#. module: website_event
+#: model:event.question.answer,name:website_event.event_0_question_2_answer_1
+msgid "Commercials"
+msgstr "광고"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/event_event.py:0
+#: model_terms:ir.ui.view,arch_db:website_event.event_event_view_form
+#: model_terms:ir.ui.view,arch_db:website_event.event_type_view_form
+msgid "Community"
+msgstr "커뮤니티"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__community_menu
+#: model:ir.model.fields,field_description:website_event.field_event_type__community_menu
+#: model:ir.model.fields.selection,name:website_event.selection__website_event_menu__menu_type__community
+msgid "Community Menu"
+msgstr "커뮤니티 메뉴"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.s_speaker_bio
@@ -321,9 +499,36 @@ msgid "Company"
 msgstr "회사"
 
 #. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/website_snippet_filter.py:0
+msgid "Conference For Architects"
+msgstr "건축가 대상 컨퍼런스"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.registration_configure_tickets_button
+msgid "Configure event tickets"
+msgstr "행사 티켓 설정"
+
+#. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.registration_attendee_details
-msgid "Continue"
-msgstr "계속"
+msgid "Confirm Registration"
+msgstr "등록 확인"
+
+#. module: website_event
+#: model:event.question.answer,name:website_event.event_7_question_0_answer_0
+msgid "Consumers"
+msgstr "소비자"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_location
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Countries"
+msgstr "국가"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Cover Position"
+msgstr "커버 위치"
 
 #. module: website_event
 #: model:ir.model.fields,field_description:website_event.field_event_event__cover_properties
@@ -331,30 +536,51 @@ msgid "Cover Properties"
 msgstr "표지 속성"
 
 #. module: website_event
-#. openerp-web
-#: code:addons/website_event/static/src/js/tours/website_event.js:0
-#, python-format
+#: model:ir.model.fields,field_description:website_event.field_website_event_menu__create_uid
+msgid "Created by"
+msgstr "작성자"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_website_event_menu__create_date
+msgid "Created on"
+msgstr "작성일자"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_time
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Date"
+msgstr "날짜"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_searchbar_input_snippet_options
+msgid "Date (new to old)"
+msgstr "날짜 (최근 날짜 순)"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_searchbar_input_snippet_options
+msgid "Date (old to new)"
+msgstr "날짜 (오래된 날짜 순)"
+
+#. module: website_event
+#: model:ir.model.fields,help:website_event.field_event_event__website_visibility
 msgid ""
-"Create a name for your new event and click <em>\"Continue\"</em>. e.g: "
-"Technical Training"
-msgstr "새로운 행사명을 작성하고 <em>\"계속\"</em>을 클릭하십시오. 예 : 기술 교육"
+"Defines the Visibility of the Event on the Website and searches.\n"
+"\n"
+"            Note that the Event is however always available via its link."
+msgstr ""
+"웹사이트와 검색에서 행사의 가시성을 지정합니다.\n"
+"\n"
+"            행사는 항상 링크를 통해 액세스할 수 있습니다."
 
 #. module: website_event
-#: model:ir.model.fields,help:website_event.field_event_event__website_menu
-msgid ""
-"Creates menus Introduction, Location and Register on the page  of the event "
-"on the website."
-msgstr "웹 사이트에서 행사 페이지에서 메뉴 소개, 위치 및 등록을 작성합니다."
+#: model_terms:ir.ui.view,arch_db:website_event.event_searchbar_input_snippet_options
+msgid "Description"
+msgstr "설명"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
-msgid "Date &amp; Time"
-msgstr "날짜 &amp; 시간"
-
-#. module: website_event
-#: model:ir.model.fields,field_description:website_event.field_event_event__website_menu
-msgid "Dedicated Menu"
-msgstr "전용 메뉴"
+#: model:ir.model.fields,field_description:website_event.field_website_event_menu__display_name
+msgid "Display Name"
+msgstr "표시명"
 
 #. module: website_event
 #: model:ir.model.fields,field_description:website_event.field_event_type__website_menu
@@ -362,41 +588,68 @@ msgid "Display a dedicated menu on Website"
 msgstr "웹 사이트에 전용 메뉴 표시"
 
 #. module: website_event
-#. openerp-web
-#: code:addons/website_event/static/src/js/tours/website_event.js:0
-#, python-format
-msgid "Drag this block and drop it in your page."
-msgstr "이 블록을 끌어서 페이지에 놓으십시오."
+#: model:ir.model.fields,help:website_event.field_event_event__community_menu
+#: model:ir.model.fields,help:website_event.field_event_type__community_menu
+msgid "Display community tab on website"
+msgstr "웹사이트에 커뮤니티 탭 표시"
+
+#. module: website_event
+#. odoo-javascript
+#: code:addons/website_event/static/src/js/tours/event_tour.js:0
+msgid "Don't forget to click <b>save</b> when you're done."
+msgstr "완료 후에 <b>저장</b> 버튼을 꼭 눌러주세요."
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.registration_complete
-msgid "E-mail"
-msgstr "이메일"
+msgid "Don't miss out!"
+msgstr "놓치지 마세요!"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_attendee_details
-msgid "Email"
-msgstr "이메일"
+#: model_terms:ir.ui.view,arch_db:website_event.registration_ticket_access
+msgid "Download All Tickets"
+msgstr "전체 티켓 다운로드"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
-msgid "End -"
-msgstr "종료 -"
+#: model_terms:ir.ui.view,arch_db:website_event.registration_ticket_access
+msgid "Download Tickets <i class=\"ms-1 fa fa-download\"/>"
+msgstr "티켓 다운로드 <i class=\"ms-1 fa fa-download\"/>"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_template
-msgid "End on"
-msgstr "종료일"
+#. odoo-javascript
+#: code:addons/website_event/static/src/js/website_event.js:0
+msgid "Error"
+msgstr "오류"
 
 #. module: website_event
 #: model:ir.model,name:website_event.model_event_event
+#: model:ir.model.fields,field_description:website_event.field_website_event_menu__event_id
 msgid "Event"
 msgstr "행사"
 
 #. module: website_event
-#: model:ir.model,name:website_event.model_event_type
-msgid "Event Category"
-msgstr "행사 범주"
+#: model:ir.model.fields,field_description:website_event.field_event_event__community_menu_ids
+msgid "Event Community Menus"
+msgstr "행사 커뮤니티 메뉴"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Event Cover Position"
+msgstr "행사 커버 위치"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_searchbar_input_snippet_options
+msgid "Event Date"
+msgstr "일정 날짜"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
+msgid "Event Details"
+msgstr "행사 세부 정보"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
+msgid "Event Info"
+msgstr "행사 정보"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.template_location
@@ -409,20 +662,63 @@ msgid "Event Menu"
 msgstr "행사 메뉴"
 
 #. module: website_event
-#. openerp-web
-#: code:addons/website_event/static/src/js/website_event.editor.js:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:website_event.event_event_view_form_add
 msgid "Event Name"
 msgstr "행사명"
 
 #. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Event Page"
+msgstr "행사 페이지"
+
+#. module: website_event
+#: model:ir.actions.act_window,name:website_event.action_event_pages_list
+msgid "Event Pages"
+msgstr "행사 페이지"
+
+#. module: website_event
+#: model:ir.model,name:website_event.model_event_registration
+msgid "Event Registration"
+msgstr "행사 등록"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__event_register_url
+msgid "Event Registration Link"
+msgstr "행사 등록 링크"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_website_visitor__event_registration_ids
+msgid "Event Registrations"
+msgstr "행사 등록"
+
+#. module: website_event
 #: model:ir.model.fields,field_description:website_event.field_event_event__subtitle
-#: model_terms:ir.ui.view,arch_db:website_event.event_details
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
 msgid "Event Subtitle"
 msgstr "행사 부제"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.event_details
+#: model:ir.model,name:website_event.model_event_tag
+msgid "Event Tag"
+msgstr "행사 태그"
+
+#. module: website_event
+#: model:ir.model,name:website_event.model_event_tag_category
+msgid "Event Tag Category"
+msgstr "행사 태그 카테고리"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.s_dynamic_snippet_options_template
+msgid "Event Tags"
+msgstr "행사 태그"
+
+#. module: website_event
+#: model:ir.model,name:website_event.model_event_type
+msgid "Event Template"
+msgstr "행사 서식"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
 msgid "Event Title"
 msgstr "행사 제목"
 
@@ -444,9 +740,45 @@ msgid "Event unpublished"
 msgstr "행사 게시안함"
 
 #. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/website.py:0
+#: model:ir.ui.menu,name:website_event.menu_event_pages
 #: model:website.menu,name:website_event.menu_events
+#: model_terms:ir.ui.view,arch_db:website_event.event_searchbar_input_snippet_options
+#: model_terms:ir.ui.view,arch_db:website_event.index_topbar
+#: model_terms:ir.ui.view,arch_db:website_event.snippets
 msgid "Events"
 msgstr "행사"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Events Page"
+msgstr "행사 페이지"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.s_event_upcoming_snippet_preview_data
+msgid "Excellence in Achievement Awards"
+msgstr "우수 업적상 수상"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
+msgid "Expired"
+msgstr "만료됨"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_location
+msgid "Filter by Country"
+msgstr "국가별 필터"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_time
+msgid "Filter by Date"
+msgstr "날짜별 필터"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.index_topbar
+msgid "Filters"
+msgstr "필터"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.event_description_full
@@ -457,30 +789,115 @@ msgstr "이 행사에 대해 사람들이 보고 말하는 내용을 찾아 대�
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_follow_us
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
 msgid "Follow Us"
 msgstr "팔로우하세요"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
-msgid "Get the direction"
-msgstr "방향을 잡으세요"
+#: model_terms:ir.ui.view,arch_db:website_event.layout
+msgid "Following content will appear on all events."
+msgstr "모든 행사에는 다음 콘텐츠가 표시됩니다."
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.event_description_full
-msgid "Google"
-msgstr "구글"
+msgid "Get directions"
+msgstr "길 찾기"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
-msgid "Hashtag:"
-msgstr "해시태그 :"
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_dates
+#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
+msgid "Google Agenda"
+msgstr "Google 아젠다"
 
 #. module: website_event
-#: code:addons/website_event/models/event.py:0
+#. odoo-python
+#: code:addons/website_event/models/website_snippet_filter.py:0
+msgid "Great Reno Ballon Race"
+msgstr "훌륭한 리노 발롱 경주"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Grid"
+msgstr "그리드"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.s_event_upcoming_snippet_preview_data
+msgid "Harmony Under the Stars"
+msgstr "별빛 아래의 하모니"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Hidden (visitor only)"
+msgstr "숨김 (방문자만 표시)"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/website_snippet_filter.py:0
+msgid "Hockey Tournament"
+msgstr "하키 시합"
+
+#. module: website_event
+#: model:event.question,title:website_event.event_7_question_1
+msgid "How did you hear about us?"
+msgstr "저희 회사에 대해 어떻게 알게 되셨나요?"
+
+#. module: website_event
+#: model:event.question,title:website_event.event_0_question_2
+#: model:event.question,title:website_event.event_1_question_0
+#: model:event.question,title:website_event.event_5_question_0
+#: model:event.question,title:website_event.event_type_data_sports_question_0
+msgid "How did you learn about this event?"
+msgstr "이 행사에 대해 어떻게 알게 되셨나요?"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_website_event_menu__id
+msgid "ID"
+msgstr "ID"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/event_event.py:0
+#: model:ir.model.fields.selection,name:website_event.selection__website_event_menu__menu_type__register
+msgid "Info"
+msgstr "정보"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.s_event_upcoming_snippet_preview_data
+msgid "Innovations in Technology and Society"
+msgstr "기술 및 사회에서의 혁신"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Inside content"
+msgstr "내부 콘텐츠"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/event_event.py:0
+#: model:ir.model.fields.selection,name:website_event.selection__website_event_menu__menu_type__introduction
 #: model_terms:ir.ui.view,arch_db:website_event.template_intro
-#, python-format
 msgid "Introduction"
 msgstr "소개"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__introduction_menu
+msgid "Introduction Menu"
+msgstr "소개 메뉴"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__introduction_menu_ids
+msgid "Introduction Menus"
+msgstr "소개 메뉴"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__is_done
+msgid "Is Done"
+msgstr "완료됨"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__is_ongoing
+msgid "Is Ongoing"
+msgstr "진행 중"
 
 #. module: website_event
 #: model:ir.model.fields,field_description:website_event.field_event_event__is_participating
@@ -488,71 +905,160 @@ msgid "Is Participating"
 msgstr "참여 여부"
 
 #. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__is_published
+#: model:ir.model.fields,field_description:website_event.field_event_tag__is_published
+#: model:ir.model.fields,field_description:website_event.field_event_tag_category__is_published
+msgid "Is Published"
+msgstr "게시 여부"
+
+#. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.s_speaker_bio
 msgid "John DOE"
 msgstr "John DOE"
 
 #. module: website_event
-#: code:addons/website_event/models/event.py:0
+#: model:ir.model.fields,field_description:website_event.field_website_event_menu__write_uid
+msgid "Last Updated by"
+msgstr "최근 갱신한 사람"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_website_event_menu__write_date
+msgid "Last Updated on"
+msgstr "최근 갱신 일자"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Layout"
+msgstr "배치"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "List"
+msgstr "목록"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/website_snippet_filter.py:0
+msgid "Live Music Festival"
+msgstr "라이브 뮤직 페스티벌"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/event_event.py:0
+#: model:ir.model.fields.selection,name:website_event.selection__website_event_menu__menu_type__location
 #: model_terms:ir.ui.view,arch_db:website_event.event_description_full
-#, python-format
 msgid "Location"
 msgstr "위치"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
-msgid "N/A"
-msgstr "해당 없음"
+#: model:ir.model.fields,field_description:website_event.field_event_event__location_menu
+msgid "Location Menu"
+msgstr "위치 메뉴"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_attendee_details
-#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
+#: model:ir.model.fields,field_description:website_event.field_event_event__location_menu_ids
+msgid "Location Menus"
+msgstr "위치 메뉴"
+
+#. module: website_event
+#: model:ir.model.fields.selection,name:website_event.selection__event_event__website_visibility__logged_users
+msgid "Logged Users"
+msgstr "로그인한 사용자"
+
+#. module: website_event
+#. odoo-javascript
+#: code:addons/website_event/static/src/js/tours/event_tour.js:0
+msgid ""
+"Looking great! Let's now <b>publish</b> this page so that it becomes "
+"<b>visible</b> on your website!"
+msgstr "멋있네요! 이제 이 페이지를<b>게시</b> 하여 웹사이트에 <b>보일 수 있도록</b> 해보세요!"
+
+#. module: website_event
+#: model:event.question,title:website_event.event_0_question_0
+msgid "Meal Type"
+msgstr "식사 유형"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_website_event_menu__menu_id
+msgid "Menu"
+msgstr "메뉴"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_website_event_menu__menu_type
+msgid "Menu Type"
+msgstr "메뉴 유형"
+
+#. module: website_event
+#: model:ir.actions.act_window,name:website_event.website_event_menu_action
+msgid "Menus"
+msgstr "메뉴"
+
+#. module: website_event
+#: model:event.question.answer,name:website_event.event_0_question_0_answer_0
+msgid "Mixed"
+msgstr "혼합함"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__address_name
 msgid "Name"
 msgstr "이름"
 
 #. module: website_event
-#. openerp-web
-#: code:addons/website_event/controllers/main.py:0
-#: code:addons/website_event/static/src/js/website_event.editor.js:0
-#, python-format
+#: model:ir.actions.act_window,name:website_event.event_event_action_add
 msgid "New Event"
 msgstr "새 행사"
 
 #. module: website_event
-#: code:addons/website_event/controllers/main.py:0
-#: model_terms:ir.ui.view,arch_db:website_event.event_time
-#, python-format
+#. odoo-python
+#: code:addons/website_event/models/website.py:0
 msgid "Next Events"
 msgstr "다음 행사"
 
 #. module: website_event
-#: code:addons/website_event/controllers/main.py:0
-#, python-format
-msgid "Next Week"
-msgstr "다음 주"
-
-#. module: website_event
-#: code:addons/website_event/controllers/main.py:0
-#, python-format
-msgid "Next month"
-msgstr "다음 달"
+#: model_terms:ir.actions.act_window,help:website_event.website_event_menu_action
+msgid "No Website Menu Items yet!"
+msgstr "아직 웹사이트 메뉴 항목이 없습니다!"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.events_list
-msgid "No events found."
-msgstr "행사가 없습니다."
-
-#. module: website_event
-#. openerp-web
-#: code:addons/website_event/static/src/js/tours/website_event.js:0
-#, python-format
-msgid "Once you click on save, your event is updated."
-msgstr "저장하면 일정이 갱신됩니다."
+msgid "No event matching your search criteria could be found."
+msgstr "검색 조건과 일치하는 행사를 찾을 수 없습니다."
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.events_list
-msgid "Online"
-msgstr "온라인"
+msgid "No events scheduled yet"
+msgstr "아직 예정된 행사가 없습니다"
+
+#. module: website_event
+#: model_terms:ir.actions.act_window,help:website_event.event_registration_action_from_visitor
+msgid "No registration linked to this visitor"
+msgstr "해당 방문자와 연결되어 있는 등록 내역이 없습니다."
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.events_list
+msgid "No results found for '"
+msgstr "' 에 대한 결과를 찾을 수 없습니다."
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_pages_kanban_view
+msgid "Not Published"
+msgstr "게시 안됨"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_location
+msgid "Online Events"
+msgstr "온라인 행사"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.events_list
+msgid "Online event"
+msgstr "온라인 행사"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/website_snippet_filter.py:0
+msgid "OpenWood Collection Online Reveal"
+msgstr "OpenWood 컬렉션 온라인 공개"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.event_description_full
@@ -560,69 +1066,96 @@ msgid "Organizer"
 msgstr "주최자"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.events_list
-msgid "Organizer:"
-msgstr "주최자 :"
-
-#. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_photos
 msgid "Our Trainings"
 msgstr "교육훈련"
 
 #. module: website_event
-#: code:addons/website_event/controllers/main.py:0
-#, python-format
+#: model:event.question.answer,name:website_event.event_0_question_2_answer_0
+msgid "Our website"
+msgstr "웹사이트"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_dates
+#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
+msgid "Outlook"
+msgstr "아웃룩"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/event_event.py:0
 msgid "Past Events"
 msgstr "지난 행사"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
-msgid "Phone"
-msgstr "전화번호"
-
-#. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_attendee_details
-msgid "Phone <small>(Optional)</small>"
-msgstr "전화번호 <small>(선택사항)</small>"
+#: model:event.question.answer,name:website_event.event_0_question_0_answer_2
+msgid "Pastafarian"
+msgstr "파스타페리안"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_photos
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
 msgid "Photos"
 msgstr "사진"
 
 #. module: website_event
-#. openerp-web
-#: code:addons/website_event/static/src/js/website_event.js:0
-#, python-format
-msgid "Please select at least one ticket."
-msgstr "적어도 한 개 이상의 티켓을 선택하십시오."
+#: model:ir.model.fields.selection,name:website_event.selection__event_event__website_visibility__public
+msgid "Public"
+msgstr "공개"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.event_event_view_form_inherit_website
-msgid "Preview Badges"
-msgstr "배지 미리보기"
+#: model_terms:ir.ui.view,arch_db:website_event.event_event_view_form
+msgid "Publish"
+msgstr "발행"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.res_config_settings_view_form
-msgid "Questions"
-msgstr "질문"
+#: model_terms:ir.ui.view,arch_db:website_event.event_event_view_search
+#: model_terms:ir.ui.view,arch_db:website_event.event_pages_kanban_view
+msgid "Published"
+msgstr "게시 완료"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_complete
-msgid "Reference"
-msgstr "참조"
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Quotes"
+msgstr "인용"
 
 #. module: website_event
-#: code:addons/website_event/models/event.py:0
-#: model_terms:ir.ui.view,arch_db:website_event.ticket
-#, python-format
+#: model:event.question.answer,name:website_event.event_1_question_0_answer_2
+#: model:event.question.answer,name:website_event.event_5_question_0_answer_2
+#: model:event.question.answer,name:website_event.event_type_data_sports_question_0_answer_2
+msgid "Radio Ad"
+msgstr "라디오 광고"
+
+#. module: website_event
+#. odoo-javascript
+#: code:addons/website_event/static/src/js/register_toaster_widget.js:0
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
+#: model_terms:ir.ui.view,arch_db:website_event.registration_template
 msgid "Register"
 msgstr "등록하기"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_template
+#: model:ir.model.fields,field_description:website_event.field_event_event__register_menu
+msgid "Register Menu"
+msgstr "등록 메뉴"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__register_menu_ids
+msgid "Register Menus"
+msgstr "등록 메뉴"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_website_visitor__event_registered_ids
+msgid "Registered Events"
+msgstr "행사 등록됨"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/controllers/main.py:0
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
+#: model_terms:ir.ui.view,arch_db:website_event.navbar
 msgid "Registration"
-msgstr "등록"
+msgstr "등록하기"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.registration_complete
@@ -630,19 +1163,134 @@ msgid "Registration confirmed!"
 msgstr "등록 확인됨!"
 
 #. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
+#: model_terms:ir.ui.view,arch_db:website_event.registration_template
+msgid "Registration failed! These tickets are not available anymore."
+msgstr "등록에 실패했습니다 이 티켓은 더 이상 사용할 수 없습니다."
+
+#. module: website_event
+#: model:ir.actions.act_window,name:website_event.event_registration_action_from_visitor
+#: model_terms:ir.ui.view,arch_db:website_event.website_visitor_view_form
+msgid "Registrations"
+msgstr "등록"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.events_list
+msgid "Registrations Closed"
+msgstr "등록 마감"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.events_list
+msgid "Registrations not yet open"
+msgstr "아직 등록이 시작되지 않았습니다"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.registration_template
+msgid "Registrations will open on"
+msgstr "다음 날짜부터 등록이 시작됩니다."
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__start_remaining
+msgid "Remaining before start"
+msgstr "시작까지 남은 시간"
+
+#. module: website_event
+#: model:ir.model.fields,help:website_event.field_event_event__start_remaining
+msgid "Remaining time before event starts (minutes)"
+msgstr "행사 시작까지 남은 시간 (분)"
+
+#. module: website_event
+#: model:event.question.answer,name:website_event.event_7_question_0_answer_2
+msgid "Research"
+msgstr "연구"
+
+#. module: website_event
+#: model:ir.model.fields,help:website_event.field_event_event__website_id
+#: model:ir.model.fields,help:website_event.field_event_tag__website_id
+#: model:ir.model.fields,help:website_event.field_event_tag_category__website_id
+msgid "Restrict to a specific website."
+msgstr "특정 웹사이트로만 제한."
+
+#. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.404
 msgid "Return to the event list."
 msgstr "행사 목록으로 돌아가기"
 
 #. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__is_seo_optimized
+msgid "SEO optimized"
+msgstr "SEO 최적화"
+
+#. module: website_event
+#: model:event.question.answer,name:website_event.event_7_question_0_answer_1
+msgid "Sales"
+msgstr "판매"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
+msgid "Sales end on"
+msgstr "판매 종료일"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
+msgid "Sales start on"
+msgstr "판매 시작일"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.dynamic_filter_template_event_event_card
+#: model_terms:ir.ui.view,arch_db:website_event.dynamic_filter_template_event_event_picture
+msgid "Sample"
+msgstr "견본"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.events_search_box_input
+msgid "Search an event..."
+msgstr "행사 검색 중..."
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_registration_view_search
+#: model_terms:ir.ui.view,arch_db:website_event.event_registration_view_tree
+msgid "Selected Answers"
+msgstr "선택된 답변"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__seo_name
+msgid "Seo name"
+msgstr "Seo 이름"
+
+#. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.event_description_full
-msgid "SHARE"
+msgid "Share"
 msgstr "공유"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.country_events_list
-msgid "See all events from"
-msgstr "모든 일정 보기"
+#: model_terms:ir.ui.view,arch_db:website_event.event_tag_category_view_form
+#: model_terms:ir.ui.view,arch_db:website_event.event_tag_category_view_tree
+msgid "Show on Website"
+msgstr "웹사이트에 표시"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.s_dynamic_snippet_options_template
+msgid "Show time"
+msgstr "시간 표시"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Sidebar"
+msgstr "사이드바"
+
+#. module: website_event
+#: model:event.question.answer,name:website_event.event_1_question_0_answer_0
+#: model:event.question.answer,name:website_event.event_5_question_0_answer_0
+#: model:event.question.answer,name:website_event.event_type_data_sports_question_0_answer_0
+msgid "Social Media"
+msgstr "소셜미디어"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.events_list
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
+msgid "Sold Out"
+msgstr "매진"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.404
@@ -650,21 +1298,77 @@ msgid "Sorry, the requested event is not available anymore."
 msgstr "죄송합니다, 이용할 수 없는 행사입니다."
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
-msgid "Start -"
-msgstr "시작 -"
+#: model:ir.model.fields,field_description:website_event.field_event_event__start_today
+msgid "Start Today"
+msgstr "오늘 시작"
 
 #. module: website_event
-#: code:addons/website_event/controllers/main.py:0
-#, python-format
-msgid "This Week"
-msgstr "이번 주"
+#: model_terms:ir.ui.view,arch_db:website_event.event_event_view_form_add
+msgid "Start → End"
+msgstr "시작 → 종료"
 
 #. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.display_timer_alert_widget
+msgid "Starts <span/>"
+msgstr "시작 <span/>"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Sub-menu (Specific)"
+msgstr "하위 메뉴 (고유함) "
+
+#. module: website_event
+#. odoo-python
 #: code:addons/website_event/controllers/main.py:0
-#, python-format
+msgid "Suspicious activity detected by Google reCaptcha."
+msgstr "구글 reCaptcha에서 의심스러운 활동이 감지되었습니다."
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Template badge"
+msgstr "서식 배지"
+
+#. module: website_event
+#: model:ir.model.fields,help:website_event.field_event_event__website_url
+#: model:ir.model.fields,help:website_event.field_event_tag__website_url
+#: model:ir.model.fields,help:website_event.field_event_tag_category__website_url
+msgid "The full URL to access the document through the website."
+msgstr "웹사이트를 통해 문서에 접근 하는 전체 URL입니다."
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/event_event.py:0
+msgid "The website must be from the same company as the event."
+msgstr "웹사이트는 행사와 동일한 회사의 것이어야 합니다."
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/event_event.py:0
 msgid "This month"
 msgstr "이번 달"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/event_event.py:0
+msgid "This operator is not supported"
+msgstr "이 연산자는 지원되지 않습니다."
+
+#. module: website_event
+#. odoo-javascript
+#: code:addons/website_event/static/src/js/tours/event_tour.js:0
+msgid "This shortcut will bring you right back to the event form."
+msgstr "바로가기를 사용하여 행사 서식으로 돌아갈 수 있습니다."
+
+#. module: website_event
+#: model_terms:ir.actions.act_window,help:website_event.website_event_menu_action
+msgid "This technical menu displays all event sub-menu items."
+msgstr "기술 메뉴에는 모든 행사의 하위 메뉴 항목이 표시됩니다."
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/controllers/main.py:0
+msgid "This ticket is not available for sale for this event"
+msgstr "이 티켓은 해당 행사에서 판매할 수 없습니다."
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.registration_attendee_details
@@ -672,35 +1376,132 @@ msgid "Ticket #"
 msgstr "티켓 #"
 
 #. module: website_event
-#: code:addons/website_event/controllers/main.py:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
+msgid "Tickets"
+msgstr "티켓"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/event_event.py:0
 msgid "Today"
 msgstr "오늘"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.layout
-msgid "Toggle navigation"
-msgstr "탐색 전환"
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Top"
+msgstr "상단"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.country_events_list
-msgid "Unpublished"
-msgstr "게시 안함"
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Top Bar Filter"
+msgstr "상단 표시줄 필터"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.events_list
-msgid "Use the top button '<b>+ New</b>' to create an event."
-msgstr "행사를 생성하는데 '<b>+신규</b>' 상위 버튼 사용"
+#: model_terms:ir.ui.view,arch_db:website_event.event_time
+msgid "Upcoming"
+msgstr "예정"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/event_event.py:0
+#: model:website.snippet.filter,name:website_event.website_snippet_filter_event_list
+msgid "Upcoming Events"
+msgstr "예정된 행사"
+
+#. module: website_event
+#: model:website.snippet.filter,name:website_event.website_snippet_filter_event_list_unfinished
+msgid "Upcoming and Ongoing Events"
+msgstr "예정 및 진행 중인 이벤트"
+
+#. module: website_event
+#. odoo-javascript
+#: code:addons/website_event/static/src/js/tours/event_tour.js:0
+msgid "Use this <b>shortcut</b> to easily access your event web page."
+msgstr "<b>바로가기</b> 를 사용하여 행사 웹페이지에 쉽게 엑세스할 수 있습니다."
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_sidebar_about_us
-msgid "Use this paragrah to write a short text about your events or company."
-msgstr "이 단락을 사용하여 행사 또는 회사에 대한 짧은 문구를 작성합니다."
+msgid "Use this paragraph to write a short text about your events or company."
+msgstr "이  지문을 사용하여 행사 또는 회사에 대한 짧은 소개글을 작성해보세요."
+
+#. module: website_event
+#: model:ir.model.fields,help:website_event.field_website_event_menu__view_id
+msgid "Used when not being an url based menu"
+msgstr "URL 기반 메뉴가 아닌 경우에 사용"
+
+#. module: website_event
+#. odoo-python
+#: code:addons/website_event/models/event_event.py:0
+msgid "Value should be True or False (not %)"
+msgstr "값은 True 또는 False (%가 아님)여야 합니다."
+
+#. module: website_event
+#: model:event.question.answer,name:website_event.event_0_question_0_answer_1
+msgid "Vegetarian"
+msgstr "채식"
+
+#. module: website_event
+#: model:ir.model.fields.selection,name:website_event.selection__event_event__website_visibility__link
+msgid "Via a Link"
+msgstr "링크를 통해"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_website_event_menu__view_id
+msgid "View"
+msgstr "화면"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_event_view_form
+msgid "Visibility"
+msgstr "표시"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__is_visible_on_website
+msgid "Visible On Website"
+msgstr "웹사이트에 표시"
 
 #. module: website_event
 #: model:ir.model.fields,field_description:website_event.field_event_event__website_published
+#: model:ir.model.fields,field_description:website_event.field_event_tag__website_published
+#: model:ir.model.fields,field_description:website_event.field_event_tag_category__website_published
 msgid "Visible on current website"
 msgstr "현재 웹 사이트에 공개"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_registration__visitor_id
+msgid "Visitor"
+msgstr "방문자"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.events_list
+msgid "We couldn't find any event matching your search for:"
+msgstr "검색 조건과 일치하는 행사를 찾을 수 없습니다:"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.events_list
+msgid "We couldn't find any event scheduled at this moment."
+msgstr "현재 예정된 행사를 찾을 수 없습니다."
+
+#. module: website_event
+#: model:ir.model,name:website_event.model_website
+#: model:ir.model.fields,field_description:website_event.field_event_event__website_id
+#: model:ir.model.fields,field_description:website_event.field_event_tag__website_id
+#: model:ir.model.fields,field_description:website_event.field_event_tag_category__website_id
+#: model_terms:ir.ui.view,arch_db:website_event.event_tag_category_view_form
+msgid "Website"
+msgstr "웹사이트"
+
+#. module: website_event
+#: model:ir.model,name:website_event.model_website_event_menu
+#: model_terms:ir.ui.view,arch_db:website_event.website_event_menu_view_form
+msgid "Website Event Menu"
+msgstr "웹사이트 행사 메뉴"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.website_event_menu_view_search
+#: model_terms:ir.ui.view,arch_db:website_event.website_event_menu_view_tree
+msgid "Website Event Menus"
+msgstr "웹사이트 행사 메뉴"
 
 #. module: website_event
 #: model:ir.actions.act_url,name:website_event.action_open_website
@@ -708,21 +1509,113 @@ msgid "Website Home"
 msgstr "웹사이트 홈"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.event_event_view_form_inherit_website
+#: model:ir.model,name:website_event.model_website_menu
+#: model:ir.model.fields,field_description:website_event.field_event_event__website_menu
 msgid "Website Menu"
 msgstr "웹사이트 메뉴"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
-msgid "iCal/Outlook"
-msgstr "iCal/Outlook"
+#: model:ir.ui.menu,name:website_event.menu_website_event_menu
+msgid "Website Menus"
+msgstr "웹사이트 메뉴"
+
+#. module: website_event
+#: model:ir.model,name:website_event.model_website_snippet_filter
+msgid "Website Snippet Filter"
+msgstr "웹사이트 스니펫 필터"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_event_view_form
+#: model_terms:ir.ui.view,arch_db:website_event.event_type_view_form
+msgid "Website Submenu"
+msgstr "웹사이트 하위 메뉴"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__website_url
+#: model:ir.model.fields,field_description:website_event.field_event_tag__website_url
+#: model:ir.model.fields,field_description:website_event.field_event_tag_category__website_url
+msgid "Website URL"
+msgstr "웹 사이트 URL"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__website_visibility
+msgid "Website Visibility"
+msgstr "웹사이트 가시성"
+
+#. module: website_event
+#: model:ir.model,name:website_event.model_website_visitor
+msgid "Website Visitor"
+msgstr "웹사이트 방문자"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__website_meta_description
+msgid "Website meta description"
+msgstr "웹사이트 메타 설명"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__website_meta_keywords
+msgid "Website meta keywords"
+msgstr "웹사이트 메타 핵심어"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__website_meta_title
+msgid "Website meta title"
+msgstr "웹사이트 메타 제목"
+
+#. module: website_event
+#: model:ir.model.fields,field_description:website_event.field_event_event__website_meta_og_img
+msgid "Website opengraph image"
+msgstr "웹사이트 오픈그래프 이미지"
+
+#. module: website_event
+#: model:event.question,title:website_event.event_5_question_1
+msgid "What's your Hockey level?"
+msgstr "하키 실력이 어느정도 되나요?"
+
+#. module: website_event
+#: model:ir.model.fields,help:website_event.field_event_event__is_ongoing
+msgid "Whether event has begun"
+msgstr "행사 시작 여부"
+
+#. module: website_event
+#: model:ir.model.fields,help:website_event.field_event_event__start_today
+msgid "Whether event is going to start today if still not ongoing"
+msgstr "아직 진행 전인 경우 행사가 오늘 시작될지 여부"
+
+#. module: website_event
+#: model:event.question,title:website_event.event_7_question_0
+msgid "Which field are you working in"
+msgstr "현재 일하고 있는 분야"
+
+#. module: website_event
+#. odoo-javascript
+#: code:addons/website_event/static/src/js/tours/event_tour.js:0
+msgid ""
+"With the Edit button, you can <b>customize</b> the web page visitors will "
+"see when registering."
+msgstr "편집 버튼을 활용하면 방문자가 행사에 등록할 때 표시되는 페이지를 <b>사용자 지정</b>하여 만들 수 있습니다."
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
+msgid "available)"
+msgstr "사용 가능)"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_event_view_form_add
+msgid "e.g. \"Conference for Architects\""
+msgstr "예: \"건축가 대상 컨퍼런스\""
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.registration_template
+msgid "time)"
+msgstr "시간)"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.event_description_full
-msgid "o_wevent_sidebar_social mx-n1"
-msgstr "o_wevent_sidebar_social mx-n1"
+msgid "w-100"
+msgstr "w-100"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.event_description_full
-msgid "o_wevent_social_link"
-msgstr "o_wevent_social_link"
+msgid "w-100 py-sm-3 mt-sm-2"
+msgstr "w-100 py-sm-3 mt-sm-2"

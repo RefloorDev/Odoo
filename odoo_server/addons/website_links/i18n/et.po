@@ -1,25 +1,27 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# * website_links
+# 	* website_links
 # 
 # Translators:
-# Rivo Zängov <eraser@eraser.ee>, 2018
-# Martin Trigaux, 2018
-# Arma Gedonsky <armagedonsky@hot.ee>, 2018
-# Egon Raamat <egon@avalah.ee>, 2018
-# Eneli Õigus <enelioigus@gmail.com>, 2018
-# Ants Peetsalu <ants@avalah.ee>, 2018
-# Martin Aavastik <martin@avalah.ee>, 2018
-# Helen Sulaoja <helen@avalah.ee>, 2018
+# JanaAvalah, 2024
+# Siim Raasuke, 2024
+# Stevin Lilla, 2024
+# Martin Aavastik <martin@avalah.ee>, 2024
+# Aveli Kannel <aveli@avalah.ee>, 2024
+# Piia Paurson <piia@avalah.ee>, 2024
+# Arma Gedonsky <armagedonsky@hot.ee>, 2024
+# Rivo Zängov <eraser@eraser.ee>, 2024
+# Eneli Õigus <enelioigus@gmail.com>, 2024
+# Anna, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~11.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-18 09:49+0000\n"
-"PO-Revision-Date: 2018-08-24 09:34+0000\n"
-"Last-Translator: Helen Sulaoja <helen@avalah.ee>, 2018\n"
-"Language-Team: Estonian (https://www.transifex.com/odoo/teams/41243/et/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Anna, 2024\n"
+"Language-Team: Estonian (https://app.transifex.com/odoo/teams/41243/et/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -27,30 +29,33 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links_charts.js:53
-#, python-format
-msgid " clicks"
-msgstr "klikke"
-
-#. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links_charts.js:104
-#, python-format
-msgid " countries"
-msgstr "riigid"
-
-#. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links_charts.js:57
-#, python-format
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links_charts.js:0
 msgid "# of clicks"
-msgstr "klikkide arv"
+msgstr "# klikkide arv"
 
 #. module: website_links
-#: model_terms:ir.ui.view,arch_db:website_links.share_page_menu
-msgid "<span title=\"Track this page to count clicks\">Track this Page</span>"
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links_charts.js:0
+msgid "%(clicks)s clicks"
 msgstr ""
+
+#. module: website_links
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links_charts.js:0
+msgid "%(count)s countries"
+msgstr ""
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+#: model_terms:ir.ui.view,arch_db:website_links.graphs
+msgid "<i class=\"fa fa-copy me-2\"/>Copy"
+msgstr "<i class=\"fa fa-copy me-2\"/>Kopeeri"
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "<span class=\"text-muted me-1\">Sort By:</span>"
+msgstr "<span class=\"text-muted me-1\">Sorteeri:</span>"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
@@ -64,71 +69,76 @@ msgstr "<strong>Keskmine</strong>"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
+msgid "<strong>Name</strong>"
+msgstr "<strong>Nimi</strong>"
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.graphs
 msgid "<strong>Original URL</strong>"
 msgstr "<strong>Algne URL</strong>"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
 msgid "<strong>Redirected URL</strong>"
-msgstr ""
+msgstr "<strong>Ümbersuunatud URL</strong>"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
 msgid "<strong>Source</strong>"
-msgstr "<strong>Allikas</strong>"
+msgstr "<strong>Allikas</strong><br/>"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
 msgid "<strong>Tracked Link</strong>"
-msgstr ""
+msgstr "<strong>Jälgitav link</strong>"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
 msgid "All Time"
-msgstr "Kogu aeg"
+msgstr "Kogu periood"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid ""
-"Campaign <i class=\"fa fa-info-circle\" data-toggle=\"tooltip\" data-"
-"placement=\"top\" role=\"img\" aria-label=\"Tooltip info\" title=\"Defines "
-"the context of your link. It might be an event you want to promote or a "
-"special promotion.\"/>"
-msgstr ""
+msgid "Campaign"
+msgstr "Kampaania"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:37
-#, python-format
+#. odoo-javascript
+#: code:addons/website_links/static/src/xml/recent_link.xml:0
 msgid "Copy"
-msgstr "Koopia"
-
-#. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:26
-#: model_terms:ir.ui.view,arch_db:website_links.graphs
-#, python-format
-msgid "Edit code"
-msgstr ""
-
-#. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links.js:356
-#, python-format
-msgid "Generating link..."
-msgstr "Lingi loomine..."
+msgstr "Kopeeri"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid "Get tracked link"
+msgid "Create a Link tracker"
+msgstr "Loo lingi jälgija"
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "Create another Tracker"
 msgstr ""
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:13
-#, python-format
-msgid "Icon"
-msgstr "Ikoon"
+#. odoo-javascript
+#: code:addons/website_links/static/src/xml/website_links_tags_wrapper.xml:0
+msgid "Create option \""
+msgstr "Loo valik \""
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+#: model_terms:ir.ui.view,arch_db:website_links.graphs
+msgid "Edit code"
+msgstr "Redigeeri koodi"
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "Generate Link Tracker"
+msgstr ""
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "Last Clicks"
+msgstr ""
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
@@ -141,24 +151,28 @@ msgid "Last Week"
 msgstr "Eelmine nädal"
 
 #. module: website_links
-#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links.js:0
+#: code:addons/website_links/static/src/js/website_links_code_editor.js:0
+msgid "Link Copied!"
+msgstr " Link kopeeritud!"
+
+#. module: website_links
+#: model:ir.model,name:website_links.model_link_tracker
+#: model:ir.ui.menu,name:website_links.menu_link_tracker
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
 msgid "Link Tracker"
 msgstr "Lingi jälgija"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid ""
-"Medium <i class=\"fa fa-info-circle\" data-toggle=\"tooltip\" data-"
-"placement=\"top\" role=\"img\" aria-label=\"Tooltip info\" title=\"Defines "
-"the medium used to share your link. It might be an email, or a Facebook Ads "
-"for instance.\"/>"
-msgstr ""
+msgid "Medium"
+msgstr "Levitamise vahend"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid "Most Clicked"
-msgstr ""
+msgid "Name"
+msgstr "Nimi"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
@@ -166,9 +180,20 @@ msgid "Newest"
 msgstr "Uusim"
 
 #. module: website_links
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links_charts.js:0
+msgid "No data"
+msgstr "Andmed puuduvad"
+
+#. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid "Recently Used"
-msgstr "Hiljuti kasutatud"
+msgid "Number of Clicks"
+msgstr "Klikkide arv"
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "Read More"
+msgstr "Loe rohkem"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
@@ -176,36 +201,42 @@ msgid ""
 "Share this page with a <strong>short link</strong> that includes "
 "<strong>analytics trackers</strong>."
 msgstr ""
+"Jagage lehte <strong>lühikese lingiga</strong> mis on "
+"<strong>jälgitav</strong>."
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid ""
-"Source <i class=\"fa fa-info-circle\" data-toggle=\"tooltip\" data-"
-"placement=\"top\" role=\"img\" aria-label=\"Tooltip info\" title=\"Defines "
-"the source from which your traffic will come from, Facebook or Twitter for "
-"instance.\"/>"
-msgstr ""
+msgid "Source"
+msgstr "Allikas"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
+#: model_terms:ir.ui.view,arch_db:website_links.link_tracker_view_tree
 msgid "Statistics"
 msgstr "Statistika"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:38
-#, python-format
-msgid "Stats"
-msgstr "Statistika"
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "Target Link"
+msgstr ""
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links_charts.js:229
-#: code:addons/website_links/static/src/js/website_links_charts.js:230
-#: code:addons/website_links/static/src/js/website_links_charts.js:231
-#, python-format
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links_code_editor.js:0
+msgid "The code cannot be left empty"
+msgstr "Koodi ei saa tühjaks jätta"
+
+#. module: website_links
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links_charts.js:0
 msgid "There is no data to show"
-msgstr ""
+msgstr "Pole andmeid näitamiseks"
+
+#. module: website_links
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links_code_editor.js:0
+msgid "This code is already taken"
+msgstr "See kood on juba võetud"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
@@ -213,96 +244,98 @@ msgid ""
 "Those trackers can be used in Google Analytics to track clicks and visitors,"
 " or in Odoo reports to track opportunities and related revenues."
 msgstr ""
+"Neid jälgijaid saab kasutada Google Analyticsis klikkide ja külastajate "
+"jälgimiseks või võimaluste ja nendega seotud tulude jälgimiseks Odoo "
+"aruannetes. "
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid "URL"
-msgstr "URL"
-
-#. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links.js:225
-#, python-format
-msgid "Unable to get recent links"
+msgid "Tracked Link"
 msgstr ""
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links_charts.js:99
-#, python-format
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links.js:0
+msgid "Unable to get recent links"
+msgstr "Viimaseid linke ei ole võimalik hankida. "
+
+#. module: website_links
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links_charts.js:0
 msgid "Undefined"
 msgstr "Määramata"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links.js:248
-#, python-format
+#. odoo-javascript
+#: code:addons/website_links/static/src/xml/recent_link.xml:0
+msgid "Visit Link"
+msgstr ""
+
+#. module: website_links
+#. odoo-python
+#: code:addons/website_links/models/link_tracker.py:0
+msgid "Visit Webpage Statistics"
+msgstr "Vaata veebilehe statistikat"
+
+#. module: website_links
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links.js:0
 msgid "You don't have any recent links."
 msgstr "Sul ei ole hiljutisi linke."
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
 msgid "Your tracked links"
-msgstr ""
+msgstr "Teie jälgitavad lingid"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:23
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
-#, python-format
 msgid "cancel"
-msgstr "loobu"
+msgstr "tühista"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:8
-#, python-format
+#. odoo-javascript
+#: code:addons/website_links/static/src/xml/recent_link.xml:0
 msgid "clicks"
 msgstr "klikki"
 
 #. module: website_links
-#: model_terms:ir.ui.view,arch_db:website_links.graphs
-msgid "copy"
-msgstr "kopeeri"
-
-#. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links.js:266
-#, python-format
-msgid "e.g. Newsletter, Social Network, .."
-msgstr "nt uudiskiri, sotsiaalvõrgustik, ..."
-
-#. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links.js:263
-#, python-format
-msgid "e.g. Promotion of June, Winter Newsletter, .."
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "e.g. \"Black Friday Mailing Campaign\""
 msgstr ""
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links.js:269
-#, python-format
-msgid "e.g. Search Engine, Website page, .."
-msgstr ""
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links.js:0
+msgid "e.g. InMails, Ads, Social, ..."
+msgstr "nt. Sotsiaalmeedia konto"
+
+#. module: website_links
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links.js:0
+msgid "e.g. June Sale, Paris Roadshow, ..."
+msgstr "nt. Juuni müügikampaania"
+
+#. module: website_links
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links.js:0
+msgid "e.g. LinkedIn, Facebook, Leads, ..."
+msgstr "nt. LinkedIn, Facebook.."
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid "e.g. https://www.odoo.com/page/contactus"
-msgstr "nt https://www.odoo.com/page/contactus"
+msgid "e.g. https://www.odoo.com/contactus"
+msgstr "nt. https://www.odoo.com/contactus"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:22
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
-#, python-format
 msgid "ok"
 msgstr "okei"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:22
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
-#, python-format
 msgid "or"
 msgstr "või"

@@ -3,17 +3,16 @@
 # 	* base_address_extended
 # 
 # Translators:
-# JH CHOI <hwangtog@gmail.com>, 2019
-# Link Up링크업 <linkup.way@gmail.com>, 2019
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:31+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: Link Up링크업 <linkup.way@gmail.com>, 2019\n"
-"Language-Team: Korean (https://www.transifex.com/odoo/teams/41243/ko/)\n"
+"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -21,16 +20,44 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: base_address_extended
-#: model_terms:ir.ui.view,arch_db:base_address_extended.view_res_country_extended_form
-msgid ""
-"Change how the system computes the full street field based on the different "
-"street subfields"
-msgstr "서로 다른 거리 하위 필드를 기반으로 전체 거리 필드를 계산하는 방식 변경"
+#: model_terms:ir.ui.view,arch_db:base_address_extended.view_res_country_city_extended_form
+msgid "<span class=\"o_stat_text\">Cities</span>"
+msgstr "<span class=\"o_stat_text\">도시</span>"
 
 #. module: base_address_extended
-#: model:ir.model,name:base_address_extended.model_res_company
-msgid "Companies"
-msgstr "회사"
+#: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
+msgid "<span> - </span>"
+msgstr "<span> - </span>"
+
+#. module: base_address_extended
+#: model:ir.model.fields,help:base_address_extended.field_res_country__enforce_cities
+#: model:ir.model.fields,help:base_address_extended.field_res_partner__country_enforce_cities
+#: model:ir.model.fields,help:base_address_extended.field_res_users__country_enforce_cities
+msgid ""
+"Check this box to ensure every address created in that country has a 'City' "
+"chosen in the list of the country's cities."
+msgstr "해당 국가에서 생성된 주소에 해당 국가의 도시 목록으로 '도시'가 선택되도록 하려면 이 확인란을 선택합니다."
+
+#. module: base_address_extended
+#: model:ir.actions.act_window,name:base_address_extended.action_res_city_tree
+#: model:ir.ui.menu,name:base_address_extended.menu_res_city
+msgid "Cities"
+msgstr "시/군/구"
+
+#. module: base_address_extended
+#: model:ir.model,name:base_address_extended.model_res_city
+#: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_city_form
+#: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
+#: model_terms:ir.ui.view,arch_db:base_address_extended.view_city_filter
+#: model_terms:ir.ui.view,arch_db:base_address_extended.view_city_tree
+msgid "City"
+msgstr "시/군/구"
+
+#. module: base_address_extended
+#: model:ir.model.fields,field_description:base_address_extended.field_res_partner__city_id
+#: model:ir.model.fields,field_description:base_address_extended.field_res_users__city_id
+msgid "City ID"
+msgstr "도시 아이디"
 
 #. module: base_address_extended
 #: model:ir.model,name:base_address_extended.model_res_partner
@@ -39,8 +66,36 @@ msgstr "연락처"
 
 #. module: base_address_extended
 #: model:ir.model,name:base_address_extended.model_res_country
+#: model:ir.model.fields,field_description:base_address_extended.field_res_city__country_id
+#: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
 msgid "Country"
 msgstr "국가"
+
+#. module: base_address_extended
+#: model:ir.model.fields,field_description:base_address_extended.field_res_city__create_uid
+msgid "Created by"
+msgstr "작성자"
+
+#. module: base_address_extended
+#: model:ir.model.fields,field_description:base_address_extended.field_res_city__create_date
+msgid "Created on"
+msgstr "작성일자"
+
+#. module: base_address_extended
+#: model:ir.model.fields,field_description:base_address_extended.field_res_city__display_name
+msgid "Display Name"
+msgstr "표시명"
+
+#. module: base_address_extended
+#: model_terms:ir.actions.act_window,help:base_address_extended.action_res_city_tree
+msgid ""
+"Display and manage the list of all cities that can be assigned to\n"
+"                your partner records. Note that an option can be set on each country separately\n"
+"                to enforce any address of it to have a city in this list."
+msgstr ""
+"협력사 레코드에 할당할 수 있는 모든 도시 목록을 표시하고 관리합니다. \n"
+"                이 목록에 도시를 포함하도록 해당 국가의 주소를 적용하기 위해 \n"
+"                각 국가에 옵션을 별도로 설정할 수 있습니다."
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_partner__street_number2
@@ -49,28 +104,16 @@ msgid "Door"
 msgstr "집 번호"
 
 #. module: base_address_extended
-#: model:ir.model.fields,field_description:base_address_extended.field_res_company__street_number2
-#: model:ir.model.fields,help:base_address_extended.field_res_partner__street_number2
-#: model:ir.model.fields,help:base_address_extended.field_res_users__street_number2
-msgid "Door Number"
-msgstr "집 번호"
+#: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
+msgid "Door #"
+msgstr "호수 #"
 
 #. module: base_address_extended
-#: model:ir.model.fields,help:base_address_extended.field_res_country__street_format
-msgid ""
-"Format to use for streets belonging to this country.\n"
-"\n"
-"You can use the python-style string pattern with all the fields of the street (for example, use '%(street_name)s, %(street_number)s' if you want to display the street name, followed by a comma and the house number)\n"
-"%(street_name)s: the name of the street\n"
-"%(street_number)s: the house number\n"
-"%(street_number2)s: the door number"
-msgstr ""
-"이 나라에 속한 거리에 사용할 형식.\n"
-"\n"
-"거리의 모든 필드에 파이썬 스타일의 문자열 패턴을 사용할 수 있습니다 (예 : 거리 이름을 표시하려면  '%(street_name)s %(street_number)s' 를 사용하고 그 뒤에 건물번호를 사용하십시오)\n"
-"%(street_name)s: 도로명\n"
-"%(street_number)s: 건물번호\n"
-"%(street_number2)s: 동/호수"
+#: model:ir.model.fields,field_description:base_address_extended.field_res_country__enforce_cities
+#: model:ir.model.fields,field_description:base_address_extended.field_res_partner__country_enforce_cities
+#: model:ir.model.fields,field_description:base_address_extended.field_res_users__country_enforce_cities
+msgid "Enforce Cities"
+msgstr "도시 적용"
 
 #. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_partner__street_number
@@ -79,39 +122,68 @@ msgid "House"
 msgstr "건물명"
 
 #. module: base_address_extended
-#: model:ir.model.fields,field_description:base_address_extended.field_res_company__street_number
-#: model:ir.model.fields,help:base_address_extended.field_res_partner__street_number
-#: model:ir.model.fields,help:base_address_extended.field_res_users__street_number
-msgid "House Number"
-msgstr "건물번호"
+#: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
+msgid "House #"
+msgstr "건물 주소 #"
 
 #. module: base_address_extended
-#: model:ir.model.fields,field_description:base_address_extended.field_res_country__street_format
-msgid "Street Format"
-msgstr "도로명 형식"
+#: model:ir.model.fields,field_description:base_address_extended.field_res_city__id
+msgid "ID"
+msgstr "ID"
 
 #. module: base_address_extended
-#: model:ir.model.fields,field_description:base_address_extended.field_res_company__street_name
+#: model:ir.model.fields,field_description:base_address_extended.field_res_city__write_uid
+msgid "Last Updated by"
+msgstr "최근 갱신한 사람"
+
+#. module: base_address_extended
+#: model:ir.model.fields,field_description:base_address_extended.field_res_city__write_date
+msgid "Last Updated on"
+msgstr "최근 갱신 일자"
+
+#. module: base_address_extended
+#: model:ir.model.fields,field_description:base_address_extended.field_res_city__name
+msgid "Name"
+msgstr "이름"
+
+#. module: base_address_extended
+#: model_terms:ir.ui.view,arch_db:base_address_extended.view_city_filter
+msgid "Search City"
+msgstr "도시 검색"
+
+#. module: base_address_extended
+#: model:ir.model.fields,field_description:base_address_extended.field_res_city__state_id
+#: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
+msgid "State"
+msgstr "시/도"
+
+#. module: base_address_extended
+#: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
+msgid "Street"
+msgstr "도로명 주소"
+
+#. module: base_address_extended
+#: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
+msgid "Street 2..."
+msgstr "상세 주소"
+
+#. module: base_address_extended
 #: model:ir.model.fields,field_description:base_address_extended.field_res_partner__street_name
 #: model:ir.model.fields,field_description:base_address_extended.field_res_users__street_name
 msgid "Street Name"
-msgstr "도로명"
+msgstr "도로명 주소"
 
 #. module: base_address_extended
-#: model_terms:ir.ui.view,arch_db:base_address_extended.view_partner_address_structured_form
-#: model_terms:ir.ui.view,arch_db:base_address_extended.view_partner_structured_form
-#: model_terms:ir.ui.view,arch_db:base_address_extended.view_res_company_extended_form
-msgid "Street Name..."
-msgstr "도로명..."
+#: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
+msgid "Street..."
+msgstr "도로명 주소"
 
 #. module: base_address_extended
-#: model_terms:ir.ui.view,arch_db:base_address_extended.view_res_country_extended_form
-msgid "Street format..."
-msgstr "도로명 형식..."
+#: model_terms:ir.ui.view,arch_db:base_address_extended.address_street_extended_form
+msgid "ZIP"
+msgstr "우편번호"
 
 #. module: base_address_extended
-#: code:addons/base_address_extended/models/base_address_extended.py:64
-#: code:addons/base_address_extended/models/base_address_extended.py:112
-#, python-format
-msgid "Unrecognized field %s in street format."
-msgstr "인식할 수 없는 %s 필드입니다."
+#: model:ir.model.fields,field_description:base_address_extended.field_res_city__zipcode
+msgid "Zip"
+msgstr "우편번호"

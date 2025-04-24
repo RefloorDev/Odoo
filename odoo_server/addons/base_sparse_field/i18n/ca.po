@@ -1,20 +1,23 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# * base_sparse_field
+# 	* base_sparse_field
 # 
 # Translators:
-# Martin Trigaux, 2018
-# Marc Tormo i Bochaca <mtbochaca@gmail.com>, 2018
-# RGB Consulting <odoo@rgbconsulting.com>, 2018
+# Josep Anton Belchi, 2024
+# marcescu, 2024
+# Marc Tormo i Bochaca <mtbochaca@gmail.com>, 2024
+# RGB Consulting <odoo@rgbconsulting.com>, 2024
+# Óscar Fonseca <tecnico@pyming.com>, 2024
+# Martin Trigaux, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~11.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-21 13:17+0000\n"
-"PO-Revision-Date: 2018-08-24 09:16+0000\n"
-"Last-Translator: RGB Consulting <odoo@rgbconsulting.com>, 2018\n"
-"Language-Team: Catalan (https://www.transifex.com/odoo/teams/41243/ca/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Martin Trigaux, 2024\n"
+"Language-Team: Catalan (https://app.transifex.com/odoo/teams/41243/ca/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -22,13 +25,18 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: base_sparse_field
+#: model:ir.model,name:base_sparse_field.model_base
+msgid "Base"
+msgstr "Base"
+
+#. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__boolean
 msgid "Boolean"
 msgstr "Booleà"
 
 #. module: base_sparse_field
-#: code:addons/base_sparse_field/models/models.py:25
-#, python-format
+#. odoo-python
+#: code:addons/base_sparse_field/models/models.py:0
 msgid "Changing the storing system for field \"%s\" is not allowed."
 msgstr "No està permès canviar el sistema de emmagatzemament pel camp \"%s\"."
 
@@ -55,12 +63,12 @@ msgstr "Dades"
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__display_name
 msgid "Display Name"
-msgstr "Mostrar Nom"
+msgstr "Nom mostrat"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_ir_model_fields__ttype
 msgid "Field Type"
-msgstr "Camp de Tipus"
+msgstr "Tipus de camp"
 
 #. module: base_sparse_field
 #: model:ir.model,name:base_sparse_field.model_ir_model_fields
@@ -93,11 +101,6 @@ msgid "Integer"
 msgstr "Enter"
 
 #. module: base_sparse_field
-#: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test____last_update
-msgid "Last Modified on"
-msgstr "Última modificació el "
-
-#. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__write_uid
 msgid "Last Updated by"
 msgstr "Última actualització per"
@@ -108,9 +111,9 @@ msgid "Last Updated on"
 msgstr "Última actualització el"
 
 #. module: base_sparse_field
-#: selection:sparse_fields.test,selection:0
+#: model:ir.model.fields.selection,name:base_sparse_field.selection__sparse_fields_test__selection__one
 msgid "One"
-msgstr ""
+msgstr "Un"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__partner
@@ -118,8 +121,8 @@ msgid "Partner"
 msgstr "Empresa"
 
 #. module: base_sparse_field
-#: code:addons/base_sparse_field/models/models.py:27
-#, python-format
+#. odoo-python
+#: code:addons/base_sparse_field/models/models.py:0
 msgid "Renaming sparse field \"%s\" is not allowed"
 msgstr "Canvi de nom de camp \"%s\" no està permès"
 
@@ -134,97 +137,24 @@ msgid "Serialization Field"
 msgstr "Camp de serialització "
 
 #. module: base_sparse_field
-#: code:addons/base_sparse_field/models/models.py:39
-#, python-format
-msgid "Serialization field `%s` not found for sparse field `%s`!"
-msgstr "No s'ha trobat el camp de serialització '%s' pel camp '%s'!"
+#. odoo-python
+#: code:addons/base_sparse_field/models/models.py:0
+msgid ""
+"Serialization field \"%(serialization_field)s\" not found for sparse field "
+"%(sparse_field)s!"
+msgstr ""
 
 #. module: base_sparse_field
 #: model:ir.model,name:base_sparse_field.model_sparse_fields_test
 msgid "Sparse fields Test"
-msgstr ""
+msgstr "Prova de camps dispersos"
 
 #. module: base_sparse_field
-#: selection:sparse_fields.test,selection:0
+#: model:ir.model.fields.selection,name:base_sparse_field.selection__sparse_fields_test__selection__two
 msgid "Two"
-msgstr ""
+msgstr "Dos"
 
 #. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "binary"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "boolean"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "char"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "date"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "datetime"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "float"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "html"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "integer"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "many2many"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "many2one"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "monetary"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "one2many"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "reference"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "selection"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
+#: model:ir.model.fields.selection,name:base_sparse_field.selection__ir_model_fields__ttype__serialized
 msgid "serialized"
-msgstr ""
-
-#. module: base_sparse_field
-#: selection:ir.model.fields,ttype:0
-msgid "text"
-msgstr ""
+msgstr "en sèrie"

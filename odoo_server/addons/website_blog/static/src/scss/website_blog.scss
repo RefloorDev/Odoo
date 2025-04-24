@@ -1,41 +1,8 @@
 // ======= VARIABLES =======
-$o-wblog-read-width: 620px;
-$o-wblog-read-container-sidebar-width :900px;
+$o-wblog-sidebar-width: 280px;
 $o-wblog-loader-size: 50px;
 
-$o-wblog-title-sizes-variants: (
-    tiny: (
-        title: $display4-size*0.6,
-        subtitle: $lead-font-size
-    ),
-    small: (
-        title: $display4-size*0.75,
-        subtitle: $lead-font-size
-    ),
-    big: (
-        title: $display3-size,
-        subtitle: $lead-font-size*1.25
-    ),
-    huge: (
-        title: $display2-size,
-        subtitle: $lead-font-size*1.5
-    ),
-    hero: (
-        title: $display1-size,
-        subtitle: $lead-font-size*1.75
-    )
-) !default;
-
 // ======= ANIMATIONS =======
-// Attention keeper for the "scroll down" top-banner button
-@keyframes o-wblog-anim-heart {
-    0%, 14%, 35% { transform: scale(1); }
-    7%, 21% {
-        transform: scale(1.3);
-        background-color: rgba(theme-color('primary'), 0.8);
-    }
-}
-
 // Generic fade-in
 @keyframes o-wblog-fade-In {
     0%   { opacity: 0; }
@@ -78,17 +45,6 @@ $o-wblog-title-sizes-variants: (
 // Website Blog
 //------------------------------------------------------------------------------
 .website_blog {
-    .css_website_mail {
-        .o_has_error {
-            border-color: red;
-        }
-        .css_nav_month {
-            display: none;
-            &:first-of-type {
-                display: block;
-            }
-        }
-    }
 
     .o_wblog_page_cards_bg {
         // To be applied to the main container when 'card design' option is
@@ -99,35 +55,16 @@ $o-wblog-title-sizes-variants: (
         background-color: rgba(black, 0.005);
     }
 
-    .o_wblog_read {
-        max-width: $o-wblog-read-width;
-    }
-
     .o_wblog_read_with_sidebar {
-        max-width: $o-wblog-read-container-sidebar-width;
+        max-width: map-get($container-max-widths, md) + $o-wblog-sidebar-width;
     }
 
     // This option class is assigned to the post's content using the "Customize"
     // menu. The aim is to be able to write simple articles on the fly,
     // achieving a good design without being forced to use snippets.
     .o_wblog_read_text {
-        font-size: 18px;
-        line-height: 28px;
+        @include font-size(18px);
         font-weight: 300;
-
-        p, ul, ol {
-            margin-bottom: 1.55em;
-        }
-
-        li {
-            margin-bottom: 1em;
-        }
-
-        .lead {
-            font-size: 26px;
-            line-height: 34px;
-            margin-bottom: 40px;
-        }
     }
 
     .o_wblog_author_avatar {
@@ -147,9 +84,10 @@ $o-wblog-title-sizes-variants: (
     }
 
     .o_wblog_social_links > a {
-        @include size(3em);
+        width: 3em;
+        height: 3em;
         > i {
-            font-size: 1.3em;
+            @include font-size(1.3em);
         }
     }
 
@@ -166,6 +104,22 @@ $o-wblog-title-sizes-variants: (
         }
     }
 
+    #o_wblog_post_content, .blog_header {
+        > nav.breadcrumb {
+            .breadcrumb-item:not(.active) {
+                flex-shrink: 0;
+            }
+            @include media-breakpoint-down(md) {
+                flex-wrap: wrap !important;
+
+                .breadcrumb-item {
+                    flex-shrink: 1 !important;
+                    @include text-truncate();
+                }
+            }
+        }
+    }
+
     #o_wblog_post_comments {
         .o_portal_chatter > hr {
             display: none;
@@ -175,12 +129,38 @@ $o-wblog-title-sizes-variants: (
     // Blog Post Page Cover
     // ==============================================
     .o_wblog_post_page_cover {
-        // By default (no image defined), inner filters elements are hidden.
-        .o_record_cover_component {
-            display: none;
+        // "Latest Blog" Tag
+        .o_wblog_post_title > .h4 {
+            color: var(--o-cc3-btn-secondary-text);
         }
 
-        // If a cover image is defined, show filters + adapt inner typography
+        // Cover sizes
+        // ==============================================
+        &.cover_auto {
+            padding: 3rem 0;
+            // The actual height will always be 'auto'. The following
+            // min-height rule is set to trigger the page transition only.
+            min-height: 1px;
+        }
+
+        // "Regular Cover" design sizes
+        // ==============================================
+        &.o_wblog_post_page_cover_regular {
+            &.o_full_screen_height {
+                min-height: 70vh !important;
+            }
+
+            &.o_half_screen_height {
+                min-height: 40vh !important;
+            }
+
+            &.cover_auto {
+                min-height: 150px;
+                padding: 0;
+            }
+        }
+
+        // If a cover image is defined, adapt inner typography
         &.o_record_has_cover {
             .o_record_cover_image:after {
                 content: "";
@@ -188,72 +168,14 @@ $o-wblog-title-sizes-variants: (
                 @include o-position-absolute(0,0,50%,0);
                 @include o-wbblog-scrim-gradient(rgba(black, 0.5), transparent);
             }
-            .o_record_cover_component {
-                display: block;
-            }
 
             .o_wblog_post_title {
                 color: white;
             }
 
-            #o_wblog_post_content_jump {
-                @include size($o-wblog-loader-size);
-                display: none;
-                background-color: rgba(black, 0.5);
-
-                &:hover {
-                    background-color: rgba(black, 0.7);
-                }
-            }
-
-            // Cover sizes
-            // ==============================================
-            &.cover_full {
-                min-height: 600px;
-                min-height: 100vh;
-            }
-
-            &.cover_mid {
-                min-height: 400px;
-                min-height: 55vh;
-            }
-
-            &.cover_full, &.cover_mid {
-                #o_wblog_post_content_jump {
-                    display: flex;
-                    animation: o-wblog-anim-heart 2.6s ease-in-out 1s infinite;
-
-                    &:hover {
-                        animation-iteration-count: 1;
-                    }
-                }
-            }
-
-            &.cover_auto {
-                padding: 3rem 0;
-                // The actual height will always be 'auto'. The following
-                // min-height rule is set to trigger the page transition only.
-                min-height: 1px;
-            }
-
-            // "Regular Cover" design sizes
-            // ==============================================
             &.o_wblog_post_page_cover_regular {
                 .o_record_cover_image:after {
                     visibility: hidden;
-                }
-
-                &.cover_full {
-                    min-height: 350px;
-                }
-
-                &.cover_mid {
-                    min-height: 250px;
-                }
-
-                &.cover_auto {
-                    min-height: 150px;
-                    padding: 0;
                 }
             }
         }
@@ -264,28 +186,16 @@ $o-wblog-title-sizes-variants: (
     // ==============================================
     .o_wblog_post_title {
         #o_wblog_post_name {
-            font-weight: $display4-weight;
+            font-weight: $display-font-weight;
             line-height: $display-line-height;
             // Default font-size.
-            @include font-size($display4-size);
+            @include font-size(map-get($display-font-sizes, 4));
         }
 
         #o_wblog_post_subtitle {
             font-weight: $lead-font-weight;
             // Default font-size.
             @include font-size($lead-font-size);
-        }
-    }
-
-    // Size variants
-    @each $size, $map in $o-wblog-title-sizes-variants {
-        .o_record_cover_font_#{$size} .o_wblog_post_title {
-            #o_wblog_post_name {
-                @include font-size(map-get($map, title));
-            }
-            #o_wblog_post_subtitle {
-                @include font-size(map-get($map, subtitle));
-            }
         }
     }
 
@@ -309,8 +219,8 @@ $o-wblog-title-sizes-variants: (
             transform: translateZ(1px);
 
             div {
-                @include size($o-wblog-loader-size);
-                margin-top: $o-wblog-loader-size * -2;
+                width: $o-wblog-loader-size;
+                height: $o-wblog-loader-size;
                 background: rgba(black, 0.15);
                 animation: o-wblog-loader 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
             }
@@ -330,10 +240,12 @@ $o-wblog-title-sizes-variants: (
     #o_wblog_posts_loop {
         .o_record_cover_container {
             box-shadow: inset 0 0 0 1px rgba(white, 0.3);
-            background: rgba(black, 0.1);
 
             padding-top: 33%;
             height: auto!important;
+            // This is mandatory as we do not want the CoverProperties
+            // sizing classes to be applied here
+            min-height: auto!important;
 
             &:hover .o_record_cover_image {
                 opacity: 0.8;
@@ -342,7 +254,7 @@ $o-wblog-title-sizes-variants: (
 
         .o_wblog_normalize_font {
             // normalize fonts
-            font-size: 13px;
+            @include font-size(13px);
             line-height: 1.45;
         }
 
@@ -357,8 +269,28 @@ $o-wblog-title-sizes-variants: (
             .o_wblog_post_cover_nocard .o_record_cover_container {
                 padding-top: 33%;
             }
+
+            @include media-breakpoint-down(md) {
+                > .row {
+                    margin-left: 0;
+                    margin-right: 0;
+                }
+            }
         }
 
+    }
+
+    > nav > .container {
+        > ul.navbar-nav {
+            flex-wrap: wrap;
+            flex-shrink: 2;
+        }
+        // If the navbar contains at least 10 items (random choice), the search
+        // input is placed at the top to avoid being centered in a multi-line
+        // navbar, which wouldn’t look good.
+        &:has(> ul.navbar-nav .nav-item:nth-child(10)) .o_searchbar_form {
+            align-self: start;
+        }
     }
 
     //  Editor Helpers
@@ -366,9 +298,7 @@ $o-wblog-title-sizes-variants: (
     body.editor_enable & {
         // Make empty covers visible in edit mode
         .o_record_cover_container.o_wblog_post_page_cover:not(.o_record_has_cover) {
-            background-color: $gray-100;
             padding: 30px 0;
-            border: 1px dashed $gray-500;
         }
 
         // Hide the big "DRAG BUILDING BLOCKS HERE" box when inside a sidebar.
@@ -376,75 +306,21 @@ $o-wblog-title-sizes-variants: (
         #o_wblog_sidebar .oe_structure:empty {
             display: none;
         }
+
+        // Prevent users from using the select in the sidebar during edit.
+        .o_wblog_sidebar_block select[name="archive"] {
+            pointer-events: none;
+        }
     }
 }
 
+#o_wblog_post_content_jump {
+    @extend .o_scroll_button;
+    width: $o-wblog-loader-size;
+    height: $o-wblog-loader-size;
+    background-color: rgba(black, 0.5);
 
-//------------------------------------------------------------------------------
-// Latest posts snippets
-//------------------------------------------------------------------------------
-.s_latest_posts, .s_latest_posts_big_picture {
-    .s_latest_posts_loader {
-        @include o-position-absolute(0, 0, 0, 0);
-        transform: translateZ(1px);
-
-        > div {
-            animation: o-wblog-loader 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-            max: {width: 30px; height: 30px;}
-        }
-    }
-
-    .s_latest_posts_post_title  {
-        font-weight: $headings-font-weight;
-        // Tweek line-height to help fit multi-line titles.
-        line-height: 1;
-    }
-
-    .s_latest_posts_post_subtitle {
-        font-size: 1em;
-    }
-}
-
-.s_latest_posts {
-    // Set sizes relative to the container font-size.
-    // (handle parents with, for example, '.small' or '.h1' classes)
-    .s_latest_posts_post_cover {
-        @include size(3.5em);
-        max: {width: 85px; height: 85px}
-    }
-
-    .s_latest_posts_post_title  {
-        font-size: 1.25em;
-    }
-}
-
-.s_latest_posts_big_picture {
-    .s_latest_posts_post {
-        min-height: 150px;
-
-        figcaption {
-            position: relative;
-            justify-content: center;
-        }
-
-        .s_latest_posts_post_cover {
-            min-height: 100%;
-
-            .o_record_cover_container {
-                top: 0;
-            }
-        }
-
-        .s_latest_posts_post_title  {
-            @include font-size($h3-font-size);
-            margin-bottom: 0.5em;
-            word-spacing: -0.15em;
-        }
-
-        @include s-latest-posts-figure-hook;
-    }
-
-    .js_get_posts {
-        @include s-latest-posts-js-get-posts-hook;
+    &:hover {
+        background-color: rgba(black, 0.7);
     }
 }

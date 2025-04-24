@@ -14,7 +14,7 @@ class PurchaseOrder(models.Model):
 
     NOTE: The matrix functionality was done in python, server side, to avoid js
         restriction.  Indeed, the js framework only loads the x first lines displayed
-        in the client, which means in case of big matrices and lots of so_lines,
+        in the client, which means in case of big matrices and lots of po_lines,
         the js doesn't have access to the 41st and following lines.
 
         To force the loading, a 'hack' of the js framework would have been needed...
@@ -22,7 +22,7 @@ class PurchaseOrder(models.Model):
 
     grid_product_tmpl_id = fields.Many2one('product.template', store=False, help="Technical field for product_matrix functionalities.")
     grid_update = fields.Boolean(default=False, store=False, help="Whether the grid field contains a new matrix to apply or not.")
-    grid = fields.Char(store=False, help="Technical storage of grid. \nIf grid_update, will be loaded on the SO. \nIf not, represents the matrix to open.")
+    grid = fields.Char(store=False, help="Technical storage of grid. \nIf grid_update, will be loaded on the PO. \nIf not, represents the matrix to open.")
 
     @api.onchange('grid_product_tmpl_id')
     def _set_grid_up(self):
@@ -30,11 +30,15 @@ class PurchaseOrder(models.Model):
             self.grid_update = False
             self.grid = json.dumps(self._get_matrix(self.grid_product_tmpl_id))
 
+    def _must_delete_date_planned(self, field_name):
+        return super()._must_delete_date_planned(field_name) or field_name == "grid"
+
     @api.onchange('grid')
     def _apply_grid(self):
         if self.grid and self.grid_update:
             grid = json.loads(self.grid)
             product_template = self.env['product.template'].browse(grid['product_template_id'])
+            product_ids = set()
             dirty_cells = grid['changes']
             Attrib = self.env['product.template.attribute.value']
             default_po_line_vals = {}
@@ -53,11 +57,17 @@ class PurchaseOrder(models.Model):
                 old_qty = sum(order_lines.mapped('product_qty'))
                 qty = cell['qty']
                 diff = qty - old_qty
-                if diff and order_lines:
+
+                if not diff:
+                    continue
+
+                product_ids.add(product.id)
+
+                if order_lines:
                     if qty == 0:
                         if self.state in ['draft', 'sent']:
                             # Remove lines if qty was set to 0 in matrix
-                            # only if SO state = draft/sent
+                            # only if PO state = draft/sent
                             self.order_line -= order_lines
                         else:
                             order_lines.update({'product_qty': 0.0})
@@ -77,28 +87,36 @@ class PurchaseOrder(models.Model):
                             raise ValidationError(_("You cannot change the quantity of a product present in multiple purchase lines."))
                         else:
                             order_lines[0].product_qty = qty
-                            order_lines[0]._onchange_quantity()
                             # If we want to support multiple lines edition:
                             # removal of other lines.
                             # For now, an error is raised instead
                             # if len(order_lines) > 1:
                             #     # Remove 1+ lines
                             #     self.order_line -= order_lines[1:]
-                elif diff:
+                else:
                     if not default_po_line_vals:
                         OrderLine = self.env['purchase.order.line']
                         default_po_line_vals = OrderLine.default_get(OrderLine._fields.keys())
+                    last_sequence = self.order_line[-1:].sequence
+                    if last_sequence:
+                        default_po_line_vals['sequence'] = last_sequence
                     new_lines.append((0, 0, dict(
                         default_po_line_vals,
                         product_id=product.id,
                         product_qty=qty,
                         product_no_variant_attribute_value_ids=no_variant_attribute_values.ids)
                     ))
-            if new_lines:
-                self.update(dict(order_line=new_lines))
-                for line in self.order_line.filtered(lambda line: line.product_template_id == product_template):
+            if product_ids:
+                res = False
+                if new_lines:
+                    # Add new PO lines
+                    self.update(dict(order_line=new_lines))
+
+                # Recompute prices for new/modified lines:
+                for line in self.order_line.filtered(lambda line: line.product_id.id in product_ids):
                     line._product_id_change()
-                    line._onchange_quantity()
+                    res = line.onchange_product_id_warning() or res
+                return res
 
     def _get_matrix(self, product_template):
         def has_ptavs(line, sorted_attr_ids):
@@ -132,7 +150,13 @@ class PurchaseOrder(models.Model):
             # configurable products are only configured through the matrix in purchase, so no need to check product_add_mode.
             for template in grid_configured_templates:
                 if len(self.order_line.filtered(lambda line: line.product_template_id == template)) > 1:
-                    matrixes.append(self._get_matrix(template))
+                    matrix = self._get_matrix(template)
+                    matrix_data = []
+                    for row in matrix['matrix']:
+                        if any(column['qty'] != 0 for column in row[1:]):
+                            matrix_data.append(row)
+                    matrix['matrix'] = matrix_data
+                    matrixes.append(matrix)
         return matrixes
 
 

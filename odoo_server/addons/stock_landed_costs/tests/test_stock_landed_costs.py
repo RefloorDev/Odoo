@@ -4,6 +4,7 @@
 from odoo.addons.stock_landed_costs.tests.common import TestStockLandedCostsCommon
 from odoo.exceptions import ValidationError
 from odoo.tests import tagged
+from odoo import fields
 
 
 @tagged('post_install', '-at_install')
@@ -13,28 +14,23 @@ class TestStockLandedCosts(TestStockLandedCostsCommon):
         # In order to test the landed costs feature of stock,
         # I create a landed cost, confirm it and check its account move created
 
-        self._load('account', 'test', 'account_minimal_test.xml')
-        self._load('stock_account', 'test', 'stock_valuation_account.xml')
-
         # I create 2 products with different volume and gross weight and configure
         # them for real_time valuation and fifo costing method
         product_landed_cost_1 = self.env['product.product'].create({
             'name': "LC product 1",
             'weight': 10,
             'volume': 1,
+            'categ_id': self.stock_account_product_categ.id,
+            'is_storable': True,
         })
-        product_landed_cost_1.product_tmpl_id.categ_id.property_cost_method = 'fifo'
-        product_landed_cost_1.product_tmpl_id.categ_id.property_stock_account_input_categ_id = self.ref('stock_landed_costs.o_expense')
-        product_landed_cost_1.product_tmpl_id.categ_id.property_stock_account_output_categ_id = self.ref('stock_landed_costs.o_income')
 
         product_landed_cost_2 = self.env['product.product'].create({
             'name': "LC product 2",
             'weight': 20,
             'volume': 1.5,
+            'categ_id': self.stock_account_product_categ.id,
+            'is_storable': True,
         })
-        product_landed_cost_2.product_tmpl_id.categ_id.property_cost_method = 'fifo'
-        product_landed_cost_2.product_tmpl_id.categ_id.property_stock_account_input_categ_id = self.ref('stock_landed_costs.o_expense')
-        product_landed_cost_2.product_tmpl_id.categ_id.property_stock_account_output_categ_id = self.ref('stock_landed_costs.o_income')
 
         self.assertEqual(product_landed_cost_1.value_svl, 0)
         self.assertEqual(product_landed_cost_1.quantity_svl, 0)
@@ -46,51 +42,52 @@ class TestStockLandedCosts(TestStockLandedCostsCommon):
         # I create 2 picking moving those products
         vals = dict(picking_default_vals, **{
             'name': 'LC_pick_1',
-            'picking_type_id': self.ref('stock.picking_type_out'),
-            'move_lines': [(0, 0, {
+            'picking_type_id': self.warehouse.out_type_id.id,
+            'move_ids': [(0, 0, {
                 'product_id': product_landed_cost_1.id,
-                'product_uom_qty': 5,
+                'product_uom_qty': 15,
                 'product_uom': self.ref('uom.product_uom_unit'),
-                'location_id': self.ref('stock.stock_location_stock'),
+                'location_id': self.warehouse.lot_stock_id.id,
                 'location_dest_id': self.ref('stock.stock_location_customers'),
             })],
         })
         picking_landed_cost_1 = self.env['stock.picking'].new(vals)
-        picking_landed_cost_1.onchange_picking_type()
-        picking_landed_cost_1.move_lines.onchange_product_id()
-        picking_landed_cost_1.move_lines.name = 'move 1'
+        picking_landed_cost_1._onchange_picking_type()
+        picking_landed_cost_1.move_ids._onchange_product_id()
+        picking_landed_cost_1.move_ids.name = 'move 1'
         vals = picking_landed_cost_1._convert_to_write(picking_landed_cost_1._cache)
         picking_landed_cost_1 = self.env['stock.picking'].create(vals)
 
         # Confirm and assign picking
+        picking_landed_cost_1.picking_type_id.create_backorder = 'never'
         self.env.company.anglo_saxon_accounting = True
         picking_landed_cost_1.action_confirm()
         picking_landed_cost_1.action_assign()
-        picking_landed_cost_1.move_lines.quantity_done = 5
+        picking_landed_cost_1.move_ids.quantity = 5
         picking_landed_cost_1.button_validate()
 
         vals = dict(picking_default_vals, **{
             'name': 'LC_pick_2',
-            'picking_type_id': self.ref('stock.picking_type_out'),
-            'move_lines': [(0, 0, {
+            'picking_type_id': self.warehouse.out_type_id.id,
+            'move_ids': [(0, 0, {
                 'product_id': product_landed_cost_2.id,
                 'product_uom_qty': 10,
                 'product_uom': self.ref('uom.product_uom_unit'),
-                'location_id': self.ref('stock.stock_location_stock'),
+                'location_id': self.warehouse.lot_stock_id.id,
                 'location_dest_id': self.ref('stock.stock_location_customers'),
             })],
         })
         picking_landed_cost_2 = self.env['stock.picking'].new(vals)
-        picking_landed_cost_2.onchange_picking_type()
-        picking_landed_cost_2.move_lines.onchange_product_id()
-        picking_landed_cost_2.move_lines.name = 'move 2'
+        picking_landed_cost_2._onchange_picking_type()
+        picking_landed_cost_2.move_ids._onchange_product_id()
+        picking_landed_cost_2.move_ids.name = 'move 2'
         vals = picking_landed_cost_2._convert_to_write(picking_landed_cost_2._cache)
         picking_landed_cost_2 = self.env['stock.picking'].create(vals)
 
         # Confirm and assign picking
         picking_landed_cost_2.action_confirm()
         picking_landed_cost_2.action_assign()
-        picking_landed_cost_2.move_lines.quantity_done = 10
+        picking_landed_cost_2.move_ids.quantity = 10
         picking_landed_cost_2.button_validate()
 
         self.assertEqual(product_landed_cost_1.value_svl, 0)
@@ -100,14 +97,18 @@ class TestStockLandedCosts(TestStockLandedCostsCommon):
 
         # I create a landed cost for those 2 pickings
         default_vals = self.env['stock.landed.cost'].default_get(list(self.env['stock.landed.cost'].fields_get()))
+        virtual_home_staging = self.env['product.product'].create({
+            'name': 'Virtual Home Staging',
+            'categ_id': self.stock_account_product_categ.id,
+        })
         default_vals.update({
             'picking_ids': [picking_landed_cost_1.id, picking_landed_cost_2.id],
-            'account_journal_id': self.ref('stock_landed_costs.expenses_journal'),
+            'account_journal_id': self.expenses_journal,
             'cost_lines': [
-                (0, 0, {'product_id': self.ref('product.product_product_2')}),
-                (0, 0, {'product_id': self.ref('product.product_product_2')}),
-                (0, 0, {'product_id': self.ref('product.product_product_2')}),
-                (0, 0, {'product_id': self.ref('product.product_product_2')})],
+                (0, 0, {'product_id': virtual_home_staging.id}),
+                (0, 0, {'product_id': virtual_home_staging.id}),
+                (0, 0, {'product_id': virtual_home_staging.id}),
+                (0, 0, {'product_id': virtual_home_staging.id})],
             'valuation_adjustment_lines': [],
         })
         cost_lines_values = {
@@ -158,5 +159,61 @@ class TestStockLandedCosts(TestStockLandedCostsCommon):
         product_value = abs(product_landed_cost_1.value_svl) + abs(product_landed_cost_2.value_svl)
         self.assertEqual(lc_value, product_value)
 
-        self.assertEqual(len(picking_landed_cost_1.move_lines.stock_valuation_layer_ids), 5)
-        self.assertEqual(len(picking_landed_cost_2.move_lines.stock_valuation_layer_ids), 5)
+        self.assertEqual(len(picking_landed_cost_1.move_ids.stock_valuation_layer_ids), 5)
+        self.assertEqual(len(picking_landed_cost_2.move_ids.stock_valuation_layer_ids), 5)
+
+    def test_aml_account_selection(self):
+        """
+        Process a PO with a landed cost, then create and post the bill. The
+        account of the landed cost AML should be:
+        - Expense if the categ valuation is manual
+        - Stock IN if the categ valuation is real time
+        """
+        self.landed_cost.landed_cost_ok = True
+
+        for valuation in ['manual_periodic', 'real_time']:
+            self.landed_cost.categ_id.property_valuation = valuation
+            account_name = 'stock_input' if valuation == 'real_time' else 'expense'
+            account = self.landed_cost.product_tmpl_id.get_product_accounts()[account_name]
+            po = self.env['purchase.order'].create({
+                'partner_id': self.partner_a.id,
+                'currency_id': self.company_data['currency'].id,
+                'order_line': [
+                    (0, 0, {
+                        'name': self.product_a.name,
+                        'product_id': self.product_a.id,
+                        'product_qty': 1.0,
+                        'product_uom': self.product_a.uom_po_id.id,
+                        'price_unit': 100.0,
+                        'taxes_id': False,
+                    }),
+                    (0, 0, {
+                        'name': self.landed_cost.name,
+                        'product_id': self.landed_cost.id,
+                        'product_qty': 1.0,
+                        'price_unit': 100.0,
+                    }),
+                ],
+            })
+            po.button_confirm()
+
+            receipt = po.picking_ids
+            receipt.move_ids.quantity = 1
+            receipt.button_validate()
+            po.order_line[1].qty_received = 1
+
+            po.action_create_invoice()
+            bill = po.invoice_ids
+            bill.invoice_date = fields.Date.today()
+
+            self.env['account.move.line'].create({
+                'move_id': bill.id,
+                'display_type': 'line_section',
+                'name': 'Great Section',
+            })
+
+            bill._post()
+
+            landed_cost_aml = bill.invoice_line_ids.filtered(lambda l: l.product_id == self.landed_cost)
+            self.assertEqual(bill.state, 'posted', 'Incorrect value with valuation %s' % valuation)
+            self.assertEqual(landed_cost_aml.account_id, account, 'Incorrect value with valuation %s' % valuation)

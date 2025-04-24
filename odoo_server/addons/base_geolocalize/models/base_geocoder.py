@@ -14,7 +14,7 @@ class GeoProvider(models.Model):
     _name = "base.geo_provider"
     _description = "Geo Provider"
 
-    tech_name = fields.Char()
+    tech_name = fields.Char(string="Technical Name")
     name = fields.Char()
 
 
@@ -67,8 +67,8 @@ class GeoCoder(models.AbstractModel):
             result = service(addr, **kw)
         except AttributeError:
             raise UserError(_(
-                'Provider %s is not implemented for geolocation service.'
-            ) % provider)
+                'Provider %s is not implemented for geolocation service.',
+                provider))
         except UserError:
             raise
         except Exception:
@@ -87,8 +87,12 @@ class GeoCoder(models.AbstractModel):
             return None
         url = 'https://nominatim.openstreetmap.org/search'
         try:
-            result = requests.get(url, {'format': 'json', 'q': addr}).json()
+            headers = {'User-Agent': 'Odoo (http://www.odoo.com/contactus)'}
+            response = requests.get(url, headers=headers, params={'format': 'json', 'q': addr})
             _logger.info('openstreetmap nominatim service called')
+            if response.status_code != 200:
+                _logger.warning('Request to openstreetmap failed.\nCode: %s\nContent: %s', response.status_code, response.content)
+            result = response.json()
         except Exception as e:
             self._raise_query_error(e)
         geo = result[0]
@@ -124,7 +128,7 @@ class GeoCoder(models.AbstractModel):
                               '\n\nGoogle made this a paid feature.\n'
                               'You should first enable billing on your Google account.\n'
                               'Then, go to Developer Console, and enable the APIs:\n'
-                              'Geocoding, Maps Static, Maps Javascript.\n') % result.get('error_message')
+                              'Geocoding, Maps Static, Maps Javascript.\n', result.get('error_message'))
                 raise UserError(error_msg)
             geo = result['results'][0]['geometry']['location']
             return float(geo['lat']), float(geo['lng'])
@@ -140,8 +144,7 @@ class GeoCoder(models.AbstractModel):
             state,
             country
         ]
-        address_list = [item for item in address_list if item]
-        return tools.ustr(', '.join(address_list))
+        return ', '.join(filter(None, address_list))
 
     @api.model
     def _geo_query_address_googlemap(self, street=None, zip=None, city=None, state=None, country=None):
@@ -153,4 +156,4 @@ class GeoCoder(models.AbstractModel):
         return self._geo_query_address_default(street=street, zip=zip, city=city, state=state, country=country)
 
     def _raise_query_error(self, error):
-        raise UserError(_('Error with geolocation server:') + ' %s' % error)
+        raise UserError(_('Error with geolocation server: %s', error))

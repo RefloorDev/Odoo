@@ -13,26 +13,26 @@ class ImLivechatReportChannel(models.Model):
     _auto = False
 
     uuid = fields.Char('UUID', readonly=True)
-    channel_id = fields.Many2one('mail.channel', 'Conversation', readonly=True)
+    channel_id = fields.Many2one('discuss.channel', 'Conversation', readonly=True)
     channel_name = fields.Char('Channel Name', readonly=True)
     technical_name = fields.Char('Code', readonly=True)
     livechat_channel_id = fields.Many2one('im_livechat.channel', 'Channel', readonly=True)
-    start_date = fields.Datetime('Start Date of session', readonly=True, help="Start date of the conversation")
-    start_hour = fields.Char('Start Hour of session', readonly=True, help="Start hour of the conversation")
-    day_number = fields.Char('Day Number', readonly=True, help="Day number of the session (1 is Monday, 7 is Sunday)")
-    time_to_answer = fields.Float('Time to answer (sec)', digits=(16, 2), readonly=True, group_operator="avg", help="Average time in seconds to give the first answer to the visitor")
+    start_date = fields.Datetime('Start Date of session', readonly=True)
+    start_hour = fields.Char('Start Hour of session', readonly=True)
+    day_number = fields.Char('Day Number', readonly=True, help="1 is Monday, 7 is Sunday")
+    time_to_answer = fields.Float('Time to answer (sec)', digits=(16, 2), readonly=True, aggregator="avg", help="Average time in seconds to give the first answer to the visitor")
     start_date_hour = fields.Char('Hour of start Date of session', readonly=True)
-    duration = fields.Float('Average duration', digits=(16, 2), readonly=True, group_operator="avg", help="Duration of the conversation (in seconds)")
-    nbr_speaker = fields.Integer('# of speakers', readonly=True, group_operator="avg", help="Number of different speakers")
-    nbr_message = fields.Integer('Average message', readonly=True, group_operator="avg", help="Number of message in the conversation")
-    is_without_answer = fields.Integer('Session(s) without answer', readonly=True, group_operator="sum",
+    duration = fields.Float('Average duration', digits=(16, 2), readonly=True, aggregator="avg", help="Duration of the conversation (in seconds)")
+    nbr_speaker = fields.Integer('# of speakers', readonly=True, aggregator="avg", help="Number of different speakers")
+    nbr_message = fields.Integer('Average message', readonly=True, aggregator="avg", help="Number of message in the conversation")
+    is_without_answer = fields.Integer('Session(s) without answer', readonly=True, aggregator="sum",
                                        help="""A session is without answer if the operator did not answer. 
                                        If the visitor is also the operator, the session will always be answered.""")
-    days_of_activity = fields.Integer('Days of activity', group_operator="max", readonly=True, help="Number of days since the first session of the operator")
+    days_of_activity = fields.Integer('Days of activity', aggregator="max", readonly=True, help="Number of days since the first session of the operator")
     is_anonymous = fields.Integer('Is visitor anonymous', readonly=True)
     country_id = fields.Many2one('res.country', 'Country of the visitor', readonly=True)
     is_happy = fields.Integer('Visitor is Happy', readonly=True)
-    rating = fields.Integer('Rating', group_operator="avg", readonly=True)
+    rating = fields.Integer('Rating', aggregator="avg", readonly=True)
     # TODO DBE : Use Selection field - Need : Pie chart must show labels, not keys.
     rating_text = fields.Char('Satisfaction Rate', readonly=True)
     is_unrated = fields.Integer('Session not rated', readonly=True)
@@ -59,9 +59,11 @@ class ImLivechatReportChannel(models.Model):
                     count(distinct C.livechat_operator_id) as nbr_speaker,
                     count(distinct M.id) as nbr_message,
                     CASE 
-                        WHEN EXISTS (select distinct M.author_id FROM mail_message M, mail_message_mail_channel_rel R 
-                                        WHERE M.author_id=C.livechat_operator_id AND R.mail_channel_id = C.id 
-                                        AND R.mail_message_id = M.id and C.livechat_operator_id = M.author_id)
+                        WHEN EXISTS (select distinct M.author_id FROM mail_message M
+                                        WHERE M.author_id=C.livechat_operator_id
+                                        AND M.res_id = C.id
+                                        AND M.model = 'discuss.channel'
+                                        AND C.livechat_operator_id = M.author_id)
                         THEN 0
                         ELSE 1
                     END as is_without_answer,
@@ -72,14 +74,14 @@ class ImLivechatReportChannel(models.Model):
                     END as is_anonymous,
                     C.country_id,
                     CASE 
-                        WHEN rate.rating = 10 THEN 1
+                        WHEN rate.rating = 5 THEN 1
                         ELSE 0
                     END as is_happy,
                     Rate.rating as rating,
                     CASE
                         WHEN Rate.rating = 1 THEN 'Unhappy'
-                        WHEN Rate.rating = 10 THEN 'Happy'
-                        WHEN Rate.rating = 5 THEN 'Neutral'
+                        WHEN Rate.rating = 5 THEN 'Happy'
+                        WHEN Rate.rating = 3 THEN 'Neutral'
                         ELSE null
                     END as rating_text,
                     CASE 
@@ -87,12 +89,11 @@ class ImLivechatReportChannel(models.Model):
                         ELSE 1
                     END as is_unrated,
                     C.livechat_operator_id as partner_id
-                FROM mail_channel C
-                    JOIN mail_message_mail_channel_rel R ON (C.id = R.mail_channel_id)
-                    JOIN mail_message M ON (M.id = R.mail_message_id)
+                FROM discuss_channel C
+                    JOIN mail_message M ON (M.res_id = C.id AND M.model = 'discuss.channel')
                     JOIN im_livechat_channel L ON (L.id = C.livechat_channel_id)
-                    LEFT JOIN mail_message MO ON (R.mail_message_id = MO.id AND MO.author_id = C.livechat_operator_id)
-                    LEFT JOIN rating_rating Rate ON (Rate.res_id = C.id and Rate.res_model = 'mail.channel' and Rate.parent_res_model = 'im_livechat.channel')
+                    LEFT JOIN mail_message MO ON (MO.res_id = C.id AND MO.model = 'discuss.channel' AND MO.author_id = C.livechat_operator_id)
+                    LEFT JOIN rating_rating Rate ON (Rate.res_id = C.id and Rate.res_model = 'discuss.channel' and Rate.parent_res_model = 'im_livechat.channel')
                     WHERE C.livechat_operator_id is not null
                 GROUP BY C.livechat_operator_id, C.id, C.name, C.livechat_channel_id, L.name, C.create_date, C.uuid, Rate.rating
             )

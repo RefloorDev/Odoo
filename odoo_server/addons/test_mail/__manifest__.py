@@ -7,19 +7,27 @@
     'sequence': 9876,
     'summary': 'Mail Tests: performances and tests specific to mail',
     'description': """This module contains tests related to mail. Those are
-contained in a separate module as it contains models used only to perform
+present in a separate module as it contains models used only to perform
 tests independently to functional aspects of other models. """,
-    'depends': ['test_performance', 'mail', 'mail_bot'],
+    'depends': [
+        'mail',
+        'test_performance',
+    ],
     'data': [
         'security/ir.model.access.csv',
         'security/test_mail_security.xml',
         'data/data.xml',
+        'data/mail_template_data.xml',
+        'data/subtype_data.xml',
     ],
-    'demo': [
-        'data/demo.xml',
-        'data/subtype_demo.xml',
-        'data/template_demo.xml',
-    ],
+    'assets': {
+        'web.assets_unit_tests': [
+            'test_mail/static/tests/**/*',
+        ],
+        'web.assets_tests': [
+            'test_mail/static/tests/tours/*',
+        ],
+    },
     'installable': True,
-    'application': False,
+    'license': 'LGPL-3',
 }

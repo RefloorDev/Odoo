@@ -1,34 +1,53 @@
-# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
 #----------------------------------------------------------
 # ir_http modular http routing
 #----------------------------------------------------------
-import base64
 import hashlib
+import json
 import logging
-import mimetypes
 import os
 import re
-import sys
-import traceback
+import threading
+import unicodedata
 
 import werkzeug
 import werkzeug.exceptions
 import werkzeug.routing
-import werkzeug.urls
 import werkzeug.utils
+
+try:
+    from werkzeug.routing import NumberConverter
+except ImportError:
+    from werkzeug.routing.converters import NumberConverter  # moved in werkzeug 2.2.2
+
+# optional python-slugify import (https://github.com/un33k/python-slugify)
+try:
+    import slugify as slugify_lib
+except ImportError:
+    slugify_lib = None
 
 import odoo
 from odoo import api, http, models, tools, SUPERUSER_ID
-from odoo.exceptions import AccessDenied, AccessError
-from odoo.http import request, content_disposition
-from odoo.tools import consteq, pycompat
-from odoo.tools.mimetypes import guess_mimetype
-from odoo.modules.module import get_resource_path, get_module_path
-
-from odoo.http import ALLOWED_DEBUG_MODES
-from odoo.tools.misc import str2bool
+from odoo.exceptions import AccessDenied
+from odoo.http import request, Response, ROUTING_KEYS
+from odoo.modules.registry import Registry
+from odoo.service import security
+from odoo.tools.json import json_default
+from odoo.tools.misc import get_lang, submap
+from odoo.tools.translate import code_translations
 
 _logger = logging.getLogger(__name__)
+
+# see also mimetypes module: https://docs.python.org/3/library/mimetypes.html and odoo.tools.mimetypes
+EXTENSION_TO_WEB_MIMETYPES = {
+    '.css': 'text/css',
+    '.less': 'text/less',
+    '.scss': 'text/scss',
+    '.js': 'text/javascript',
+    '.xml': 'text/xml',
+    '.csv': 'text/csv',
+    '.html': 'text/html',
+}
 
 
 class RequestUID(object):
@@ -37,434 +56,381 @@ class RequestUID(object):
 
 
 class ModelConverter(werkzeug.routing.BaseConverter):
+    regex = r'[0-9]+'
 
     def __init__(self, url_map, model=False):
-        super(ModelConverter, self).__init__(url_map)
+        super().__init__(url_map)
         self.model = model
-        self.regex = r'([0-9]+)'
 
-    def to_python(self, value):
+        IrHttp = Registry(threading.current_thread().dbname)['ir.http']
+        self.slug = IrHttp._slug
+        self.unslug = IrHttp._unslug
+
+    def to_python(self, value: str) -> models.BaseModel:
         _uid = RequestUID(value=value, converter=self)
         env = api.Environment(request.cr, _uid, request.context)
-        return env[self.model].browse(int(value))
+        return env[self.model].browse(self.unslug(value)[1])
 
-    def to_url(self, value):
-        return value.id
+    def to_url(self, value: models.BaseModel) -> str:
+        return self.slug(value)
 
 
 class ModelsConverter(werkzeug.routing.BaseConverter):
+    regex = r'[0-9,]+'
 
     def __init__(self, url_map, model=False):
-        super(ModelsConverter, self).__init__(url_map)
+        super().__init__(url_map)
         self.model = model
-        # TODO add support for slug in the form [A-Za-z0-9-] bla-bla-89 -> id 89
-        self.regex = r'([0-9,]+)'
 
-    def to_python(self, value):
+    def to_python(self, value: str) -> models.BaseModel:
         _uid = RequestUID(value=value, converter=self)
         env = api.Environment(request.cr, _uid, request.context)
         return env[self.model].browse(int(v) for v in value.split(','))
 
-    def to_url(self, value):
+    def to_url(self, value: models.BaseModel) -> str:
         return ",".join(value.ids)
 
 
-class SignedIntConverter(werkzeug.routing.NumberConverter):
+class SignedIntConverter(NumberConverter):
     regex = r'-?\d+'
     num_convert = int
+
+
+class LazyCompiledBuilder:
+    def __init__(self, rule, _compile_builder, append_unknown):
+        self.rule = rule
+        self._callable = None
+        self._compile_builder = _compile_builder
+        self._append_unknown = append_unknown
+
+    def __get__(self, *args):
+        # Rule.compile will actually call
+        #
+        #   self._build = self._compile_builder(False).__get__(self, None)
+        #   self._build_unknown = self._compile_builder(True).__get__(self, None)
+        #
+        # meaning the _build and _build unkown will contain _compile_builder().__get__(self, None).
+        # This is why this override of __get__ is needed.
+        return self
+
+    def __call__(self, *args, **kwargs):
+        if self._callable is None:
+            self._callable = self._compile_builder(self._append_unknown).__get__(self.rule, None)
+            del self.rule
+            del self._compile_builder
+            del self._append_unknown
+        return self._callable(*args, **kwargs)
+
+
+class FasterRule(werkzeug.routing.Rule):
+    """
+    _compile_builder is a major part of the routing map generation and rules
+    are actually not build so often.
+    This classe makes calls to _compile_builder lazy
+    """
+    def _compile_builder(self, append_unknown=True):
+        return LazyCompiledBuilder(self, super()._compile_builder, append_unknown)
 
 
 class IrHttp(models.AbstractModel):
     _name = 'ir.http'
     _description = "HTTP Routing"
 
+    @classmethod
+    def _slugify_one(cls, value: str, max_length: int = 0) -> str:
+        """ Transform a string to a slug that can be used in a url path.
+            This method will first try to do the job with python-slugify if present.
+            Otherwise it will process string by stripping leading and ending spaces,
+            converting unicode chars to ascii, lowering all chars and replacing spaces
+            and underscore with hyphen "-".
+        """
+        if slugify_lib:
+            # There are 2 different libraries only python-slugify is supported
+            try:
+                return slugify_lib.slugify(value, max_length=max_length)
+            except TypeError:
+                pass
+        uni = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+        slug_str = re.sub(r'[\W_]+', '-', uni).strip('-').lower()
+        return slug_str[:max_length] if max_length > 0 else slug_str
+
+    @classmethod
+    def _slugify(cls, value: str, max_length: int = 0, path: bool = False) -> str:
+        if not path:
+            return cls._slugify_one(value, max_length=max_length)
+        else:
+            res = []
+            for u in value.split('/'):
+                s = cls._slugify_one(u, max_length=max_length)
+                if s:
+                    res.append(s)
+            # check if supported extension
+            path_no_ext, ext = os.path.splitext(value)
+            if ext in EXTENSION_TO_WEB_MIMETYPES:
+                res[-1] = cls._slugify_one(path_no_ext) + ext
+            return '/'.join(res)
+
+    @classmethod
+    def _slug(cls, value: models.BaseModel | tuple[int, str]) -> str:
+        if isinstance(value, tuple):
+            return str(value[0])
+        return str(value.id)
+
+    @classmethod
+    def _unslug(cls, value: str) -> tuple[str | None, int] | tuple[None, None]:
+        try:
+            return None, int(value)
+        except ValueError:
+            return None, None
+
     #------------------------------------------------------
     # Routing map
     #------------------------------------------------------
 
     @classmethod
-    def _get_converters(cls):
+    def _get_converters(cls) -> dict[str, type]:
         return {'model': ModelConverter, 'models': ModelsConverter, 'int': SignedIntConverter}
 
     @classmethod
-    def _match(cls, path_info, key=None):
-        return cls.routing_map().bind_to_environ(request.httprequest.environ).match(path_info=path_info, return_rule=True)
+    def _match(cls, path_info):
+        rule, args = request.env['ir.http'].routing_map().bind_to_environ(request.httprequest.environ).match(path_info=path_info, return_rule=True)
+        return rule, args
+
+    @classmethod
+    def _get_public_users(cls):
+        return [request.env['ir.model.data']._xmlid_to_res_model_res_id('base.public_user')[1]]
+
+    @classmethod
+    def _auth_method_bearer(cls):
+        headers = request.httprequest.headers
+
+        def get_http_authorization_bearer_token():
+            # werkzeug<2.3 doesn't expose `authorization.token` (for bearer authentication)
+            # check header directly
+            header = headers.get("Authorization")
+            if header and (m := re.match(r"^bearer\s+(.+)$", header, re.IGNORECASE)):
+                return m.group(1)
+            return None
+
+        def check_sec_headers():
+            """Protection against CSRF attacks.
+            Modern browsers automatically add Sec- headers that we can check to protect against CSRF.
+            https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-Fetch-User
+            """
+            return (
+                headers.get("Sec-Fetch-Dest") == "document"
+                and headers.get("Sec-Fetch-Mode") == "navigate"
+                and headers.get("Sec-Fetch-Site") in ('none', 'same-origin')
+                and headers.get("Sec-Fetch-User") == "?1"
+            )
+
+        if token := get_http_authorization_bearer_token():
+            # 'rpc' scope does not really exist, we basically require a global key (scope NULL)
+            uid = request.env['res.users.apikeys']._check_credentials(scope='rpc', key=token)
+            if not uid:
+                raise werkzeug.exceptions.Unauthorized(
+                    "Invalid apikey",
+                    www_authenticate=werkzeug.datastructures.WWWAuthenticate('bearer'))
+            if request.env.uid and request.env.uid != uid:
+                raise AccessDenied("Session user does not match the used apikey")
+            request.update_env(user=uid)
+        elif not request.env.uid:
+            raise werkzeug.exceptions.Unauthorized(
+                'User not authenticated, use the "Authorization" header',
+                www_authenticate=werkzeug.datastructures.WWWAuthenticate('bearer'))
+        elif not check_sec_headers():
+            raise AccessDenied("Missing \"Authorization\" or Sec-headers for interactive usage")
+        cls._auth_method_user()
 
     @classmethod
     def _auth_method_user(cls):
-        request.uid = request.session.uid
-        if not request.uid:
+        if request.env.uid in [None] + cls._get_public_users():
             raise http.SessionExpiredException("Session expired")
 
     @classmethod
     def _auth_method_none(cls):
-        request.uid = None
+        request.env = api.Environment(request.env.cr, None, request.env.context)
 
     @classmethod
     def _auth_method_public(cls):
-        if not request.session.uid:
-            request.uid = request.env.ref('base.public_user').id
-        else:
-            request.uid = request.session.uid
+        if request.env.uid is None:
+            public_user = request.env.ref('base.public_user')
+            request.update_env(user=public_user.id)
 
     @classmethod
-    def _authenticate(cls, auth_method='user'):
+    def _authenticate(cls, endpoint):
+        auth = 'none' if http.is_cors_preflight(request, endpoint) else endpoint.routing['auth']
+        cls._authenticate_explicit(auth)
+
+    @classmethod
+    def _authenticate_explicit(cls, auth):
         try:
-            if request.session.uid:
-                try:
-                    request.session.check_security()
-                    # what if error in security.check()
-                    #   -> res_users.check()
-                    #   -> res_users._check_credentials()
-                except (AccessDenied, http.SessionExpiredException):
-                    # All other exceptions mean undetermined status (e.g. connection pool full),
-                    # let them bubble up
+            if request.session.uid is not None:
+                if not security.check_session(request.session, request.env, request):
                     request.session.logout(keep_db=True)
-            if request.uid is None:
-                getattr(cls, "_auth_method_%s" % auth_method)()
+                    request.env = api.Environment(request.env.cr, None, request.session.context)
+            getattr(cls, f'_auth_method_{auth}')()
         except (AccessDenied, http.SessionExpiredException, werkzeug.exceptions.HTTPException):
             raise
         except Exception:
             _logger.info("Exception during request Authentication.", exc_info=True)
             raise AccessDenied()
-        return auth_method
 
     @classmethod
-    def _handle_debug(cls):
-        # Store URL debug mode (might be empty) into session
-        if 'debug' in request.httprequest.args:
-            debug_mode = []
-            for debug in request.httprequest.args['debug'].split(','):
-                if debug not in ALLOWED_DEBUG_MODES:
-                    debug = '1' if str2bool(debug, debug) else ''
-                debug_mode.append(debug)
-            debug_mode = ','.join(debug_mode)
-
-            # Write on session only when needed
-            if debug_mode != request.session.debug:
-                request.session.debug = debug_mode
+    def _geoip_resolve(cls):
+        return request._geoip_resolve()
 
     @classmethod
-    def _serve_attachment(cls):
-        env = api.Environment(request.cr, SUPERUSER_ID, request.context)
-        attach = env['ir.attachment'].get_serve_attachment(request.httprequest.path, extra_fields=['name', 'checksum'])
-        if attach:
-            wdate = attach[0]['__last_update']
-            datas = attach[0]['datas'] or b''
-            name = attach[0]['name']
-            checksum = attach[0]['checksum'] or hashlib.sha1(datas).hexdigest()
-
-            if (not datas and name != request.httprequest.path and
-                    name.startswith(('http://', 'https://', '/'))):
-                return werkzeug.utils.redirect(name, 301)
-
-            response = werkzeug.wrappers.Response()
-            response.last_modified = wdate
-
-            response.set_etag(checksum)
-            response.make_conditional(request.httprequest)
-
-            if response.status_code == 304:
-                return response
-
-            response.mimetype = attach[0]['mimetype'] or 'application/octet-stream'
-            response.data = base64.b64decode(datas)
-            return response
+    def _sanitize_cookies(cls, cookies):
+        pass
 
     @classmethod
-    def _serve_fallback(cls, exception):
-        # serve attachment
-        attach = cls._serve_attachment()
-        if attach:
-            return attach
-        return False
+    def _pre_dispatch(cls, rule, args):
+        ICP = request.env['ir.config_parameter'].with_user(SUPERUSER_ID)
 
-    @classmethod
-    def _handle_exception(cls, exception):
-        # in case of Exception, e.g. 404, we don't step into _dispatch
-        cls._handle_debug()
-
-        # If handle_exception returns something different than None, it will be used as a response
-
-        # This is done first as the attachment path may
-        # not match any HTTP controller
-        if isinstance(exception, werkzeug.exceptions.HTTPException) and exception.code == 404:
-            serve = cls._serve_fallback(exception)
-            if serve:
-                return serve
-
-        # Don't handle exception but use werkzeug debugger if server in --dev mode
-        if 'werkzeug' in tools.config['dev_mode'] and not isinstance(exception, werkzeug.exceptions.NotFound):
-            raise exception
-
+        # Change the default database-wide 128MiB upload limit on the
+        # ICP value. Do it before calling http's generic pre_dispatch
+        # so that the per-route limit @route(..., max_content_length=x)
+        # takes over.
         try:
-            return request._handle_exception(exception)
-        except AccessDenied:
-            return werkzeug.exceptions.Forbidden()
+            key = 'web.max_file_upload_size'
+            if (value := ICP.get_param(key, None)) is not None:
+                request.httprequest.max_content_length = int(value)
+        except ValueError:  # better not crash on ALL requests
+            _logger.error("invalid %s: %r, using %s instead",
+                key, value, request.httprequest.max_content_length,
+            )
+
+        request.dispatcher.pre_dispatch(rule, args)
+
+        # verify the default language set in the context is valid,
+        # otherwise fallback on the company lang, english or the first
+        # lang installed
+        env = request.env if request.env.uid else request.env['base'].with_user(SUPERUSER_ID).env
+        request.update_context(lang=get_lang(env).code)
+
+        for key, val in list(args.items()):
+            if not isinstance(val, models.BaseModel):
+                continue
+
+            # Replace uid and lang placeholder by the current request.env.uid and request.env.lang
+            args[key] = val.with_env(request.env)
+
+            try:
+                # explicitly crash now, instead of crashing later
+                args[key].check_access('read')
+            except (odoo.exceptions.AccessError, odoo.exceptions.MissingError) as e:
+                # custom behavior in case a record is not accessible / has been removed
+                if handle_error := rule.endpoint.routing.get('handle_params_access_error'):
+                    if response := handle_error(e):
+                        werkzeug.exceptions.abort(response)
+                if isinstance(e, odoo.exceptions.MissingError):
+                    raise werkzeug.exceptions.NotFound() from e
+                raise
 
     @classmethod
-    def _dispatch(cls):
-        cls._handle_debug()
-
-        # locate the controller method
-        try:
-            rule, arguments = cls._match(request.httprequest.path)
-            func = rule.endpoint
-        except werkzeug.exceptions.NotFound as e:
-            return cls._handle_exception(e)
-
-        # check authentication level
-        try:
-            auth_method = cls._authenticate(func.routing["auth"])
-        except Exception as e:
-            return cls._handle_exception(e)
-
-        processing = cls._postprocess_args(arguments, rule)
-        if processing:
-            return processing
-
-        # set and execute handler
-        try:
-            request.set_handler(func, arguments, auth_method)
-            result = request.dispatch()
-            if isinstance(result, Exception):
-                raise result
-        except Exception as e:
-            return cls._handle_exception(e)
-
+    def _dispatch(cls, endpoint):
+        result = endpoint(**request.params)
+        if isinstance(result, Response) and result.is_qweb:
+            result.flatten()
         return result
 
     @classmethod
-    def _postprocess_args(cls, arguments, rule):
-        """ post process arg to set uid on browse records """
-        for key, val in list(arguments.items()):
-            # Replace uid placeholder by the current request.uid
-            if isinstance(val, models.BaseModel) and isinstance(val._uid, RequestUID):
-                arguments[key] = val.with_user(request.uid)
-                if not val.exists():
-                    return cls._handle_exception(werkzeug.exceptions.NotFound())
+    def _post_dispatch(cls, response):
+        request.dispatcher.post_dispatch(response)
 
     @classmethod
-    def _generate_routing_rules(cls, modules, converters):
+    def _post_logout(cls):
+        pass
+
+    @classmethod
+    def _handle_error(cls, exception):
+        return request.dispatcher.handle_error(exception)
+
+    @classmethod
+    def _serve_fallback(cls):
+        model = request.env['ir.attachment']
+        attach = model.sudo()._get_serve_attachment(request.httprequest.path)
+        if attach and (attach.store_fname or attach.db_datas):
+            return attach._to_http_stream().get_response()
+
+    @classmethod
+    def _redirect(cls, location, code=303):
+        return werkzeug.utils.redirect(location, code=code, Response=Response)
+
+    def _generate_routing_rules(self, modules, converters):
         return http._generate_routing_rules(modules, False, converters)
 
-    @classmethod
-    def routing_map(cls, key=None):
-        if not hasattr(cls, '_routing_map'):
-            cls._routing_map = {}
-            cls._rewrite_len = {}
-        if key not in cls._routing_map:
-            _logger.info("Generating routing map for key %s" % str(key))
-            installed = request.registry._init_modules | set(odoo.conf.server_wide_modules)
-            if tools.config['test_enable'] and odoo.modules.module.current_test:
-                installed.add(odoo.modules.module.current_test)
-            mods = sorted(installed)
-            # Note : when routing map is generated, we put it on the class `cls`
-            # to make it available for all instance. Since `env` create an new instance
-            # of the model, each instance will regenared its own routing map and thus
-            # regenerate its EndPoint. The routing map should be static.
-            routing_map = werkzeug.routing.Map(strict_slashes=False, converters=cls._get_converters())
-            for url, endpoint, routing in cls._generate_routing_rules(mods, converters=cls._get_converters()):
-                xtra_keys = 'defaults subdomain build_only strict_slashes redirect_to alias host'.split()
-                kw = {k: routing[k] for k in xtra_keys if k in routing}
-                routing_map.add(werkzeug.routing.Rule(url, endpoint=endpoint, methods=routing['methods'], **kw))
-            cls._routing_map[key] = routing_map
-        return cls._routing_map[key]
+    @tools.ormcache('key', cache='routing')
+    def routing_map(self, key=None):
+        _logger.info("Generating routing map for key %s", str(key))
+        registry = Registry(threading.current_thread().dbname)
+        installed = registry._init_modules.union(odoo.conf.server_wide_modules)
+        mods = sorted(installed)
+        # Note : when routing map is generated, we put it on the class `cls`
+        # to make it available for all instance. Since `env` create an new instance
+        # of the model, each instance will regenared its own routing map and thus
+        # regenerate its EndPoint. The routing map should be static.
+        routing_map = werkzeug.routing.Map(strict_slashes=False, converters=self._get_converters())
+        for url, endpoint in self._generate_routing_rules(mods, converters=self._get_converters()):
+            routing = submap(endpoint.routing, ROUTING_KEYS)
+            if routing['methods'] is not None and 'OPTIONS' not in routing['methods']:
+                routing['methods'] = [*routing['methods'], 'OPTIONS']
+            rule = FasterRule(url, endpoint=endpoint, **routing)
+            rule.merge_slashes = False
+            routing_map.add(rule)
+        return routing_map
+
+    @api.autovacuum
+    def _gc_sessions(self):
+        if os.getenv("ODOO_SKIP_GC_SESSIONS"):
+            return
+        http.root.session_store.vacuum(max_lifetime=http.get_session_max_inactivity(self.env))
+
+    @api.model
+    def get_translations_for_webclient(self, modules, lang):
+        if not modules:
+            modules = self.pool._init_modules
+        if not lang:
+            lang = self._context.get("lang")
+        lang_data = self.env['res.lang']._get_data(code=lang)
+        lang_params = {
+            "name": lang_data.name,
+            "code": lang_data.code,
+            "direction": lang_data.direction,
+            "date_format": lang_data.date_format,
+            "time_format": lang_data.time_format,
+            "short_time_format": lang_data.short_time_format,
+            "grouping": lang_data.grouping,
+            "decimal_point": lang_data.decimal_point,
+            "thousands_sep": lang_data.thousands_sep,
+            "week_start": int(lang_data.week_start),
+        } if lang_data else None
+
+        # Regional languages (ll_CC) must inherit/override their parent lang (ll), but this is
+        # done server-side when the language is loaded, so we only need to load the user's lang.
+        translations_per_module = {}
+        for module in modules:
+            translations_per_module[module] = code_translations.get_web_translations(module, lang)
+
+        return translations_per_module, lang_params
+
+    @api.model
+    @tools.ormcache('frozenset(modules)', 'lang')
+    def get_web_translations_hash(self, modules, lang):
+        translations, lang_params = self.get_translations_for_webclient(modules, lang)
+        translation_cache = {
+            'lang_parameters': lang_params,
+            'modules': translations,
+            'lang': lang,
+            'multi_lang': len(self.env['res.lang'].sudo().get_installed()) > 1,
+        }
+        return hashlib.sha1(json.dumps(translation_cache, sort_keys=True, default=json_default).encode()).hexdigest()
 
     @classmethod
-    def _clear_routing_map(cls):
-        if hasattr(cls, '_routing_map'):
-            cls._routing_map = {}
-            _logger.debug("Clear routing map")
+    def _is_allowed_cookie(cls, cookie_type):
+        return True if cookie_type == 'required' else bool(request.env.user)
 
-    #------------------------------------------------------
-    # Binary server
-    #------------------------------------------------------
-
-    @classmethod
-    def _xmlid_to_obj(cls, env, xmlid):
-        return env.ref(xmlid, False)
-
-    def _get_record_and_check(self, xmlid=None, model=None, id=None, field='datas', access_token=None):
-        # get object and content
-        record = None
-        if xmlid:
-            record = self._xmlid_to_obj(self.env, xmlid)
-        elif id and model in self.env:
-            record = self.env[model].browse(int(id))
-
-        # obj exists
-        if not record or not record.exists() or field not in record:
-            return None, 404
-
-        if model == 'ir.attachment':
-            record_sudo = record.sudo()
-            if access_token and not consteq(record_sudo.access_token or '', access_token):
-                return None, 403
-            elif (access_token and consteq(record_sudo.access_token or '', access_token)):
-                record = record_sudo
-            elif record_sudo.public:
-                record = record_sudo
-            elif self.env.user.has_group('base.group_portal'):
-                # Check the read access on the record linked to the attachment
-                # eg: Allow to download an attachment on a task from /my/task/task_id
-                record.check('read')
-                record = record_sudo
-
-        # check read access
-        try:
-            # We have prefetched some fields of record, among which the field
-            # 'write_date' used by '__last_update' below. In order to check
-            # access on record, we have to invalidate its cache first.
-            record._cache.clear()
-            record['__last_update']
-        except AccessError:
-            return None, 403
-
-        return record, 200
-
-    @classmethod
-    def _binary_ir_attachment_redirect_content(cls, record, default_mimetype='application/octet-stream'):
-        # mainly used for theme images attachemnts
-        status = content = filename = filehash = None
-        mimetype = getattr(record, 'mimetype', False)
-        if record.type == 'url' and record.url:
-            # if url in in the form /somehint server locally
-            url_match = re.match("^/(\w+)/(.+)$", record.url)
-            if url_match:
-                module = url_match.group(1)
-                module_path = get_module_path(module)
-                module_resource_path = get_resource_path(module, url_match.group(2))
-
-                if module_path and module_resource_path:
-                    module_path = os.path.join(os.path.normpath(module_path), '')  # join ensures the path ends with '/'
-                    module_resource_path = os.path.normpath(module_resource_path)
-                    if module_resource_path.startswith(module_path):
-                        with open(module_resource_path, 'rb') as f:
-                            content = base64.b64encode(f.read())
-                        status = 200
-                        filename = os.path.basename(module_resource_path)
-                        mimetype = guess_mimetype(base64.b64decode(content), default=default_mimetype)
-                        filehash = '"%s"' % hashlib.md5(pycompat.to_text(content).encode('utf-8')).hexdigest()
-
-            if not content:
-                status = 301
-                content = record.url
-
-        return status, content, filename, mimetype, filehash
-
-    def _binary_record_content(
-            self, record, field='datas', filename=None,
-            filename_field='name', default_mimetype='application/octet-stream'):
-
-        model = record._name
-        mimetype = 'mimetype' in record and record.mimetype or False
-        content = None
-        filehash = 'checksum' in record and record['checksum'] or False
-
-        field_def = record._fields[field]
-        if field_def.type == 'binary' and field_def.attachment:
-            field_attachment = self.env['ir.attachment'].sudo().search_read(domain=[('res_model', '=', model), ('res_id', '=', record.id), ('res_field', '=', field)], fields=['datas', 'mimetype', 'checksum'], limit=1)
-            if field_attachment:
-                mimetype = field_attachment[0]['mimetype']
-                content = field_attachment[0]['datas']
-                filehash = field_attachment[0]['checksum']
-
-        if not content:
-            content = record[field] or ''
-
-        # filename
-        default_filename = False
-        if not filename:
-            if filename_field in record:
-                filename = record[filename_field]
-            if not filename:
-                default_filename = True
-                filename = "%s-%s-%s" % (record._name, record.id, field)
-
-        if not mimetype:
-            try:
-                decoded_content = base64.b64decode(content)
-            except base64.binascii.Error:  # if we could not decode it, no need to pass it down: it would crash elsewhere...
-                return (404, [], None)
-            mimetype = guess_mimetype(decoded_content, default=default_mimetype)
-
-        # extension
-        _, existing_extension = os.path.splitext(filename)
-        if not existing_extension or default_filename:
-            extension = mimetypes.guess_extension(mimetype)
-            if extension:
-                filename = "%s%s" % (filename, extension)
-
-        if not filehash:
-            filehash = '"%s"' % hashlib.md5(pycompat.to_text(content).encode('utf-8')).hexdigest()
-
-        status = 200 if content else 404
-        return status, content, filename, mimetype, filehash
-
-    def _binary_set_headers(self, status, content, filename, mimetype, unique, filehash=None, download=False):
-        headers = [('Content-Type', mimetype), ('X-Content-Type-Options', 'nosniff')]
-        # cache
-        etag = bool(request) and request.httprequest.headers.get('If-None-Match')
-        status = status or 200
-        if filehash:
-            headers.append(('ETag', filehash))
-            if etag == filehash and status == 200:
-                status = 304
-        headers.append(('Cache-Control', 'max-age=%s' % (http.STATIC_CACHE_LONG if unique else 0)))
-        # content-disposition default name
-        if download:
-            headers.append(('Content-Disposition', content_disposition(filename)))
-
-        return (status, headers, content)
-
-    def binary_content(self, xmlid=None, model='ir.attachment', id=None, field='datas',
-                       unique=False, filename=None, filename_field='name', download=False,
-                       mimetype=None, default_mimetype='application/octet-stream',
-                       access_token=None):
-        """ Get file, attachment or downloadable content
-
-        If the ``xmlid`` and ``id`` parameter is omitted, fetches the default value for the
-        binary field (via ``default_get``), otherwise fetches the field for
-        that precise record.
-
-        :param str xmlid: xmlid of the record
-        :param str model: name of the model to fetch the binary from
-        :param int id: id of the record from which to fetch the binary
-        :param str field: binary field
-        :param bool unique: add a max-age for the cache control
-        :param str filename: choose a filename
-        :param str filename_field: if not create an filename with model-id-field
-        :param bool download: apply headers to download the file
-        :param str mimetype: mintype of the field (for headers)
-        :param str default_mimetype: default mintype if no mintype found
-        :param str access_token: optional token for unauthenticated access
-                                 only available  for ir.attachment
-        :returns: (status, headers, content)
-        """
-        record, status = self._get_record_and_check(xmlid=xmlid, model=model, id=id, field=field, access_token=access_token)
-
-        if not record:
-            return (status or 404, [], None)
-
-        content, headers, status = None, [], None
-
-        if record._name == 'ir.attachment':
-            status, content, filename, mimetype, filehash = self._binary_ir_attachment_redirect_content(record, default_mimetype=default_mimetype)
-        if not content:
-            status, content, filename, mimetype, filehash = self._binary_record_content(
-                record, field=field, filename=filename, filename_field=filename_field,
-                default_mimetype='application/octet-stream')
-
-        status, headers, content = self._binary_set_headers(
-            status, content, filename, mimetype, unique, filehash=filehash, download=download)
-
-        return status, headers, content
-
-    def _response_by_status(self, status, headers, content):
-        if status == 304:
-            return werkzeug.wrappers.Response(status=status, headers=headers)
-        elif status == 301:
-            return werkzeug.utils.redirect(content, code=301)
-        elif status != 200:
-            return request.not_found()
+    @api.model
+    def _verify_request_recaptcha_token(self, action):
+        return True

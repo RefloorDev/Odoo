@@ -1,13 +1,10 @@
-# -*- coding: utf-8 -*-
-
 import re
 
-import collections
+from collections.abc import Iterable
 
-from odoo import api, fields, models, _
-from odoo.osv import expression
+from odoo import api, fields, models
+from odoo.tools import _, SQL
 
-import werkzeug.urls
 
 def sanitize_account_number(acc_number):
     if acc_number:
@@ -19,6 +16,7 @@ class Bank(models.Model):
     _description = 'Bank'
     _name = 'res.bank'
     _order = 'name'
+    _rec_names_search = ['name', 'bic']
 
     name = fields.Char(required=True)
     street = fields.Char()
@@ -27,34 +25,32 @@ class Bank(models.Model):
     city = fields.Char()
     state = fields.Many2one('res.country.state', 'Fed. State', domain="[('country_id', '=?', country)]")
     country = fields.Many2one('res.country')
+    country_code = fields.Char(related='country.code', string='Country Code')
     email = fields.Char()
     phone = fields.Char()
     active = fields.Boolean(default=True)
     bic = fields.Char('Bank Identifier Code', index=True, help="Sometimes called BIC or Swift.")
 
-    def name_get(self):
-        result = []
+    @api.depends('bic')
+    def _compute_display_name(self):
         for bank in self:
-            name = bank.name + (bank.bic and (' - ' + bank.bic) or '')
-            result.append((bank.id, name))
-        return result
+            name = (bank.name or '') + (bank.bic and (' - ' + bank.bic) or '')
+            bank.display_name = name
 
     @api.model
-    def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None):
-        args = args or []
-        domain = []
-        if name:
-            domain = ['|', ('bic', '=ilike', name + '%'), ('name', operator, name)]
-            if operator in expression.NEGATIVE_TERM_OPERATORS:
-                domain = ['&'] + domain
-        bank_ids = self._search(domain + args, limit=limit, access_rights_uid=name_get_uid)
-        return models.lazy_name_get(self.browse(bank_ids).with_user(name_get_uid))
-        
+    def _search_display_name(self, operator, value):
+        if operator in ('ilike', 'not ilike') and value:
+            domain = ['|', ('bic', '=ilike', value + '%'), ('name', 'ilike', value)]
+            if operator == 'not ilike':
+                domain = ['!', *domain]
+            return domain
+        return super()._search_display_name(operator, value)
+
     @api.onchange('country')
     def _onchange_country_id(self):
         if self.country and self.country != self.state.country_id:
             self.state = False
-            
+
     @api.onchange('state')
     def _onchange_state(self):
         if self.state.country_id:
@@ -75,22 +71,26 @@ class ResPartnerBank(models.Model):
     def _get_supported_account_types(self):
         return [('bank', _('Normal'))]
 
+    active = fields.Boolean(default=True)
     acc_type = fields.Selection(selection=lambda x: x.env['res.partner.bank'].get_supported_account_types(), compute='_compute_acc_type', string='Type', help='Bank account type: Normal or IBAN. Inferred from the bank account number.')
     acc_number = fields.Char('Account Number', required=True)
     sanitized_acc_number = fields.Char(compute='_compute_sanitized_acc_number', string='Sanitized Account Number', readonly=True, store=True)
-    acc_holder_name = fields.Char(string='Account Holder Name', help="Account holder name, in case it is different than the name of the Account Holder")
+    acc_holder_name = fields.Char(string='Account Holder Name', help="Account holder name, in case it is different than the name of the Account Holder", compute='_compute_account_holder_name', readonly=False, store=True)
     partner_id = fields.Many2one('res.partner', 'Account Holder', ondelete='cascade', index=True, domain=['|', ('is_company', '=', True), ('parent_id', '=', False)], required=True)
+    allow_out_payment = fields.Boolean('Send Money', help='This account can be used for outgoing payments', default=False, copy=False, readonly=False)
     bank_id = fields.Many2one('res.bank', string='Bank')
     bank_name = fields.Char(related='bank_id.name', readonly=False)
     bank_bic = fields.Char(related='bank_id.bic', readonly=False)
     sequence = fields.Integer(default=10)
     currency_id = fields.Many2one('res.currency', string='Currency')
-    company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.company, ondelete='cascade')
-    qr_code_valid = fields.Boolean(string="Has all required arguments", compute="_validate_qr_code_arguments")
+    company_id = fields.Many2one('res.company', 'Company', related='partner_id.company_id', store=True, readonly=True)
+    country_code = fields.Char(related='partner_id.country_code', string="Country Code")
 
-    _sql_constraints = [
-        ('unique_number', 'unique(sanitized_acc_number, company_id)', 'Account Number must be unique'),
-    ]
+    _sql_constraints = [(
+        'unique_number',
+        'unique(sanitized_acc_number, partner_id)',
+        'The combination Account Number/Partner must be unique.'
+    )]
 
     @api.depends('acc_number')
     def _compute_sanitized_acc_number(self):
@@ -102,41 +102,44 @@ class ResPartnerBank(models.Model):
         for bank in self:
             bank.acc_type = self.retrieve_acc_type(bank.acc_number)
 
+    @api.depends('partner_id')
+    def _compute_account_holder_name(self):
+        for bank in self:
+            bank.acc_holder_name = bank.partner_id.name
+
     @api.model
     def retrieve_acc_type(self, acc_number):
         """ To be overridden by subclasses in order to support other account_types.
         """
         return 'bank'
 
-    @api.model
-    def _search(self, args, offset=0, limit=None, order=None, count=False, access_rights_uid=None):
-        pos = 0
-        while pos < len(args):
-            # DLE P14
-            if args[pos][0] == 'acc_number':
-                op = args[pos][1]
-                value = args[pos][2]
-                if not isinstance(value, str) and isinstance(value, collections.Iterable):
-                    value = [sanitize_account_number(i) for i in value]
-                else:
-                    value = sanitize_account_number(value)
-                if 'like' in op:
-                    value = '%' + value + '%'
-                args[pos] = ('sanitized_acc_number', op, value)
-            pos += 1
-        return super(ResPartnerBank, self)._search(args, offset, limit, order, count=count, access_rights_uid=access_rights_uid)
+    @api.depends('acc_number', 'bank_id')
+    def _compute_display_name(self):
+        for acc in self:
+            acc.display_name = f'{acc.acc_number} - {acc.bank_id.name}' if acc.bank_id else acc.acc_number
 
-    @api.model
-    def build_qr_code_url(self, amount, comment):
-        communication = ""
-        if comment:
-            communication = (comment[:137] + '...') if len(comment) > 140 else comment
-        qr_code_string = 'BCD\n001\n1\nSCT\n%s\n%s\n%s\nEUR%s\n\n\n%s' % (self.bank_bic, self.company_id.name, self.acc_number, amount, communication)
-        qr_code_url = '/report/barcode/?type=%s&value=%s&width=%s&height=%s&humanreadable=1' % ('QR', werkzeug.url_quote_plus(qr_code_string), 128, 128)
-        return qr_code_url
+    def _condition_to_sql(self, alias: str, fname: str, operator: str, value, query) -> SQL:
+        if fname == 'acc_number':
+            fname = 'sanitized_acc_number'
+            if not isinstance(value, str) and isinstance(value, Iterable):
+                value = [sanitize_account_number(i) for i in value]
+            else:
+                value = sanitize_account_number(value)
+        return super()._condition_to_sql(alias, fname, operator, value, query)
 
-    def _validate_qr_code_arguments(self):
-        for bank in self:
-            bank.qr_code_valid = (bank.bank_bic
-                                            and bank.company_id.name
-                                            and bank.acc_number)
+    def action_archive_bank(self):
+        """
+            Custom archive function because the basic action_archive don't trigger a re-rendering of the page, so
+            the archived value is still visible in the view.
+        """
+        self.ensure_one()
+        self.action_archive()
+        return {'type': 'ir.actions.client', 'tag': 'reload'}
+
+    def unlink(self):
+        """
+            Instead of deleting a bank account, we want to archive it since we cannot delete bank account that is linked
+            to any entries
+        """
+        self.action_archive()
+        return True

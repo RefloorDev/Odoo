@@ -3,20 +3,17 @@
 # 	* website_blog
 # 
 # Translators:
-# Jeanphy <hzh0292@qq.com>, 2019
-# Ying <acc.tou@gmail.com>, 2019
-# Andy Cheng <andy.cheng@richsoda.com>, 2019
-# Martin Trigaux, 2019
-# 敬雲 林 <chingyun@yuanchih-consult.com>, 2019
+# Wil Odoo, 2024
+# Tony Ng, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:13+0000\n"
-"PO-Revision-Date: 2019-08-26 09:15+0000\n"
-"Last-Translator: 敬雲 林 <chingyun@yuanchih-consult.com>, 2019\n"
-"Language-Team: Chinese (Taiwan) (https://www.transifex.com/odoo/teams/41243/zh_TW/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Tony Ng, 2025\n"
+"Language-Team: Chinese (Taiwan) (https://app.transifex.com/odoo/teams/41243/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -24,9 +21,15 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
-msgid "&amp;nbsp;"
-msgstr "&amp;nbsp;"
+#: model_terms:ir.ui.view,arch_db:website_blog.date_selector
+msgid "#{year}"
+msgstr "#{year}"
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_blog.py:0
+msgid "%s (copy)"
+msgstr "%s (副本)"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_feed
@@ -39,59 +42,14 @@ msgid "' page header."
 msgstr "' 頁首."
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_short
+msgid "'. Showing results for '"
+msgstr "'.顯示結果 '"
+
+#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.date_selector
 msgid "-- All dates"
 msgstr "-- 所有日期"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "1 post max"
-msgstr "最多 1 篇文章"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "10 posts max"
-msgstr "最多 10 篇文章"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "2 posts max"
-msgstr "最多 3 篇文章"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "3 posts max"
-msgstr "最多 3 篇文章"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "4 posts max"
-msgstr "最多 3 篇文章"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "5 posts max"
-msgstr "最多 3 篇文章"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "6 posts max"
-msgstr "最多 3 篇文章"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "7 posts max"
-msgstr "最多 3 篇文章"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "8 posts max"
-msgstr "最多 3 篇文章"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "9 posts max"
-msgstr "最多 3 篇文章"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_6
@@ -103,13 +61,6 @@ msgid ""
 "there than a cumbersome telescope set up kit."
 msgstr ""
 "<b>雙筒望遠鏡重量輕，便於攜帶。</b>除非你有奢侈的設置和操作一個天文臺從你的甲板，你可能要旅行執行你的觀看。雙筒望遠鏡可以更容易地隨身攜帶，而且比笨重的望遠鏡設置套件更輕巧，可以攜帶到該國使用。"
-
-#. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
-msgid "<b>Click on Save</b> to record your changes."
-msgstr "<b>點選儲存</b>來保留您的修改。"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_6
@@ -124,25 +75,15 @@ msgstr ""
 "<b>挑選專家的大腦。</b>如果您尚未活躍在天文學協會或俱樂部，望遠鏡商店的銷售人員將能夠引導您到您所在地區的活躍社團。一旦你與購買望遠鏡的人有聯繫，你可以得到關於什麼有效，什麼避免，比任何你將從網路文章或沃爾瑪的銷售人員得到比更有效的建議。"
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "<b>Publish your blog post</b> to make it visible to your visitors."
 msgstr "<b>發佈您的部落格文章</b>，讓文章被您的訪客看見。"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_comment
 msgid "<b>Sign in</b>"
-msgstr "<b>登錄</b>"
-
-#. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
-msgid ""
-"<b>That's it, your blog post is published!</b> Discover more features "
-"through the <i>Customize</i> menu."
-msgstr "<b>就這樣，您的部落格文章已發佈！</b>從<i>自訂</i>選單找到更多功能。"
+msgstr "<b>登入</b>"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_6
@@ -156,9 +97,8 @@ msgstr ""
 "<b>購買前先試一下。</b>這是與天文學俱樂部進行一些實地考察的另一個優勢。你可以留出一些品質小時與誰知道望遠鏡的人，並設置他們的鑽機，以檢查他們的設備，學習關鍵的技術方面，並嘗試他們之前，你下沉錢在自己的設置。"
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid ""
 "<b>Write your story here.</b> Use the top toolbar to style your text: add an"
 " image or table, set bold or italic, etc. Drag and drop building blocks for "
@@ -206,8 +146,8 @@ msgstr "<em class=\"h4 my-0\">你對月球的研究，就像其他任何東西�
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_tags_display
-msgid "<em>No tags definied</em>"
-msgstr "<em>未定義標籤</em>"
+msgid "<em>No tags defined</em>"
+msgstr "<em>沒有定義標籤</em>"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_complete
@@ -215,25 +155,25 @@ msgid ""
 "<i class=\"fa fa-angle-down fa-3x text-white\" aria-label=\"To blog "
 "content\" title=\"To blog content\"/>"
 msgstr ""
-"<i class=\"fa fa-angle-down fa-3x text-white\" aria-label=\"To blog "
-"content\" title=\"To blog content\"/>"
+"<i class=\"fa fa-angle-down fa-3x text-white\" aria-label=\"前往網誌內文\" "
+"title=\"前往網誌內文\"/>"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_view_kanban
-msgid "<i class=\"fa fa-clock-o\" role=\"img\" aria-label=\"Post date\" title=\"Post date\"/>"
-msgstr ""
-"<i class=\"fa fa-clock-o\" role=\"img\" aria-label=\"Post date\" "
+msgid ""
+"<i class=\"fa fa-clock-o me-1\" role=\"img\" aria-label=\"Post date\" "
 "title=\"Post date\"/>"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "<i class=\"fa fa-folder-open\"/> Choose a blog"
-msgstr "<i class=\"fa fa-folder-open\">選擇部落格"
+msgstr "<i class=\"fa fa-clock-o me-1\" role=\"img\" aria-label=\"發文日期\" title=\"發文日期\"/>"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
 msgid "<i class=\"fa fa-github text-github\" aria-label=\"Github\" title=\"Github\"/>"
-msgstr "<i class=\"fa fa-github text-github\" aria-label=\"Github\" title=\"Github\"/>"
+msgstr "<i class=\"fa fa-github text-github\" aria-label=\"GitHub\" title=\"GitHub\"/>"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_view_kanban
+msgid "<i class=\"fa fa-globe me-1\" title=\"Website\"/>"
+msgstr "<i class=\"fa fa-globe me-1\" title=\"網站\"/>"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
@@ -260,17 +200,17 @@ msgid "<i class=\"fa fa-rss-square\" aria-label=\"RSS\" title=\"RSS\"/>"
 msgstr "<i class=\"fa fa-rss-square\" aria-label=\"RSS\" title=\"RSS\"/>"
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "<i class=\"fa fa-sort-numeric-asc\"/> Posts limit"
-msgstr "<i class=\"fa fa-sort-numeric-asc\"/>文章限制"
+#: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
+msgid "<i class=\"fa fa-tiktok text-tiktok\" aria-label=\"TikTok\" title=\"TikTok\"/>"
+msgstr ""
+"<i class=\"fa fa-tiktok text-tiktok\" aria-label=\"TikTok / 抖音\" "
+"title=\"TikTok / 抖音\"/>"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
-msgid "<i class=\"fa fa-twitter text-twitter\" aria-label=\"Twitter\" title=\"Twitter\"/>"
-msgstr ""
-"<i class=\"fa fa-twitter text-twitter\" aria-label=\"Twitter\" "
-"title=\"Twitter\"/>"
+msgid "<i class=\"fa fa-twitter text-twitter\" aria-label=\"X\" title=\"X\"/>"
+msgstr "<i class=\"fa fa-twitter text-twitter\" aria-label=\"X\" title=\"X\"/>"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
@@ -278,37 +218,43 @@ msgid ""
 "<i class=\"fa fa-youtube-play text-youtube\" aria-label=\"Youtube\" "
 "title=\"Youtube\"/>"
 msgstr ""
-"<i class=\"fa fa-youtube-play text-youtube\" aria-label=\"Youtube\" "
-"title=\"Youtube\"/>"
+"<i class=\"fa fa-youtube-play text-youtube\" aria-label=\"YouTube\" "
+"title=\"YouTube\"/>"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_read_next
 msgid ""
-"<span class=\"bg-gamma h6 d-inline-block py-1 px-2 rounded-sm\">Read "
+"<span class=\"bg-o-color-3 h6 d-inline-block py-1 px-2 rounded-1\">Read "
 "Next</span>"
 msgstr ""
-"<span class=\"bg-gamma h6 d-inline-block py-1 px-2 rounded-sm\">閱讀下一篇</span>"
+"<span class=\"bg-o-color-3 h6 d-inline-block py-1 px-2 "
+"rounded-1\">閱讀下一篇</span>"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_read_next
 msgid ""
-"<span class=\"h4 d-inline-block py-1 px-2 rounded-sm text-white\">\n"
+"<span class=\"h4 d-inline-block py-1 px-2 rounded-1 text-white\">\n"
 "                                    <i class=\"fa fa-angle-right fa-3x text-white\" aria-label=\"Read next\" title=\"Read Next\"/>\n"
 "                                </span>"
 msgstr ""
-"<span class=\"h4 d-inline-block py-1 px-2 rounded-sm text-white\">\n"
-"                                    <i class=\"fa fa-angle-right fa-3x text-white\" aria-label=\"Read next\" title=\"Read Next\"/>\n"
+"<span class=\"h4 d-inline-block py-1 px-2 rounded-1 text-white\">\n"
+"                                    <i class=\"fa fa-angle-right fa-3x text-white\" aria-label=\"閱讀下一篇\" title=\"閱讀下一篇\"/>\n"
 "                                </span>"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
-msgid "<span class=\"mr-1\">Show:</span>"
-msgstr "<span class=\"mr-1\">顯示：</span>"
+msgid "<span class=\"me-1\">Show:</span>"
+msgstr "<span class=\"me-1\">顯示：</span>"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blogs_nav
-msgid "<span class=\"nav-link disabled pl-0\">Blogs:</span>"
-msgstr "<span class=\"nav-link disabled pl-0\">部落格：</span>"
+msgid "<span class=\"nav-link disabled ps-0\">Blogs:</span>"
+msgstr "<span class=\"nav-link disabled ps-0\">網誌：</span>"
+
+#. module: website_blog
+#: model_terms:web_tour.tour,rainbow_man_message:website_blog.blog
+msgid "<span><b>Good job!</b> You went through all steps of this tour.</span>"
+msgstr "<span><b>做得好！</b>你已完成本次導覽的所有步驟。</span>"
 
 #. module: website_blog
 #: model:blog.post,subtitle:website_blog.blog_post_2
@@ -364,7 +310,7 @@ msgstr "存取文章"
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_needaction
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__message_needaction
 msgid "Action Needed"
-msgstr "需採取行動"
+msgstr "需要採取行動"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__active
@@ -383,14 +329,21 @@ msgid "All"
 msgstr "所有"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blogs_nav
 #: model_terms:ir.ui.view,arch_db:website_blog.post_breadcrumbs
 msgid "All Blogs"
-msgstr "所有部落格"
+msgstr "所有網誌"
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
 msgid "All blogs"
-msgstr "所有部落格"
+msgstr "所有網誌"
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Alone in the ocean"
+msgstr "獨自在大海裡"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_6
@@ -398,13 +351,10 @@ msgid "Along those lines, how difficult is the set up and break down?"
 msgstr "沿著這些思路，設置和分解有多困難？"
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/s_latest_posts_frontend.js:0
-#, python-format
-msgid ""
-"An error occured with this latest posts block. If the problem persists, "
-"please consider deleting it and adding a new one"
-msgstr "此最新貼文區塊發生錯誤。如果錯誤持續發生，請考慮刪除此區塊，再重新建立一個。"
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/website_blog.js:0
+msgid "Amazing blog article: %(title)s! Check it live: %(url)s"
+msgstr "精彩的網誌文章：%(title)s！馬上了解：%(url)s"
 
 #. module: website_blog
 #: model:blog.post,subtitle:website_blog.blog_post_1
@@ -431,29 +381,33 @@ msgstr "銅峽谷的另一個獨特特徵是塔拉胡馬拉印第安人文化的
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_archive_display
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
 msgid "Archive"
-msgstr "歸檔"
+msgstr "封存"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_blog_view_search
+#: model_terms:ir.ui.view,arch_db:website_blog.view_blog_blog_form
+#: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_form
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_search
 msgid "Archived"
-msgstr "封存"
+msgstr "已封存"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_archives
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
 msgid "Archives"
-msgstr "封存"
+msgstr "歸檔"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
 msgid "Article"
-msgstr "條款"
+msgstr "文章"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
 msgid "Articles"
-msgstr "文章管理"
+msgstr "文章"
 
 #. module: website_blog
 #: model:blog.blog,name:website_blog.blog_blog_2
@@ -484,18 +438,31 @@ msgstr "Atom 推送"
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_attachment_count
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__message_attachment_count
 msgid "Attachment Count"
-msgstr "附件數"
+msgstr "附件數目"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__author_id
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_search
 msgid "Author"
 msgstr "作者"
 
 #. module: website_blog
+#: model:ir.model.fields,field_description:website_blog.field_blog_post__author_name
+msgid "Author Name"
+msgstr "作者名字"
+
+#. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__author_avatar
 msgid "Avatar"
 msgstr "頭像"
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Awesome hotel rooms"
+msgstr "超棒的酒店房間"
 
 #. module: website_blog
 #: model:blog.post,subtitle:website_blog.blog_post_4
@@ -541,7 +508,7 @@ msgstr ""
 #. module: website_blog
 #: model:blog.post,subtitle:website_blog.blog_post_6
 msgid "Before you make your first purchase…"
-msgstr "在你第一次購買之前..."
+msgstr "在你第一次採購之前..."
 
 #. module: website_blog
 #: model:blog.post,name:website_blog.blog_post_7
@@ -549,100 +516,122 @@ msgid "Beyond The Eye"
 msgstr "超越眼睛"
 
 #. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website.py:0
+#: model:ir.model,name:website_blog.model_blog_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__blog_id
+#: model:ir.ui.menu,name:website_blog.menu_website_blog_root_global
+#: model:website.menu,name:website_blog.menu_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_blog_view_search
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_blog_form
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_search
-#: model:website.menu,name:website_blog.menu_blog
 msgid "Blog"
-msgstr "部落格"
+msgstr "網誌"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__name
 msgid "Blog Name"
-msgstr "部落格名稱"
+msgstr "網誌名稱"
 
 #. module: website_blog
-#: code:addons/website_blog/models/website.py:0
-#: code:addons/website_blog/models/website.py:0
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Blog Page"
+msgstr "網誌頁面"
+
+#. module: website_blog
 #: model:ir.model,name:website_blog.model_blog_post
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_form
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_search
-#, python-format
 msgid "Blog Post"
-msgstr "部落格文章"
-
-#. module: website_blog
-#: code:addons/website_blog/models/website.py:0
-#, python-format
-msgid "Blog Post <b>%s</b> seems to be calling this file !"
-msgstr "部落格貼文 <b>%s</b> 似乎呼叫了此文件！"
-
-#. module: website_blog
-#: code:addons/website_blog/models/website.py:0
-#, python-format
-msgid "Blog Post <b>%s</b> seems to have a link to this page !"
-msgstr "部落格貼文 <b>%s</b> 似乎有連結到這頁！"
+msgstr "網誌文章"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_complete
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
+msgid "Blog Post Cover"
+msgstr "網誌文章封面"
+
+#. module: website_blog
+#: model:ir.actions.act_window,name:website_blog.action_blog_post
+msgid "Blog Post Pages"
+msgstr "網誌文章頁面"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_complete
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_view_form_add
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_read_next
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_form
 msgid "Blog Post Title"
-msgstr "部落格貼文標題"
+msgstr "網誌文章標題"
 
 #. module: website_blog
-#: code:addons/website_blog/models/website.py:0
-#: code:addons/website_blog/models/website.py:0
-#: model:ir.actions.act_window,name:website_blog.action_blog_post
-#: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_list
-#, python-format
+#: model:ir.model.fields,field_description:website_blog.field_blog_blog__blog_post_ids
+#: model:ir.ui.menu,name:website_blog.menu_blog_post_pages
+#: model_terms:ir.ui.view,arch_db:website_blog.website_blog
 msgid "Blog Posts"
-msgstr "部落格貼文"
+msgstr "網誌文章"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__subtitle
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_form
 msgid "Blog Subtitle"
-msgstr "部落格副標"
+msgstr "網誌副標題"
 
 #. module: website_blog
 #: model:ir.model,name:website_blog.model_blog_tag
 msgid "Blog Tag"
-msgstr "部落格標籤"
+msgstr "網誌標籤"
 
 #. module: website_blog
 #: model:ir.model,name:website_blog.model_blog_tag_category
 msgid "Blog Tag Category"
-msgstr "部落格標籤分類"
+msgstr "網誌標籤類別"
 
 #. module: website_blog
 #: model:ir.actions.act_window,name:website_blog.action_tags
 msgid "Blog Tags"
-msgstr "部落格標籤"
+msgstr "網誌標籤"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
 msgid "Blog Title"
-msgstr "Blog 標題"
+msgstr "網誌標題"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
 msgid "Blog's Title"
-msgstr "部落格標題"
+msgstr "網誌標題"
 
 #. module: website_blog
 #: model:ir.actions.act_window,name:website_blog.action_blog_blog
-#: model:ir.model,name:website_blog.model_blog_blog
 #: model:ir.ui.menu,name:website_blog.menu_blog_global
-#: model:ir.ui.menu,name:website_blog.menu_website_blog_root
-#: model:ir.ui.menu,name:website_blog.menu_website_blog_root_global
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_searchbar_input_snippet_options
+#: model_terms:ir.ui.view,arch_db:website_blog.blogs_nav
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_blog_list
+#: model_terms:ir.ui.view,arch_db:website_blog.website_blog
 msgid "Blogs"
-msgstr "部落格"
+msgstr "網誌"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Blogs List"
+msgstr "網誌列表"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Blogs Page"
+msgstr "網誌頁面"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Bottom"
+msgstr "底部"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Breadcrumb"
+msgstr "頁面路徑"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
@@ -675,16 +664,14 @@ msgid "Can Publish"
 msgstr "可以發佈"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Cards"
+msgstr "卡片"
+
+#. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__category_id
 msgid "Category"
 msgstr "類別"
-
-#. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
-msgid "Change Cover"
-msgstr "更改封面"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
@@ -692,11 +679,16 @@ msgid "Children’s’ Facilities"
 msgstr "兒童用品"
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "Choose an image from the library."
 msgstr "從圖庫中選擇圖片。"
+
+#. module: website_blog
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
+msgid "Click here to add new content to your website."
+msgstr "點選此處於您的網站添加新內容。"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
@@ -706,16 +698,15 @@ msgid ""
 msgstr "點擊右上角的\"<b>新建</b>寫你的第一篇部落格文章。"
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
-msgid "Click on <b>Save</b> to set the picture as cover."
-msgstr "點擊<b>儲存</b>將圖片設為封面。"
-
-#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blogs_nav
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
 msgid "Close"
 msgstr "關閉"
+
+#. module: website_blog
+#: model:ir.model.fields,field_description:website_blog.field_blog_tag__color
+msgid "Color"
+msgstr "顏色"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
@@ -724,8 +715,15 @@ msgstr "評論"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
+#: model_terms:ir.ui.view,arch_db:website_blog.post_info
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
 msgid "Comments"
-msgstr "備註"
+msgstr "評論"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Comments/Views Stats"
+msgstr "評論/瀏覽次數統計"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__content
@@ -750,15 +748,15 @@ msgstr ""
 "銅峽谷是該地區的六峽之一。雖然這個名字表明峽谷可能與銅礦開採有某種關聯，但事實並非如此。這個名字來自覆蓋著峽谷的銅質和綠色地衣。銅峽谷有兩個氣候區。該地區擁有高山氣候，低層為亞熱帶氣候。冬季寒冷，高海拔地區經常有暴風雪。夏天又幹又熱。首都奇瓦瓦是一個高海拔沙漠，那裡的天氣從寒冷的冬天到炎熱的夏天。該區域之所以獨特，是因為它內部存在各種生態系統。"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Cover"
+msgstr "封面"
+
+#. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__cover_properties
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__cover_properties
 msgid "Cover Properties"
 msgstr "封面屬性"
-
-#. module: website_blog
-#: model_terms:ir.actions.act_window,help:website_blog.action_blog_post
-msgid "Create a new blog post"
-msgstr "建立一篇新的部落格貼文"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__create_uid
@@ -766,7 +764,7 @@ msgstr "建立一篇新的部落格貼文"
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__create_uid
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag_category__create_uid
 msgid "Created by"
-msgstr "創立者"
+msgstr "建立人員"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__create_date
@@ -777,17 +775,37 @@ msgid "Created on"
 msgstr "建立於"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Date"
+msgstr "日期"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_searchbar_input_snippet_options
+msgid "Date (new to old)"
+msgstr "日期（從新到舊）"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_searchbar_input_snippet_options
+msgid "Date (old to new)"
+msgstr "日期（從舊到新）"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_searchbar_input_snippet_options
+msgid "Description"
+msgstr "說明"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Dexter"
+msgstr "德克斯特"
+
+#. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__display_name
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__display_name
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__display_name
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag_category__display_name
 msgid "Display Name"
 msgstr "顯示名稱"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.blog_edit_options
-msgid "Duplicate"
-msgstr "複製"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_2
@@ -804,11 +822,6 @@ msgid ""
 "helicopter tours."
 msgstr ""
 "東茂宜島直升機之旅將讓您看到一萬英尺的火山，哈雷阿卡拉或太陽之家。這座火山處於休眠狀態，最後一次噴發是在1790年。您將能夠看到火山口的火山口和乾燥，乾燥的地球圍繞火山的斜坡的南側與茂宜島直升機之旅。"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_tags_display
-msgid "Edit"
-msgstr "編輯"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_tags_display
@@ -831,10 +844,22 @@ msgid "Edit the 'Filter Results' page header."
 msgstr "編輯\"篩選結果\"頁首"
 
 #. module: website_blog
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
+msgid "Edit your title, the subtitle is optional."
+msgstr "編輯標題，副標題可選填。"
+
+#. module: website_blog
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
+msgid "Enter your post's title"
+msgstr "輸入你文章的標題"
+
+#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
 msgid "Facebook"
-msgstr "臉書"
+msgstr "Facebook"
 
 #. module: website_blog
 #: model:blog.post,subtitle:website_blog.blog_post_3
@@ -854,6 +879,7 @@ msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
 msgid "Follow Us"
 msgstr "關注我們"
 
@@ -862,12 +888,6 @@ msgstr "關注我們"
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__message_follower_ids
 msgid "Followers"
 msgstr "關注人"
-
-#. module: website_blog
-#: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_channel_ids
-#: model:ir.model.fields,field_description:website_blog.field_blog_post__message_channel_ids
-msgid "Followers (Channels)"
-msgstr "關注人（頻道）"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_partner_ids
@@ -902,6 +922,11 @@ msgstr ""
 "從最小的嬰兒到最先進的天體物理學家，任何想享受天文學的人都會有所享受。事實上，這是一門科學，它是如此容易訪問，幾乎任何人都可以做到這一點，幾乎任何地方，他們。他們必須知道如何去查找。"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Full-Width"
+msgstr "全寬"
+
+#. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_5
 msgid "Get a geek"
 msgstr "成為達人!"
@@ -922,9 +947,20 @@ msgid "Get started"
 msgstr "開始"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Grid"
+msgstr "矩陣"
+
+#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_search
 msgid "Group By"
-msgstr "分組按"
+msgstr "分組依據"
+
+#. module: website_blog
+#: model:ir.model.fields,field_description:website_blog.field_blog_blog__has_message
+#: model:ir.model.fields,field_description:website_blog.field_blog_post__has_message
+msgid "Has Message"
+msgstr "有訊息"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
@@ -934,7 +970,12 @@ msgstr "以下是您應該記住的一些關鍵事實："
 #. module: website_blog
 #: model:blog.blog,subtitle:website_blog.blog_blog_1
 msgid "Holiday tips"
-msgstr "假日提示"
+msgstr "holiday tips"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Hover Effect"
+msgstr "滑鼠經過時效果"
 
 #. module: website_blog
 #: model:blog.post,name:website_blog.blog_post_4
@@ -958,6 +999,7 @@ msgstr "你的望遠鏡的移動性如何？"
 
 #. module: website_blog
 #: model:blog.post,name:website_blog.blog_post_3
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_blog_posts_preview_data
 msgid "How to choose the right hotel"
 msgstr "如何選擇合適的酒店"
 
@@ -967,13 +1009,11 @@ msgstr "如何選擇合適的酒店"
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__id
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag_category__id
 msgid "ID"
-msgstr "ID"
+msgstr "識別號"
 
 #. module: website_blog
 #: model:ir.model.fields,help:website_blog.field_blog_blog__message_needaction
-#: model:ir.model.fields,help:website_blog.field_blog_blog__message_unread
 #: model:ir.model.fields,help:website_blog.field_blog_post__message_needaction
-#: model:ir.model.fields,help:website_blog.field_blog_post__message_unread
 msgid "If checked, new messages require your attention."
 msgstr "勾選代表有新訊息需要您留意。"
 
@@ -1006,6 +1046,12 @@ msgstr ""
 "自然，當你對天文學的熱愛中成長時，你會發現許多天體很迷人。但是月亮可能永遠是我們的初戀，因為月球是一個遙遠的太空物體，它有著飛近地球和人類行走的獨特區別。"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.dynamic_filter_template_blog_post_card
+#: model_terms:ir.ui.view,arch_db:website_blog.dynamic_filter_template_blog_post_horizontal
+msgid "In"
+msgstr "在"
+
+#. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_6
 msgid ""
 "In many ways, it is a big step from someone who is just fooling around with "
@@ -1014,6 +1060,11 @@ msgid ""
 "know how to use it."
 msgstr ""
 "從許多方面來說，這是從一個只是愚弄天文學的人到一個嚴肅的科學學生邁出的一大步。但是你和我們都知道，在真正知道如何使用望遠鏡之前，在購買望遠鏡之後還有一大步。"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Increase Readability"
+msgstr "增加可讀性"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_is_follower
@@ -1025,6 +1076,12 @@ msgstr "是關注人"
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__is_published
 msgid "Is Published"
 msgstr "已發佈"
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Islands"
+msgstr "小島"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_5
@@ -1065,6 +1122,12 @@ msgstr ""
 "當你想到它時，它真的是驚人的，只要仰望任何給定的夜晚，你可以看到幾乎幾十萬顆恒星，恒星系統，行星，衛星，小行星，彗星，彗星，也許甚至偶爾的太空梭可能漫步。當你意識到你仰望的天空是所有意圖和目的完全相同的天空，我們的祖先享受，幾千年前，他們只是抬頭，這是更令人歎為觀止的。"
 
 #. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Jungle"
+msgstr "叢林"
+
+#. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_5
 msgid "Know what you are looking at"
 msgstr "知道你在看什麼"
@@ -1075,9 +1138,8 @@ msgid "Know when to look"
 msgstr "知道何時查看"
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/website_blog.editor.js:0
-#, python-format
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/options.js:0
 msgid "Large"
 msgstr "大"
 
@@ -1086,14 +1148,6 @@ msgstr "大"
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_search
 msgid "Last Contributor"
 msgstr "最後貢獻者"
-
-#. module: website_blog
-#: model:ir.model.fields,field_description:website_blog.field_blog_blog____last_update
-#: model:ir.model.fields,field_description:website_blog.field_blog_post____last_update
-#: model:ir.model.fields,field_description:website_blog.field_blog_tag____last_update
-#: model:ir.model.fields,field_description:website_blog.field_blog_tag_category____last_update
-msgid "Last Modified on"
-msgstr "最後修改於"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__write_uid
@@ -1111,16 +1165,14 @@ msgid "Last Updated on"
 msgstr "最後更新於"
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
-msgid "Latest"
-msgstr "最新"
+#: model:website.snippet.filter,name:website_blog.dynamic_filter_latest_blog_posts
+msgid "Latest Blog Posts"
+msgstr "最新部落格文章"
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_big_picture
-msgid "Latest Posts"
-msgstr "最新貼文"
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Layout"
+msgstr "格式"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_5
@@ -1142,6 +1194,11 @@ msgid "LinkedIn"
 msgstr "LinkedIn"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "List"
+msgstr "清單"
+
+#. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
 msgid ""
 "Local color is great but the hotel’s own restaurants and bars can play an "
@@ -1157,13 +1214,13 @@ msgid "Location"
 msgstr "地點"
 
 #. module: website_blog
-#: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_main_attachment_id
-#: model:ir.model.fields,field_description:website_blog.field_blog_post__message_main_attachment_id
-msgid "Main Attachment"
-msgstr "主要附件"
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Marley"
+msgstr "Marley"
 
 #. module: website_blog
 #: model:blog.post,name:website_blog.blog_post_2
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_blog_posts_preview_data
 msgid "Maui helicopter tours"
 msgstr "茂宜島直升機之旅"
 
@@ -1186,7 +1243,7 @@ msgid ""
 "to capture the moments will also allow you to relive the tour again and "
 "again as you reminisce throughout the years."
 msgstr ""
-"茂宜島直升機之旅是遊覽那些步行或汽車無法到達的地方的好方法。行程約一小時，從約一百八十五美元到二百四十美元人不等。對許多人來說，這是一生難得的機會，可以欣賞到不再可用的自然風光。拍攝相機和視頻捕捉瞬間，也可以讓你重溫旅遊一遍又一遍，你回憶了整個歲月。"
+"茂宜島直升機之旅是遊覽那些步行或汽車無法到達的地方的好方法。行程約一小時，從約一百八十五美元到二百四十美元人不等。對許多人來說，這是一生難得的機會，可以欣賞到不再可用的自然風光。拍攝相機和影片來捕捉瞬間，也可以讓你重溫旅遊一遍又一遍，你回憶了整個歲月。"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_2
@@ -1196,12 +1253,11 @@ msgid ""
 "capture the beauty of the scenery and to show friends and family at home all"
 " the wonderful things you saw while on vacation."
 msgstr ""
-"茂宜島直升機之旅將讓您看到所有這些景點。在茂宜島直升機之旅中，請務必帶相機或視頻，捕捉風景之美，並在家中向朋友和家人展示您在度假時看到的所有精彩內容。"
+"茂宜島直升機之旅將讓您看到所有這些景點。在茂宜島直升機之旅中，請務必帶相機或錄影機，捕捉風景之美，並在家中向朋友和家人展示您在度假時看到的所有精彩內容。"
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/website_blog.editor.js:0
-#, python-format
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/options.js:0
 msgid "Medium"
 msgstr "媒體"
 
@@ -1259,24 +1315,30 @@ msgstr ""
 "對於家庭旅行者來說，比商務旅客更重要，你應該從目錄中瞭解酒店對孩子的友好程度，並從那裡做出您的決定。值得尋找的一件事是，酒店是否提供保姆服務。對於希望逃離孩子的商務旅客來說，這當然也非常重要——也許酒店不適合兒童入住！"
 
 #. module: website_blog
+#: model:website.snippet.filter,name:website_blog.dynamic_filter_most_viewed_blog_posts
+msgid "Most Viewed Blog Posts"
+msgstr "瀏覽次數最多的部落格文章"
+
+#. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__name
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag_category__name
 msgid "Name"
 msgstr "名稱"
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/website_blog.editor.js:0
-#, python-format
+#: model:ir.actions.act_window,name:website_blog.blog_post_action_add
 msgid "New Blog Post"
 msgstr "新的部落格貼文"
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/s_latest_posts_frontend.js:0
-#, python-format
-msgid "No blog post was found. Make sure your posts are published."
-msgstr "找不到部落格貼文。請確認您的貼文已發佈。"
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Next Article"
+msgstr "下一篇文章"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "No Cover"
+msgstr "無封面"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
@@ -1286,12 +1348,27 @@ msgstr "尚無部落格貼文。"
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__visits
 msgid "No of Views"
-msgstr "瀏覽數量"
+msgstr "瀏覽次數"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
+msgid "No results for \"%s\"."
+msgstr "沒有“%s”的結果。"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_short
+msgid "No results found for '"
+msgstr "找不到:"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_tags
 msgid "No tags defined yet."
 msgstr "尚未定義標籤"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "None"
+msgstr "無"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_4
@@ -1302,7 +1379,22 @@ msgid ""
 "these guidelines, you will enjoy hours of enjoyment stargazing at the "
 "phenomenal sights in the night sky that are beyond the naked eye."
 msgstr ""
-"這一切都不妨礙你推進你的計畫，把一個真棒望遠鏡系統。只要確保你得到品質的建議和培訓如何配置你的望遠鏡，以滿足您的需求。使用這些指南，您將享受數小時的享受，在夜空中，肉眼無法欣賞到非凡的景象。"
+"這一切都不會妨礙你推進計劃，組裝一個很棒的望遠鏡系統。只要確保你獲取有質素的建議及培訓，了解如何配置你的望遠鏡去滿足你的需求。跟從這些指引後，你將體驗無數小時的享受，觀賞夜空中肉眼無法看見的非凡星光。"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Normal"
+msgstr "正常（沒有底線）"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Normal picture"
+msgstr "正常圖片"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_view_kanban
+msgid "Not Published"
+msgstr "未發佈"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_5
@@ -1327,20 +1419,14 @@ msgstr "錯誤數量"
 #. module: website_blog
 #: model:ir.model.fields,help:website_blog.field_blog_blog__message_needaction_counter
 #: model:ir.model.fields,help:website_blog.field_blog_post__message_needaction_counter
-msgid "Number of messages which requires an action"
-msgstr "需要處理的消息數量"
+msgid "Number of messages requiring action"
+msgstr "需要採取行動的訊息數目"
 
 #. module: website_blog
 #: model:ir.model.fields,help:website_blog.field_blog_blog__message_has_error_counter
 #: model:ir.model.fields,help:website_blog.field_blog_post__message_has_error_counter
 msgid "Number of messages with delivery error"
 msgstr "有發送錯誤的郵件數量"
-
-#. module: website_blog
-#: model:ir.model.fields,help:website_blog.field_blog_blog__message_unread_counter
-#: model:ir.model.fields,help:website_blog.field_blog_post__message_unread_counter
-msgid "Number of unread messages"
-msgstr "未讀訊息的數量"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_7
@@ -1355,21 +1441,28 @@ msgstr ""
 "當然，要將你的月亮崇拜帶到極致，將您的設備安裝到一個好的啟動望遠鏡，將為您提供月球表面最令人驚歎的細節。隨著每次升級，您的知識以及您所看到的深度和範圍都將在幾何上得到改善。對於許多業餘天文學家來說，我們有時無法從這個最接近的太空物體上看到的東西。"
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
-msgid "Once you have reviewed the content on mobile, close the preview."
-msgstr "當您在手機上確認過內容後，請關閉預覽。"
+msgid ""
+"Once you have reviewed the content on mobile, you can switch back to the "
+"normal view by clicking here again"
+msgstr "檢視流動裝置內容格式後，你可再按此處，切換回正常畫面"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_tags
 msgid "Others"
-msgstr "其它"
+msgstr "其他"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
+#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
+msgid "Our Latest Posts"
+msgstr "我們的最新文章"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_blogs_display
 msgid "Our blogs"
-msgstr "我們的部落格"
+msgstr "我們的網誌"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_2
@@ -1427,9 +1520,30 @@ msgid "Photo by Teddy Kelley, @teddykelley"
 msgstr "照片由泰迪·凱利，@teddykelley"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Picture size"
+msgstr "圖片大小"
+
+#. module: website_blog
+#: model:ir.model.fields,field_description:website_blog.field_blog_blog__blog_post_count
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__post_ids
 msgid "Posts"
 msgstr "貼文"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Posts List"
+msgstr "文章列表"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_searchbar_input_snippet_options
+msgid "Publication Date"
+msgstr "發佈日期"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_view_kanban
+msgid "Published"
+msgstr "已發佈"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
@@ -1445,7 +1559,7 @@ msgstr "發佈日期"
 #: model:mail.message.subtype,description:website_blog.mt_blog_blog_published
 #: model:mail.message.subtype,name:website_blog.mt_blog_blog_published
 msgid "Published Post"
-msgstr "已發佈的帖子"
+msgstr "已發佈的貼文"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_form
@@ -1458,14 +1572,15 @@ msgid "Publishing date"
 msgstr "發佈日期"
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
-msgid "Read more"
-msgstr "看更多"
+#: model:ir.model.fields,field_description:website_blog.field_blog_blog__rating_ids
+#: model:ir.model.fields,field_description:website_blog.field_blog_post__rating_ids
+msgid "Ratings"
+msgstr "評分"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
-msgid "Read more <i class=\"fa fa-chevron-right ml-2\"/>"
-msgstr "閱讀更多<i class=\"fa fa-chevron-right ml-2\">"
+msgid "Read more <i class=\"oi oi-chevron-right ms-2\"/>"
+msgstr "閱讀更多 <i class=\"oi oi-chevron-right ms-2\"/>"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
@@ -1475,8 +1590,8 @@ msgstr "餐館、咖啡館和酒吧"
 #. module: website_blog
 #: model:ir.model.fields,help:website_blog.field_blog_blog__website_id
 #: model:ir.model.fields,help:website_blog.field_blog_post__website_id
-msgid "Restrict publishing to this website."
-msgstr "限制發佈到此網站。"
+msgid "Restrict to a specific website."
+msgstr "只限特定網站使用。"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_form
@@ -1497,25 +1612,70 @@ msgid "SMS Delivery error"
 msgstr "簡訊發送錯誤"
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/website_blog.editor.js:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:website_blog.dynamic_filter_template_blog_post_big_picture
+#: model_terms:ir.ui.view,arch_db:website_blog.dynamic_filter_template_blog_post_card
+#: model_terms:ir.ui.view,arch_db:website_blog.dynamic_filter_template_blog_post_horizontal
+#: model_terms:ir.ui.view,arch_db:website_blog.dynamic_filter_template_blog_post_list
+msgid "Sample"
+msgstr "範例"
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Satellites"
+msgstr "衛星"
+
+#. module: website_blog
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
+msgid "Search for an image. (eg: type \"business\")"
+msgstr "搜尋圖片（例：輸入「商業」）"
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Seaside vs mountain side"
+msgstr "海邊 vs 山上"
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Seeing the world from above"
+msgstr "從高處看世界"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_view_form_add
 msgid "Select Blog"
 msgstr "選擇部落格"
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "Select the blog you want to add the post to."
 msgstr "選擇要將文章加入到的部落格。"
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "Select this menu item to create a new blog post."
-msgstr "選擇此選單項新建一篇文章。"
+msgstr "選擇此選單項新增一篇貼文。"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Select to Comment"
+msgstr "選取以評論"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Select to Tweet"
+msgstr "選取以發佈推文"
+
+#. module: website_blog
+#: model:ir.model.fields,field_description:website_blog.field_blog_blog__seo_name
+#: model:ir.model.fields,field_description:website_blog.field_blog_post__seo_name
+#: model:ir.model.fields,field_description:website_blog.field_blog_tag__seo_name
+msgid "Seo name"
+msgstr "SEO 名稱"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_form
@@ -1523,9 +1683,8 @@ msgid "Separate every keyword with a comma"
 msgstr "用逗號分隔每個關鍵字"
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "Set a blog post <b>cover</b>."
 msgstr "設定部落格文章<b>封面</b>。"
 
@@ -1538,9 +1697,14 @@ msgid ""
 msgstr "一些遷徙和本地鳥類、哺乳動物和爬行動物稱銅峽谷為家。在這片土地上，精緻的動物也值得一看。"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Share Links"
+msgstr "分享連結"
+
+#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
 msgid "Share on Facebook"
-msgstr "分享於臉書"
+msgstr "分享至 Facebook"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
@@ -1549,16 +1713,22 @@ msgstr "分享於LinkedIn"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
-msgid "Share on Twitter"
-msgstr "分享於Twitter"
+msgid "Share on X"
+msgstr "分享至 X"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
 msgid "Share this post"
-msgstr "分享這個帖子"
+msgstr "分享這個貼文"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Sidebar"
+msgstr "側邊欄"
 
 #. module: website_blog
 #: model:blog.post,name:website_blog.blog_post_1
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_blog_posts_preview_data
 msgid "Sierra Tarahumara"
 msgstr "塔拉胡馬拉山"
 
@@ -1569,6 +1739,27 @@ msgid ""
 "The area is a favorite destination among those seeking an adventurous "
 "vacation."
 msgstr "塔拉胡馬拉山脈，俗稱銅峽谷位於墨西哥。該地區是尋求冒險度假的人最喜歡的目的地。"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Silly-Chico"
+msgstr "Silly-Chico"
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Skies"
+msgstr "天空"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Smaller"
+msgstr "較小"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Smaller picture"
+msgstr "較小圖片"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_6
@@ -1604,7 +1795,7 @@ msgid ""
 "up front and get exposure to the different kinds. So before you make your "
 "first purchase…"
 msgstr ""
-"因此，要選擇正確的望遠鏡類型，使用望遠鏡的目標很重要。為了真正瞭解鏡片和望遠鏡設計的優點和弱點，而且瞭解望遠鏡在各種觀星情況下的表現，最好先做一些功課，接觸不同類型。所以在你第一次購買之前..."
+"因此，要選擇正確的望遠鏡類型，使用望遠鏡的目標很重要。為了真正瞭解鏡片和望遠鏡設計的優點和弱點，而且瞭解望遠鏡在各種觀星情況下的表現，最好先做一些功課，接觸不同類型。所以在你第一次採購之前..."
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
@@ -1624,17 +1815,21 @@ msgid "Someone famous in <cite title=\"Source Title\">Source Title</cite>"
 msgstr "輸入高超想法 <cite title=\"Source Title\">Source Title</cite>"
 
 #. module: website_blog
-#. openerp-web
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Spotting the fauna"
+msgstr "Spotting the fauna"
+
+#. module: website_blog
+#. odoo-python
 #: code:addons/website_blog/models/website_blog.py:0
-#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "Start writing here..."
 msgstr "在這裡開始寫入"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
 msgid "Style"
-msgstr "風格"
+msgstr "樣式"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__subtitle
@@ -1644,7 +1839,6 @@ msgstr "副標題"
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_complete
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_read_next
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
 msgid "Subtitle"
@@ -1678,13 +1872,13 @@ msgstr "標籤列表"
 
 #. module: website_blog
 #: model:ir.model.constraint,message:website_blog.constraint_blog_tag_category_name_uniq
-msgid "Tag category already exists !"
-msgstr "標籤類別已存在 ！"
+msgid "Tag category already exists!"
+msgstr "已有這個標籤類別！"
 
 #. module: website_blog
 #: model:ir.model.constraint,message:website_blog.constraint_blog_tag_name_uniq
-msgid "Tag name already exists !"
-msgstr "標籤名已存在!"
+msgid "Tag name already exists!"
+msgstr "標籤名稱已存在!"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__tag_ids
@@ -1692,13 +1886,31 @@ msgstr "標籤名已存在!"
 #: model:ir.ui.menu,name:website_blog.menu_blog_tag_global
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_tags_display
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_tags
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
 msgid "Tags"
 msgstr "標籤"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Tags List"
+msgstr "標籤列表"
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Taking pictures in the dark"
+msgstr "在黑暗環境中拍照"
+
+#. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__teaser
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
 msgid "Teaser"
 msgstr "預告"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Teaser & Tags"
+msgstr "預告及標籤"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__teaser_manual
@@ -1712,8 +1924,7 @@ msgid ""
 "trusted the face-to-face advice you were given by the so called ‘experts’. "
 "The 21st Century way to select and book your hotel is of course on the "
 "Internet, by using travel websites."
-msgstr ""
-"十年前，你可能已經拜訪了當地的旅行社，並相信所謂的\"專家\"會為您提供面對面的建議。21世紀選擇和預訂酒店的方式當然是在互聯網上，通過使用旅遊網站。"
+msgstr "十年前，你可能已經拜訪了當地的旅行社，並相信所謂的\"專家\"會為您提供面對面的建議。21世紀選擇和預訂酒店的方式當然是在線上，通過使用旅遊網站。"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_4
@@ -1771,7 +1982,7 @@ msgstr "這個地區的懸崖是世界上最高的，看到從山峰上流水簡
 #. module: website_blog
 #: model:ir.model.fields,help:website_blog.field_blog_post__website_url
 msgid "The full URL to access the document through the website."
-msgstr "通過網站存取此文件的完整網址。"
+msgstr "透過網站存取此文件的完整網址。"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_4
@@ -1804,7 +2015,7 @@ msgid ""
 "The tripod or other accessory decisions will change significantly with a "
 "telescope that will live on your deck versus one that you plan to take to "
 "many remote locations."
-msgstr "三腳架或其他配件決策將顯著改變與望遠鏡，將住在你的甲板上，而不是一個你計畫採取到許多偏遠的地方。"
+msgstr "三腳架或其他配件的選擇，會按不同望遠鏡而顯著改變，例如長久放置在家中露台，或是打算攜同前往許多偏遠地方。"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_2
@@ -1840,7 +2051,7 @@ msgstr ""
 #: model_terms:blog.post,content:website_blog.blog_post_6
 msgid ""
 "There are other considerations to factor into your final purchase decision."
-msgstr "在您的最終購買決策中還有其他考慮因素。"
+msgstr "在您的最終採購決策中還有其他考慮因素。"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_5
@@ -1868,9 +2079,14 @@ msgid "This box will not be visible to your visitors"
 msgstr "此框對您的訪問者不可見"
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/website_blog.editor.js:0
-#, python-format
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/options.js:0
+msgid "This tag already exists"
+msgstr "標籤名稱已存在！"
+
+#. module: website_blog
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/options.js:0
 msgid "Tiny"
 msgstr "細小"
 
@@ -1878,7 +2094,17 @@ msgstr "細小"
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__name
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
 msgid "Title"
-msgstr "稱謂"
+msgstr "標題"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Title Above Cover"
+msgstr "標題置於封面之上"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Title Inside Cover"
+msgstr "標題置於封面內"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_7
@@ -1932,7 +2158,12 @@ msgid ""
 "carefully synchronized with computers for the best view of the lunar "
 "landscape."
 msgstr ""
-"為了把它帶到一個自然的下一個層次，你可能想利用與其他天文學家的夥伴關係，或者參觀一個真正偉大的望遠鏡，這是由專業人士已經投資更好的技術，以消除大氣干擾，看到月亮甚至更好。互聯網可以讓你訪問哈勃和許多巨大的望遠鏡，指向月球所有的時間。此外，許多天文學俱樂部正在研究如何組合多台望遠鏡，仔細與電腦同步，以最佳方式觀賞月球景觀。"
+"為了把它帶到一個自然的下一個層次，你可能想利用與其他天文學家的夥伴關係，或者參觀一個真正偉大的望遠鏡，這是由專業人士已經投資更好的技術，以消除大氣干擾，看到月亮甚至更好。網路可以讓你訪問哈勃和許多巨大的望遠鏡，指向月球所有的時間。此外，許多天文學俱樂部正在研究如何組合多台望遠鏡，仔細與電腦同步，以最佳方式觀賞月球景觀。"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Top Banner"
+msgstr "頂部橫額"
 
 #. module: website_blog
 #: model:blog.blog,name:website_blog.blog_blog_1
@@ -1942,7 +2173,7 @@ msgstr "旅行"
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
 msgid "Twitter"
-msgstr "推特"
+msgstr "Twitter"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
@@ -1950,33 +2181,31 @@ msgid "Unpublished ("
 msgstr "未發佈（"
 
 #. module: website_blog
-#: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_unread
-#: model:ir.model.fields,field_description:website_blog.field_blog_post__message_unread
-msgid "Unread Messages"
-msgstr "未讀消息"
-
-#. module: website_blog
-#: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_unread_counter
-#: model:ir.model.fields,field_description:website_blog.field_blog_post__message_unread_counter
-msgid "Unread Messages Counter"
-msgstr "未讀消息計數器"
-
-#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.post_heading
 msgid "Untitled Post"
 msgstr "無標題帖文"
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "Use this icon to preview your blog post on <b>mobile devices</b>."
-msgstr "使用此圖標，在<b>移動設備</b>上預覽您的部落格文章。"
+msgstr "使用此圖示，在<b>手機設備</b>上預覽您的部落格文章。"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_tag_form
 msgid "Used in:"
 msgstr "使用在："
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Viewpoints"
+msgstr "觀點"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.post_info
+msgid "Views"
+msgstr "瀏覽次數"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.index
@@ -1989,6 +2218,11 @@ msgid "Visible on current website"
 msgstr "在當前網站可見"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_content
+msgid "WRITE HERE OR DRAG BUILDING BLOCKS"
+msgstr "在此處書寫，或拖放內容方塊"
+
+#. module: website_blog
 #: model:ir.model,name:website_blog.model_website
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__website_id
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__website_id
@@ -1998,18 +2232,23 @@ msgstr "網站"
 #. module: website_blog
 #: model:ir.actions.act_url,name:website_blog.action_open_website
 msgid "Website Blogs"
-msgstr "網站部落格"
+msgstr "網站網誌"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__website_message_ids
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__website_message_ids
 msgid "Website Messages"
-msgstr "網站信息"
+msgstr "網站資訊"
+
+#. module: website_blog
+#: model:ir.model,name:website_blog.model_website_snippet_filter
+msgid "Website Snippet Filter"
+msgstr "網站小摘要篩選器"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__website_url
 msgid "Website URL"
-msgstr "網站URL"
+msgstr "網站網址"
 
 #. module: website_blog
 #: model:ir.model.fields,help:website_blog.field_blog_blog__website_message_ids
@@ -2022,21 +2261,21 @@ msgstr "網站溝通記錄"
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__website_meta_description
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__website_meta_description
 msgid "Website meta description"
-msgstr "網站元說明"
+msgstr "網站 meta 說明"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__website_meta_keywords
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__website_meta_keywords
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__website_meta_keywords
 msgid "Website meta keywords"
-msgstr "網站元關鍵詞"
+msgstr "網站meta關鍵字"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__website_meta_title
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__website_meta_title
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__website_meta_title
 msgid "Website meta title"
-msgstr "網站元標題"
+msgstr "網站meta標題"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__website_meta_og_img
@@ -2062,16 +2301,15 @@ msgstr ""
 "雖然任何人都可以在任何時候仰望並愛上星星，但天文學的樂趣是學習如何變得越來越熟練，並具備更多的凝視恒星的能力，每次你仰望時，你看到和理解的越來越多。這裡有一些步驟，你可以採取，使時刻，你可以奉獻給你的天文學愛好更愉快。"
 
 #. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "With a View"
+msgstr "有檢視畫面"
+
+#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.sidebar_blog_index
 msgid "Write a small text here to describe your blog or company."
 msgstr "在這裡寫一個說明來描述你的部落格或公司。"
-
-#. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
-msgid "Write a title, the subtitle is optional."
-msgstr "寫一個標題，副標題是可選的。"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
@@ -2084,7 +2322,7 @@ msgid ""
 "offerings like a Pillow menu or Bath menu, choice of smoking or non smoking "
 "rooms etc."
 msgstr ""
-"你應該總是仔細考慮你需要從你的臥室類型的設施，並找到酒店，有你認為是重要的。酒店目錄網站應詳細說明諸如：床的大小，互聯網接入（其成本，是否有無線網路或有線寬頻連線），免費設施，從房間的意見和豪華產品，如枕頭功能表或浴缸功能表，選擇吸煙或非吸煙客房等。"
+"你應該總是仔細考慮你需要從你的臥室類型的設施，並找到酒店，有你認為是重要的。酒店目錄網站應詳細說明諸如：床的大小，網路（其成本，是否有無線網路或有線寬頻連線），免費設施，從房間的意見和豪華產品，如枕頭功能表或浴缸功能表，選擇吸煙或非吸煙客房等。"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_2
@@ -2106,30 +2344,20 @@ msgid "adventure"
 msgstr "冒險"
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
-msgid ""
-"bg-100 border mx-1 mb-2 rounded-circle d-flex align-items-center justify-"
-"content-center text-decoration-none"
-msgstr ""
-"bg-100 border mx-1 mb-2 rounded-circle d-flex align-items-center justify-"
-"content-center text-decoration-none"
-
-#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_template_new_post
 msgid "blog. Click here to access the blog :"
-msgstr "已在部落格上發佈新帖子。點選此處訪問部落格："
+msgstr "已在部落格上發佈新文章。點選此處訪問部落格："
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.post_breadcrumbs
 msgid "breadcrumb"
-msgstr "導覽列"
+msgstr "頁面路徑"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
 #: model_terms:ir.ui.view,arch_db:website_blog.post_heading
 msgid "by"
-msgstr "by"
+msgstr "由"
 
 #. module: website_blog
 #: model:blog.tag,name:website_blog.blog_tag_5
@@ -2144,7 +2372,7 @@ msgstr "指南"
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_template_new_post
 msgid "has been published on the"
-msgstr "已在部落格上發佈新帖子"
+msgstr "已發佈於"
 
 #. module: website_blog
 #: model:blog.tag,name:website_blog.blog_tag_1
@@ -2154,22 +2382,7 @@ msgstr "酒店 "
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_content
 msgid "in"
-msgstr "在"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
-msgid "in <i class=\"fa fa-folder-open text-muted\"/>"
-msgstr "於 <i class=\"fa fa-folder-open text-muted\"/>"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
-msgid "in <i class=\"fa fa-folder-open text-white-75\"/>"
-msgstr "於 <i class=\"fa fa-folder-open text-white-75\"/>"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_short
-msgid "justify-content-center"
-msgstr "對齊內容中心"
+msgstr "網誌："
 
 #. module: website_blog
 #: model:blog.tag,name:website_blog.blog_tag_4
@@ -2188,5 +2401,14 @@ msgstr "未發佈"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
+msgid ""
+"|\n"
+"                            <i class=\"fa fa-comment text-muted me-1\"/>"
+msgstr ""
+"|\n"
+"                            <i class=\"fa fa-comment text-muted me-1\"/>"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
 msgid "| No comments yet"
-msgstr "|尚未發表評論"
+msgstr "| 未有評論"

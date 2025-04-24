@@ -3,20 +3,22 @@
 # 	* website_blog
 # 
 # Translators:
-# Arnis Putniņš <arnis@allegro.lv>, 2019
-# InfernalLV <karlisdreizis@gmail.com>, 2019
-# JanisJanis <jbojars@gmail.com>, 2019
-# ievaputnina <ievai.putninai@gmail.com>, 2019
-# Martin Trigaux, 2019
+# Anzelika Adejanova, 2024
+# JanisJanis <jbojars@gmail.com>, 2024
+# Martin Trigaux, 2024
+# ievaputnina <ievai.putninai@gmail.com>, 2024
+# Arnis Putniņš <arnis@allegro.lv>, 2024
+# Will Sensors, 2025
+# Armīns Jeltajevs <armins.jeltajevs@gmail.com>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-12-05 12:34+0000\n"
-"PO-Revision-Date: 2019-08-26 09:15+0000\n"
-"Last-Translator: Martin Trigaux, 2019\n"
-"Language-Team: Latvian (https://www.transifex.com/odoo/teams/41243/lv/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Armīns Jeltajevs <armins.jeltajevs@gmail.com>, 2025\n"
+"Language-Team: Latvian (https://app.transifex.com/odoo/teams/41243/lv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -24,9 +26,15 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);\n"
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
-msgid "&amp;nbsp;"
-msgstr "&amp;nbsp;"
+#: model_terms:ir.ui.view,arch_db:website_blog.date_selector
+msgid "#{year}"
+msgstr ""
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_blog.py:0
+msgid "%s (copy)"
+msgstr "%s (kopija)"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_feed
@@ -39,58 +47,13 @@ msgid "' page header."
 msgstr ""
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_short
+msgid "'. Showing results for '"
+msgstr "'. Rāda rezultātus par"
+
+#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.date_selector
 msgid "-- All dates"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "1 post max"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "10 posts max"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "2 posts max"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "3 posts max"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "4 posts max"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "5 posts max"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "6 posts max"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "7 posts max"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "8 posts max"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "9 posts max"
 msgstr ""
 
 #. module: website_blog
@@ -101,13 +64,6 @@ msgid ""
 "to travel to perform your viewings. Binoculars go with you much easier and "
 "they are more lightweight to carry to the country and use while you are "
 "there than a cumbersome telescope set up kit."
-msgstr ""
-
-#. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
-msgid "<b>Click on Save</b> to record your changes."
 msgstr ""
 
 #. module: website_blog
@@ -122,9 +78,8 @@ msgid ""
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "<b>Publish your blog post</b> to make it visible to your visitors."
 msgstr ""
 
@@ -132,15 +87,6 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_comment
 msgid "<b>Sign in</b>"
 msgstr "<b>Pierakstīties</b>"
-
-#. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
-msgid ""
-"<b>That's it, your blog post is published!</b> Discover more features "
-"through the <i>Customize</i> menu."
-msgstr ""
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_6
@@ -153,9 +99,8 @@ msgid ""
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid ""
 "<b>Write your story here.</b> Use the top toolbar to style your text: add an"
 " image or table, set bold or italic, etc. Drag and drop building blocks for "
@@ -203,7 +148,7 @@ msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_tags_display
-msgid "<em>No tags definied</em>"
+msgid "<em>No tags defined</em>"
 msgstr ""
 
 #. module: website_blog
@@ -215,18 +160,20 @@ msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_view_kanban
-msgid "<i class=\"fa fa-clock-o\" role=\"img\" aria-label=\"Post date\" title=\"Post date\"/>"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "<i class=\"fa fa-folder-open\"/> Choose a blog"
+msgid ""
+"<i class=\"fa fa-clock-o me-1\" role=\"img\" aria-label=\"Post date\" "
+"title=\"Post date\"/>"
 msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
 msgid "<i class=\"fa fa-github text-github\" aria-label=\"Github\" title=\"Github\"/>"
 msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_view_kanban
+msgid "<i class=\"fa fa-globe me-1\" title=\"Website\"/>"
+msgstr "<i class=\"fa fa-globe me-1\" title=\"Website\"/>"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
@@ -249,14 +196,14 @@ msgid "<i class=\"fa fa-rss-square\" aria-label=\"RSS\" title=\"RSS\"/>"
 msgstr ""
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
-msgid "<i class=\"fa fa-sort-numeric-asc\"/> Posts limit"
+#: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
+msgid "<i class=\"fa fa-tiktok text-tiktok\" aria-label=\"TikTok\" title=\"TikTok\"/>"
 msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
-msgid "<i class=\"fa fa-twitter text-twitter\" aria-label=\"Twitter\" title=\"Twitter\"/>"
+msgid "<i class=\"fa fa-twitter text-twitter\" aria-label=\"X\" title=\"X\"/>"
 msgstr ""
 
 #. module: website_blog
@@ -269,27 +216,34 @@ msgstr ""
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_read_next
 msgid ""
-"<span class=\"bg-gamma h6 d-inline-block py-1 px-2 rounded-sm\">Read "
+"<span class=\"bg-o-color-3 h6 d-inline-block py-1 px-2 rounded-1\">Read "
 "Next</span>"
 msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_read_next
 msgid ""
-"<span class=\"h4 d-inline-block py-1 px-2 rounded-sm text-white\">\n"
+"<span class=\"h4 d-inline-block py-1 px-2 rounded-1 text-white\">\n"
 "                                    <i class=\"fa fa-angle-right fa-3x text-white\" aria-label=\"Read next\" title=\"Read Next\"/>\n"
 "                                </span>"
 msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
-msgid "<span class=\"mr-1\">Show:</span>"
+msgid "<span class=\"me-1\">Show:</span>"
 msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blogs_nav
-msgid "<span class=\"nav-link disabled pl-0\">Blogs:</span>"
+msgid "<span class=\"nav-link disabled ps-0\">Blogs:</span>"
 msgstr ""
+
+#. module: website_blog
+#: model_terms:web_tour.tour,rainbow_man_message:website_blog.blog
+msgid "<span><b>Good job!</b> You went through all steps of this tour.</span>"
+msgstr ""
+"<span><b>Labs darbs!</b> Jūs izgājāt cauri visiem šīs pamācības "
+"soļiem.</span>"
 
 #. module: website_blog
 #: model:blog.post,subtitle:website_blog.blog_post_2
@@ -349,7 +303,7 @@ msgstr "Nepieciešama darbība"
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__active
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__active
 msgid "Active"
-msgstr "Aktīvs Sistēmā"
+msgstr "Aktīvs"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_tags_display
@@ -362,13 +316,20 @@ msgid "All"
 msgstr "Visi"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blogs_nav
 #: model_terms:ir.ui.view,arch_db:website_blog.post_breadcrumbs
 msgid "All Blogs"
 msgstr ""
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_options
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
 msgid "All blogs"
+msgstr ""
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Alone in the ocean"
 msgstr ""
 
 #. module: website_blog
@@ -377,12 +338,9 @@ msgid "Along those lines, how difficult is the set up and break down?"
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/s_latest_posts_frontend.js:0
-#, python-format
-msgid ""
-"An error occured with this latest posts block. If the problem persists, "
-"please consider deleting it and adding a new one"
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/website_blog.js:0
+msgid "Amazing blog article: %(title)s! Check it live: %(url)s"
 msgstr ""
 
 #. module: website_blog
@@ -409,6 +367,7 @@ msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_archive_display
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
 msgid "Archive"
 msgstr "Arhīvs"
 
@@ -422,6 +381,7 @@ msgstr "Arhivēts"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_archives
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
 msgid "Archives"
 msgstr "Arhīvi"
 
@@ -433,7 +393,7 @@ msgstr ""
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
 msgid "Articles"
-msgstr ""
+msgstr "Raksti"
 
 #. module: website_blog
 #: model:blog.blog,name:website_blog.blog_blog_2
@@ -467,13 +427,26 @@ msgstr "Pielikumu skaits"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__author_id
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_search
 msgid "Author"
 msgstr "Autors"
 
 #. module: website_blog
+#: model:ir.model.fields,field_description:website_blog.field_blog_post__author_name
+msgid "Author Name"
+msgstr "Autora vārds"
+
+#. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__author_avatar
 msgid "Avatar"
+msgstr "Ikona"
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Awesome hotel rooms"
 msgstr ""
 
 #. module: website_blog
@@ -526,13 +499,18 @@ msgid "Beyond The Eye"
 msgstr ""
 
 #. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website.py:0
+#: model:ir.model,name:website_blog.model_blog_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__blog_id
+#: model:ir.ui.menu,name:website_blog.menu_website_blog_root_global
+#: model:website.menu,name:website_blog.menu_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_blog_view_search
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_blog_form
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_search
-#: model:website.menu,name:website_blog.menu_blog
 msgid "Blog"
-msgstr ""
+msgstr "Blogs"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__name
@@ -540,42 +518,39 @@ msgid "Blog Name"
 msgstr ""
 
 #. module: website_blog
-#: code:addons/website_blog/models/website.py:0
-#: code:addons/website_blog/models/website.py:0
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Blog Page"
+msgstr ""
+
+#. module: website_blog
 #: model:ir.model,name:website_blog.model_blog_post
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_form
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_search
-#, python-format
 msgid "Blog Post"
 msgstr ""
 
 #. module: website_blog
-#: code:addons/website_blog/models/website.py:0
-#, python-format
-msgid "Blog Post <b>%s</b> seems to be calling this file !"
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_complete
+msgid "Blog Post Cover"
 msgstr ""
 
 #. module: website_blog
-#: code:addons/website_blog/models/website.py:0
-#, python-format
-msgid "Blog Post <b>%s</b> seems to have a link to this page !"
+#: model:ir.actions.act_window,name:website_blog.action_blog_post
+msgid "Blog Post Pages"
 msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_complete
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_view_form_add
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_read_next
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_form
 msgid "Blog Post Title"
 msgstr ""
 
 #. module: website_blog
-#: code:addons/website_blog/models/website.py:0
-#: code:addons/website_blog/models/website.py:0
-#: model:ir.actions.act_window,name:website_blog.action_blog_post
-#: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_list
-#, python-format
+#: model:ir.model.fields,field_description:website_blog.field_blog_blog__blog_post_ids
+#: model:ir.ui.menu,name:website_blog.menu_blog_post_pages
+#: model_terms:ir.ui.view,arch_db:website_blog.website_blog
 msgid "Blog Posts"
 msgstr ""
 
@@ -613,13 +588,33 @@ msgstr ""
 
 #. module: website_blog
 #: model:ir.actions.act_window,name:website_blog.action_blog_blog
-#: model:ir.model,name:website_blog.model_blog_blog
 #: model:ir.ui.menu,name:website_blog.menu_blog_global
-#: model:ir.ui.menu,name:website_blog.menu_website_blog_root
-#: model:ir.ui.menu,name:website_blog.menu_website_blog_root_global
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_searchbar_input_snippet_options
+#: model_terms:ir.ui.view,arch_db:website_blog.blogs_nav
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_blog_list
+#: model_terms:ir.ui.view,arch_db:website_blog.website_blog
 msgid "Blogs"
 msgstr "Blogs"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Blogs List"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Blogs Page"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Bottom"
+msgstr "Apakšā"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Breadcrumb"
+msgstr ""
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
@@ -648,7 +643,12 @@ msgstr ""
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__can_publish
 msgid "Can Publish"
-msgstr ""
+msgstr "Var publicēt"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Cards"
+msgstr "Kartes"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__category_id
@@ -656,22 +656,20 @@ msgid "Category"
 msgstr "Kategorija"
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
-msgid "Change Cover"
-msgstr ""
-
-#. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
 msgid "Children’s’ Facilities"
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "Choose an image from the library."
+msgstr ""
+
+#. module: website_blog
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
+msgid "Click here to add new content to your website."
 msgstr ""
 
 #. module: website_blog
@@ -682,16 +680,15 @@ msgid ""
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
-msgid "Click on <b>Save</b> to set the picture as cover."
-msgstr ""
-
-#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blogs_nav
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
 msgid "Close"
 msgstr "Aizvērt"
+
+#. module: website_blog
+#: model:ir.model.fields,field_description:website_blog.field_blog_tag__color
+msgid "Color"
+msgstr "Krāsa"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
@@ -700,8 +697,15 @@ msgstr "Komentārs"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
+#: model_terms:ir.ui.view,arch_db:website_blog.post_info
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
 msgid "Comments"
-msgstr "Comments"
+msgstr "Komentāri"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Comments/Views Stats"
+msgstr ""
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__content
@@ -725,14 +729,14 @@ msgid ""
 msgstr ""
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Cover"
+msgstr "Nosegt"
+
+#. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__cover_properties
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__cover_properties
 msgid "Cover Properties"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.actions.act_window,help:website_blog.action_blog_post
-msgid "Create a new blog post"
 msgstr ""
 
 #. module: website_blog
@@ -752,17 +756,37 @@ msgid "Created on"
 msgstr "Izveidots"
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Date"
+msgstr "Datums"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_searchbar_input_snippet_options
+msgid "Date (new to old)"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_searchbar_input_snippet_options
+msgid "Date (old to new)"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_searchbar_input_snippet_options
+msgid "Description"
+msgstr "Apraksts"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Dexter"
+msgstr ""
+
+#. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__display_name
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__display_name
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__display_name
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag_category__display_name
 msgid "Display Name"
-msgstr "Attēlotais nosaukums"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.blog_edit_options
-msgid "Duplicate"
-msgstr "Dublēt"
+msgstr "Nosaukums"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_2
@@ -781,13 +805,8 @@ msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_tags_display
-msgid "Edit"
-msgstr "Labot"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_tags_display
 msgid "Edit in backend"
-msgstr "Edit in backend"
+msgstr "Rediģēt aizmugursistēmā"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_short
@@ -805,10 +824,22 @@ msgid "Edit the 'Filter Results' page header."
 msgstr ""
 
 #. module: website_blog
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
+msgid "Edit your title, the subtitle is optional."
+msgstr ""
+
+#. module: website_blog
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
+msgid "Enter your post's title"
+msgstr ""
+
+#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
 msgid "Facebook"
-msgstr ""
+msgstr "Facebook"
 
 #. module: website_blog
 #: model:blog.post,subtitle:website_blog.blog_post_3
@@ -827,6 +858,7 @@ msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
 msgid "Follow Us"
 msgstr ""
 
@@ -835,12 +867,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__message_follower_ids
 msgid "Followers"
 msgstr "Sekotāji"
-
-#. module: website_blog
-#: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_channel_ids
-#: model:ir.model.fields,field_description:website_blog.field_blog_post__message_channel_ids
-msgid "Followers (Channels)"
-msgstr "Sekotāji (Kanāli)"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_partner_ids
@@ -874,6 +900,11 @@ msgid ""
 msgstr ""
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Full-Width"
+msgstr ""
+
+#. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_5
 msgid "Get a geek"
 msgstr ""
@@ -894,9 +925,20 @@ msgid "Get started"
 msgstr ""
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Grid"
+msgstr "Režģis"
+
+#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_search
 msgid "Group By"
 msgstr "Grupēt pēc"
+
+#. module: website_blog
+#: model:ir.model.fields,field_description:website_blog.field_blog_blog__has_message
+#: model:ir.model.fields,field_description:website_blog.field_blog_post__has_message
+msgid "Has Message"
+msgstr "Ir ziņojums"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
@@ -906,6 +948,11 @@ msgstr ""
 #. module: website_blog
 #: model:blog.blog,subtitle:website_blog.blog_blog_1
 msgid "Holiday tips"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Hover Effect"
 msgstr ""
 
 #. module: website_blog
@@ -929,6 +976,7 @@ msgstr ""
 
 #. module: website_blog
 #: model:blog.post,name:website_blog.blog_post_3
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_blog_posts_preview_data
 msgid "How to choose the right hotel"
 msgstr ""
 
@@ -942,9 +990,7 @@ msgstr "ID"
 
 #. module: website_blog
 #: model:ir.model.fields,help:website_blog.field_blog_blog__message_needaction
-#: model:ir.model.fields,help:website_blog.field_blog_blog__message_unread
 #: model:ir.model.fields,help:website_blog.field_blog_post__message_needaction
-#: model:ir.model.fields,help:website_blog.field_blog_post__message_unread
 msgid "If checked, new messages require your attention."
 msgstr "Ja atzīmēts, jums jāpievērš uzmanība jauniem ziņojumiem."
 
@@ -974,12 +1020,23 @@ msgid ""
 msgstr ""
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.dynamic_filter_template_blog_post_card
+#: model_terms:ir.ui.view,arch_db:website_blog.dynamic_filter_template_blog_post_horizontal
+msgid "In"
+msgstr "Pēc"
+
+#. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_6
 msgid ""
 "In many ways, it is a big step from someone who is just fooling around with "
 "astronomy to a serious student of the science. But you and I both know that "
 "there is still another big step after buying a telescope before you really "
 "know how to use it."
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Increase Readability"
 msgstr ""
 
 #. module: website_blog
@@ -991,6 +1048,12 @@ msgstr "Ir sekotājs"
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__is_published
 msgid "Is Published"
+msgstr "Ir publicēts"
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Islands"
 msgstr ""
 
 #. module: website_blog
@@ -1031,6 +1094,12 @@ msgid ""
 msgstr ""
 
 #. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Jungle"
+msgstr ""
+
+#. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_5
 msgid "Know what you are looking at"
 msgstr ""
@@ -1041,9 +1110,8 @@ msgid "Know when to look"
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/website_blog.editor.js:0
-#, python-format
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/options.js:0
 msgid "Large"
 msgstr "Large"
 
@@ -1054,19 +1122,11 @@ msgid "Last Contributor"
 msgstr "Pēdējais Papildinājs"
 
 #. module: website_blog
-#: model:ir.model.fields,field_description:website_blog.field_blog_blog____last_update
-#: model:ir.model.fields,field_description:website_blog.field_blog_post____last_update
-#: model:ir.model.fields,field_description:website_blog.field_blog_tag____last_update
-#: model:ir.model.fields,field_description:website_blog.field_blog_tag_category____last_update
-msgid "Last Modified on"
-msgstr "Pēdējoreiz modificēts"
-
-#. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__write_uid
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__write_uid
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag_category__write_uid
 msgid "Last Updated by"
-msgstr "Pēdējoreiz atjaunoja"
+msgstr "Pēdējo reizi atjaunoja"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__write_date
@@ -1074,19 +1134,17 @@ msgstr "Pēdējoreiz atjaunoja"
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__write_date
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag_category__write_date
 msgid "Last Updated on"
-msgstr "Pēdējoreiz atjaunots"
+msgstr "Pēdējās izmaiņas"
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
-msgid "Latest"
+#: model:website.snippet.filter,name:website_blog.dynamic_filter_latest_blog_posts
+msgid "Latest Blog Posts"
 msgstr ""
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts
-#: model_terms:ir.ui.view,arch_db:website_blog.s_latest_posts_big_picture
-msgid "Latest Posts"
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Layout"
+msgstr "Izkārtojums"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_5
@@ -1108,6 +1166,11 @@ msgid "LinkedIn"
 msgstr ""
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "List"
+msgstr "Saraksts"
+
+#. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
 msgid ""
 "Local color is great but the hotel’s own restaurants and bars can play an "
@@ -1119,16 +1182,16 @@ msgstr ""
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
 msgid "Location"
-msgstr "Vieta"
+msgstr "Atrašanās vieta"
 
 #. module: website_blog
-#: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_main_attachment_id
-#: model:ir.model.fields,field_description:website_blog.field_blog_post__message_main_attachment_id
-msgid "Main Attachment"
-msgstr "Galvenais pielikums"
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Marley"
+msgstr ""
 
 #. module: website_blog
 #: model:blog.post,name:website_blog.blog_post_2
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_blog_posts_preview_data
 msgid "Maui helicopter tours"
 msgstr ""
 
@@ -1162,9 +1225,8 @@ msgid ""
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/website_blog.editor.js:0
-#, python-format
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/options.js:0
 msgid "Medium"
 msgstr "Vidējs"
 
@@ -1183,7 +1245,7 @@ msgstr "Ziņojumi"
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_form
 msgid "Meta Description"
-msgstr ""
+msgstr "Meta apraksts"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_form
@@ -1219,23 +1281,29 @@ msgid ""
 msgstr ""
 
 #. module: website_blog
+#: model:website.snippet.filter,name:website_blog.dynamic_filter_most_viewed_blog_posts
+msgid "Most Viewed Blog Posts"
+msgstr ""
+
+#. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__name
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag_category__name
 msgid "Name"
 msgstr "Nosaukums"
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/website_blog.editor.js:0
-#, python-format
+#: model:ir.actions.act_window,name:website_blog.blog_post_action_add
 msgid "New Blog Post"
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/s_latest_posts_frontend.js:0
-#, python-format
-msgid "No blog post was found. Make sure your posts are published."
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Next Article"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "No Cover"
 msgstr ""
 
 #. module: website_blog
@@ -1246,12 +1314,27 @@ msgstr ""
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__visits
 msgid "No of Views"
+msgstr "Skatījumu skaits"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
+msgid "No results for \"%s\"."
 msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_short
+msgid "No results found for '"
+msgstr "Nav atrasts neviens rezultāts"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_tags
 msgid "No tags defined yet."
 msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "None"
+msgstr "Nav"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_4
@@ -1262,6 +1345,21 @@ msgid ""
 "these guidelines, you will enjoy hours of enjoyment stargazing at the "
 "phenomenal sights in the night sky that are beyond the naked eye."
 msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Normal"
+msgstr "Standarta"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Normal picture"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_view_kanban
+msgid "Not Published"
+msgstr "Nav publicēts"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_5
@@ -1281,12 +1379,12 @@ msgstr "Darbību skaits"
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_has_error_counter
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__message_has_error_counter
 msgid "Number of errors"
-msgstr ""
+msgstr "Kļūdu skaits"
 
 #. module: website_blog
 #: model:ir.model.fields,help:website_blog.field_blog_blog__message_needaction_counter
 #: model:ir.model.fields,help:website_blog.field_blog_post__message_needaction_counter
-msgid "Number of messages which requires an action"
+msgid "Number of messages requiring action"
 msgstr "Ziņojumu, kuriem nepieciešama darbība, skaits"
 
 #. module: website_blog
@@ -1294,12 +1392,6 @@ msgstr "Ziņojumu, kuriem nepieciešama darbība, skaits"
 #: model:ir.model.fields,help:website_blog.field_blog_post__message_has_error_counter
 msgid "Number of messages with delivery error"
 msgstr "Ziņojumu, kas satur piegādes kļūdu, skaits"
-
-#. module: website_blog
-#: model:ir.model.fields,help:website_blog.field_blog_blog__message_unread_counter
-#: model:ir.model.fields,help:website_blog.field_blog_post__message_unread_counter
-msgid "Number of unread messages"
-msgstr "Neizlasīto ziņojumu skaits"
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_7
@@ -1313,15 +1405,22 @@ msgid ""
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
-msgid "Once you have reviewed the content on mobile, close the preview."
+msgid ""
+"Once you have reviewed the content on mobile, you can switch back to the "
+"normal view by clicking here again"
 msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_tags
 msgid "Others"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
+#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
+msgid "Our Latest Posts"
 msgstr ""
 
 #. module: website_blog
@@ -1385,9 +1484,30 @@ msgid "Photo by Teddy Kelley, @teddykelley"
 msgstr ""
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Picture size"
+msgstr ""
+
+#. module: website_blog
+#: model:ir.model.fields,field_description:website_blog.field_blog_blog__blog_post_count
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__post_ids
 msgid "Posts"
 msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Posts List"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_searchbar_input_snippet_options
+msgid "Publication Date"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_view_kanban
+msgid "Published"
+msgstr "Publicēts"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
@@ -1416,13 +1536,14 @@ msgid "Publishing date"
 msgstr ""
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
-msgid "Read more"
-msgstr ""
+#: model:ir.model.fields,field_description:website_blog.field_blog_blog__rating_ids
+#: model:ir.model.fields,field_description:website_blog.field_blog_post__rating_ids
+msgid "Ratings"
+msgstr "Reitingi"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
-msgid "Read more <i class=\"fa fa-chevron-right ml-2\"/>"
+msgid "Read more <i class=\"oi oi-chevron-right ms-2\"/>"
 msgstr ""
 
 #. module: website_blog
@@ -1433,7 +1554,7 @@ msgstr ""
 #. module: website_blog
 #: model:ir.model.fields,help:website_blog.field_blog_blog__website_id
 #: model:ir.model.fields,help:website_blog.field_blog_post__website_id
-msgid "Restrict publishing to this website."
+msgid "Restrict to a specific website."
 msgstr ""
 
 #. module: website_blog
@@ -1446,34 +1567,79 @@ msgstr ""
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__is_seo_optimized
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__is_seo_optimized
 msgid "SEO optimized"
-msgstr ""
+msgstr "SEO optimizēts"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_has_sms_error
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__message_has_sms_error
 msgid "SMS Delivery error"
+msgstr "Īsziņas piegādes kļūda"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.dynamic_filter_template_blog_post_big_picture
+#: model_terms:ir.ui.view,arch_db:website_blog.dynamic_filter_template_blog_post_card
+#: model_terms:ir.ui.view,arch_db:website_blog.dynamic_filter_template_blog_post_horizontal
+#: model_terms:ir.ui.view,arch_db:website_blog.dynamic_filter_template_blog_post_list
+msgid "Sample"
+msgstr "Uzņemšanas piedāvājuma paraugs"
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Satellites"
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/website_blog.editor.js:0
-#, python-format
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
+msgid "Search for an image. (eg: type \"business\")"
+msgstr ""
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Seaside vs mountain side"
+msgstr ""
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Seeing the world from above"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_view_form_add
 msgid "Select Blog"
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "Select the blog you want to add the post to."
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "Select this menu item to create a new blog post."
 msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Select to Comment"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Select to Tweet"
+msgstr ""
+
+#. module: website_blog
+#: model:ir.model.fields,field_description:website_blog.field_blog_blog__seo_name
+#: model:ir.model.fields,field_description:website_blog.field_blog_post__seo_name
+#: model:ir.model.fields,field_description:website_blog.field_blog_tag__seo_name
+msgid "Seo name"
+msgstr "Seo nosaukums"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.view_blog_post_form
@@ -1481,9 +1647,8 @@ msgid "Separate every keyword with a comma"
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "Set a blog post <b>cover</b>."
 msgstr ""
 
@@ -1494,6 +1659,11 @@ msgid ""
 "their home. The exquisite fauna in this near-pristine land is also worth "
 "checking out."
 msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Share Links"
+msgstr "Kopīgošanas saites"
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
@@ -1507,7 +1677,7 @@ msgstr ""
 
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
-msgid "Share on Twitter"
+msgid "Share on X"
 msgstr ""
 
 #. module: website_blog
@@ -1516,7 +1686,13 @@ msgid "Share this post"
 msgstr ""
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Sidebar"
+msgstr ""
+
+#. module: website_blog
 #: model:blog.post,name:website_blog.blog_post_1
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_blog_posts_preview_data
 msgid "Sierra Tarahumara"
 msgstr ""
 
@@ -1526,6 +1702,27 @@ msgid ""
 "Sierra Tarahumara, popularly known as Copper Canyon is situated in Mexico. "
 "The area is a favorite destination among those seeking an adventurous "
 "vacation."
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Silly-Chico"
+msgstr ""
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Skies"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Smaller"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
+msgid "Smaller picture"
 msgstr ""
 
 #. module: website_blog
@@ -1579,17 +1776,21 @@ msgid "Someone famous in <cite title=\"Source Title\">Source Title</cite>"
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Spotting the fauna"
+msgstr ""
+
+#. module: website_blog
+#. odoo-python
 #: code:addons/website_blog/models/website_blog.py:0
-#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "Start writing here..."
 msgstr ""
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_3
 msgid "Style"
-msgstr ""
+msgstr "Stils"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__subtitle
@@ -1599,7 +1800,6 @@ msgstr ""
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_complete
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_read_next
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
 msgid "Subtitle"
@@ -1633,13 +1833,13 @@ msgstr ""
 
 #. module: website_blog
 #: model:ir.model.constraint,message:website_blog.constraint_blog_tag_category_name_uniq
-msgid "Tag category already exists !"
+msgid "Tag category already exists!"
 msgstr ""
 
 #. module: website_blog
 #: model:ir.model.constraint,message:website_blog.constraint_blog_tag_name_uniq
-msgid "Tag name already exists !"
-msgstr "Birkas nosaukums jau eksistē !"
+msgid "Tag name already exists!"
+msgstr "Iezīmes nosaukums jau pastāv!"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__tag_ids
@@ -1647,12 +1847,30 @@ msgstr "Birkas nosaukums jau eksistē !"
 #: model:ir.ui.menu,name:website_blog.menu_blog_tag_global
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_tags_display
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_tags
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
 msgid "Tags"
-msgstr "Birkas"
+msgstr "Iezīmes"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Tags List"
+msgstr ""
+
+#. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Taking pictures in the dark"
+msgstr ""
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__teaser
+#: model_terms:ir.ui.view,arch_db:website_blog.s_dynamic_snippet_options_template
 msgid "Teaser"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Teaser & Tags"
 msgstr ""
 
 #. module: website_blog
@@ -1814,9 +2032,14 @@ msgid "This box will not be visible to your visitors"
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/website_blog.editor.js:0
-#, python-format
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/options.js:0
+msgid "This tag already exists"
+msgstr ""
+
+#. module: website_blog
+#. odoo-javascript
+#: code:addons/website_blog/static/src/js/options.js:0
 msgid "Tiny"
 msgstr ""
 
@@ -1825,6 +2048,16 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
 msgid "Title"
 msgstr "Nosaukums"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Title Above Cover"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Title Inside Cover"
+msgstr ""
 
 #. module: website_blog
 #: model_terms:blog.post,content:website_blog.blog_post_7
@@ -1877,6 +2110,11 @@ msgid ""
 msgstr ""
 
 #. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.snippet_options
+msgid "Top Banner"
+msgstr ""
+
+#. module: website_blog
 #: model:blog.blog,name:website_blog.blog_blog_1
 msgid "Travel"
 msgstr ""
@@ -1892,26 +2130,13 @@ msgid "Unpublished ("
 msgstr ""
 
 #. module: website_blog
-#: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_unread
-#: model:ir.model.fields,field_description:website_blog.field_blog_post__message_unread
-msgid "Unread Messages"
-msgstr "Neizlasīti ziņojumi"
-
-#. module: website_blog
-#: model:ir.model.fields,field_description:website_blog.field_blog_blog__message_unread_counter
-#: model:ir.model.fields,field_description:website_blog.field_blog_post__message_unread_counter
-msgid "Unread Messages Counter"
-msgstr "Neizlasīto ziņojumu skaitītājs"
-
-#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.post_heading
 msgid "Untitled Post"
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
 msgid "Use this icon to preview your blog post on <b>mobile devices</b>."
 msgstr ""
 
@@ -1921,6 +2146,17 @@ msgid "Used in:"
 msgstr ""
 
 #. module: website_blog
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "Viewpoints"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.post_info
+msgid "Views"
+msgstr "Skatījumi"
+
+#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.index
 msgid "Visible in all blogs' pages"
 msgstr ""
@@ -1928,6 +2164,11 @@ msgstr ""
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__website_published
 msgid "Visible on current website"
+msgstr "Redzams pašreizējā tīmekļa vietnē"
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_content
+msgid "WRITE HERE OR DRAG BUILDING BLOCKS"
 msgstr ""
 
 #. module: website_blog
@@ -1935,7 +2176,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__website_id
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__website_id
 msgid "Website"
-msgstr "Tīkla vietne"
+msgstr "Tīmekļa vietne"
 
 #. module: website_blog
 #: model:ir.actions.act_url,name:website_blog.action_open_website
@@ -1947,6 +2188,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__website_message_ids
 msgid "Website Messages"
 msgstr "Tīmekļa lapas ziņojumi"
+
+#. module: website_blog
+#: model:ir.model,name:website_blog.model_website_snippet_filter
+msgid "Website Snippet Filter"
+msgstr "Tīmekļa vietnes fragmentu filtrs"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__website_url
@@ -1964,7 +2210,7 @@ msgstr "Tīmekļa lapas komunikācijas vēsture"
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__website_meta_description
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__website_meta_description
 msgid "Website meta description"
-msgstr "Website meta description"
+msgstr "Mājas lapas meta apraksts"
 
 #. module: website_blog
 #: model:ir.model.fields,field_description:website_blog.field_blog_blog__website_meta_keywords
@@ -1985,7 +2231,7 @@ msgstr "Website meta title"
 #: model:ir.model.fields,field_description:website_blog.field_blog_post__website_meta_og_img
 #: model:ir.model.fields,field_description:website_blog.field_blog_tag__website_meta_og_img
 msgid "Website opengraph image"
-msgstr ""
+msgstr "Tīmekļa vietne opengraph attēls"
 
 #. module: website_blog
 #: model:blog.post,name:website_blog.blog_post_5
@@ -2003,15 +2249,14 @@ msgid ""
 msgstr ""
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.sidebar_blog_index
-msgid "Write a small text here to describe your blog or company."
+#. odoo-python
+#: code:addons/website_blog/models/website_snippet_filter.py:0
+msgid "With a View"
 msgstr ""
 
 #. module: website_blog
-#. openerp-web
-#: code:addons/website_blog/static/src/js/tours/website_blog.js:0
-#, python-format
-msgid "Write a title, the subtitle is optional."
+#: model_terms:ir.ui.view,arch_db:website_blog.sidebar_blog_index
+msgid "Write a small text here to describe your blog or company."
 msgstr ""
 
 #. module: website_blog
@@ -2045,14 +2290,6 @@ msgid "adventure"
 msgstr ""
 
 #. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_share_links_display
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_sidebar_blog_index_follow_us
-msgid ""
-"bg-100 border mx-1 mb-2 rounded-circle d-flex align-items-center justify-"
-"content-center text-decoration-none"
-msgstr ""
-
-#. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_template_new_post
 msgid "blog. Click here to access the blog :"
 msgstr ""
@@ -2066,7 +2303,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
 #: model_terms:ir.ui.view,arch_db:website_blog.post_heading
 msgid "by"
-msgstr "by"
+msgstr " "
 
 #. module: website_blog
 #: model:blog.tag,name:website_blog.blog_tag_5
@@ -2091,22 +2328,7 @@ msgstr ""
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.blog_post_content
 msgid "in"
-msgstr "iekš"
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post
-msgid "in <i class=\"fa fa-folder-open text-muted\"/>"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_cover_post_fullwidth_design
-msgid "in <i class=\"fa fa-folder-open text-white-75\"/>"
-msgstr ""
-
-#. module: website_blog
-#: model_terms:ir.ui.view,arch_db:website_blog.blog_post_short
-msgid "justify-content-center"
-msgstr ""
+msgstr " "
 
 #. module: website_blog
 #: model:blog.tag,name:website_blog.blog_tag_4
@@ -2121,6 +2343,13 @@ msgstr ""
 #. module: website_blog
 #: model_terms:ir.ui.view,arch_db:website_blog.posts_loop
 msgid "unpublished"
+msgstr ""
+
+#. module: website_blog
+#: model_terms:ir.ui.view,arch_db:website_blog.opt_blog_post_regular_cover
+msgid ""
+"|\n"
+"                            <i class=\"fa fa-comment text-muted me-1\"/>"
 msgstr ""
 
 #. module: website_blog

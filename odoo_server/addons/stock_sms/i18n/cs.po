@@ -3,18 +3,16 @@
 # 	* stock_sms
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Jan Horzinka <jan.horzinka@centrum.cz>, 2019
-# trendspotter <j.podhorecky@volny.cz>, 2019
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:13+0000\n"
-"PO-Revision-Date: 2019-08-26 09:14+0000\n"
-"Last-Translator: trendspotter <j.podhorecky@volny.cz>, 2019\n"
-"Language-Team: Czech (https://www.transifex.com/odoo/teams/41243/cs/)\n"
+"POT-Creation-Date: 2023-10-26 21:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Czech (https://app.transifex.com/odoo/teams/41243/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -25,14 +23,7 @@ msgstr ""
 #: model:sms.template,body:stock_sms.sms_template_data_stock_delivery
 msgid ""
 "\n"
-"                %if object.origin:\n"
-"                    ${object.company_id.name}: We are glad to inform you that your order n° ${object.origin} has been shipped.\n"
-"                %else:\n"
-"                    ${object.company_id.name}: We are glad to inform you that your order has been shipped.\n"
-"                %endif\n"
-"                %if object.carrier_tracking_ref:\n"
-"                    Your tracking reference is ${object.carrier_tracking_ref}.\n"
-"                %endif\n"
+"                {{ (object.company_id.name + ': We are glad to inform you that your order n° ' + object.origin + ' has been shipped.' if object.origin else object.company_id.name + ': We are glad to inform you that your order has been shipped.') + (' Your tracking reference is ' + (object.carrier_tracking_ref) + '.' if hasattr(object, 'carrier_tracking_ref') and object.carrier_tracking_ref else '') }}\n"
 "            "
 msgstr ""
 
@@ -47,14 +38,9 @@ msgid "Companies"
 msgstr "Společnosti"
 
 #. module: stock_sms
-#: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__company_id
-msgid "Company"
-msgstr "Firma"
-
-#. module: stock_sms
 #: model:ir.model,name:stock_sms.model_res_config_settings
 msgid "Config Settings"
-msgstr "Nastavení konfigurace"
+msgstr "Konfigurační nastavení"
 
 #. module: stock_sms
 #: model_terms:ir.ui.view,arch_db:stock_sms.view_confirm_stock_sms
@@ -64,17 +50,17 @@ msgstr "Potvrdit"
 #. module: stock_sms
 #: model:ir.model,name:stock_sms.model_confirm_stock_sms
 msgid "Confirm Stock SMS"
-msgstr "Potvrzovací skladová SMS"
+msgstr "SMS o potvrzení výdejky"
 
 #. module: stock_sms
 #: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__create_uid
 msgid "Created by"
-msgstr "Vytvořeno od"
+msgstr "Vytvořeno uživatelem"
 
 #. module: stock_sms
 #: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__create_date
 msgid "Created on"
-msgstr "Vytvořeno"
+msgstr "Vytvořeno dne"
 
 #. module: stock_sms
 #: model:sms.template,name:stock_sms.sms_template_data_stock_delivery
@@ -89,7 +75,7 @@ msgstr "Vypnout SMS"
 #. module: stock_sms
 #: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__display_name
 msgid "Display Name"
-msgstr "Zobrazované jméno"
+msgstr "Zobrazovací název"
 
 #. module: stock_sms
 #: model:ir.model.fields,field_description:stock_sms.field_res_company__has_received_warning_stock_sms
@@ -102,34 +88,30 @@ msgid "ID"
 msgstr "ID"
 
 #. module: stock_sms
-#: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms____last_update
-msgid "Last Modified on"
-msgstr "Naposled změněno"
-
-#. module: stock_sms
 #: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__write_uid
 msgid "Last Updated by"
-msgstr "Naposledy upraveno od"
+msgstr "Naposledy upraveno uživatelem"
 
 #. module: stock_sms
 #: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__write_date
 msgid "Last Updated on"
-msgstr "Naposled upraveno"
+msgstr "Naposledy upraveno dne"
 
 #. module: stock_sms
-#: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__picking_id
-msgid "Picking"
+#: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__pick_ids
+msgid "Pick"
 msgstr "Dodání"
 
 #. module: stock_sms
+#. odoo-python
 #: code:addons/stock_sms/models/stock_picking.py:0
 #: model_terms:ir.ui.view,arch_db:stock_sms.view_confirm_stock_sms
-#, python-format
 msgid "SMS"
 msgstr "SMS"
 
 #. module: stock_sms
 #: model:ir.model.fields,field_description:stock_sms.field_res_company__stock_move_sms_validation
+#: model_terms:ir.ui.view,arch_db:stock_sms.res_config_settings_view_form_stock
 msgid "SMS Confirmation"
 msgstr "SMS potvrzení"
 
@@ -148,8 +130,8 @@ msgstr "SMS ověření pohybu ve skladu"
 #. module: stock_sms
 #: model:ir.model.fields,help:stock_sms.field_res_company__stock_sms_confirmation_template_id
 #: model:ir.model.fields,help:stock_sms.field_res_config_settings__stock_sms_confirmation_template_id
-msgid "SMS sent to the customer once the order is done."
-msgstr "SMS odeslaná zákazníkovi v okamžiku kdy je objednávka hotova. "
+msgid "SMS sent to the customer once the order is delivered."
+msgstr ""
 
 #. module: stock_sms
 #: model:ir.model,name:stock_sms.model_stock_picking

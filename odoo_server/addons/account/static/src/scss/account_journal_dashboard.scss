@@ -1,20 +1,19 @@
-.o_kanban_view.o_kanban_dashboard.o_account_kanban {
+.o_account_kanban .o_kanban_renderer {
+    --KanbanRecord-padding-v: #{$o-kanban-dashboard-vpadding};
+    --KanbanRecord-padding-h: #{$o-kanban-dashboard-hpadding};
+
     .o_kanban_record {
 
+        &:not(.o_kanban_ghost) {
+            min-height: 150px;
+        }
+
         @include media-breakpoint-up(sm) {
-            .oe_kanban_action_button {
-                display: block;
+            button.oe_kanban_action {
                 margin-bottom: 5px;
             }
         }
 
-        .o_kanban_card_settings {
-            padding-top: $o-horizontal-padding/2;
-            padding-bottom: $o-horizontal-padding/2;
-
-            border-top: 1px solid;
-            border-color: $o-brand-lightsecondary;
-        }
         .o_dashboard_star {
             font-size: 12px;
 
@@ -32,25 +31,36 @@
         .o_dashboard_graph {
             margin-bottom: -$o-horizontal-padding/2;
         }
-    }
 
-    &.o_kanban_ungrouped {
-        .o_kanban_record {
-            width: 450px;
+        .o_field_widget.o_field_kanban_vat_activity {
+            display: block;
+        }
+
+        .container-fluid {
+            flex: 1 0 auto;
+            display: flex;
+            flex-flow: column nowrap;
         }
     }
 
-    .o_sample_data_label {
-        @include o-position-absolute($bottom: 25%, $right: 0);
-        z-index: 1;
+    &.o_kanban_ungrouped {
+        @include media-breakpoint-down(lg) {
+            --KanbanRecord-width: 100vw;
+        }
+        @include media-breakpoint-up(lg) {
+            --KanbanRecord-width: 47vw;
+        }
+        &:has(> .o_kanban_record:nth-child(12)) {
+            // 3 cards per row for large screens if there are more than 5 cards (+ 6 ghost cards)
+            @include media-breakpoint-up(xxl, $o-extra-grid-breakpoints) {
+                --KanbanRecord-width: 31vw;
+            }
+        }
     }
+
     .o_kanban_group {
         &:not(.o_column_folded) {
-            width: 450px + 2*$o-kanban-group-padding;
-
-            @include media-breakpoint-down(sm) {
-                width: 100%;
-            }
+            --KanbanGroup-width: 500px;
         }
     }
 }
@@ -61,7 +71,7 @@
     margin: 16px -16px;
 
     canvas {
-        height: 75px;
+        height: 150px;
     }
 
 }

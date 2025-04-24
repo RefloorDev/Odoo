@@ -9,13 +9,5 @@ class ResConfigSettings(models.TransientModel):
 
     cal_client_id = fields.Char("Client_id", config_parameter='google_calendar_client_id', default='')
     cal_client_secret = fields.Char("Client_key", config_parameter='google_calendar_client_secret', default='')
-    server_uri = fields.Char('URI for tuto')
-
-    @api.model
-    def get_values(self):
-        res = super(ResConfigSettings, self).get_values()
-        get_param = self.env['ir.config_parameter'].sudo().get_param
-        res.update(
-            server_uri="%s/google_account/authentication" % get_param('web.base.url', default="http://yourcompany.odoo.com"),
-        )
-        return res
+    cal_sync_paused = fields.Boolean("Google Synchronization Paused", config_parameter='google_calendar_sync_paused',
+        help="Indicates if synchronization with Google Calendar is paused or not.")

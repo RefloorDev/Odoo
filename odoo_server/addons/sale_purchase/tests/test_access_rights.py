@@ -3,15 +3,15 @@
 
 from odoo.exceptions import AccessError
 from odoo.addons.sale_purchase.tests.common import TestCommonSalePurchaseNoChart
+from odoo.tests import tagged
 
 
+@tagged('-at_install', 'post_install')
 class TestAccessRights(TestCommonSalePurchaseNoChart):
 
     @classmethod
     def setUpClass(cls):
-        super(TestAccessRights, cls).setUpClass()
-
-        cls.setUpServicePurchaseProducts()
+        super().setUpClass()
 
         # Create a users
         group_sale_user = cls.env.ref('sales_team.group_sale_salesman')
@@ -34,35 +34,32 @@ class TestAccessRights(TestCommonSalePurchaseNoChart):
         SaleOrder = self.env['sale.order'].with_context(tracking_disable=True)
 
         sale_order = SaleOrder.with_user(self.user_salesperson).create({
-            'partner_id': self.partner_customer_usd.id,
+            'partner_id': self.partner_a.id,
             'user_id': self.user_salesperson.id
         })
 
         sol_service_purchase = self.env['sale.order.line'].with_user(self.user_salesperson).create({
-            'name': self.service_purchase_1.name,
             'product_id': self.service_purchase_1.id,
             'product_uom_qty': 4,
-            'product_uom': self.service_purchase_1.uom_id.id,
-            'price_unit': self.service_purchase_1.list_price,
             'order_id': sale_order.id,
             'tax_id': False,
         })
 
         # confirming SO will create the PO even if you don't have the rights
         sale_order.action_confirm()
-        sale_order.action_cancel()
+        sale_order._action_cancel()
 
         self.assertTrue(sale_order.name, "Saleperson can read its own SO")
 
-        action = sale_order.sudo().action_view_purchase()
+        action = sale_order.sudo().action_view_purchase_orders()
 
         # try to access PO as sale person
         with self.assertRaises(AccessError):
-            purchase_orders = self.env['purchase.order'].with_user(self.user_salesperson).search(action['domain'])
+            purchase_orders = self.env['purchase.order'].with_user(self.user_salesperson).browse(action['res_id'])
             purchase_orders.read()
 
         # try to access PO as purchase person
-        purchase_orders = self.env['purchase.order'].with_user(self.user_purchaseperson).search(action['domain'])
+        purchase_orders = self.env['purchase.order'].with_user(self.user_purchaseperson).browse(action['res_id'])
         purchase_orders.read()
 
         # try to access the PO lines from the SO, as sale person

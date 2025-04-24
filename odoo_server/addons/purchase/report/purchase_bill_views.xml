@@ -6,7 +6,7 @@
         <field name="model">purchase.bill.union</field>
         <field name="arch" type="xml">
             <search string="Search Reference Document">
-                <field name="name" string="Reference" filter_domain="['|', ('name','ilike',self), ('reference','=like',str(self)+'%')]"/>
+                <field name="name" string="Reference" filter_domain="['|', ('name','ilike',self), ('reference','=like',self+'%')]"/>
                 <field name="amount"/>
                 <separator/>
                 <field name="partner_id" operator="child_of"/>
@@ -18,18 +18,18 @@
     </record>
 
     <record id="view_purchase_bill_union_tree" model="ir.ui.view">
-        <field name="name">purchase.bill.union.tree</field>
+        <field name="name">purchase.bill.union.list</field>
         <field name="model">purchase.bill.union</field>
         <field name="arch" type="xml">
-            <tree string="Reference Document">
+            <list string="Reference Document">
                 <field name="name"/>
                 <field name="reference"/>
                 <field name="partner_id"/>
                 <field name="date"/>
                 <field name="amount"/>
-                <field name="currency_id" invisible="1"/>
+                <field name="currency_id" column_invisible="True"/>
                 <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
-            </tree>
+            </list>
         </field>
     </record>
 

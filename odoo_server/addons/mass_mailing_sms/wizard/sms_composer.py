@@ -3,7 +3,7 @@
 
 import werkzeug.urls
 
-from odoo import fields, models, _
+from odoo import _, api, Command, fields, models
 
 
 class SMSComposer(models.TransientModel):
@@ -12,46 +12,48 @@ class SMSComposer(models.TransientModel):
     # mass mode with mass sms
     mass_sms_allow_unsubscribe = fields.Boolean('Include opt-out link', default=True)
     mailing_id = fields.Many2one('mailing.mailing', string='Mailing')
-    utm_campaign_id = fields.Many2one('utm.campaign', string='Campaign')
+    utm_campaign_id = fields.Many2one('utm.campaign', string='Campaign', ondelete='set null')
 
     # ------------------------------------------------------------
     # Mass mode specific
     # ------------------------------------------------------------
 
     def _get_unsubscribe_url(self, res_id, trace_code, number):
-        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         return werkzeug.urls.url_join(
-            base_url,
+            self.get_base_url(),
             '/sms/%s/%s' % (self.mailing_id.id, trace_code)
         )
+
+    @api.model
+    def _get_unsubscribe_info(self, url):
+        return _('STOP SMS: %(unsubscribe_url)s', unsubscribe_url=url)
 
     def _prepare_mass_sms_trace_values(self, record, sms_values):
         trace_code = self.env['mailing.trace']._get_random_code()
         trace_values = {
+            'mass_mailing_id': self.mailing_id.id,
             'model': self.res_model,
             'res_id': record.id,
-            'trace_type': 'sms',
-            'mass_mailing_id': self.mailing_id.id,
-            'sms_number': sms_values['number'],
             'sms_code': trace_code,
+            'sms_number': sms_values['number'],
+            'sms_tracker_ids': [Command.create({'sms_uuid': sms_values['uuid']})],
+            'trace_type': 'sms',
         }
         if sms_values['state'] == 'error':
-            if sms_values['error_code'] == 'sms_number_format':
-                trace_values['sent'] = fields.Datetime.now()
-                trace_values['bounced'] = fields.Datetime.now()
-            else:
-                trace_values['exception'] = fields.Datetime.now()
+            trace_values['failure_type'] = sms_values['failure_type']
+            trace_values['trace_status'] = 'error'
         elif sms_values['state'] == 'canceled':
-            trace_values['ignored'] = fields.Datetime.now()
+            trace_values['failure_type'] = sms_values['failure_type']
+            trace_values['trace_status'] = 'cancel'
         else:
             if self.mass_sms_allow_unsubscribe:
-                sms_values['body'] = '%s\n%s' % (sms_values['body'] or '', _('STOP SMS : %s') % self._get_unsubscribe_url(record.id, trace_code, sms_values['number']))
+                stop_sms = self._get_unsubscribe_info(self._get_unsubscribe_url(record.id, trace_code, sms_values['number']))
+                sms_values['body'] = '%s\n%s' % (sms_values['body'] or '', stop_sms)
         return trace_values
 
-    def _get_blacklist_record_ids(self, records, recipients_info):
-        """ Consider opt-outed contact as being blacklisted for that specific
-        mailing. """
-        res = super(SMSComposer, self)._get_blacklist_record_ids(records, recipients_info)
+    def _get_optout_record_ids(self, records, recipients_info):
+        """ Fetch opt-out records based on mailing. """
+        res = super(SMSComposer, self)._get_optout_record_ids(records, recipients_info)
         if self.mailing_id:
             optout_res_ids = self.mailing_id._get_opt_out_list_sms()
             res += optout_res_ids
@@ -70,7 +72,7 @@ class SMSComposer(models.TransientModel):
         if self.mailing_id:
             tracker_values = self.mailing_id._get_link_tracker_values()
             for sms_id, body in all_bodies.items():
-                body = self.env['link.tracker'].sudo()._convert_links_text(body, tracker_values)
+                body = self.env['mail.render.mixin'].sudo()._shorten_links_text(body, tracker_values)
                 all_bodies[sms_id] = body
         return all_bodies
 

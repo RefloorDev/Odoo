@@ -3,21 +3,27 @@
 # 	* stock_landed_costs
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Otgonbayar.A <gobi.mn@gmail.com>, 2019
-# Khishigbat Ganbold <khishigbat@asterisk-tech.mn>, 2019
-# nurbakhit nurka <nurbakhit@bumanit.mn>, 2019
-# Baskhuu Lodoikhuu <baskhuujacara@gmail.com>, 2020
-# Munkhbaatar Gombosuren <muuguu17@gmail.com>, 2020
+# Гэрэлтцог Цогтбаатар, 2024
+# tumenjargal hadbaatar <tumenjargal7903@gmail.com>, 2024
+# Батболд <batbold.ts@gmail.com>, 2024
+# Munkhbilguun Altankhuyag <munkhbilguunaltankhuyag@gmail.com>, 2024
+# Batmunkh Ganbat <batmunkh2522@gmail.com>, 2024
+# Batmunkh Ganbat <batmunkh.g@bumanit.mn>, 2024
+# hish, 2024
+# Bayarkhuu Bataa, 2024
+# Munkhbaatar g <muuguu17@gmail.com>, 2024
+# Torbat Jargalsaikhan, 2024
+# Martin Trigaux, 2024
+# Baskhuu Lodoikhuu <baskhuujacara@gmail.com>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-09 12:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:14+0000\n"
-"Last-Translator: Munkhbaatar Gombosuren <muuguu17@gmail.com>, 2020\n"
-"Language-Team: Mongolian (https://www.transifex.com/odoo/teams/41243/mn/)\n"
+"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Baskhuu Lodoikhuu <baskhuujacara@gmail.com>, 2025\n"
+"Language-Team: Mongolian (https://app.transifex.com/odoo/teams/41243/mn/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -25,13 +31,10 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
-msgid " already out"
-msgstr " хэдийнээ дууссан"
+msgid "%(product)s: %(quantity)s already out"
+msgstr ""
 
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.stock_landed_cost_view_kanban
@@ -39,15 +42,9 @@ msgid "<i class=\"fa fa-clock-o\" title=\"Date\" role=\"img\" aria-label=\"Date\
 msgstr "<i class=\"fa fa-clock-o\" title=\"Date\" role=\"img\" aria-label=\"Date\"/>"
 
 #. module: stock_landed_costs
-#: model:ir.model.fields,help:stock_landed_costs.field_account_move_line__product_type
-msgid ""
-"A storable product is a product for which you manage stock. The Inventory app has to be installed.\n"
-"A consumable product is a product for which stock is not managed.\n"
-"A service is a non-material product you provide."
+#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
+msgid "<span class=\"o_stat_text\">Valuation</span>"
 msgstr ""
-"Үлдэгдэл тооцох барааны хувьд та тэдгээр барааны нөөцийг хянах боломжтой юм. Үүний тулд Inventory app суулгасан байх шаардлагатай.\n"
-"Үлдэгдэл тооцохгүй бараа бол нөөцийг хянаж бүртгэх шаардлагагүй бараа юм.\n"
-"Үйлчилгээ бол таны ханган үзүүлдэг материаллаг бус ажил үйлчилгээ болно."
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines__account_id
@@ -62,7 +59,7 @@ msgstr "Санхүүгийн журнал"
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_needaction
 msgid "Action Needed"
-msgstr "Үйлдэл шаардсан"
+msgstr "Үйлдэл шаардлагатай"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__activity_ids
@@ -80,6 +77,11 @@ msgid "Activity State"
 msgstr "Ажилбарын төлөв"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__activity_type_icon
+msgid "Activity Type Icon"
+msgstr "Ажилбарын төрлийн зураг"
+
+#. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
 msgid "Additional Costs"
 msgstr ""
@@ -87,7 +89,12 @@ msgstr ""
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__additional_landed_cost
 msgid "Additional Landed Cost"
-msgstr "Нэмэлт газардсан өртөг"
+msgstr "Өртөгт шингэх зардал"
+
+#. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__target_model
+msgid "Apply On"
+msgstr "Хэрэгжүүлэх"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_attachment_count
@@ -95,21 +102,25 @@ msgid "Attachment Count"
 msgstr "Хавсралтын тоо"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields.selection,name:stock_landed_costs.selection__product_template__split_method_landed_cost__by_current_cost_price
 #: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost_lines__split_method__by_current_cost_price
 msgid "By Current Cost"
-msgstr "Одоогийн Өртгөөр"
+msgstr "Мөрийн нэгж үнээр"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields.selection,name:stock_landed_costs.selection__product_template__split_method_landed_cost__by_quantity
 #: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost_lines__split_method__by_quantity
 msgid "By Quantity"
 msgstr "Тоо хэмжээгээр"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields.selection,name:stock_landed_costs.selection__product_template__split_method_landed_cost__by_volume
 #: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost_lines__split_method__by_volume
 msgid "By Volume"
 msgstr "Эзлэхүүнээр"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields.selection,name:stock_landed_costs.selection__product_template__split_method_landed_cost__by_weight
 #: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost_lines__split_method__by_weight
 msgid "By Weight"
 msgstr "Жингээр"
@@ -133,11 +144,6 @@ msgstr "Компаниуд"
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__company_id
 msgid "Company"
 msgstr "Компани"
-
-#. module: stock_landed_costs
-#: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__company_id
-msgid "Company related to this journal"
-msgstr "Энэ журналын холбогдох компани"
 
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
@@ -166,14 +172,14 @@ msgid "Cost Lines"
 msgstr "Өртөгийн мөрүүд"
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
 msgid ""
 "Cost and adjustments lines do not match. You should maybe recompute the "
 "landed costs."
 msgstr ""
-"Өртөг болон тохируулгын мөрүүд таарахгүй байна. Магадгүй та газардсан "
-"өртөгийг дахин тооцоолуулах шаардлагатай."
+"Өртөг болон тохируулгын мөрүүд таарахгүй байна. Магадгүй та өртөгт шингэх "
+"зардлыг дахин тооцоолуулах шаардлагатай."
 
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.account_view_move_form_inherited
@@ -183,7 +189,7 @@ msgstr ""
 #. module: stock_landed_costs
 #: model_terms:ir.actions.act_window,help:stock_landed_costs.action_stock_landed_cost
 msgid "Create a new landed cost"
-msgstr "Өртөгт шингэх нэмэлт зардал шинээр нэмэх"
+msgstr "Өртөгт шингэх зардал шинээр нэмэх"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__create_uid
@@ -201,6 +207,7 @@ msgstr "Үүсгэсэн огноо"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__currency_id
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines__currency_id
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__currency_id
 msgid "Currency"
 msgstr "Валют"
@@ -218,6 +225,18 @@ msgid "Default Journal"
 msgstr ""
 
 #. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_product_product__split_method_landed_cost
+#: model:ir.model.fields,field_description:stock_landed_costs.field_product_template__split_method_landed_cost
+msgid "Default Split Method"
+msgstr ""
+
+#. module: stock_landed_costs
+#: model:ir.model.fields,help:stock_landed_costs.field_product_product__split_method_landed_cost
+#: model:ir.model.fields,help:stock_landed_costs.field_product_template__split_method_landed_cost
+msgid "Default Split Method when used for Landed Cost"
+msgstr ""
+
+#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines__name
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__name
 msgid "Description"
@@ -231,8 +250,8 @@ msgid "Display Name"
 msgstr "Дэлгэрэнгүй нэр"
 
 #. module: stock_landed_costs
-#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
 #: model:mail.message.subtype,name:stock_landed_costs.mt_stock_landed_cost_open
+#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
 msgid "Done"
 msgstr "Дууссан"
 
@@ -243,13 +262,19 @@ msgid "Draft"
 msgstr "Ноорог"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields.selection,name:stock_landed_costs.selection__product_template__split_method_landed_cost__equal
 #: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost_lines__split_method__equal
 msgid "Equal"
 msgstr "Тэнцүү"
 
 #. module: stock_landed_costs
-#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
-msgid "Exception Activities"
+#: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost_lines__split_method
+msgid ""
+"Equal: Cost will be equally divided.\n"
+"By Quantity: Cost will be divided according to product's quantity.\n"
+"By Current cost: Cost will be divided according to product's current cost.\n"
+"By Weight: Cost will be divided depending on its weight.\n"
+"By Volume: Cost will be divided depending on its volume."
 msgstr ""
 
 #. module: stock_landed_costs
@@ -258,24 +283,36 @@ msgid "Followers"
 msgstr "Дагагчид"
 
 #. module: stock_landed_costs
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_channel_ids
-msgid "Followers (Channels)"
-msgstr "Дагагчид (Сувагууд)"
-
-#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_partner_ids
 msgid "Followers (Partners)"
 msgstr "Дагагчид (Харилцагчид)"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__activity_type_icon
+msgid "Font awesome icon e.g. fa-tasks"
+msgstr "Font awesome icon ж.ш. fa-tasks"
+
+#. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
 msgid "Future Activities"
-msgstr "Ирээдүйн ажилбар"
+msgstr "Ирээдүйн үйл ажиллагаанууд"
+
+#. module: stock_landed_costs
+#: model:ir.model.fields,help:stock_landed_costs.field_account_move_line__product_type
+msgid ""
+"Goods are tangible materials and merchandise you provide.\n"
+"A service is a non-material product you provide."
+msgstr ""
 
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
 msgid "Group By"
 msgstr "Бүлэглэлт"
+
+#. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__has_message
+msgid "Has Message"
+msgstr "Мессежтэй"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__id
@@ -292,11 +329,10 @@ msgstr "Дүрс"
 #. module: stock_landed_costs
 #: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__activity_exception_icon
 msgid "Icon to indicate an exception activity."
-msgstr ""
+msgstr "Ажилбар дээр сануулга гарсныг илэрхийлэх зураг."
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__message_needaction
-#: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__message_unread
 msgid "If checked, new messages require your attention."
 msgstr "Хэрэв сонгогдсон бол, шинэ зурвасууд таны анхаарлыг шаардана."
 
@@ -309,8 +345,10 @@ msgstr "Үүнийг сонговол алдаа үүсэх үед зурвас�
 #. module: stock_landed_costs
 #: model:ir.model.fields,help:stock_landed_costs.field_product_product__landed_cost_ok
 #: model:ir.model.fields,help:stock_landed_costs.field_product_template__landed_cost_ok
-msgid "Indicates whether the product is a landed cost."
-msgstr "Энэхүү бараа нь өртөгт шингэх зардлын төрөл зүйл болохыг илэрхийлнэ."
+msgid ""
+"Indicates whether the product is a landed cost: when receiving a vendor "
+"bill, you can allocate this cost on preceding receipts."
+msgstr ""
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_is_follower
@@ -331,7 +369,7 @@ msgstr "Өртөгт шингэх зардал эсэх"
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__description
 msgid "Item Description"
-msgstr "Зүйлийн Тайлбар"
+msgstr "Зүйлийн тайлбар"
 
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
@@ -340,10 +378,6 @@ msgstr "Журнал"
 
 #. module: stock_landed_costs
 #: model:ir.model,name:stock_landed_costs.model_account_move
-msgid "Journal Entries"
-msgstr "Ажил гүйлгээ"
-
-#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__account_move_id
 msgid "Journal Entry"
 msgstr "Ажил гүйлгээ"
@@ -359,27 +393,23 @@ msgstr "Журналын бичилт"
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_layer__stock_landed_cost_id
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
 msgid "Landed Cost"
-msgstr "Газардсан өртөг"
-
-#. module: stock_landed_costs
-#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
-msgid "Landed Cost Name"
-msgstr "Газардсан өртөгийн нэр"
+msgstr "Өртөгт шингэсэн зардал"
 
 #. module: stock_landed_costs
 #: model:ir.actions.act_window,name:stock_landed_costs.action_stock_landed_cost
+#: model:ir.model.fields,field_description:stock_landed_costs.field_account_bank_statement_line__landed_costs_ids
 #: model:ir.model.fields,field_description:stock_landed_costs.field_account_move__landed_costs_ids
 #: model:ir.ui.menu,name:stock_landed_costs.menu_stock_landed_cost
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.account_view_move_form_inherited
-#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_product_landed_cost_form
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_tree
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_tree2
 msgid "Landed Costs"
-msgstr "Нэмэлт өртөг"
+msgstr "Өртөгт шингэх зардал"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_account_bank_statement_line__landed_costs_visible
 #: model:ir.model.fields,field_description:stock_landed_costs.field_account_move__landed_costs_visible
 msgid "Landed Costs Visible"
 msgstr ""
@@ -387,14 +417,14 @@ msgstr ""
 #. module: stock_landed_costs
 #: model:mail.message.subtype,description:stock_landed_costs.mt_stock_landed_cost_open
 msgid "Landed cost validated"
-msgstr "Газардсан өртөг батлагдсан"
+msgstr "Өртөгт шингэх зардал батлагдсан"
 
 #. module: stock_landed_costs
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost____last_update
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines____last_update
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines____last_update
-msgid "Last Modified on"
-msgstr "Сүүлд зассан огноо"
+#: model_terms:ir.actions.act_window,help:stock_landed_costs.action_stock_landed_cost
+msgid ""
+"Landed costs allow you to include additional costs (shipment, insurance, "
+"customs duties, etc) into the cost of the product."
+msgstr ""
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__write_uid
@@ -421,19 +451,19 @@ msgid "Lc Journal"
 msgstr ""
 
 #. module: stock_landed_costs
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_main_attachment_id
-msgid "Main Attachment"
-msgstr "Үндсэн хавсралт"
-
-#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_has_error
 msgid "Message Delivery error"
-msgstr "Алдаа үүссэн талаарх зурвас"
+msgstr "Зурвас илгээх алдаа"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_ids
 msgid "Messages"
 msgstr "Зурвасууд"
+
+#. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__my_activity_date_deadline
+msgid "My Activity Deadline"
+msgstr "Миний ажилбарын эцсийн огноо"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__name
@@ -442,9 +472,8 @@ msgid "Name"
 msgstr "Нэр"
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
 msgid "New"
 msgstr "Шинэ"
 
@@ -452,6 +481,11 @@ msgstr "Шинэ"
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__final_cost
 msgid "New Value"
 msgstr ""
+
+#. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__activity_calendar_event_id
+msgid "Next Activity Calendar Event"
+msgstr "Календар дээрх дараагийн Үйл ажиллагаа"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__activity_date_deadline
@@ -480,7 +514,7 @@ msgstr "Алдааны тоо"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__message_needaction_counter
-msgid "Number of messages which requires an action"
+msgid "Number of messages requiring action"
 msgstr "Үйлдэл шаардсан зурвасын тоо"
 
 #. module: stock_landed_costs
@@ -489,15 +523,10 @@ msgid "Number of messages with delivery error"
 msgstr "Алдааны мэдэгдэл бүхий зурвасын тоо"
 
 #. module: stock_landed_costs
-#: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__message_unread_counter
-msgid "Number of unread messages"
-msgstr "Уншаагүй зурвасын тоо"
-
-#. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
 msgid "Only draft landed costs can be validated"
-msgstr "Зөвхөн ноорог газардсан өртөгийг батлах боломжтой"
+msgstr "Зөвхөн ноорог төлөвтэй өртөгт шингэх зардлыг батлах боломжтой"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__former_cost
@@ -507,19 +536,18 @@ msgstr "Анхны өртөг"
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
 msgid "Picking"
-msgstr "Агуулахын баримт"
+msgstr "Бэлтгэх баримт"
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
 msgid "Please configure Stock Expense Account for product: %s."
-msgstr "Дараах бараанд Барааны Зардлын Дансыг тохируулна уу: %s."
+msgstr "Дараах барааны хувьд Зардлын дансыг тохируулна уу: %s."
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
-msgid ""
-"Please define the transfers on which those additional costs should apply."
+msgid "Please define %s on which those additional costs should apply."
 msgstr ""
 
 #. module: stock_landed_costs
@@ -528,15 +556,11 @@ msgid "Posted"
 msgstr "Батлагдсан"
 
 #. module: stock_landed_costs
+#: model:ir.model,name:stock_landed_costs.model_product_template
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines__product_id
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__product_id
 msgid "Product"
 msgstr "Бараа"
-
-#. module: stock_landed_costs
-#: model:ir.model,name:stock_landed_costs.model_product_template
-msgid "Product Template"
-msgstr "Барааны загвар"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_account_move_line__product_type
@@ -544,14 +568,24 @@ msgid "Product Type"
 msgstr "Барааны төрөл"
 
 #. module: stock_landed_costs
+#: model:ir.model,name:stock_landed_costs.model_purchase_order_line
+msgid "Purchase Order Line"
+msgstr "Худалдан авалтын захиалгын мөр"
+
+#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__quantity
 msgid "Quantity"
 msgstr "Тоо хэмжээ"
 
 #. module: stock_landed_costs
+#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__rating_ids
+msgid "Ratings"
+msgstr "Үнэлгээнүүд"
+
+#. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__activity_user_id
 msgid "Responsible User"
-msgstr "Хариуцсан хэрэглэгч"
+msgstr "Эд хариуцагч"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_has_sms_error
@@ -568,7 +602,7 @@ msgstr ""
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost_lines__split_method
 msgid "Split Method"
-msgstr "Хуваах Арга"
+msgstr "Хуваарилах арга"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__state
@@ -596,7 +630,7 @@ msgstr ""
 #. module: stock_landed_costs
 #: model:ir.model,name:stock_landed_costs.model_stock_landed_cost
 msgid "Stock Landed Cost"
-msgstr "Барааны Газардсан Өртөг"
+msgstr "Өртөгт шингэх зардал"
 
 #. module: stock_landed_costs
 #: model:ir.model,name:stock_landed_costs.model_stock_landed_cost_lines
@@ -604,6 +638,7 @@ msgid "Stock Landed Cost Line"
 msgstr "Өртөгт шингэх зардлын мөр"
 
 #. module: stock_landed_costs
+#: model:ir.model,name:stock_landed_costs.model_stock_move
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_valuation_adjustment_lines__move_id
 msgid "Stock Move"
 msgstr "Барааны хөдөлгөөн"
@@ -612,7 +647,7 @@ msgstr "Барааны хөдөлгөөн"
 #: model:ir.model,name:stock_landed_costs.model_stock_valuation_layer
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__stock_valuation_layer_ids
 msgid "Stock Valuation Layer"
-msgstr ""
+msgstr "Өртгийн бүртгэл"
 
 #. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_search
@@ -622,12 +657,13 @@ msgstr "Өнөөдрийн ажилбар"
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__amount_total
 msgid "Total"
-msgstr "Нийт"
+msgstr "Нийт дүн"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__picking_ids
+#: model:ir.model.fields.selection,name:stock_landed_costs.selection__stock_landed_cost__target_model__picking
 msgid "Transfers"
-msgstr "Дотоод шилжүүлгэ"
+msgstr "Гүйлгээ"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,help:stock_landed_costs.field_stock_landed_cost__activity_exception_decoration
@@ -635,34 +671,19 @@ msgid "Type of the exception activity on record."
 msgstr "Бичлэг дээрх асуудал бүхий ажилбарын төрөл"
 
 #. module: stock_landed_costs
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_unread
-msgid "Unread Messages"
-msgstr "Уншаагүй зурвас"
-
-#. module: stock_landed_costs
-#: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__message_unread_counter
-msgid "Unread Messages Counter"
-msgstr "Уншаагүй зурвасын тоолуур"
-
-#. module: stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
 msgid "Validate"
-msgstr "Батлах"
+msgstr "Зөвшөөрөх"
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
 msgid ""
 "Validated landed costs cannot be cancelled, but you could create negative "
 "landed costs to reverse them"
 msgstr ""
-"Батласан газардсан өртөгийг цуцлах боломжгүй, гэхдээ буцаахын тулд хасах "
-"газардсан өртөг үүсгэж болно"
-
-#. module: stock_landed_costs
-#: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
-msgid "Valuation"
-msgstr "Өртөгийн дүн"
+"Батласан төлөвтэй өртөгт шингэх зардалын бүртгэлийг цуцлах боломжгүй, гэхдээ"
+" буцаахын тулд хасах утгатай зардлыг өртөгт шингээж болно"
 
 #. module: stock_landed_costs
 #: model:ir.model,name:stock_landed_costs.model_stock_valuation_adjustment_lines
@@ -673,7 +694,7 @@ msgstr "Өртөг шингээлтийн мөрүүд"
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__valuation_adjustment_lines
 #: model_terms:ir.ui.view,arch_db:stock_landed_costs.view_stock_landed_cost_form
 msgid "Valuation Adjustments"
-msgstr "Үнэлгээний Тохируулгууд"
+msgstr "Өртөг шингээлт"
 
 #. module: stock_landed_costs
 #: model:ir.model.fields,field_description:stock_landed_costs.field_stock_landed_cost__vendor_bill_id
@@ -701,10 +722,17 @@ msgid "Weight"
 msgstr "Жин"
 
 #. module: stock_landed_costs
+#. odoo-python
 #: code:addons/stock_landed_costs/models/stock_landed_cost.py:0
-#, python-format
 msgid ""
-"You cannot apply landed costs on the chosen transfer(s). Landed costs can "
-"only be applied for products with automated inventory valuation and FIFO or "
-"average costing method."
+"You cannot apply landed costs on the chosen %s(s). Landed costs can only be "
+"applied for products with FIFO or average costing method."
+msgstr ""
+
+#. module: stock_landed_costs
+#. odoo-python
+#: code:addons/stock_landed_costs/models/product.py:0
+msgid ""
+"You cannot change the product type or disable landed cost option because the"
+" product is used in an account move line."
 msgstr ""

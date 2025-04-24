@@ -3,20 +3,22 @@
 # 	* base_geolocalize
 # 
 # Translators:
-# Rosen Vladimirov <vladimirov.rosen@gmail.com>, 2020
-# aleksandar ivanov, 2020
-# Albena Mincheva <albena_vicheva@abv.bg>, 2020
-# Maria Boyadjieva <marabo2000@gmail.com>, 2020
-# Igor Sheludko <igor.sheludko@gmail.com>, 2020
+# Albena Mincheva <albena_vicheva@abv.bg>, 2024
+# Maria Boyadjieva <marabo2000@gmail.com>, 2024
+# Ивайло Малинов <iv.malinov@gmail.com>, 2024
+# Rosen Vladimirov <vladimirov.rosen@gmail.com>, 2024
+# aleksandar ivanov, 2024
+# Venelin Stoykov, 2024
+# Petko Karamotchev, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:32+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: Igor Sheludko <igor.sheludko@gmail.com>, 2020\n"
-"Language-Team: Bulgarian (https://www.transifex.com/odoo/teams/41243/bg/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Petko Karamotchev, 2024\n"
+"Language-Team: Bulgarian (https://app.transifex.com/odoo/teams/41243/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -24,28 +26,13 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: base_geolocalize
-#: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
-msgid "<span class=\"oe_inline\"> ( On  </span>"
-msgstr "<span class=\"oe_inline\"> ( На  </span>"
-
-#. module: base_geolocalize
-#: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
-msgid "<span> : Lat : </span>"
-msgstr "<span> : г.шир. : </span>"
-
-#. module: base_geolocalize
-#: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
-msgid "<span> ;  Long:  </span>"
-msgstr "<span> ;  Дълъг:  </span>"
-
-#. module: base_geolocalize
 #: model:ir.model.fields,field_description:base_geolocalize.field_res_config_settings__geoloc_provider_id
 msgid "API"
 msgstr "Приложно-програмен интерфейс - API"
 
 #. module: base_geolocalize
-#: code:addons/base_geolocalize/models/base_geocoder.py:104
-#, python-format
+#. odoo-python
+#: code:addons/base_geolocalize/models/base_geocoder.py:0
 msgid ""
 "API key for GeoCoding (Places) required.\n"
 "Visit https://developers.google.com/maps/documentation/geocoding/get-api-key for more information."
@@ -54,12 +41,22 @@ msgstr ""
 #. module: base_geolocalize
 #: model_terms:ir.ui.view,arch_db:base_geolocalize.res_config_settings_view_form
 msgid "API:"
+msgstr "API:"
+
+#. module: base_geolocalize
+#: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
+msgid "Compute Localization"
+msgstr ""
+
+#. module: base_geolocalize
+#: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
+msgid "Compute based on address"
 msgstr ""
 
 #. module: base_geolocalize
 #: model:ir.model,name:base_geolocalize.model_res_config_settings
 msgid "Config Settings"
-msgstr "Конфиг Настройки"
+msgstr "Конфигурационни настройки"
 
 #. module: base_geolocalize
 #: model:ir.model,name:base_geolocalize.model_res_partner
@@ -74,18 +71,17 @@ msgstr "Създаден от"
 #. module: base_geolocalize
 #: model:ir.model.fields,field_description:base_geolocalize.field_base_geo_provider__create_date
 msgid "Created on"
-msgstr "Създаден на"
+msgstr "Създадено на"
 
 #. module: base_geolocalize
 #: model:ir.model.fields,field_description:base_geolocalize.field_base_geo_provider__display_name
-#: model:ir.model.fields,field_description:base_geolocalize.field_base_geocoder__display_name
 msgid "Display Name"
-msgstr "Покажете име"
+msgstr "Име за показване"
 
 #. module: base_geolocalize
-#: code:addons/base_geolocalize/models/base_geocoder.py:156
-#, python-format
-msgid "Error with geolocation server:"
+#. odoo-python
+#: code:addons/base_geolocalize/models/base_geocoder.py:0
+msgid "Error with geolocation server: %s"
 msgstr ""
 
 #. module: base_geolocalize
@@ -94,14 +90,14 @@ msgid "Geo Coder"
 msgstr ""
 
 #. module: base_geolocalize
-#: model:ir.model,name:base_geolocalize.model_base_geo_provider
-msgid "Geo Provider"
+#: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
+msgid "Geo Location"
 msgstr ""
 
 #. module: base_geolocalize
-#: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
-msgid "Geolocate"
-msgstr "Задайте геолокация"
+#: model:ir.model,name:base_geolocalize.model_base_geo_provider
+msgid "Geo Provider"
+msgstr ""
 
 #. module: base_geolocalize
 #: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
@@ -121,20 +117,13 @@ msgstr ""
 
 #. module: base_geolocalize
 #: model:ir.model.fields,field_description:base_geolocalize.field_base_geo_provider__id
-#: model:ir.model.fields,field_description:base_geolocalize.field_base_geocoder__id
 msgid "ID"
-msgstr "ИН"
+msgstr "ID"
 
 #. module: base_geolocalize
 #: model_terms:ir.ui.view,arch_db:base_geolocalize.res_config_settings_view_form
 msgid "Key:"
-msgstr ""
-
-#. module: base_geolocalize
-#: model:ir.model.fields,field_description:base_geolocalize.field_base_geo_provider____last_update
-#: model:ir.model.fields,field_description:base_geolocalize.field_base_geocoder____last_update
-msgid "Last Modified on"
-msgstr "Последно коригирано на"
+msgstr "Ключ:"
 
 #. module: base_geolocalize
 #: model:ir.model.fields,field_description:base_geolocalize.field_base_geo_provider__write_uid
@@ -147,30 +136,56 @@ msgid "Last Updated on"
 msgstr "Последно актуализирано на"
 
 #. module: base_geolocalize
-#: model:ir.model.fields,field_description:base_geolocalize.field_base_geo_provider__name
-msgid "Name"
-msgstr "Name"
+#: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
+msgid "Lat :"
+msgstr ""
 
 #. module: base_geolocalize
 #: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
-msgid "Partner Assignation"
-msgstr "Разпределяне на партньори"
+msgid "Long:"
+msgstr ""
 
 #. module: base_geolocalize
-#: code:addons/base_geolocalize/models/base_geocoder.py:69
-#, python-format
+#: model:ir.model.fields,field_description:base_geolocalize.field_base_geo_provider__name
+msgid "Name"
+msgstr "Име"
+
+#. module: base_geolocalize
+#. odoo-python
+#: code:addons/base_geolocalize/models/res_partner.py:0
+msgid "No match found for %(partner_names)s address(es)."
+msgstr ""
+
+#. module: base_geolocalize
+#: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
+msgid "Partner Assignment"
+msgstr ""
+
+#. module: base_geolocalize
+#. odoo-python
+#: code:addons/base_geolocalize/models/base_geocoder.py:0
 msgid "Provider %s is not implemented for geolocation service."
+msgstr ""
+
+#. module: base_geolocalize
+#: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
+msgid "Refresh"
+msgstr "Опресни"
+
+#. module: base_geolocalize
+#: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
+msgid "Refresh Localization"
 msgstr ""
 
 #. module: base_geolocalize
 #: model:ir.model.fields,field_description:base_geolocalize.field_base_geo_provider__tech_name
 #: model:ir.model.fields,field_description:base_geolocalize.field_res_config_settings__geoloc_provider_techname
-msgid "Tech Name"
-msgstr ""
+msgid "Technical Name"
+msgstr "Technical Name"
 
 #. module: base_geolocalize
-#: code:addons/base_geolocalize/models/base_geocoder.py:123
-#, python-format
+#. odoo-python
+#: code:addons/base_geolocalize/models/base_geocoder.py:0
 msgid ""
 "Unable to geolocate, received the error:\n"
 "%s\n"
@@ -182,8 +197,19 @@ msgid ""
 msgstr ""
 
 #. module: base_geolocalize
+#: model_terms:ir.ui.view,arch_db:base_geolocalize.view_crm_partner_geo_form
+msgid "Updated on:"
+msgstr ""
+
+#. module: base_geolocalize
 #: model:ir.model.fields,help:base_geolocalize.field_res_config_settings__geoloc_provider_googlemap_key
 msgid ""
 "Visit https://developers.google.com/maps/documentation/geocoding/get-api-key"
 " for more information."
 msgstr ""
+
+#. module: base_geolocalize
+#. odoo-python
+#: code:addons/base_geolocalize/models/res_partner.py:0
+msgid "Warning"
+msgstr "Внимание"

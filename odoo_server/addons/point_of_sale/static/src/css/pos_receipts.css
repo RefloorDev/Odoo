@@ -1,18 +1,12 @@
 .pos-receipt-print {
     width: 512px;
-    height: 0;
-    overflow: hidden;
-    position: absolute;
-    left: 0;
-    top: 0;
-    text-align: left;
-    direction: ltr;
-    font-size: 28px;
+    font-size: 27px;
     color: #000000;
 }
 
 .pos-receipt .pos-receipt-right-align {
     float: right;
+    display: flex;
 }
 
 .pos-receipt .pos-receipt-center-align {
@@ -29,6 +23,11 @@
     margin: 0 auto;
 }
 
+.pos-receipt .pos-receipt-qrcode {
+    display: block;
+    margin: 0 auto;
+}
+
 .pos-receipt .pos-receipt-contact {
     text-align: center;
     font-size: 75%;
@@ -41,7 +40,7 @@
 
 .pos-receipt .pos-receipt-amount {
     font-size: 125%;
-    padding-left: 6em;
+    text-align: start;
 }
 
 .pos-receipt .pos-receipt-title {
@@ -55,11 +54,31 @@
     text-align: center;
 }
 
-.pos-receipt .pos-order-receipt-cancel {
-    color: red;
-}
-
 .pos-payment-terminal-receipt {
     text-align: center;
     font-size: 75%;
+}
+
+.pos-payment-terminal-receipt pre {
+    font-family: inherit;
+}
+
+.responsive-price {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.responsive-price > .pos-receipt-right-align {
+    margin-left: auto;
+}
+
+.pos-receipt .pos-receipt-taxes {
+    display: flex;
+    flex-direction: column;
+}
+
+.pos-receipt .orderlines {
+    /*rtl:ignore*/
+    direction: ltr;
 }

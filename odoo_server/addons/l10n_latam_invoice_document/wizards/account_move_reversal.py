@@ -5,28 +5,29 @@ from odoo.exceptions import UserError
 
 
 class AccountMoveReversal(models.TransientModel):
-
     _inherit = "account.move.reversal"
 
-    l10n_latam_use_documents = fields.Boolean(
-        related='move_id.journal_id.l10n_latam_use_documents', readonly=True)
-    l10n_latam_document_type_id = fields.Many2one('l10n_latam.document.type', 'Document Type', ondelete='cascade')
-    l10n_latam_sequence_id = fields.Many2one('ir.sequence', compute='_compute_l10n_latam_sequence')
+    l10n_latam_use_documents = fields.Boolean(compute='_compute_documents_info')
+    l10n_latam_document_type_id = fields.Many2one('l10n_latam.document.type', 'Document Type', ondelete='cascade', domain="[('id', 'in', l10n_latam_available_document_type_ids)]", compute='_compute_document_type', readonly=False, store=True)
+    l10n_latam_available_document_type_ids = fields.Many2many('l10n_latam.document.type', compute='_compute_documents_info')
     l10n_latam_document_number = fields.Char(string='Document Number')
+    l10n_latam_manual_document_number = fields.Boolean(compute='_compute_l10n_latam_manual_document_number', string='Manual Number')
 
-    @api.model
-    def default_get(self, fields):
-        res = super(AccountMoveReversal, self).default_get(fields)
-        move_ids = self.env['account.move'].browse(self.env.context['active_ids']) if self.env.context.get('active_model') == 'account.move' else self.env['account.move']
-        if len(move_ids) > 1:
-            move_ids_use_document = move_ids.filtered(lambda move: move.l10n_latam_use_documents)
-            if move_ids_use_document:
-                raise UserError(_('You can only reverse documents with legal invoicing documents from Latin America one at a time.\nProblematic documents: %s') % ", ".join(move_ids_use_document.mapped('name')))
-
-        return res
+    @api.depends('l10n_latam_document_type_id', 'journal_id')
+    def _compute_l10n_latam_manual_document_number(self):
+        self.l10n_latam_manual_document_number = False
+        for wiz in self.filtered(lambda x: x.journal_id and x.journal_id.l10n_latam_use_documents):
+            wiz.l10n_latam_manual_document_number = self.env['account.move'].new({
+                'move_type': wiz._reverse_type_map(wiz.move_ids[0].move_type),
+                'journal_id': wiz.journal_id.id,
+                'partner_id': wiz.move_ids[0].partner_id.id,
+                'company_id': wiz.move_ids[0].company_id.id,
+                'reversed_entry_id': wiz.move_ids[0].id,
+            })._is_manual_document_number()
 
     @api.model
     def _reverse_type_map(self, move_type):
+        self.ensure_one()
         match = {
             'entry': 'entry',
             'out_invoice': 'out_refund',
@@ -36,18 +37,35 @@ class AccountMoveReversal(models.TransientModel):
             'in_receipt': 'out_receipt'}
         return match.get(move_type)
 
-    @api.onchange('move_id')
-    def _onchange_move_id(self):
-        if self.move_id.l10n_latam_use_documents:
-            refund = self.move_id.new({
-                'type': self._reverse_type_map(self.move_id.type),
-                'journal_id': self.move_id.journal_id.id,
-                'partner_id': self.move_id.partner_id.id,
-                'company_id': self.move_id.company_id.id,
-            })
-            self.l10n_latam_document_type_id = refund.l10n_latam_document_type_id
-            return {'domain': {
-                'l10n_latam_document_type_id': [('id', 'in', refund.l10n_latam_available_document_type_ids.ids)]}}
+    @api.depends('l10n_latam_available_document_type_ids', 'journal_id')
+    def _compute_document_type(self):
+        for record in self.filtered(
+                lambda x: not x.l10n_latam_document_type_id or
+                x.l10n_latam_document_type_id not in x.l10n_latam_available_document_type_ids):
+            document_types = record.l10n_latam_available_document_type_ids._origin
+            record.l10n_latam_document_type_id = document_types[0] if document_types else False
+
+    @api.depends('move_ids', 'journal_id')
+    def _compute_documents_info(self):
+        self.l10n_latam_available_document_type_ids = False
+        self.l10n_latam_use_documents = False
+        for record in self:
+            if len(record.move_ids) > 1:
+                move_ids_use_document = record.move_ids._origin.filtered(lambda move: move.l10n_latam_use_documents)
+                if move_ids_use_document:
+                    raise UserError(_('You can only reverse documents with legal invoicing documents from Latin America one at a time.\nProblematic documents: %s', ", ".join(move_ids_use_document.mapped('name'))))
+            else:
+                record.l10n_latam_use_documents = record.journal_id.l10n_latam_use_documents
+
+            if record.l10n_latam_use_documents:
+                refund = record.env['account.move'].new({
+                    'move_type': record._reverse_type_map(record.move_ids.move_type),
+                    'journal_id': record.journal_id.id,
+                    'partner_id': record.move_ids.partner_id.id,
+                    'company_id': record.move_ids.company_id.id,
+                    'reversed_entry_id': record.move_ids.id,
+                })
+                record.l10n_latam_available_document_type_ids = refund.l10n_latam_available_document_type_ids
 
     def _prepare_default_reversal(self, move):
         """ Set the default document type and number in the new revsersal move taking into account the ones selected in
@@ -58,18 +76,6 @@ class AccountMoveReversal(models.TransientModel):
             'l10n_latam_document_number': self.l10n_latam_document_number,
         })
         return res
-
-    @api.depends('l10n_latam_document_type_id')
-    def _compute_l10n_latam_sequence(self):
-        for rec in self:
-            refund = rec.move_id.new({
-                'type': self._reverse_type_map(rec.move_id.type),
-                'journal_id': rec.move_id.journal_id.id,
-                'partner_id': rec.move_id.partner_id.id,
-                'company_id': rec.move_id.company_id.id,
-                'l10n_latam_document_type_id': rec.l10n_latam_document_type_id.id,
-            })
-            rec.l10n_latam_sequence_id = refund._get_document_type_sequence()
 
     @api.onchange('l10n_latam_document_number', 'l10n_latam_document_type_id')
     def _onchange_l10n_latam_document_number(self):

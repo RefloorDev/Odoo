@@ -5,27 +5,26 @@
 
 """
 
+import datetime
 import itertools
 import logging
 import sys
 import threading
 import time
+import traceback
 
 import odoo
 import odoo.modules.db
 import odoo.modules.graph
 import odoo.modules.migration
 import odoo.modules.registry
-import odoo.tools as tools
-
-from odoo import api, SUPERUSER_ID
-from odoo.modules.module import adapt_version, initialize_sys_path, load_openerp_module
+from .. import SUPERUSER_ID, api, tools
+from .module import adapt_version, initialize_sys_path, load_openerp_module
 
 _logger = logging.getLogger(__name__)
-_test_logger = logging.getLogger('odoo.tests')
 
 
-def load_data(cr, idref, mode, kind, package, report):
+def load_data(env, idref, mode, kind, package):
     """
 
     kind: data, demo, test, init_xml, update_xml, demo_xml.
@@ -33,18 +32,22 @@ def load_data(cr, idref, mode, kind, package, report):
     noupdate is False, unless it is demo data or it is csv data in
     init mode.
 
+    :returns: Whether a file was loaded
+    :rtype: bool
     """
 
     def _get_files_of_kind(kind):
         if kind == 'demo':
-            kind = ['demo_xml', 'demo']
+            keys = ['demo_xml', 'demo']
         elif kind == 'data':
-            kind = ['init_xml', 'update_xml', 'data']
+            keys = ['init_xml', 'update_xml', 'data']
         if isinstance(kind, str):
-            kind = [kind]
+            keys = [kind]
         files = []
-        for k in kind:
+        for k in keys:
             for f in package.data[k]:
+                if f in files:
+                    _logger.warning("File %s is imported twice in module %s %s", f, package.name, kind)
                 files.append(f)
                 if k.endswith('_xml') and not (k == 'init_xml' and not f.endswith('.xml')):
                     # init_xml, update_xml and demo_xml are deprecated except
@@ -57,21 +60,23 @@ def load_data(cr, idref, mode, kind, package, report):
                     )
         return files
 
+    filename = None
     try:
         if kind in ('demo', 'test'):
-            threading.currentThread().testing = True
+            threading.current_thread().testing = True
         for filename in _get_files_of_kind(kind):
             _logger.info("loading %s/%s", package.name, filename)
             noupdate = False
             if kind in ('demo', 'demo_xml') or (filename.endswith('.csv') and kind in ('init', 'init_xml')):
                 noupdate = True
-            tools.convert_file(cr, package.name, filename, idref, mode, noupdate, kind, report)
+            tools.convert_file(env, package.name, filename, idref, mode, noupdate, kind)
     finally:
         if kind in ('demo', 'test'):
-            threading.currentThread().testing = False
+            threading.current_thread().testing = False
 
+    return bool(filename)
 
-def load_demo(cr, package, idref, mode, report=None):
+def load_demo(env, package, idref, mode):
     """
     Loads demo data for the specified package.
     """
@@ -79,81 +84,72 @@ def load_demo(cr, package, idref, mode, report=None):
         return False
 
     try:
-        _logger.info("Module %s: loading demo", package.name)
-        with cr.savepoint(flush=False):
-            load_data(cr, idref, mode, kind='demo', package=package, report=report)
+        if package.data.get('demo') or package.data.get('demo_xml'):
+            _logger.info("Module %s: loading demo", package.name)
+            with env.cr.savepoint(flush=False):
+                load_data(env(su=True), idref, mode, kind='demo', package=package)
         return True
-    except Exception as e:
+    except Exception:  # noqa: BLE001
         # If we could not install demo data for this module
         _logger.warning(
             "Module %s demo data failed to install, installed without demo data",
             package.name, exc_info=True)
 
-        env = api.Environment(cr, SUPERUSER_ID, {})
         todo = env.ref('base.demo_failure_todo', raise_if_not_found=False)
         Failure = env.get('ir.demo_failure')
         if todo and Failure is not None:
             todo.state = 'open'
-            Failure.create({'module_id': package.id, 'error': str(e)})
+            Failure.create({'module_id': package.id, 'error': traceback.format_exc()})
         return False
 
 
-def force_demo(cr):
+def force_demo(env):
     """
     Forces the `demo` flag on all modules, and installs demo data for all installed modules.
     """
     graph = odoo.modules.graph.Graph()
-    cr.execute('UPDATE ir_module_module SET demo=True')
-    cr.execute(
+    env.cr.execute('UPDATE ir_module_module SET demo=True')
+    env.cr.execute(
         "SELECT name FROM ir_module_module WHERE state IN ('installed', 'to upgrade', 'to remove')"
     )
-    module_list = [name for (name,) in cr.fetchall()]
-    graph.add_modules(cr, module_list, ['demo'])
+    module_list = [name for (name,) in env.cr.fetchall()]
+    graph.add_modules(env.cr, module_list, ['demo'])
 
     for package in graph:
-        load_demo(cr, package, {}, 'init')
+        load_demo(env, package, {}, 'init')
 
-    env = api.Environment(cr, SUPERUSER_ID, {})
-    env['ir.module.module'].invalidate_cache(['demo'])
+    env['ir.module.module'].invalidate_model(['demo'])
+    env['res.groups']._update_user_groups_view()
 
 
-def load_module_graph(cr, graph, status=None, perform_checks=True,
+def load_module_graph(env, graph, status=None, perform_checks=True,
                       skip_modules=None, report=None, models_to_check=None):
     """Migrates+Updates or Installs all module nodes from ``graph``
+
+       :param env:
        :param graph: graph of module nodes to load
        :param status: deprecated parameter, unused, left to avoid changing signature in 8.0
        :param perform_checks: whether module descriptors should be checked for validity (prints warnings
                               for same cases)
        :param skip_modules: optional list of module names (packages) which have previously been loaded and can be skipped
+       :param report:
+       :param set models_to_check:
        :return: list of modules that were installed or updated
     """
-    def load_test(idref, mode):
-        cr.execute("SAVEPOINT load_test_data_file")
-        try:
-            load_data(cr, idref, mode, 'test', package, report)
-            return True
-        except Exception:
-            _test_logger.exception(
-                'module %s: an exception occurred in a test', package.name)
-            return False
-        finally:
-            cr.execute("ROLLBACK TO SAVEPOINT load_test_data_file")
-            # avoid keeping stale xml_id, etc. in cache
-            odoo.registry(cr.dbname).clear_caches()
-
     if models_to_check is None:
         models_to_check = set()
 
     processed_modules = []
     loaded_modules = []
-    registry = odoo.registry(cr.dbname)
-    migrations = odoo.modules.migration.MigrationManager(cr, graph)
+    registry = env.registry
+    migrations = odoo.modules.migration.MigrationManager(env.cr, graph)
     module_count = len(graph)
     _logger.info('loading %d modules...', module_count)
 
     # register, instantiate and initialize models for each modules
     t0 = time.time()
-    t0_sql = odoo.sql_db.sql_counter
+    loading_extra_query_count = odoo.sql_db.sql_counter
+    loading_cursor_query_count = env.cr.sql_log_count
 
     models_updated = set()
 
@@ -164,31 +160,39 @@ def load_module_graph(cr, graph, status=None, perform_checks=True,
         if skip_modules and module_name in skip_modules:
             continue
 
-        _logger.debug('loading module %s (%d/%d)', module_name, index, module_count)
+        module_t0 = time.time()
+        module_cursor_query_count = env.cr.sql_log_count
+        module_extra_query_count = odoo.sql_db.sql_counter
 
         needs_update = (
             hasattr(package, "init")
             or hasattr(package, "update")
             or package.state in ("to install", "to upgrade")
         )
+        module_log_level = logging.DEBUG
         if needs_update:
+            module_log_level = logging.INFO
+        _logger.log(module_log_level, 'Loading module %s (%d/%d)', module_name, index, module_count)
+
+        new_install = package.state == 'to install'
+        if needs_update:
+            if not new_install:
+                if package.name != 'base':
+                    registry.setup_models(env.cr)
+                migrations.migrate_module(package, 'pre')
             if package.name != 'base':
-                registry.setup_models(cr)
-            migrations.migrate_module(package, 'pre')
-            if package.name != 'base':
-                env = api.Environment(cr, SUPERUSER_ID, {})
-                env['base'].flush()
+                env.flush_all()
 
         load_openerp_module(package.name)
 
-        new_install = package.state == 'to install'
         if new_install:
             py_module = sys.modules['odoo.addons.%s' % (module_name,)]
             pre_init = package.info.get('pre_init_hook')
             if pre_init:
-                getattr(py_module, pre_init)(cr)
+                registry.setup_models(env.cr)
+                getattr(py_module, pre_init)(env)
 
-        model_names = registry.load(cr, package)
+        model_names = registry.load(env.cr, package)
 
         mode = 'update'
         if hasattr(package, 'init') or package.state == 'to install':
@@ -198,8 +202,8 @@ def load_module_graph(cr, graph, status=None, perform_checks=True,
         if needs_update:
             models_updated |= set(model_names)
             models_to_check -= set(model_names)
-            registry.setup_models(cr)
-            registry.init_models(cr, model_names, {'module': package.name}, new_install)
+            registry.setup_models(env.cr)
+            registry.init_models(env.cr, model_names, {'module': package.name}, new_install)
         elif package.state != 'to remove':
             # The current module has simply been loaded. The models extended by this module
             # and for which we updated the schema, must have their schema checked again.
@@ -211,7 +215,6 @@ def load_module_graph(cr, graph, status=None, perform_checks=True,
         idref = {}
 
         if needs_update:
-            env = api.Environment(cr, SUPERUSER_ID, {})
             # Can't put this line out of the loop: ir.module.module will be
             # registered by init_models() above.
             module = env['ir.module.module'].browse(module_id)
@@ -222,24 +225,25 @@ def load_module_graph(cr, graph, status=None, perform_checks=True,
             if package.state == 'to upgrade':
                 # upgrading the module information
                 module.write(module.get_values_from_terp(package.data))
-            load_data(cr, idref, mode, kind='data', package=package, report=report)
-            demo_loaded = package.dbdemo = load_demo(cr, package, idref, mode, report)
-            cr.execute('update ir_module_module set demo=%s where id=%s', (demo_loaded, module_id))
-            module.invalidate_cache(['demo'])
+            load_data(env, idref, mode, kind='data', package=package)
+            demo_loaded = package.dbdemo = load_demo(env, package, idref, mode)
+            env.cr.execute('update ir_module_module set demo=%s where id=%s', (demo_loaded, module_id))
+            module.invalidate_model(['demo'])
 
             migrations.migrate_module(package, 'post')
 
             # Update translations for all installed languages
             overwrite = odoo.tools.config["overwrite_existing_translations"]
-            module.with_context(overwrite=overwrite)._update_translations()
+            module._update_translations(overwrite=overwrite)
 
-            if package.name is not None:
-                registry._init_modules.add(package.name)
+        if package.name is not None:
+            registry._init_modules.add(package.name)
 
+        if needs_update:
             if new_install:
                 post_init = package.info.get('post_init_hook')
                 if post_init:
-                    getattr(py_module, post_init)(cr, registry)
+                    getattr(py_module, post_init)(env)
 
             if mode == 'update':
                 # validate the views that have not been checked yet
@@ -248,17 +252,44 @@ def load_module_graph(cr, graph, status=None, perform_checks=True,
             # need to commit any modification the module's installation or
             # update made to the schema or data so the tests can run
             # (separately in their own transaction)
-            cr.commit()
+            env.cr.commit()
+            concrete_models = [model for model in model_names if not registry[model]._abstract]
+            if concrete_models:
+                env.cr.execute("""
+                    SELECT model FROM ir_model 
+                    WHERE id NOT IN (SELECT DISTINCT model_id FROM ir_model_access) AND model IN %s
+                """, [tuple(concrete_models)])
+                models = [model for [model] in env.cr.fetchall()]
+                if models:
+                    lines = [
+                        f"The models {models} have no access rules in module {module_name}, consider adding some, like:",
+                        "id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink"
+                    ]
+                    for model in models:
+                        xmlid = model.replace('.', '_')
+                        lines.append(f"{module_name}.access_{xmlid},access_{xmlid},{module_name}.model_{xmlid},base.group_user,1,0,0,0")
+                    _logger.warning('\n'.join(lines))
 
-            if tools.config.options['test_enable']:
-                report.record_result(load_test(idref, mode))
+        updating = tools.config.options['init'] or tools.config.options['update']
+        test_time = test_queries = 0
+        test_results = None
+        if tools.config.options['test_enable'] and (needs_update or not updating):
+            from odoo.tests import loader  # noqa: PLC0415
+            suite = loader.make_suite([module_name], 'at_install')
+            if suite.countTestCases():
+                if not needs_update:
+                    registry.setup_models(env.cr)
                 # Python tests
-                env['ir.http']._clear_routing_map()     # force routing map to be rebuilt
-                report.record_result(odoo.modules.module.run_unit_tests(module_name))
+                tests_t0, tests_q0 = time.time(), odoo.sql_db.sql_counter
+                test_results = loader.run_suite(suite, global_report=report)
+                report.update(test_results)
+                test_time = time.time() - tests_t0
+                test_queries = odoo.sql_db.sql_counter - tests_q0
+
                 # tests may have reset the environment
-                env = api.Environment(cr, SUPERUSER_ID, {})
                 module = env['ir.module.module'].browse(module_id)
 
+        if needs_update:
             processed_modules.append(package.name)
 
             ver = adapt_version(package.data['version'])
@@ -271,12 +302,33 @@ def load_module_graph(cr, graph, status=None, perform_checks=True,
             for kind in ('init', 'demo', 'update'):
                 if hasattr(package, kind):
                     delattr(package, kind)
-            module.flush()
+            module.env.flush_all()
 
-        if package.name is not None:
-            registry._init_modules.add(package.name)
+        extra_queries = odoo.sql_db.sql_counter - module_extra_query_count - test_queries
+        extras = []
+        if test_queries:
+            extras.append(f'+{test_queries} test')
+        if extra_queries:
+            extras.append(f'+{extra_queries} other')
+        _logger.log(
+            module_log_level, "Module %s loaded in %.2fs%s, %s queries%s",
+            module_name, time.time() - module_t0,
+            f' (incl. {test_time:.2f}s test)' if test_time else '',
+            env.cr.sql_log_count - module_cursor_query_count,
+            f' ({", ".join(extras)})' if extras else ''
+        )
+        if test_results and not test_results.wasSuccessful():
+            _logger.error(
+                "Module %s: %d failures, %d errors of %d tests",
+                module_name, test_results.failures_count, test_results.errors_count,
+                test_results.testsRun
+            )
 
-    _logger.log(25, "%s modules loaded in %.2fs, %s queries", len(graph), time.time() - t0, odoo.sql_db.sql_counter - t0_sql)
+    _logger.runbot("%s modules loaded in %.2fs, %s queries (+%s extra)",
+                   len(graph),
+                   time.time() - t0,
+                   env.cr.sql_log_count - loading_cursor_query_count,
+                   odoo.sql_db.sql_counter - loading_extra_query_count)  # extra queries: testes, notify, any other closed cursor
 
     return loaded_modules, processed_modules
 
@@ -294,7 +346,7 @@ def _check_module_names(cr, module_names):
             incorrect_names = mod_names.difference([x['name'] for x in cr.dictfetchall()])
             _logger.warning('invalid module names, ignored: %s', ", ".join(incorrect_names))
 
-def load_marked_modules(cr, graph, states, force, progressdict, report,
+def load_marked_modules(env, graph, states, force, progressdict, report,
                         loaded_modules, perform_checks, models_to_check=None):
     """Loads modules marked with ``states``, adding them to ``graph`` and
        ``loaded_modules`` and returns a list of installed/upgraded modules."""
@@ -304,14 +356,14 @@ def load_marked_modules(cr, graph, states, force, progressdict, report,
 
     processed_modules = []
     while True:
-        cr.execute("SELECT name from ir_module_module WHERE state IN %s" ,(tuple(states),))
-        module_list = [name for (name,) in cr.fetchall() if name not in graph]
+        env.cr.execute("SELECT name from ir_module_module WHERE state IN %s", (tuple(states),))
+        module_list = [name for (name,) in env.cr.fetchall() if name not in graph]
         if not module_list:
             break
-        graph.add_modules(cr, module_list, force)
+        graph.add_modules(env.cr, module_list, force)
         _logger.debug('Updating graph with %d more modules', len(module_list))
         loaded, processed = load_module_graph(
-            cr, graph, progressdict, report=report, skip_modules=loaded_modules,
+            env, graph, progressdict, report=report, skip_modules=loaded_modules,
             perform_checks=perform_checks, models_to_check=models_to_check
         )
         processed_modules.extend(processed)
@@ -320,7 +372,10 @@ def load_marked_modules(cr, graph, states, force, progressdict, report,
             break
     return processed_modules
 
-def load_modules(db, force_demo=False, status=None, update_module=False):
+def load_modules(registry, force_demo=False, status=None, update_module=False):
+    """ Load the modules for a registry object that has just been created.  This
+        function is part of Registry.new() and should not be used anywhere else.
+    """
     initialize_sys_path()
 
     force = []
@@ -329,7 +384,12 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
 
     models_to_check = set()
 
-    with db.cursor() as cr:
+    with registry.cursor() as cr:
+        # prevent endless wait for locks on schema changes (during online
+        # installs) if a concurrent transaction has accessed the table;
+        # connection settings are automatically reset when the connection is
+        # borrowed from the pool
+        cr.execute("SET SESSION lock_timeout = '15s'")
         if not odoo.modules.db.is_initialized(cr):
             if not update_module:
                 _logger.error("Database %s not initialized, you can force it with `-i base`", cr.dbname)
@@ -338,13 +398,8 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
             odoo.modules.db.initialize(cr)
             update_module = True # process auto-installed modules
             tools.config["init"]["all"] = 1
-            tools.config['update']['all'] = 1
             if not tools.config['without_demo']:
                 tools.config["demo"]['all'] = 1
-
-        # This is a brand new registry, just created in
-        # odoo.modules.registry.Registry.new().
-        registry = odoo.registry(cr.dbname)
 
         if 'base' in tools.config['update'] or 'all' in tools.config['update']:
             cr.execute("update ir_module_module set state=%s where name=%s and state=%s", ('to upgrade', 'base', 'installed'))
@@ -356,11 +411,17 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
             _logger.critical('module base cannot be loaded! (hint: verify addons-path)')
             raise ImportError('Module `base` cannot be loaded! (hint: verify addons-path)')
 
+        if update_module and odoo.tools.sql.table_exists(cr, 'ir_model_fields'):
+            # determine the fields which are currently translated in the database
+            cr.execute("SELECT model || '.' || name FROM ir_model_fields WHERE translate IS TRUE")
+            registry._database_translated_fields = {row[0] for row in cr.fetchall()}
+
         # processed_modules: for cleanup step after install
         # loaded_modules: to avoid double loading
         report = registry._assertion_report
+        env = api.Environment(cr, SUPERUSER_ID, {})
         loaded_modules, processed_modules = load_module_graph(
-            cr, graph, status, perform_checks=update_module,
+            env, graph, status, perform_checks=update_module,
             report=report, models_to_check=models_to_check)
 
         load_lang = tools.config.pop('load_language')
@@ -370,11 +431,10 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
 
         if load_lang:
             for lang in load_lang.split(','):
-                tools.load_language(cr, lang)
+                tools.translate.load_language(cr, lang)
 
         # STEP 2: Mark other modules to be loaded/updated
         if update_module:
-            env = api.Environment(cr, SUPERUSER_ID, {})
             Module = env['ir.module.module']
             _logger.info('updating modules list')
             Module.update_list()
@@ -389,13 +449,13 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
 
             module_names = [k for k, v in tools.config['update'].items() if v]
             if module_names:
-                modules = Module.search([('state', '=', 'installed'), ('name', 'in', module_names)])
+                modules = Module.search([('state', 'in', ('installed', 'to upgrade')), ('name', 'in', module_names)])
                 if modules:
                     modules.button_upgrade()
 
+            env.flush_all()
             cr.execute("update ir_module_module set state=%s where name=%s", ('installed', 'base'))
-            Module.invalidate_cache(['state'])
-            Module.flush()
+            Module.invalidate_model(['state'])
 
         # STEP 3: Load marked modules (skipping base which was done in STEP 1)
         # IMPORTANT: this is done in two parts, first loading all installed or
@@ -414,13 +474,45 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
         previously_processed = -1
         while previously_processed < len(processed_modules):
             previously_processed = len(processed_modules)
-            processed_modules += load_marked_modules(cr, graph,
+            processed_modules += load_marked_modules(env, graph,
                 ['installed', 'to upgrade', 'to remove'],
                 force, status, report, loaded_modules, update_module, models_to_check)
             if update_module:
-                processed_modules += load_marked_modules(cr, graph,
+                processed_modules += load_marked_modules(env, graph,
                     ['to install'], force, status, report,
                     loaded_modules, update_module, models_to_check)
+
+        if update_module:
+            # set up the registry without the patch for translated fields
+            database_translated_fields = registry._database_translated_fields
+            registry._database_translated_fields = ()
+            registry.setup_models(cr)
+            # determine which translated fields should no longer be translated,
+            # and make their model fix the database schema
+            models_to_untranslate = set()
+            for full_name in database_translated_fields:
+                model_name, field_name = full_name.rsplit('.', 1)
+                if model_name in registry:
+                    field = registry[model_name]._fields.get(field_name)
+                    if field and not field.translate:
+                        _logger.debug("Making field %s non-translated", field)
+                        models_to_untranslate.add(model_name)
+            registry.init_models(cr, list(models_to_untranslate), {'models_to_check': True})
+
+        registry.loaded = True
+        registry.setup_models(cr)
+
+        # check that all installed modules have been loaded by the registry
+        Module = env['ir.module.module']
+        modules = Module.search_fetch(Module._get_modules_to_load_domain(), ['name'], order='name')
+        missing = [name for name in modules.mapped('name') if name not in graph]
+        if missing:
+            _logger.error("Some modules are not loaded, some dependencies or manifest may be missing: %s", missing)
+
+        # STEP 3.5: execute migration end-scripts
+        migrations = odoo.modules.migration.MigrationManager(cr, graph)
+        for package in graph:
+            migrations.migrate_module(package, 'end')
 
         # check that new module dependencies have been properly installed after a migration/upgrade
         cr.execute("SELECT name from ir_module_module WHERE state IN ('to install', 'to upgrade')")
@@ -428,49 +520,28 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
         if module_list:
             _logger.error("Some modules have inconsistent states, some dependencies may be missing: %s", sorted(module_list))
 
-        # check that all installed modules have been loaded by the registry after a migration/upgrade
-        cr.execute("SELECT name from ir_module_module WHERE state = 'installed' and name != 'studio_customization'")
-        module_list = [name for (name,) in cr.fetchall() if name not in graph]
-        if module_list:
-            _logger.error("Some modules are not loaded, some dependencies or manifest may be missing: %s", sorted(module_list))
-
-        registry.loaded = True
-        registry.setup_models(cr)
-
-        # STEP 3.5: execute migration end-scripts
-        migrations = odoo.modules.migration.MigrationManager(cr, graph)
-        for package in graph:
-            migrations.migrate_module(package, 'end')
-
         # STEP 3.6: apply remaining constraints in case of an upgrade
         registry.finalize_constraints()
 
         # STEP 4: Finish and cleanup installations
         if processed_modules:
-            env = api.Environment(cr, SUPERUSER_ID, {})
-            cr.execute("""select model,name from ir_model where id NOT IN (select distinct model_id from ir_model_access)""")
-            for (model, name) in cr.fetchall():
-                if model in registry and not registry[model]._abstract and not registry[model]._transient:
-                    _logger.warning('The model %s has no access rules, consider adding one. E.g. access_%s,access_%s,model_%s,base.group_user,1,0,0,0',
-                        model, model.replace('.', '_'), model.replace('.', '_'), model.replace('.', '_'))
-
-            # Temporary warning while we remove access rights on osv_memory objects, as they have
-            # been replaced by owner-only access rights
-            cr.execute("""select distinct mod.model, mod.name from ir_model_access acc, ir_model mod where acc.model_id = mod.id""")
-            for (model, name) in cr.fetchall():
-                if model in registry and registry[model]._transient:
-                    _logger.warning('The transient model %s (%s) should not have explicit access rules!', model, name)
 
             cr.execute("SELECT model from ir_model")
             for (model,) in cr.fetchall():
                 if model in registry:
                     env[model]._check_removed_columns(log=True)
                 elif _logger.isEnabledFor(logging.INFO):    # more an info that a warning...
-                    _logger.log(25, "Model %s is declared but cannot be loaded! (Perhaps a module was partially removed or renamed)", model)
+                    _logger.runbot("Model %s is declared but cannot be loaded! (Perhaps a module was partially removed or renamed)", model)
 
             # Cleanup orphan records
             env['ir.model.data']._process_end(processed_modules)
-            env['base'].flush()
+            # Cleanup cron
+            vacuum_cron = env.ref('base.autovacuum_job', raise_if_not_found=False)
+            if vacuum_cron:
+                # trigger after a small delay to give time for assets to regenerate
+                vacuum_cron._trigger(at=datetime.datetime.now() + datetime.timedelta(minutes=1))
+
+            env.flush_all()
 
         for kind in ('init', 'demo', 'update'):
             tools.config[kind] = {}
@@ -482,13 +553,13 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
             cr.execute("SELECT name, id FROM ir_module_module WHERE state=%s", ('to remove',))
             modules_to_remove = dict(cr.fetchall())
             if modules_to_remove:
-                env = api.Environment(cr, SUPERUSER_ID, {})
                 pkgs = reversed([p for p in graph if p.name in modules_to_remove])
                 for pkg in pkgs:
                     uninstall_hook = pkg.info.get('uninstall_hook')
                     if uninstall_hook:
                         py_module = sys.modules['odoo.addons.%s' % (pkg.name,)]
-                        getattr(py_module, uninstall_hook)(cr, registry)
+                        getattr(py_module, uninstall_hook)(env)
+                        env.flush_all()
 
                 Module = env['ir.module.module']
                 Module.browse(modules_to_remove.values()).module_uninstall()
@@ -496,10 +567,10 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
                 # modules to remove next time
                 cr.commit()
                 _logger.info('Reloading registry once more after uninstalling modules')
-                api.Environment.reset()
                 registry = odoo.modules.registry.Registry.new(
                     cr.dbname, force_demo, status, update_module
                 )
+                cr.reset()
                 registry.check_tables_exist(cr)
                 cr.commit()
                 return registry
@@ -516,27 +587,32 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
 
         # STEP 6: verify custom views on every model
         if update_module:
-            env = api.Environment(cr, SUPERUSER_ID, {})
+            env['res.groups']._update_user_groups_view()
             View = env['ir.ui.view']
             for model in registry:
                 try:
                     View._validate_custom_views(model)
                 except Exception as e:
-                    _logger.warning('invalid custom view(s) for model %s: %s', model, tools.ustr(e))
+                    _logger.warning('invalid custom view(s) for model %s: %s', model, e)
 
-        if report.failures:
-            _logger.error('At least one test failed when loading the modules.')
-        else:
+        if not registry._assertion_report or registry._assertion_report.wasSuccessful():
             _logger.info('Modules loaded.')
+        else:
+            _logger.error('At least one test failed when loading the modules.')
 
-        # STEP 8: call _register_hook on every model
-        env = api.Environment(cr, SUPERUSER_ID, {})
+
+        # STEP 8: save installed/updated modules for post-install tests and _register_hook
+        registry.updated_modules += processed_modules
+
+        # STEP 9: call _register_hook on every model
+        # This is done *exactly once* when the registry is being loaded. See the
+        # management of those hooks in `Registry.setup_models`: all the calls to
+        # setup_models() done here do not mess up with hooks, as registry.ready
+        # is False.
         for model in env.values():
             model._register_hook()
-        env['base'].flush()
+        env.flush_all()
 
-        # STEP 9: save installed/updated modules for post-install tests
-        registry.updated_modules += processed_modules
 
 def reset_modules_state(db_name):
     """
@@ -550,6 +626,10 @@ def reset_modules_state(db_name):
     # of time
     db = odoo.sql_db.db_connect(db_name)
     with db.cursor() as cr:
+        cr.execute("SELECT 1 FROM information_schema.tables WHERE table_name='ir_module_module'")
+        if not cr.fetchall():
+            _logger.info('skipping reset_modules_state, ir_module_module table does not exists')
+            return
         cr.execute(
             "UPDATE ir_module_module SET state='installed' WHERE state IN ('to remove', 'to upgrade')"
         )

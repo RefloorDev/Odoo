@@ -3,23 +3,16 @@
 # 	* barcodes
 # 
 # Translators:
-# Martin Trigaux, 2020
-# Matjaz Mozetic <m.mozetic@matmoz.si>, 2020
-# Dejan Sraka <dejan.sraka@picolabs.si>, 2020
-# laznikd <laznik@mentis.si>, 2020
-# matjaz k <matjaz@mentis.si>, 2020
-# Boris Kodelja <boris@hbs.si>, 2020
-# Tadej Lupšina <tadej@hbs.si>, 2020
-# Jasmina Macur <jasmina@hbs.si>, 2020
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: Jasmina Macur <jasmina@hbs.si>, 2020\n"
-"Language-Team: Slovenian (https://www.transifex.com/odoo/teams/41243/sl/)\n"
+"POT-Creation-Date: 2024-09-25 08:40+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Slovenian (https://app.transifex.com/odoo/teams/41243/sl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -27,27 +20,9 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);\n"
 
 #. module: barcodes
-#: code:addons/barcodes/models/barcodes.py:0
-#, python-format
-msgid " '*' is not a valid Regex Barcode Pattern. Did you mean '.*' ?"
-msgstr " '*' ni veljaven Regex Barcode vzorec. Ali ste mislili '.*' ?"
-
-#. module: barcodes
-#: code:addons/barcodes/models/barcodes.py:0
-#, python-format
-msgid ": a rule can only contain one pair of braces."
-msgstr ""
-
-#. module: barcodes
-#: code:addons/barcodes/models/barcodes.py:0
-#, python-format
-msgid ": braces can only contain N's followed by D's."
-msgstr ""
-
-#. module: barcodes
-#: code:addons/barcodes/models/barcodes.py:0
-#, python-format
-msgid ": empty braces."
+#. odoo-python
+#: code:addons/barcodes/models/barcode_rule.py:0
+msgid " '*' is not a valid Regex Barcode Pattern. Did you mean '.*'?"
 msgstr ""
 
 #. module: barcodes
@@ -98,6 +73,12 @@ msgid "Any"
 msgstr ""
 
 #. module: barcodes
+#. odoo-javascript
+#: code:addons/barcodes/static/src/components/barcode_scanner.xml:0
+msgid "Barcode"
+msgstr "Črtna koda"
+
+#. module: barcodes
 #: model:ir.model,name:barcodes.model_barcodes_barcode_events_mixin
 msgid "Barcode Event Mixin"
 msgstr ""
@@ -133,6 +114,12 @@ msgid "Barcode Scanned"
 msgstr "Skenirana črtna koda"
 
 #. module: barcodes
+#. odoo-javascript
+#: code:addons/barcodes/static/src/barcode_handlers.js:0
+msgid "Barcode: %(barcode)s"
+msgstr ""
+
+#. module: barcodes
 #: model:ir.model,name:barcodes.model_res_company
 msgid "Companies"
 msgstr "Podjetja"
@@ -150,18 +137,10 @@ msgid "Created on"
 msgstr "Ustvarjeno"
 
 #. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Discard"
-msgstr "Opusti"
-
-#. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_nomenclature__display_name
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__display_name
-#: model:ir.model.fields,field_description:barcodes.field_barcodes_barcode_events_mixin__display_name
 msgid "Display Name"
-msgstr "Naziv prikaza"
+msgstr "Prikazani naziv"
 
 #. module: barcodes
 #: model:ir.model.fields.selection,name:barcodes.selection__barcode_rule__encoding__ean13
@@ -184,37 +163,6 @@ msgid "Encoding"
 msgstr "Kodiranje"
 
 #. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Error: Barcode command is undefined"
-msgstr "Napaka: Ukaz črtne kode ni določen"
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Error: Document not editable"
-msgstr "Napaka: Dokument ni mogoče urediti"
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Error: No last scanned barcode"
-msgstr "Napaka: Ni zadnje skenirane črtne kode"
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Error: Pager not available"
-msgstr ""
-
-#. module: barcodes
 #: model:ir.model,name:barcodes.model_ir_http
 msgid "HTTP Routing"
 msgstr "HTTP usmerjanje"
@@ -222,22 +170,14 @@ msgstr "HTTP usmerjanje"
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_nomenclature__id
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__id
-#: model:ir.model.fields,field_description:barcodes.field_barcodes_barcode_events_mixin__id
 msgid "ID"
 msgstr "ID"
-
-#. module: barcodes
-#: model:ir.model.fields,field_description:barcodes.field_barcode_nomenclature____last_update
-#: model:ir.model.fields,field_description:barcodes.field_barcode_rule____last_update
-#: model:ir.model.fields,field_description:barcodes.field_barcodes_barcode_events_mixin____last_update
-msgid "Last Modified on"
-msgstr "Zadnjič spremenjeno"
 
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_nomenclature__write_uid
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__write_uid
 msgid "Last Updated by"
-msgstr "Zadnjič posodobil"
+msgstr "Zadnji posodobil"
 
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_nomenclature__write_date
@@ -260,10 +200,16 @@ msgstr "Nomenklatura"
 msgid ""
 "Patterns can also define how numerical values, such as weight or price, can be\n"
 "                                encoded into the barcode. They are indicated by <code>{NNN}</code> where the N's\n"
-"                                define where the number's digits are encoded. Floats are also supported with the \n"
-"                                decimals indicated with D's, such as <code>{NNNDD}</code>. In these cases, \n"
-"                                the barcode field on the associated records <i>must</i> show these digits as \n"
+"                                define where the number's digits are encoded. Floats are also supported with the\n"
+"                                decimals indicated with D's, such as <code>{NNNDD}</code>. In these cases,\n"
+"                                the barcode field on the associated records <i>must</i> show these digits as\n"
 "                                zeroes."
+msgstr ""
+
+#. module: barcodes
+#. odoo-javascript
+#: code:addons/barcodes/static/src/components/barcode_scanner.js:0
+msgid "Please, Scan again!"
 msgstr ""
 
 #. module: barcodes
@@ -277,23 +223,9 @@ msgid "Rules"
 msgstr "Pravila"
 
 #. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Select"
-msgstr "Izberi"
-
-#. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__sequence
 msgid "Sequence"
 msgstr "Zaporedje"
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "Set quantity"
-msgstr "Nastavite količino"
 
 #. module: barcodes
 #: model_terms:ir.ui.view,arch_db:barcodes.view_barcode_nomenclature_form
@@ -301,9 +233,22 @@ msgid "Tables"
 msgstr "Mize"
 
 #. module: barcodes
+#. odoo-javascript
+#: code:addons/barcodes/static/src/components/barcode_scanner.xml:0
+msgid "Tap to scan"
+msgstr "Kliknite za optično branje"
+
+#. module: barcodes
 #: model:ir.model.fields,help:barcodes.field_barcode_rule__pattern
 msgid "The barcode matching pattern"
 msgstr "Vzorec ujemanja črtne kode"
+
+#. module: barcodes
+#. odoo-python
+#: code:addons/barcodes/models/barcode_rule.py:0
+msgid ""
+"The barcode pattern %(pattern)s does not lead to a valid regular expression."
+msgstr ""
 
 #. module: barcodes
 #: model:ir.model.fields,help:barcodes.field_barcode_nomenclature__rule_ids
@@ -316,11 +261,26 @@ msgid "The matched pattern will alias to this barcode"
 msgstr "Ujemajoči se vzorec bo vzporeden s to črtno kodo"
 
 #. module: barcodes
-#: code:addons/barcodes/models/barcodes.py:0
-#: code:addons/barcodes/models/barcodes.py:0
-#: code:addons/barcodes/models/barcodes.py:0
-#, python-format
-msgid "There is a syntax error in the barcode pattern "
+#. odoo-python
+#: code:addons/barcodes/models/barcode_rule.py:0
+msgid ""
+"There is a syntax error in the barcode pattern %(pattern)s: a rule can only "
+"contain one pair of braces."
+msgstr ""
+
+#. module: barcodes
+#. odoo-python
+#: code:addons/barcodes/models/barcode_rule.py:0
+msgid ""
+"There is a syntax error in the barcode pattern %(pattern)s: braces can only "
+"contain N's followed by D's."
+msgstr ""
+
+#. module: barcodes
+#. odoo-python
+#: code:addons/barcodes/models/barcode_rule.py:0
+msgid ""
+"There is a syntax error in the barcode pattern %(pattern)s: empty braces."
 msgstr ""
 
 #. module: barcodes
@@ -329,20 +289,6 @@ msgid ""
 "This rule will apply only if the barcode is encoded with the specified "
 "encoding"
 msgstr "To pravilo velja samo, če je črtna koda kodirana s podano kodiranjem"
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "To modify this document, please first start edition."
-msgstr "Če želite spremeniti ta dokument, najprej začnite izdajo."
-
-#. module: barcodes
-#. openerp-web
-#: code:addons/barcodes/static/src/js/barcode_form_view.js:0
-#, python-format
-msgid "To set the quantity please scan a barcode first."
-msgstr "Če želite nastaviti količino, najprej skenirajte črtno kodo."
 
 #. module: barcodes
 #: model:ir.model.fields,field_description:barcodes.field_barcode_rule__type
@@ -376,6 +322,12 @@ msgstr "UPC/EAN pretvorba"
 #: model:ir.model.fields.selection,name:barcodes.selection__barcode_rule__type__product
 msgid "Unit Product"
 msgstr "Enota izdelka"
+
+#. module: barcodes
+#. odoo-javascript
+#: code:addons/barcodes/static/src/barcode_handlers.js:0
+msgid "Unknown barcode command"
+msgstr ""
 
 #. module: barcodes
 #: model:ir.model.fields,help:barcodes.field_barcode_rule__sequence

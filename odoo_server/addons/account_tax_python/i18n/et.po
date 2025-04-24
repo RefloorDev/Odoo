@@ -1,21 +1,19 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# * account_tax_python
+# 	* account_tax_python
 # 
 # Translators:
-# Martin Trigaux, 2018
-# Egon Raamat <egon@avalah.ee>, 2018
-# Eneli Õigus <enelioigus@gmail.com>, 2018
-# Marek Pontus, 2018
+# Stevin Lilla, 2024
+# Birgit Vijar, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~11.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-18 09:49+0000\n"
-"PO-Revision-Date: 2018-08-24 09:15+0000\n"
-"Last-Translator: Marek Pontus, 2018\n"
-"Language-Team: Estonian (https://www.transifex.com/odoo/teams/41243/et/)\n"
+"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Birgit Vijar, 2025\n"
+"Language-Team: Estonian (https://app.transifex.com/odoo/teams/41243/et/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -23,107 +21,74 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: account_tax_python
-#: model:ir.model.fields,field_description:account_tax_python.field_account_tax__python_applicable
-#: model:ir.model.fields,field_description:account_tax_python.field_account_tax_template__python_applicable
-msgid "Applicable Code"
-msgstr "Rakendatav kood"
-
-#. module: account_tax_python
-#: model:ir.model.fields,help:account_tax_python.field_account_tax__python_compute
+#: model:ir.model.fields,help:account_tax_python.field_account_tax__amount_type
 msgid ""
-"Compute the amount of the tax by setting the variable 'result'.\n"
 "\n"
-":param base_amount: float, actual amount on which the tax is applied\n"
-":param price_unit: float\n"
-":param quantity: float\n"
-":param company: res.company recordset singleton\n"
-":param product: product.product recordset singleton or None\n"
-":param partner: res.partner recordset singleton or None"
-msgstr "Arvutage maksusumma, määrates muutuja \"tulemus\"."
-
-#. module: account_tax_python
-#: model:ir.model.fields,help:account_tax_python.field_account_tax_template__python_compute
-msgid ""
-"Compute the amount of the tax by setting the variable 'result'.\n"
-"\n"
-":param base_amount: float, actual amount on which the tax is applied\n"
-":param price_unit: float\n"
-":param quantity: float\n"
-":param product: product.product recordset singleton or None\n"
-":param partner: res.partner recordset singleton or None"
-msgstr "Arvutage maksusumma, määrates muutuja \"tulemus\"."
-
-#. module: account_tax_python
-#: model:ir.model.fields,help:account_tax_python.field_account_tax__python_applicable
-msgid ""
-"Determine if the tax will be applied by setting the variable 'result' to True or False.\n"
-"\n"
-":param price_unit: float\n"
-":param quantity: float\n"
-":param company: res.company recordset singleton\n"
-":param product: product.product recordset singleton or None\n"
-":param partner: res.partner recordset singleton or None"
+"    - Group of Taxes: The tax is a set of sub taxes.\n"
+"    - Fixed: The tax amount stays the same whatever the price.\n"
+"    - Percentage: The tax amount is a % of the price:\n"
+"        e.g 100 * (1 + 10%) = 110 (not price included)\n"
+"        e.g 110 / (1 + 10%) = 100 (price included)\n"
+"    - Percentage Tax Included: The tax amount is a division of the price:\n"
+"        e.g 180 / (1 - 10%) = 200 (not price included)\n"
+"        e.g 200 * (1 - 10%) = 180 (price included)\n"
+"        "
 msgstr ""
-"Määrake, kas lisatakse maks, määrates muutuja \"tulemus\" tõeseks või "
-"vääraks."
+"\n"
+"    - Maksude grupp: Maks koosneb alammaksudest.\n"
+"    - Fikseeritud: Maks jääb samaks, olenemata hinnast.\n"
+"    - Protsent: Maks on teatud % hinnast:\n"
+"        nt 100 * (1 + 10%) = 110 (hind ei sisalda maksu)\n"
+"        nt 110 / (1 + 10%) = 100 (hind sisaldab maksu)\n"
+"    - Sisaldab protsendilist maksu: Maksusumma sõltub hinnast:\n"
+"        nt 180 / (1 - 10%) = 200 (hind ei sisalda maksu)\n"
+"       nt 200 * (1 - 10%) = 180 (hind sisaldab maksu)\n"
+"        "
 
 #. module: account_tax_python
-#: model:ir.model.fields,help:account_tax_python.field_account_tax_template__python_applicable
+#: model:ir.model.fields,help:account_tax_python.field_account_tax__formula
 msgid ""
-"Determine if the tax will be applied by setting the variable 'result' to True or False.\n"
+"Compute the amount of the tax.\n"
 "\n"
+":param base: float, actual amount on which the tax is applied\n"
 ":param price_unit: float\n"
 ":param quantity: float\n"
-":param product: product.product recordset singleton or None\n"
-":param partner: res.partner recordset singleton or None"
+":param product: A object representing the product\n"
 msgstr ""
-"Määrake, kas makse lisatakse, määrates muutuja \"tulemus\" tõeseks või "
-"vääraks."
+"Arvutage maksusumma.\n"
+"\n"
+":param baas: ujuv, tegelik summa, millelt maks rakendatakse\n"
+":param hinna_ühik: ujuv\n"
+":param kogus: ujuv\n"
+":param toode: toodet esindav objekt\n"
 
 #. module: account_tax_python
-#: selection:account.tax,amount_type:0
-#: selection:account.tax.template,amount_type:0
-msgid "Fixed"
-msgstr "Fikseeritud"
+#: model:ir.model.fields.selection,name:account_tax_python.selection__account_tax__amount_type__code
+msgid "Custom Formula"
+msgstr "Kohandatud valem"
 
 #. module: account_tax_python
-#: selection:account.tax,amount_type:0
-#: selection:account.tax.template,amount_type:0
-msgid "Group of Taxes"
-msgstr "Käibemaksu grupp"
+#: model:ir.model.fields,field_description:account_tax_python.field_account_tax__formula
+msgid "Formula"
+msgstr "Valem"
 
 #. module: account_tax_python
-#: selection:account.tax,amount_type:0
-#: selection:account.tax.template,amount_type:0
-msgid "Percentage of Price"
-msgstr "Protsenti hinnast"
+#: model:ir.model.fields,field_description:account_tax_python.field_account_tax__formula_decoded_info
+msgid "Formula Decoded Info"
+msgstr "Valemi dekodeeritud teave"
 
 #. module: account_tax_python
-#: selection:account.tax,amount_type:0
-#: selection:account.tax.template,amount_type:0
-msgid "Percentage of Price Tax Included"
-msgstr "Protsenti koos maksudega hinnast"
-
-#. module: account_tax_python
-#: selection:account.tax,amount_type:0
-#: selection:account.tax.template,amount_type:0
-#: model:ir.model.fields,field_description:account_tax_python.field_account_tax__python_compute
-#: model:ir.model.fields,field_description:account_tax_python.field_account_tax_template__python_compute
-msgid "Python Code"
-msgstr "Pythoni kood"
+#. odoo-python
+#: code:addons/account_tax_python/models/account_tax.py:0
+msgid "Malformed formula '%(formula)s' at position %(position)s"
+msgstr "Vigane valem '%(formula)s' positsioonis %(position)s"
 
 #. module: account_tax_python
 #: model:ir.model,name:account_tax_python.model_account_tax
 msgid "Tax"
-msgstr "Tulumaks"
+msgstr "Käibemaks"
 
 #. module: account_tax_python
 #: model:ir.model.fields,field_description:account_tax_python.field_account_tax__amount_type
-#: model:ir.model.fields,field_description:account_tax_python.field_account_tax_template__amount_type
 msgid "Tax Computation"
 msgstr "Maksuarvutus"
-
-#. module: account_tax_python
-#: model:ir.model,name:account_tax_python.model_account_tax_template
-msgid "Templates for Taxes"
-msgstr "Maksude mall"
