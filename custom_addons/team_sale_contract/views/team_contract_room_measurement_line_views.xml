@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="team_contract_room_measurement_line_form_view" model="ir.ui.view">
+            <field name="name">team.contract.room.measurement.line.form.view</field>
+            <field name="model">team.contract.room.measurement.line</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="company_id"/>
+                                <field name="room_area"/>
+                                <field name="order_id"/>
+                                <field name="comments"/>
+                                <field name="material_id"/>
+                                <field name="material_comments"/>
+                                <field name="custom_room_name"/>
+                                <field name="image_comments"/>
+                                <field name="moulding"/>
+                                <field name="molding_type_id"/>
+                            </group>
+                            <group>
+                                <field name="room_id"/>
+                                <field name="floor_id"/>
+                                <field name="appointment_id"/>
+                                <field name="exclude_from_calculation"/>
+                                <field name="adjusted_area"/>
+                                <field name="custom_room_measured"/>
+                                <field name="room_perimeter"/>
+                                <field name="color_up_charge_price"/>
+                                <field name="color_up_charge_total"/>
+                                <field name="molding_unit_price"/>
+                                <field name="molding_total_price"/>
+                            </group>
+                            <group>
+                                <field name="shape_image_id"/>
+                                <field name="shape_image"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="images_page" string="Images">
+                                <field name="attachment_ids"/>
+                                <field name="protrusion_image_ids"/>
+                            </page>
+                            <page name="transitions_page" string="Transitions">
+                                <field name="transition_line_id">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="transition_width"/>
+                                        <field name="transition_height"/>
+                                        <field name="transition_height_id"/>
+                                        <field name="floor_id"/>
+                                        <field name="room_id"/>
+                                        <field name="appointment_id"/>
+                                        <field name="order_id"/>
+                                        <field name="company_id" column_invisible="1"/>
+                                        <field name="room_measurement_id" column_invisible="1"/>
+                                    </list>
+                                    <form>
+                                        <group>
+                                            <group>
+                                                <field name="name"/>
+                                                <field name="transition_width"/>
+                                                <field name="transition_height"/>
+                                                <field name="transition_height_id"/>
+                                            </group>
+                                            <group>
+                                                <field name="floor_id"/>
+                                                <field name="room_id"/>
+                                                <field name="appointment_id"/>
+                                                <field name="order_id"/>
+                                                <field name="company_id" invisible="1"/>
+                                                <field name="room_measurement_id" invisible="1"/>
+                                            </group>
+                                        </group>
+                                    </form>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="team_contract_room_measurement_line_list_view" model="ir.ui.view">
+            <field name="name">team.contract.room.measurement.line.list.view</field>
+            <field name="model">team.contract.room.measurement.line</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="name"/>
+                    <field name="company_id"/>
+                    <field name="room_area"/>
+                    <field name="order_id"/>
+                    <field name="comments"/>
+                    <field name="material_id"/>
+                    <field name="material_comments"/>
+                    <field name="custom_room_name"/>
+                    <field name="image_comments"/>
+                    <field name="moulding"/>
+                    <field name="molding_type_id"/>
+                    <field name="room_id"/>
+                    <field name="floor_id"/>
+                    <field name="appointment_id"/>
+                    <field name="exclude_from_calculation"/>
+                    <field name="adjusted_area"/>
+                    <field name="custom_room_measured"/>
+                    <field name="room_perimeter"/>
+                    <field name="color_up_charge_price"/>
+                    <field name="color_up_charge_total"/>
+                    <field name="molding_unit_price"/>
+                    <field name="molding_total_price"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="team_contract_room_measurement_line_action_window" model="ir.actions.act_window">
+            <field name="name">Room Measurements</field>
+            <field name="res_model">team.contract.room.measurement.line</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem name="Room Measurements" parent="sale.menu_sale_config" id="menu_act_room_measurements" action="team_contract_room_measurement_line_action_window"/>
+    </data>
+</odoo>

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
-
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
@@ -83,15 +81,27 @@ class DashboardAccess(models.Model):
                 })
         return image_list
 
-    @api.model
-    def create(self, vals):
-        if vals.get('name', _('/')) == _('/'):
-            user = False
-            if vals.get('user_id', False):
-                user = self.env['res.users'].search([('id', '=', vals['user_id'])])
-            vals['name'] = user.name if user else '' + self.env['ir.sequence'].next_by_code('dashboard.access') or _(
-                '/')
-        return super(DashboardAccess, self).create(vals)
+    # @api.model
+    # def create(self, vals):
+    #     if vals.get('name', _('/')) == _('/'):
+    #         user = False
+    #         if vals.get('user_id', False):
+    #             user = self.env['res.users'].search([('id', '=', vals['user_id'])])
+    #         vals['name'] = user.name if user else '' + self.env['ir.sequence'].next_by_code('dashboard.access') or _(
+    #             '/')
+    #     return super(DashboardAccess, self).create(vals)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        res_users_obj = self.env['res.users']
+        ir_sequence_obj = self.env['ir.sequence']
+        for vals in vals_list:
+            if vals.get('name', _('/')) == _('/'):
+                user = False
+                if vals.get('user_id', False):
+                    user = res_users_obj.search([('id', '=', vals['user_id'])], limit=1)
+                vals['name'] = (user.name if user else '') + (ir_sequence_obj.next_by_code('dashboard.access') or _('/'))
+        return super(DashboardAccess, self).create(vals_list)
 
     @api.constrains('user_id')
     def check_user(self):

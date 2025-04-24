@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="team_credit_application_form_view" model="ir.ui.view">
+            <field name="name">team.credit.application.form.view</field>
+            <field name="model">team.credit.application</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="total_price"/>
+                                <field name="downpayment"/>
+                                <field name="amount_financed"/>
+                                <field name="type_of_loan"/>
+                                <field name="low_payment"/>
+                                <field name="no_interest"/>
+                                <field name="no_payment"/>
+                                <field name="type_of_property"/>
+                                <field name="single_family"/>
+                                <field name="mobile_family"/>
+                                <field name="condoo"/>
+                            </group>
+                            <group>
+                                <field name="work_to_be_done"/>
+                                <field name="windows"/>
+                                <field name="roof"/>
+                                <field name="siding"/>
+                                <field name="gutters"/>
+                                <field name="gutter_grate"/>
+                                <field name="insulation"/>
+                                <field name="walk_in_tubs"/>
+                                <field name="owners"/>
+                                <field name="same_as_below"/>
+                                <field name="else_owners"/>
+                            </group>
+                            <group>
+                                <field name="owners_if_different"/>
+                                <field name="address_of_property"/>
+                                <field name="same_as_address_of_property"/>
+                                <field name="else_address_of_property"/>
+                            </group>
+                            <group>
+                                <label for="street" string="Address"/>
+                                <div class="o_address_format">
+                                    <field name="street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="city" placeholder="City" class="o_address_city"/>
+                                    <field name="state" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
+                                    <field name="zip" placeholder="ZIP" class="o_address_zip"/>
+                                    <!-- <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/> -->
+                                </div>
+                            </group>
+
+                            <group>
+                                <field name="same_property_address"/>
+                                <field name="applicant_name"/>
+                                <field name="co_applicant_name"/>
+                                <field name="applicant_first_name"/>
+                                <field name="applicant_middle_name"/>
+                                <field name="applicant_last_name"/>
+                                <field name="encrypted_drivers_license"/>
+                                <field name="encrypted_date_of_birth"/>
+                            </group>
+                            <group>
+                                <field name="drivers_license"/>
+                                <field name="drivers_license_issue_date"/>
+                                <field name="drivers_license_exp_date"/>
+                                <field name="date_of_birth"/>
+                                <field name="social_security_number"/>
+                                <field name="encrypted_social_security_number"/>
+                            </group>
+                            <group>
+                                <field name="address_of_applicant"/>
+                                <label for="address_of_applicant_street" string="Address"/>
+                                <div class="o_address_format">
+                                    <field name="address_of_applicant_street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="address_of_applicant_street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="address_of_applicant_city" placeholder="City" class="o_address_city"/>
+                                    <field name="address_of_applicant_state" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
+                                    <field name="address_of_applicant_zip" placeholder="ZIP" class="o_address_zip"/>
+                                    <!-- <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/> -->
+                                </div>
+                            </group>
+                            <group>
+                                <field name="previous_address_of_applicant"/>
+                                <label for="previous_address_of_applicant_street" string="Address"/>
+                                <div class="o_address_format">
+                                    <field name="previous_address_of_applicant_street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="previous_address_of_applicant_street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="previous_address_of_applicant_city" placeholder="City" class="o_address_city"/>
+                                    <field name="previous_address_of_applicant_state" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
+                                    <field name="previous_address_of_applicant_zip" placeholder="ZIP" class="o_address_zip"/>
+                                    <!-- <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/> -->
+                                </div>
+                            </group>
+
+                            <group>
+                                <field name="cell_phone"/>
+                                <field name="home_phone"/>
+                                <field name="how_long"/>
+                                <field name="previous_address_how_long"/>
+                                <field name="present_employer"/>
+                                <field name="years_on_job"/>
+                                <field name="occupation"/>
+                            </group>
+                            <group>
+                                <field name="present_employers_address"/>
+                                <label for="present_employers_address_street" string="Address"/>
+                                <div class="o_address_format">
+                                    <field name="present_employers_address_street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="present_employers_address_street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="present_employers_address_city" placeholder="City" class="o_address_city"/>
+                                    <field name="present_employers_address_state" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
+                                    <field name="present_employers_address_zip" placeholder="ZIP" class="o_address_zip"/>
+                                    <!-- <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/> -->
+                                </div>
+                            </group>
+                            <group>
+                                <field name="earnings_from_employment"/>
+                                <field name="is_earning_from_employment"/>
+                                <field name="supervisor_or_department"/>
+                                <field name="employers_phone_number"/>
+                            </group>
+                            <group>
+                                <field name="previous_employers_address"/>
+                                <label for="previous_employers_address_street" string="Address"/>
+                                <div class="o_address_format">
+                                    <field name="previous_employers_address_street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="previous_employers_address_street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="previous_employers_address_city" placeholder="City" class="o_address_city"/>
+                                    <field name="previous_employers_address_state" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
+                                    <field name="previous_employers_address_zip" placeholder="ZIP" class="o_address_zip"/>
+                                    <!-- <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/> -->
+                                </div>
+                            </group>
+                            <group>
+                                <field name="earnings_per_month"/>
+                                <field name="years_on_job_previous_employer"/>
+                                <field name="occupation_previous_employer"/>
+                                <field name="previous_employers_phone_number"/>
+                            </group>
+                            <group></group>
+                            <!-- co-applicant details -->
+                            <group>
+                                <field name="co_applicant_first_name"/>
+                                <field name="co_applicant_middle_name"/>
+                                <field name="co_applicant_last_name"/>
+                                <field name="co_applicant_drivers_license"/>
+                                <field name="co_applicant_drivers_license_issue_date"/>
+                                <field name="co_applicant_drivers_license_exp_date"/>
+                                <field name="co_applicant_date_of_birth"/>
+                                <field name="co_applicant_social_security_number"/>
+                                <field name="co_applicant_address_of_applicant"/>
+                            </group>
+                            <group>
+                                <field name="co_applicant_phone"/>
+                                <field name="co_applicant_secondary_phone"/>
+                            </group>
+                            <group>
+                                <field name="encrypted_co_applicant_drivers_license"/>
+                                <field name="encrypted_co_applicant_date_of_birth"/>
+                                <field name="encrypted_co_applicant_social_security_number"/>
+                            </group>
+                            <group>
+                                <field name="co_applicant_how_long"/>
+                                <field name="co_applicant_present_employer"/>
+                                <field name="co_applicant_years_on_job"/>
+                                <field name="co_applicant_occupation"/>
+                            </group>
+                            <group>
+                                <label for="co_applicant_street" string="Address"/>
+                                <div class="o_address_format">
+                                    <field name="co_applicant_street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="co_applicant_street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="co_applicant_city" placeholder="City" class="o_address_city"/>
+                                    <field name="co_applicant_state" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
+                                    <field name="co_applicant_zip" placeholder="ZIP" class="o_address_zip"/>
+                                    <!-- <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/> -->
+                                </div>
+                            </group>
+                            <group>
+                                <field name="co_applicant_present_employers_address"/>
+                                <label for="co_applicant_present_employers_street" string="Address"/>
+                                <div class="o_address_format">
+                                    <field name="co_applicant_present_employers_street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="co_applicant_present_employers_street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="co_applicant_present_employers_city" placeholder="City" class="o_address_city"/>
+                                    <field name="co_applicant_present_employers_state" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
+                                    <field name="co_applicant_present_employers_zip" placeholder="ZIP" class="o_address_zip"/>
+                                    <!-- <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/> -->
+                                </div>
+                            </group>
+                            <group>
+                                <field name="co_applicant_previous_employers_address"/>
+                                <label for="co_applicant_previous_employers_street" string="Address"/>
+                                <div class="o_address_format">
+                                    <field name="co_applicant_previous_employers_street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="co_applicant_previous_employers_street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="co_applicant_previous_employers_city" placeholder="City" class="o_address_city"/>
+                                    <field name="co_applicant_previous_employers_state" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
+                                    <field name="co_applicant_previoust_employers_zip" placeholder="ZIP" class="o_address_zip"/>
+                                    <!-- <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/> -->
+                                </div>
+                            </group>
+                            <group></group>
+                            <group>
+                                <field name="co_applicant_earnings_from_employment"/>
+                                <field name="co_applicant_supervisor_or_department"/>
+                                <field name="co_applicant_employers_phone_number"/>
+                            </group>
+                            <group>
+                                <field name="co_applicant_earnings_per_month"/>
+                                <field name="co_applicant_years_on_job_previous_employer"/>
+                                <field name="co_applicant_occupation_previous_employer"/>
+                                <field name="co_applicant_previous_employers_phone_number"/>
+                            </group>
+                        </group>
+
+                        <!-- OTHER INCOME AND OBLIGATIONS -->
+                        <group>
+                            <group>
+                                <field name="source_of_other_income"/>
+                                <field name="social_security"/>
+                                <field name="pension"/>
+                                <field name="child_support"/>
+                                <field name="rental"/>
+                                <field name="other_source_of_income"/>
+                                <field name="amount_monthly"/>
+                                <field name="is_amount_monthly"/>
+                                <field name="nearest_relative"/>
+                                <field name="relationship"/>
+                            </group>
+                            <group>
+                                <field name="phone_number_relationship"/>
+                                <field name="address_relationship"/>
+                                <label for="address_relationship_street" string="Address"/>
+                                <div class="o_address_format">
+                                    <field name="address_relationship_street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="address_relationship_street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="address_relationship_city" placeholder="City" class="o_address_city"/>
+                                    <field name="address_relationship_state" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
+                                    <field name="address_relationship_zip" placeholder="ZIP" class="o_address_zip"/>
+                                    <!-- <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/> -->
+                                </div>
+                            </group>
+                            <group>
+                                <field name="property_details"/>
+                                <field name="property_details_mortage"/>
+                                <field name="property_details_land"/>
+                                <field name="property_details_contract"/>
+                                <field name="property_details_free_and_clear"/>
+                            </group>
+                            <group>
+                                <field name="lender_name"/>
+                                <field name="lender_phone"/>
+                                <field name="lender_address"/>
+                                <label for="lender_address_street" string="Address"/>
+                                <div class="o_address_format">
+                                    <field name="lender_address_street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="lender_address_street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="lender_address_city" placeholder="City" class="o_address_city"/>
+                                    <field name="lender_address_state" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
+                                    <field name="lender_address_zip" placeholder="ZIP" class="o_address_zip"/>
+                                    <!-- <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/> -->
+                                </div>
+                            </group>
+                            <group>
+                                <field name="lender_phone"/>
+                                <field name="original_purchase_price"/>
+                                <field name="original_mortage_amount"/>
+                                <field name="monthly_mortage_payment"/>
+                                <field name="date_aquired"/>
+                                <field name="present_balance"/>
+                                <field name="present_value_of_home"/>
+                            </group>
+                            <group>
+                                <field name="second_mortage"/>
+                                <field name="second_mortage_yes"/>
+                                <field name="second_mortage_no"/>
+                                <field name="lender_name_or_phone"/>
+                                <field name="applicant_second_mortage_phone"/>
+                                <field name="original_amount"/>
+                                <field name="present_balance_second_mortage"/>
+                                <field name="monthly_payment"/>
+                                <field name="other_obligations"/>
+                                <field name="total_monthly_payments"/>
+                                <field name="checking_account_no"/>
+                                <field name="name_of_bank"/>
+                                <field name="bank_phone_number"/>
+                                <field name="checking_routing_no"/>
+                            </group>
+
+                            <!-- HOME OWNERS INSURANCE INFORMATION -->
+                            <group>
+                                <field name="insurance_company"/>
+                                <field name="agent"/>
+                                <field name="insurance_phone_no"/>
+                                <field name="coverage"/>
+                            </group>
+                        </group>
+                        <!-- INFORMATION FOR GOVERNMENT MONITORING PURPOSES -->
+                        <group>
+                            <group>
+                                <field name="applicant_not_furnish_info"/>
+                                <field name="ethnicity"/>
+                                <field name="ethnicity_not_hispanic"/>
+                                <field name="ethnicity_hispanic"/>
+                                <field name="race"/>
+                                <field name="race_dont_furnish"/>
+                                <field name="race_american_indian"/>
+                                <field name="race_white"/>
+                                <field name="race_hispanic"/>
+                                <field name="race_asian"/>
+                                <field name="race_black"/>
+                                <field name="race_other"/>
+                            </group>
+                            <group>
+                                <field name="sex"/>
+                                <field name="sex_male"/>
+                                <field name="sex_female"/>
+                                <field name="marital_status"/>
+                                <field name="marital_status_married"/>
+                                <field name="marital_status_unmarried"/>
+                                <field name="marital_status_separated"/>
+                                <field name="co_applicant_not_furnish_info"/>
+                                <field name="co_applicant_ethnicity"/>
+                                <field name="co_applicant_ethnicity_not_hispanic"/>
+                                <field name="co_applicant_ethnicity_hispanic"/>
+                            </group>
+                            <group>
+                                <field name="co_applicant_race"/>
+                                <field name="co_applicant_race_dont_furnish"/>
+                                <field name="co_applicant_race_american_indian"/>
+                                <field name="co_applicant_race_white"/>
+                                <field name="co_applicant_race_hispanic"/>
+                                <field name="co_applicant_race_asian"/>
+                                <field name="co_applicant_race_black"/>
+                                <field name="co_applicant_race_other"/>
+                                <field name="co_applicant_race_american_indian"/>
+                                <field name="co_applicant_race_asian"/>
+                                <field name="co_applicant_race_african_american"/>
+                                <field name="co_applicant_race_native_hawaiian"/>
+                                <field name="co_applicant_race_white"/>
+                            </group>
+                            <group>
+                                <field name="co_applicant_sex"/>
+                                <field name="co_applicant_sex_male"/>
+                                <field name="co_applicant_sex_female"/>
+                                <field name="co_applicant_marital_status"/>
+                                <field name="marital_status_married"/>
+                                <field name="co_applicant_marital_status_unmarried"/>
+                                <field name="co_applicant_marital_status_separated"/>
+                                <field name="type_of_credit_requested"/>
+                                <field name="individual_credit"/>
+                                <field name="joint_credit"/>
+                                <field name="individual_credit_other"/>
+                                <field name="joint_credit_initials"/>
+                            </group>Í
+                        </group>
+                        <group>
+                            <group>
+                                <field name="applicant_signature"/>
+                                <field name="applicant_signature_date"/>
+                                <field name="co_applicant_signature"/>
+                                <field name="co_applicant_signature_date"/>
+                            </group>
+                            <group>
+                                <field name="order_id"/>
+                                <field name="co_applicant_skip"/>
+                                <field name="appointment_id"/>
+                                <field name="partner_id"/>
+                            </group>
+                            <group>
+                                <field name="applicant_email"/>
+                                <field name="co_applicant_email"/>
+                                <field name="improveit_id"/>
+                                <field name="attachment_id"/>
+                                <field name="additional_income"/>
+                                <field name="additional_monthly_income"/>
+                            </group>
+                            <group>
+                                <field name="applicant_other_race"/>
+                                <field name="co_applicant_other_race"/>
+                                <field name="hunter_message_status"/>
+                                <field name="hunter_message_status_yes"/>
+                                <field name="hunter_message_status_no"/>
+                                <field name="applicant_mortgage_company"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="team_credit_application_list_view" model="ir.ui.view">
+            <field name="name">team.credit.application.list.view</field>
+            <field name="model">team.credit.application</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="applicant_name"/>
+                    <field name="co_applicant_name"/>
+                    <field name="cell_phone"/>
+                    <field name="home_phone"/>
+                    <field name="how_long"/>
+                    <field name="present_employer"/>
+                    <field name="occupation"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="team_credit_application_action_window" model="ir.actions.act_window">
+            <field name="name">Credit Application</field>
+            <field name="res_model">team.credit.application</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem name="Credit Application" parent="sale.menu_sale_config" id="menu_act_credit_application" action="team_credit_application_action_window"/>
+    </data>
+</odoo>

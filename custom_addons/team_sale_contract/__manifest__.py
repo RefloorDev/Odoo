@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
-
 {
     'name': 'Sale Contract',
     'version': '1.1',
     'category': 'Sales/Sales',
-    'author': 'One Team US LLC',
-    'website': 'https://oneteam.us/',
+    'author': 'Sagar Mokariya',
+    'website': 'https://www.xeonglobal.com',
     'summary': 'Sale Contract Creation & Configurations',
     'description': """
 This module customizing sale module to create a sale contract & followups.
@@ -15,6 +13,7 @@ This module customizing sale module to create a sale contract & followups.
     'data': [
         'security/ir.model.access.csv',
         'security/user_security.xml',
+        'data/ir_actions_server.xml',
         'data/appointment_sequence_data.xml',
         'data/payment_data.xml',
         'data/cron_data.xml',
@@ -26,11 +25,21 @@ This module customizing sale module to create a sale contract & followups.
         'views/team_customer_appointment_view.xml',
         'views/sale_contract_views.xml',
         'views/sale_order_contract_views.xml',
+        'views/team_floor_molding_views.xml',
+        'views/team_contract_question_line_views.xml',
+        'views/team_contract_room_measurement_line_views.xml',
+        'views/team_credit_application_views.xml',
+        'views/appointment_result_views.xml',
+        'views/otl_api_sync_log_view.xml',
+        'views/otl_appointment_sync_log_views.xml',
+        'views/i360_users_views.xml',
+        
         'views/res_config_settings_views.xml',
         'wizard/generate_token_wizard_view.xml',
         'wizard/day_wise_report_wizrd_view.xml',
     ],
     
     'installable': True,
-    'auto_install': False
+    'auto_install': False,
+    'license': 'OPL-1',
 }

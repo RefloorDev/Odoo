@@ -1,8 +1,8 @@
-
+# -*- coding: utf-8 -*-
 from odoo import models, fields, api, _, http
 from odoo.exceptions import ValidationError, UserError
 import uuid
-from odoo.addons.payment.controllers.portal import PaymentProcessing
+# from odoo.addons.payment.controllers.portal import PaymentProcessing
 import requests
 import base64
 import json
@@ -12,7 +12,7 @@ from dateutil.relativedelta import relativedelta
 import logging
 _logger = logging.getLogger(__name__)
 from odoo.addons.team_api_configuration.controllers.configurations import URL, DB, API_USER_ID, API_USER_PASSWORD
-from werkzeug import FileStorage
+# from werkzeug import FileStorage
 from io import BytesIO
 from requests_toolbelt import MultipartEncoder
 from odoo.http import content_disposition, Controller, request, route
@@ -36,13 +36,13 @@ class ResPartner(models.Model):
 class TeamCustomerAppointment(models.Model):
     _inherit = "team.customer.appointment"
 
-    @api.model
-    def create(self, vals):
-        if not vals.get('customer_name', ''):
-            customer_name = (vals.get('applicant_first_name','') or '') + ' ' + (
-                vals.get('applicant_middle_name','') or '') + ' ' + (vals.get('applicant_last_name','') or '')
-            vals.update({'customer_name': customer_name})
-        return super(TeamCustomerAppointment, self).create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get('customer_name'):
+                customer_name = " ".join(filter(None, [vals.get('applicant_first_name'), vals.get('applicant_middle_name'), vals.get('applicant_last_name')]))
+                vals['customer_name'] = customer_name.strip()
+        return super().create(vals_list)
 
     def write(self, vals):
         _logger.info('inside appointment-%s write: values -  %s' % (self and self[0].name or '', vals))
@@ -227,13 +227,13 @@ class TeamCustomerAppointment(models.Model):
                         })
                         result = {
                             "result": "Success",
-                            "message": self.env['ir.config_parameter'].sudo().get_param('send_review_success_message') or "",
+                            "message": self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.send_review_success_message') or "",
                         }
                     else:
                         result = {
                             "result": "Failed",
                             "message": self.env['ir.config_parameter'].sudo().get_param(
-                                'send_review_failure_message') or "",
+                                'team_sale_contract.send_review_failure_message') or "",
                         }
                 else:
                     result = {
@@ -244,7 +244,7 @@ class TeamCustomerAppointment(models.Model):
             pass
             _logger.error("******--------Error in SendReviewLink API---------********")
         return result
-
+    
 
 class SignRequest(models.Model):
     _inherit = "otl_document_sign.request"
@@ -655,9 +655,10 @@ class SaleOrder(models.Model):
                     document_template_id = order.appointment_id.app_version_id.sale_contract_tmpl_id.id or False
             else:
                 if order.coapplicant_skip or not order.appointment_id.co_applicant:
-                    document_template_id = self.env['ir.config_parameter'].sudo().get_param('sale_contract_tmpl_id_ncp') or False
+                    document_template_id = self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.sale_contract_tmpl_id_ncp') or False
                 else:
-                    document_template_id = self.env['ir.config_parameter'].sudo().get_param('sale_contract_tmpl_id') or False
+                    document_template_id = self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.sale_contract_tmpl_id') or False
+
             if document_template_id:
                 template = self.env['otl_document_sign.template'].sudo().browse(int(document_template_id))
                 vals = {
@@ -836,7 +837,7 @@ class SaleOrder(models.Model):
         return transaction
 
     def add_payment_line(self, discount, adjustment, additional_cost, monthly_promo, admin_fee, final_sale_price=0):
-        min_sale_price = float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0
+        min_sale_price = float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.min_sale_price')) or 0.0
         obj = self.env['sale.order.line']
         for record in self:
             if record.state == 'draft':
@@ -865,7 +866,7 @@ class SaleOrder(models.Model):
                                 stair_count += float(answer_line.answer)
                 if stair_count:
                     stair_product = self.env['product.template'].search([
-                        ('type', '=', 'product'),
+                        ('type', '=', 'consu'),
                         ('product_variant_ids', '!=', False),
                         ('categ_id.name', 'ilike', 'Stairs'),
                         ('grade', '=', record.floor_type.grade)
@@ -1206,7 +1207,7 @@ class SaleOrder(models.Model):
             elif "Errors" in content:
                 return content.get('Errors', {})
         return result
-
+    
     def add_quote_sales_app(self, status):
         result = {
             "success": "true",
@@ -2184,7 +2185,6 @@ class SaleOrder(models.Model):
                             result.update({"success": "false"})
 
         return result
-
     def add_sale_id_file(self, document=None):
         result = {
             "success": "true",
@@ -2436,7 +2436,7 @@ class SaleOrder(models.Model):
                 stair_product = False
                 if room_line.room_id and room_line.room_id.product_category_id and room_line.room_id.product_category_id.name.upper() == 'VINYL STAIRS' and floor_type:
                     stair_product = self.env['product.template'].search([
-                        ('type', '=', 'product'),
+                        ('type', '=', 'consu'),
                         ('product_variant_ids', '!=', False),
                         ('categ_id.name', 'ilike', 'Stairs'),
                         ('grade', '=', floor_type.grade)
@@ -2626,8 +2626,6 @@ class SaleOrder(models.Model):
                     return content
         return result
 
-
-
     def add_quote_items_sales_app(self):
         result = {
             "success": "true",
@@ -2652,7 +2650,7 @@ class SaleOrder(models.Model):
                         floor_type = sale_order.floor_type
                     else:
                         payment_plan_id = self.env['ir.config_parameter'].sudo().get_param(
-                            'payment_plan_id') or False
+                            'team_sale_contract.payment_plan_id') or False
                         if payment_plan_id:
                             old_floor_type = self.env['product.template'].browse(int(payment_plan_id))
                             if old_floor_type and old_floor_type.exists() and not old_floor_type.active:
@@ -2678,7 +2676,7 @@ class SaleOrder(models.Model):
                             stair_product = False
                             if room_line.room_id and room_line.room_id.product_category_id and room_line.room_id.product_category_id.name.upper() == 'VINYL STAIRS' and floor_type:
                                 stair_product = self.env['product.template'].search([
-                                    ('type', '=', 'product'),
+                                    ('type', '=', 'consu'),
                                     ('product_variant_ids', '!=', False),
                                     ('categ_id.name', 'ilike', 'Stairs'),
                                     ('grade', '=', floor_type.grade)
@@ -2890,7 +2888,6 @@ class SaleOrder(models.Model):
                         discount += abs(line.price_unit)
         return discount
 
-
     def add_sale_items_api(self):
         result = {
             "success": "true",
@@ -2928,7 +2925,7 @@ class SaleOrder(models.Model):
                         stair_product = False
                         if room_line.room_id and room_line.room_id.product_category_id and room_line.room_id.product_category_id.name.upper() == 'VINYL STAIRS' and sale_order.floor_type:
                             stair_product = self.env['product.template'].search([
-                                ('type', '=', 'product'),
+                                ('type', '=', 'consu'),
                                 ('product_variant_ids', '!=', False),
                                 ('categ_id.name', 'ilike', 'Stairs'),
                                 ('grade', '=', sale_order.floor_type.grade)
@@ -3867,8 +3864,7 @@ class SaleOrder(models.Model):
                 [('api_type', '=', 'boomi')], limit=1)
             for sale_order in self:
                 appointment = sale_order.appointment_id
-                _logger.info(
-                    '--------Starting SyncLoanData API of Appointment ID---------: %s' % (sale_order.appointment_id.id))
+                _logger.info('--------Starting SyncLoanData API of Appointment ID---------: %s' % (sale_order.appointment_id.id))
                 if sale_order.quote_id and appointment:
                     data = {
                         'Id': sale_order.quote_id or '',
@@ -3936,7 +3932,7 @@ class SaleOrder(models.Model):
                                         stair_count += float(answer_line.answer)
                         if stair_count:
                             stair_product = self.env['product.template'].search([
-                                ('type', '=', 'product'),
+                                ('type', '=', 'consu'),
                                 ('product_variant_ids', '!=', False),
                                 ('categ_id.name', 'ilike', 'Stairs'),
                                 ('grade', '=', sale_order.floor_type.grade)
@@ -4025,20 +4021,23 @@ class SaleOrder(models.Model):
         return result
 
 
+
 class Followers(models.Model):
     _inherit = 'mail.followers'
 
-    @api.model
-    def create(self, vals):
-        if 'res_model' in vals and 'res_id' in vals and 'partner_id' in vals:
-            dups = self.env['mail.followers'].sudo().search([('res_model', '=',vals.get('res_model')),
-                                           ('res_id', '=', vals.get('res_id')),
-                                           ('partner_id', '=', vals.get('partner_id'))])
-            if len(dups):
-                for p in dups:
-                    p.unlink()
-        res = super(Followers, self).create(vals)
-        return res
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if {'res_model', 'res_id', 'partner_id'}.issubset(vals):
+                dups = self.env['mail.followers'].sudo().search([
+                    ('res_model', '=', vals['res_model']),
+                    ('res_id', '=', vals['res_id']),
+                    ('partner_id', '=', vals['partner_id'])
+                ])
+                if dups:
+                    dups.unlink()  # Unlink duplicates if found
+
+        return super().create(vals_list)
 
 
 class CardTransactionLog(models.Model):

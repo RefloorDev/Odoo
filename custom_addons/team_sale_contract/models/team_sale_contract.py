@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
-
 import base64
-
 from odoo import models, fields, api, _
 from datetime import datetime,date
 from odoo.osv import expression
@@ -153,13 +150,14 @@ class TeamContractQuestions(models.Model):
     amount_included = fields.Float('Included Amount', help='It denotes the amount which already included in the quote')
     calculate_order_wise = fields.Boolean("Calculate Based on Order", default=False,
                                           help='If checked, amount should calculate based on total order not based on room.')
-
-    @api.model
-    def create(self, vals):
-        if vals.get('question_id', False):
-            question = self.env['team.quote.question'].browse(vals.get('question_id', False))
-            vals.update({'amount_included': question and question.amount_included or 0})
-        return super(TeamContractQuestions, self).create(vals)
+    
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('question_id'):
+                question = self.env['team.quote.question'].browse(vals['question_id'])
+                vals.update({'amount_included': question.amount_included if question else 0})
+        return super(TeamContractQuestions, self).create(vals_list)
 
     def write(self, vals):
         if vals.get('question_id', False):
@@ -234,6 +232,7 @@ class TeamContractRoomMeasurement(models.Model):
     color_up_charge_total = fields.Float('Color Up Charge Total Amount', compute='_compute_color_up_charge_total', store=True)
     molding_unit_price = fields.Float('Molding Unit Price')
     molding_total_price = fields.Float('Molding Total Amount', compute='_compute_molding_total_price', store=True)
+    appointment_result = fields.Char('Appointment Result', related='order_id.appointment_result', store=True)
     misc_charge_comments = fields.Char('Miscellaneous Charge Comments')
     delivery_option = fields.Char("Selected Delivery Option")
 
@@ -727,10 +726,10 @@ class TeamCreditApplication(models.Model):
                 })
         return vals
 
-    @api.model
-    def create(self, vals):
-        vals = self.action_update_field_values(vals)
-        return super(TeamCreditApplication, self).create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        vals_list = [self.action_update_field_values(vals) for vals in vals_list]
+        return super(TeamCreditApplication, self).create(vals_list)
 
     def write(self, vals):
         vals = self.action_update_field_values(vals)
@@ -774,10 +773,11 @@ class TeamCreditApplication(models.Model):
             else:
                 if order.co_applicant_skip:
                     document_template_id = self.env['ir.config_parameter'].sudo().get_param(
-                        'credit_application_tmpl_id_ncp') or False
+                        'team_sale_contract.credit_application_tmpl_id_ncp') or False
                 else:
                     document_template_id = self.env['ir.config_parameter'].sudo().get_param(
-                        'credit_application_tmpl_id') or False
+                        'team_sale_contract.credit_application_tmpl_id') or False
+            
             if document_template_id:
                 template = self.env['otl_document_sign.template'].sudo().browse(int(document_template_id))
                 vals = {
@@ -904,21 +904,19 @@ class ExternalCreditApplication(models.Model):
                                         default='versatile', required=True)
     improveit_id = fields.Char(string='i360 ReferenceID', copy=False)
 
-    @api.model
-    def create(self, vals):
-        if vals.get('name', '/') == '/':
-            seq_date = None
-            if 'submitted_date' in vals:
-                seq_date = fields.Datetime.context_timestamp(self,
-                                                             fields.Datetime.to_datetime(vals['event_date']))
-            if 'company_id' in vals:
-                vals['name'] = self.env['ir.sequence'].with_context(force_company=vals['company_id']).next_by_code(
-                    'versatile.credit.application', sequence_date=seq_date) or _('/')
-            else:
-                vals['name'] = self.env['ir.sequence'].next_by_code('versatile.credit.application',
-                                                                    sequence_date=seq_date) or _('/')
-
-        return super(ExternalCreditApplication, self).create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('name', '/') == '/':
+                seq_date = None
+                if 'submitted_date' in vals:
+                    seq_date = fields.Datetime.context_timestamp(self, fields.Datetime.to_datetime(vals['submitted_date']))
+                if 'company_id' in vals:
+                    vals['name'] = self.env['ir.sequence'].with_context(
+                        force_company=vals['company_id']).next_by_code('versatile.credit.application', sequence_date=seq_date) or _('/')
+                else:
+                    vals['name'] = self.env['ir.sequence'].next_by_code('versatile.credit.application', sequence_date=seq_date) or _('/')
+        return super(ExternalCreditApplication, self).create(vals_list)
 
 
 class VersatileErrorLine(models.Model):

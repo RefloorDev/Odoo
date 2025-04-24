@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
-
 from odoo import models, fields, api, _
 from datetime import datetime
 from odoo.osv import expression
 from odoo.exceptions import ValidationError
-from odoo.addons.resource.models.resource import float_to_time
+# from odoo.addons.resource.models.resource import float_to_time
+from odoo.addons.resource.models.utils import float_to_time
 import pytz
 from google.oauth2 import service_account
 from google.cloud import storage
@@ -50,8 +49,6 @@ class DeliveryOptionLine(models.Model):
 
     name = fields.Char('Delivery Options', required=True)
     molding_type_id = fields.Many2one('team.floor.molding', 'Molding Type', ondelete='cascade')
-
-
 
 class ResCompany(models.Model):
     _inherit = 'res.company'
@@ -173,9 +170,9 @@ class ResCompany(models.Model):
     @api.model
     def cron_upload_attachments_to_cloud_storage(self):
         google_auth_attachment_id = self.env['ir.config_parameter'].sudo().get_param(
-                    'google_auth_attachment_id') or False
+                    'team_sale_contract.google_auth_attachment_id') or False
         google_bucket_name = self.env['ir.config_parameter'].sudo().get_param(
-                    'google_bucket_name') or ''
+                    'team_sale_contract.google_bucket_name') or ''
         signature_path = '{date}/{appointment}/Sign'
         snapshot_path = '{date}/{appointment}/Snapshot'
         document_path = '{date}/{appointment}/Documents'
@@ -309,6 +306,7 @@ class LocationEntityKeyLine(models.Model):
 
 class FloorColor(models.Model):
     _name = 'floor.color'
+    _description = "Floor Color"
 
     name = fields.Char('Name')
     product_line = fields.Char('Product Line')
@@ -453,7 +451,7 @@ class PaymentDownPayment(models.Model):
     _name = 'team.payment.percentage'
     _description = "Down Payment Percentage"
 
-    name = fields.Char(strinng='Name', required=True)
+    name = fields.Char(string='Name', required=True)
     percentage = fields.Float(string="Percentage", required=True)
 
 
@@ -766,7 +764,6 @@ class AppointmentResultReason(models.Model):
     sequence = fields.Integer('Priority',
                               help="Give to the more specialized category, a higher priority to have them in top of the list.", default = 10)
     appointment_result_ids = fields.Many2many('appointment.result', 'appointment_result_reason_rel', 'result_id', 'result_reason_id', string='Applicable Appointment Results')
-
     _sql_constraints = [
         ('name_company_uniq', 'unique (name,company_id)', 'Reason must be unique per company!')
     ]

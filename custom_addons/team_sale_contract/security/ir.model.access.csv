@@ -56,40 +56,40 @@ access_contract_team_otl_document_sign.log,team.otl_document_sign.log.manager,ot
 access_contract_team_otl_document_sign.request.item.value,team.otl_document_sign.request.item.value.manager,otl_document_sign.model_otl_document_sign_request_item_value,sales_team.group_sale_salesman,1,1,1,1
 access_sign_template_group_sale_user,sign_template group_sale_user,otl_document_sign.model_otl_document_sign_template,sales_team.group_sale_salesman,1,0,0,0
 
-access_card_transaction_log_user,team.appointment.result.user,model_otl_card_transaction_log,base.group_user, 1,0,0,0
+access_card_transaction_log_user,team.appointment.result.user,model_otl_card_transaction_log,base.group_user,1,0,0,0
 access_card_transaction_log_manager,team.appointment.result.manager,model_otl_card_transaction_log,sales_team.group_sale_salesman,1,1,1,1
 
-access_appointment_sync_log_user,appointment.sync.log.user,model_otl_appointment_sync_log,base.group_user, 1,0,0,0
+access_appointment_sync_log_user,appointment.sync.log.user,model_otl_appointment_sync_log,base.group_user,1,0,0,0
 access_appointment_sync_log_manager,appointment.sync.log.manager,model_otl_appointment_sync_log,sales_team.group_sale_salesman,1,1,1,1
 
-access_app_appointment_sync_log_user,app.appointment.sync.log.user,model_otl_app_appointment_sync_log,base.group_user, 1,0,0,0
+access_app_appointment_sync_log_user,app.appointment.sync.log.user,model_otl_app_appointment_sync_log,base.group_user,1,0,0,0
 access_app_appointment_sync_log_manager,app.appointment.sync.log.manager,model_otl_app_appointment_sync_log,sales_team.group_sale_salesman,1,1,1,1
 
-access_api_sync_log_user,api.sync.log.user,model_otl_api_sync_log,base.group_user, 1,0,0,0
+access_api_sync_log_user,api.sync.log.user,model_otl_api_sync_log,base.group_user,1,0,0,0
 access_api_sync_log_manager,api.sync.log.manager,model_otl_api_sync_log,sales_team.group_sale_salesman,1,1,1,1
 
-access_discount_history_line_user,discount.history.line.user,model_otl_discount_history_line,base.group_user, 1,0,0,0
+access_discount_history_line_user,discount.history.line.user,model_otl_discount_history_line,base.group_user,1,0,0,0
 access_discount_history_line_manager,discount.history.line.manager,model_otl_discount_history_line,sales_team.group_sale_salesman,1,1,1,1
 
-access_app_screen_log_user,otl.app.screen.log.user,model_otl_app_screen_log,base.group_user, 1,0,0,0
+access_app_screen_log_user,otl.app.screen.log.user,model_otl_app_screen_log,base.group_user,1,0,0,0
 access_app_screen_log_manager,otl.app.screen.log.manager,model_otl_app_screen_log,sales_team.group_sale_salesman,1,1,1,1
 
-access_office_location_user,otl.office.location.user,model_otl_office_location,base.group_user, 1,0,0,0
+access_office_location_user,otl.office.location.user,model_otl_office_location,base.group_user,1,0,0,0
 access_office_location_manager,otl.office.location.manager,model_otl_office_location,sales_team.group_sale_manager,1,1,1,1
 
-access_product_special_price_user,otl.product.special.price.user,model_otl_product_special_price,base.group_user, 1,0,0,0
+access_product_special_price_user,otl.product.special.price.user,model_otl_product_special_price,base.group_user,1,0,0,0
 access_product_special_price_manager,otl.product.special.price.manager,model_otl_product_special_price,sales_team.group_sale_manager,1,1,1,1
 
-access_sales_app_version_user,otl.sales.app.version.user,model_otl_sales_app_version,base.group_user, 1,0,0,0
+access_sales_app_version_user,otl.sales.app.version.user,model_otl_sales_app_version,base.group_user,1,0,0,0
 access_sales_app_version_manager,otl.sales.app.version.manager,model_otl_sales_app_version,sales_team.group_sale_manager,1,1,1,1
 
-access_promotion_code_user,otl.promotion.code.user,model_otl_promotion_code,base.group_user, 1,0,0,0
+access_promotion_code_user,otl.promotion.code.user,model_otl_promotion_code,base.group_user,1,0,0,0
 access_promotion_code_manager,otl.promotion.code.manager,model_otl_promotion_code,sales_team.group_sale_manager,1,1,1,1
 
-access_transition_height_user,otl.transition.height.user,model_otl_transition_height,base.group_user, 1,0,0,0
+access_transition_height_user,otl.transition.height.user,model_otl_transition_height,base.group_user,1,0,0,0
 access_transition_height_manager,otl.transition.height.manager,model_otl_transition_height,sales_team.group_sale_manager,1,1,1,1
 
-access_user_authentication_log_user,otl.user.authentication.log.user,model_otl_user_authentication_log,base.group_user, 1,0,0,0
+access_user_authentication_log_user,otl.user.authentication.log.user,model_otl_user_authentication_log,base.group_user,1,0,0,0
 
 access_otl_payment_restriction_rule,access.otl.payment.restriction.rule,model_otl_payment_restriction_rule,base.group_user,1,0,0,0
 access_otl_payment_restriction_rule_manager,access.otl.payment.restriction.rule,model_otl_payment_restriction_rule,sales_team.group_sale_manager,1,1,1,1
@@ -120,3 +120,4 @@ access_external_application_credentials_manager,external.application.credentials
 access_location_entity_key_line_user,location.entity.key.line.user,model_otl_location_entity_key_line,sales_team.group_sale_salesman,1,0,0,0
 access_location_entity_key_line_manager,location.entity.key.line.manager,model_otl_location_entity_key_line,base.group_system,1,1,1,1
 
+access_otl_day_wise_sync_status_report_all,access.otl.day.wise.sync.status.report.all,model_otl_day_wise_sync_status_report,,1,1,1,1

@@ -75,7 +75,7 @@ class SignTemplate(models.Model):
         datas = dataURL[dataURL.find(',')+1:]
 
         try:
-            file_pdf = PdfFileReader(io.BytesIO(base64.b64decode(datas)), strict=False, overwriteWarnings=False)
+            file_pdf = PdfFileReader(io.BytesIO(base64.b64decode(datas)), strict=False)
         except Exception as e:
             raise UserError(_("This file cannot be read. Is it a valid PDF?"))
         file_type = mimetype.replace('application/', '').replace(';base64', '')

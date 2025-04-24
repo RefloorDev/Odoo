@@ -6,6 +6,7 @@ from odoo.exceptions import UserError
 
 class Otl_Document_Sign_Wizard(models.TransientModel):
     _name = 'otl.document.otl_document_sign.wizard'
+    _description = 'Create Sign Template'
 
     model_id = fields.Many2one('ir.model', string='Model')
     upload_data = fields.Binary('Upload File')
@@ -27,8 +28,9 @@ class Otl_Document_Sign_Wizard(models.TransientModel):
                         'attachment_id': attachment.id,
                         'model_id': record.model_id and record.model_id.id or False,
                     })
-                    if sign_template:
-                        return sign_template.go_to_custom_template()
+                    # Need to wrok on this
+                    # if sign_template:
+                    #     return sign_template.go_to_custom_template()
         return True
 
 

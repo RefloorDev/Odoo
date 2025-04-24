@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from odoo import api, fields, models, registry, _
 from odoo.exceptions import UserError
 from xml.etree.ElementTree import fromstring, ElementTree
@@ -438,7 +439,7 @@ class TeamImproveitConfiguration(models.Model):
                 product_template_values = {
                 'name': name,
                 'improveit_product_id': improveit_product_id,
-                'type': 'product',
+                'type': 'consu',
                 'list_price': price,
                 'payment_plan': payment_plan,
                 'description': description
@@ -754,7 +755,7 @@ class TeamImproveitConfiguration(models.Model):
                             product_template_values = {
                                 'name': name,
                                 'improveit_product_id': improveit_product_id,
-                                'type': 'product',
+                                'type': 'consu',
                                 'list_price': price,
                                 'payment_plan': payment_plan,
                                 'description': description,
@@ -801,7 +802,7 @@ class TeamImproveitConfiguration(models.Model):
                             product_template_values = {
                                 'name': name,
                                 'improveit_product_id': improveit_product_id,
-                                'type': 'product',
+                                'type': 'consu',
                                 'list_price': price,
                                 'payment_plan': payment_plan,
                                 'description':description,
@@ -1158,7 +1159,6 @@ class TeamImproveitConfiguration(models.Model):
                 location.name: location.id
             })
         return location_data
-
 
     def get_floor_color_api(self):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
@@ -1609,7 +1609,7 @@ class TeamImproveitConfiguration(models.Model):
                 except IOError:
                     error_msg = _("Something went wrong during GetAppointmentResultDetails API execution.")
                     raise self.env['res.config.settings'].get_config_warning(error_msg)
-
+    
     def get_finance_order_checklist_api(self):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'order_checklist')])
         if configurations:
@@ -1651,7 +1651,8 @@ class TeamImproveitConfiguration(models.Model):
                 except IOError:
                     error_msg = _("Something went wrong during GetArrivalCompletionChecklist API execution.")
                     raise self.env['res.config.settings'].get_config_warning(error_msg)
-
+    
+    
     def action_sync_master_data(self, data={}):
         _logger.info('-------Starting: action_sync_master_data')
         for record in self.sudo().search([('api_type', '=', 'boomi')]):

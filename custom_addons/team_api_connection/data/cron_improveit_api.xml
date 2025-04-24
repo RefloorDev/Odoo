@@ -9,8 +9,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">
@@ -23,8 +21,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.sync_sale_person_data()</field>
@@ -36,8 +32,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_products_api()</field>
@@ -49,8 +43,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_question_data_api()</field>
@@ -62,8 +54,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_rooms_api()</field>
@@ -75,8 +65,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_floor_color_api()</field>
@@ -89,8 +77,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_payment_options()</field>
@@ -102,8 +88,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_discount_coupons()</field>
@@ -115,8 +99,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_appointment_result()</field>
@@ -128,8 +110,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_molding_types()</field>
@@ -141,8 +121,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_resision_date()</field>
@@ -154,8 +132,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_special_pricing_api()</field>
@@ -167,8 +143,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_promocode_api()</field>
@@ -181,8 +155,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_appointment_result_detail_api()</field>
@@ -194,12 +166,11 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="team_api_connection.model_team_improveit_configuration"/>
             <field name="state">code</field>
             <field name="code">model.get_finance_order_checklist_api()</field>
         </record>
+
 
 <!--        <record forcecreate="True" id="ir_cron_action_do_file_upload" model="ir.cron">-->
 <!--            <field name="name">Document Upload to i360(Cron 2)</field>-->
@@ -220,8 +191,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">10</field>
             <field name="interval_type">minutes</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="sale.model_sale_order"/>
             <field name="state">code</field>
             <field name="code">model.cron_action_sync_order_to_i360()</field>
@@ -233,8 +202,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="base.model_res_users"/>
             <field name="state">code</field>
             <field name="code">model.cron_clear_user_tokens()</field>
@@ -246,8 +213,6 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field eval="False" name="doall"/>
             <field name="model_id" ref="base.model_res_users"/>
             <field name="state">code</field>
             <field name="code">model.cron_send_pending_sync_order_details()</field>

@@ -1,325 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
-    <record id="res_config_settings_view_form" model="ir.ui.view">
-        <field name="name">res.config.settings.view.form.inherit.sale</field>
+    <record id="res_config_settings_view_form_team_sale_contract" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.team_sale_contract</field>
         <field name="model">res.config.settings</field>
-        <field name="priority" eval="10"/>
-        <field name="inherit_id" ref="sale.res_config_settings_view_form"/>
+        <field name="inherit_id" ref="sale_management.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[@id='sale_config_online_confirmation_sign']"
-                   position="before">
+            <xpath expr="//block[@name='quotation_order_setting_container']" position="after">
+                <block title="Document Template" id="sale_document_template_id_setting">
+                    <setting id="sale_contract_tmpl_id" string="Document Template" help="Select document template here.">
+                        <field name="sale_contract_tmpl_id" options="{'no_create': True}"/>
+                    </setting>
+                    <setting id="sale_contract_tmpl_id_ncp" string="Document Template Without Co-Applicant" help="select document template without Co-Applicant here.">
+                        <field name="sale_contract_tmpl_id_ncp" options="{'no_create': True}"/>
+                    </setting>
+                    <setting id="credit_application_tmpl_id" string="Document Template" help="select credit application document template here.">
+                        <field name="credit_application_tmpl_id" options="{'no_create': True}"/>
+                    </setting>
+                    <setting id="credit_application_tmpl_id_ncp" string="Document Template Without Co-Applicant" help="select credit application document template Without Co-Applicant here.">
+                        <field name="credit_application_tmpl_id_ncp" options="{'no_create': True}"/>
+                    </setting>
+                </block>
+                <block title="Other Configuration" id="sale_other_data_id_setting">
+                    <setting id="admin_fee" string="Admin Fee" help="Enter Admin fee here.">
+                        <field name="admin_fee" options="{'no_create': True}"/>
+                    </setting>
+                    <setting id="min_sale_price" string="Minimum Sale Price" help="Minimum required sale/quote price for an order.">
+                        <field name="min_sale_price" options="{'no_create': True}"/>
+                    </setting>
+                    <setting id="doc_status_message" string="Document Not Filled Message" help="Enter Message to Display while contract document not filled completely Here!">
+                        <field name="doc_status_message" options="{'no_create': True}"/>
+                    </setting>
+                    <setting id="doc_completion_message" string="Completion Message" help="Enter Message to Display while contract document is filled completely Here!">
+                        <field name="doc_completion_message" options="{'no_create': True}"/>
+                    </setting>
 
-                <div class="col-12 col-lg-6 o_setting_box" id="sale_contract_tmpl_id_setting"
-                     groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Document Template</span>
-                        <div class="text-muted">
-                            select document template here
-                        </div>
-                        <div class="row mt16">
-                            <label for="sale_contract_tmpl_id" string="Document Template"
-                                   class="col-lg-4 o_light_label"/>
-                            <field name="sale_contract_tmpl_id" class="oe_inline" options="{'no_create_edit': True}"/>
-                        </div>
-                    </div>
+                    <setting id="send_review_success_message" string="Review Link Sent Success Message" help="Enter Message to Display while sent review link is success!">
+                        <field name="send_review_success_message" />
+                    </setting>
+                    <setting id="send_review_failure_message" string="Review Link Sent Failure Message" help="Enter Message to Display while sent review link is failed!">
+                        <field name="send_review_failure_message"/>
+                    </setting>
 
+                    <setting id="max_no_transitions" string="Transition Limit" help="Maximum number of transitions allowed for a room.">
+                        <field name="max_no_transitions" options="{'no_create': True}"/>
+                    </setting>
 
-                </div>
+                    <setting id="max_stair_width" string="Stair Width" help="Maximum width allowed for a stair.">
+                        <field name="max_stair_width"/>
+                    </setting>
+                    <setting id="min_down_payment_amount" string="Down Payment" help="Minimum down payment required for a cash sale.">
+                        <field name="min_down_payment_amount" options="{'no_create': True}"/>
+                    </setting>
 
-                <div class="col-12 col-lg-6 o_setting_box" id="sale_contract_tmpl_id_ncp_setting"
-                     groups="base.group_no_one">
+                    <setting id="payment_plan_id" string="Default Payment Plan" help="if no payment plan selected, this plan will send to i360.">
+                        <field name="payment_plan_id" options="{'no_create': True}"/>
+                    </setting>
+                </block>
+                <block title="API Configuration" id="sale_other_data_id_setting">
+                    <setting id="enable_api_queue_system" string="Enable API Queueing System" help="Enable queueing system to prevent concurrent API requests.">
+                        <field name="enable_api_queue_system" options="{'no_create': True}"/>
+                    </setting>
+                    <setting id="enable_additional_comment_api" string="Enable Additional Comments API" help="Enable separate API to sync Additional Comments to i360.">
+                        <field name="enable_additional_comment_api" options="{'no_create': True}"/>
+                    </setting>
+                    <setting id="installer_date_range_limit" string="Installer Date Range" help="Maximum number of days from the appointment date to fetch available installation date.">
+                        <field name="installer_date_range_limit" options="{'no_create': True}"/>
+                    </setting>
 
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Document Template Without Co-Applicant</span>
-                        <div class="text-muted">
-                            select document template without Co-Applicant here
-                        </div>
-                        <div class="row mt16">
-                            <label for="sale_contract_tmpl_id_ncp" string="Document Template Without Co-Applicant"
-                                   class="col-lg-4 o_light_label"/>
-                            <field name="sale_contract_tmpl_id_ncp" class="oe_inline"
-                                   options="{'no_create_edit': True}"/>
-                        </div>
-                    </div>
+                    <setting id="max_i360_sync_retry_limit" string="i360 Sync Retry Limit" help="Maximum allowed duration for i360 sync retry attempts from sync initiated time.">
+                        <field name="max_i360_sync_retry_limit" options="{'no_create': True}"/>
+                    </setting>
 
-                </div>
-
-                <div class="col-12 col-lg-6 o_setting_box" id="credit_application_tmpl_id_setting"
-                     groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Document Template</span>
-                        <div class="text-muted">
-                            select credit application document template here
-                        </div>
-                        <div class="row mt16">
-                            <label for="credit_application_tmpl_id" string="Document Template"
-                                   class="col-lg-4 o_light_label"/>
-                            <field name="credit_application_tmpl_id" class="oe_inline"
-                                   options="{'no_create_edit': True}"/>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-lg-6 o_setting_box" id="credit_application_tmpl_id_ncp_setting"
-                     groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Document Template Without Co-Applicant</span>
-                        <div class="text-muted">
-                            select credit application document template Without Co-Applicant here
-                        </div>
-                        <div class="row mt16">
-                            <label for="credit_application_tmpl_id_ncp" string="Document Template"
-                                   class="col-lg-4 o_light_label"/>
-                            <field name="credit_application_tmpl_id_ncp" class="oe_inline"
-                                   options="{'no_create_edit': True}"/>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-lg-6 o_setting_box" id="admin_fee_setting" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Admin Fee</span>
-                        <div class="text-muted">
-                            Enter Admin fee here
-                        </div>
-                        <div class="row mt16">
-                            <label for="admin_fee" string="Admin Fee" class="col-lg-4 o_light_label"/>
-                            <field name="admin_fee" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-lg-6 o_setting_box" id="min_sale_price_setting" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Minimum Sale Price</span>
-                        <div class="text-muted">
-                            Minimum required sale/quote price for an order.
-                        </div>
-                        <div class="row mt16">
-                            <label for="min_sale_price" string="Minimum Sale Price" class="col-lg-4 o_light_label"/>
-                            <field name="min_sale_price" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-lg-6 o_setting_box" id="max_no_transitions_setting" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Transition Limit</span>
-                        <div class="text-muted">
-                            Maximum number of transitions allowed for a room.
-                        </div>
-                        <div class="row mt16">
-                            <label for="max_no_transitions" string="Transition Limit" class="col-lg-4 o_light_label"/>
-                            <field name="max_no_transitions" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="max_stair_width_setting" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Stair Width</span>
-                        <div class="text-muted">
-                            Maximum width allowed for a stair.
-                        </div>
-                        <div class="row mt16">
-                            <label for="max_stair_width" string="Stair Width Limit" class="col-lg-4 o_light_label"/>
-                            <field name="max_stair_width" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="min_down_payment_amount_setting" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Down Payment</span>
-                        <div class="text-muted">
-                            Minimum down payment required for a cash sale.
-                        </div>
-                        <div class="row mt16">
-                            <label for="min_down_payment_amount" string="Minimum Down Payment" class="col-lg-4 o_light_label"/>
-                            <field name="min_down_payment_amount" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-lg-6 o_setting_box" id="document_status_setting" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Document Not Filled Message</span>
-                        <div class="text-muted">
-                            Enter Message to Display while contract document not filled completely Here!
-                        </div>
-                        <div class="row mt16">
-                            <label for="doc_status_message" string="Error Message" class="col-lg-4 o_light_label"/>
-                            <field name="doc_status_message" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="document_status_setting2" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Document Completion Message</span>
-                        <div class="text-muted">
-                            Enter Message to Display while contract document is filled completely Here!
-                        </div>
-                        <div class="row mt16">
-                            <label for="doc_completion_message" string="Completion Message"
-                                   class="col-lg-4 o_light_label"/>
-                            <field name="doc_completion_message" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="send_review_success_message" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Review Link Sent Success Message</span>
-                        <div class="text-muted">
-                            Enter Message to Display while sent review link is success!
-                        </div>
-                        <div class="row mt16">
-                            <label for="send_review_success_message" string="Success Message"
-                                   class="col-lg-4 o_light_label"/>
-                            <field name="send_review_success_message" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="send_review_failure_message" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Review Link Sent Failure Message</span>
-                        <div class="text-muted">
-                            Enter Message to Display while sent review link is failed!
-                        </div>
-                        <div class="row mt16">
-                            <label for="send_review_failure_message" string="Failure Message"
-                                   class="col-lg-4 o_light_label"/>
-                            <field name="send_review_failure_message" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="credit_application_tmpl_id_ncp_setting"
-                     groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Default Payment Plan</span>
-                        <div class="text-muted">
-                            if no payment plan selected, this plan will send to i360
-                        </div>
-                        <div class="row mt16">
-                            <label for="payment_plan_id" string="Default Payment Plan" class="col-lg-4 o_light_label"/>
-                            <field name="payment_plan_id" class="oe_inline" options="{'no_create_edit': True}"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="enable_api_queue_system_ncp_setting"
-                     groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Enable API Queueing System</span>
-                        <div class="text-muted">
-                            Enable queueing system to prevent concurrent API requests.
-                        </div>
-                        <div class="row mt16">
-                            <label for="enable_api_queue_system" string="Enable API Queueing System" class="col-lg-4 o_light_label"/>
-                            <field name="enable_api_queue_system" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="enable_api_queue_system_ncp_setting"
-                     groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Enable Additional Comments API</span>
-                        <div class="text-muted">
-                            Enable separate API to sync Additional Comments to i360.
-                        </div>
-                        <div class="row mt16">
-                            <label for="enable_additional_comment_api" string="Enable Additional Comments API" class="col-lg-4 o_light_label"/>
-                            <field name="enable_additional_comment_api" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="installer_date_range_limit_setting" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Installer Date Range</span>
-                        <div class="text-muted">
-                            Maximum number of days from the appointment date to fetch available installation date.
-                        </div>
-                        <div class="row mt16">
-                            <label for="installer_date_range_limit" string="Installer Date Range" class="col-lg-4 o_light_label"/>
-                            <field name="installer_date_range_limit" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="geolocation_radius_limit_setting" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Geolocation Radius</span>
-                        <div class="text-muted">
-                            Geolocation radius limit to determine arrival and departure time from the appointment venue.
-                        </div>
-                        <div class="row mt16">
-                            <label for="geolocation_radius_limit" string="Geolocation Radius" class="col-lg-4 o_light_label"/>
-                            <field name="geolocation_radius_limit" class="oe_inline"/> Meters
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="enable_geolocation_setting"
-                     groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Enable Geolocation Tracking</span>
-                        <div class="text-muted">
-                            Enable geolocation tracking to get saleperson arrival and departure time in appointment venue.
-                        </div>
-                        <div class="row mt16">
-                            <label for="enable_geolocation" string="Enable Geolocation Tracking" class="col-lg-4 o_light_label"/>
-                            <field name="enable_geolocation" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="google_auth_attachment_id_setting"
-                     groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Google Service Authentication</span>
-                        <div class="text-muted">
-                            File for Google service authentication for cloud storage
-                        </div>
-                        <div class="row mt16">
-                            <label for="google_auth_attachment_id" string="Auth File"
-                                   class="col-lg-4 o_light_label"/>
-                            <field name="google_auth_attachment_id" class="oe_inline"
-                                   options="{'no_create_edit': True}"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="google_bucket_name_setting2" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">Google Storage</span>
-                        <div class="text-muted">
-                            Google Storage Bucket Name
-                        </div>
-                        <div class="row mt16">
-                            <label for="google_bucket_name" string="Bucket Name"
-                                   class="col-lg-4 o_light_label"/>
-                            <field name="google_bucket_name" class="oe_inline"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-6 o_setting_box" id="max_i360_sync_retry_limit_setting" groups="base.group_no_one">
-                    <div class="o_setting_right_pane">
-                        <span class="o_form_label">i360 Sync Retry Limit</span>
-                        <div class="text-muted">
-                            Maximum allowed duration for i360 sync retry attempts from sync initiated time.
-                        </div>
-                        <div class="row mt16">
-                            <label for="max_i360_sync_retry_limit" string="i360 Sync Retry Limit" class="col-lg-4 o_light_label"/>
-                            <field name="max_i360_sync_retry_limit" class="oe_inline"/> Hours
-                        </div>
-                    </div>
-                </div>
+                    <setting id="geolocation_radius_limit" string="Geolocation Radius" help="Geolocation radius limit to determine arrival and departure time from the appointment venue.">
+                        <field name="geolocation_radius_limit" options="{'no_create': True}"/>
+                    </setting>
+                    <setting id="enable_geolocation" string="Enable Geolocation Tracking" help="Enable geolocation tracking to get saleperson arrival and departure time in appointment venue.">
+                        <field name="enable_geolocation" options="{'no_create': True}"/>
+                    </setting>
+                </block>
+                <block title="Google API Configuration" id="sale_other_data_id_setting">
+                    <setting id="google_auth_attachment_id" string="Auth File" help="File for Google service authentication for cloud storage">
+                        <field name="google_auth_attachment_id" options="{'no_create': True}"/>
+                    </setting>
+                    <setting id="google_bucket_name" string="Google Storage" help="Google Storage Bucket Name.">
+                        <field name="google_bucket_name" options="{'no_create': True}"/>
+                    </setting>
+                </block>
             </xpath>
         </field>
     </record>
 
-    <record id="action_otl_document_config_settings" model="ir.actions.act_window">
+    <record id="action_otl_sale_document_config_settings" model="ir.actions.act_window">
         <field name="name">Document Settings</field>
-        <field name="type">ir.actions.act_window</field>
         <field name="res_model">res.config.settings</field>
-        <field name="view_id" ref="res_config_settings_view_form"/>
+        <field name="view_id" ref="res_config_settings_view_form_team_sale_contract"/>
         <field name="view_mode">form</field>
-        <field name="domain">[]</field>
         <field name="target">inline</field>
+        <field name="context">{'module' : 'team_sale_contract', 'bin_size': False}</field>
     </record>
-
-
 </odoo>

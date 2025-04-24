@@ -19,3 +19,5 @@ access_sign_template_tag_manager,access_sign_template_tag_manager,model_otl_docu
 access_sign_log_all,sign_log all,model_otl_document_sign_log,,0,0,0,0
 access_sign_log_group_manager,sign_log group_manager,model_otl_document_sign_log,group_sign_manager,1,0,0,0
 access_sign_request_portal,otl_document_sign.request.portal,otl_document_sign.model_otl_document_sign_request,base.group_portal,1,0,0,0
+
+access_otl_document_otl_document_sign_wizard_all,access.otl.document.otl_document_sign.wizard.all,model_otl_document_otl_document_sign_wizard,,1,1,1,1

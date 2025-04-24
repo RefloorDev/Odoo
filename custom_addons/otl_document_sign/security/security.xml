@@ -116,7 +116,8 @@
             <field name="perm_create" eval="False"/>
         </record>
 
-        <record id="sign_request_line_rule_portal" model="ir.rule">
+        <!-- This domain may not possible becuase in model 'otl_document_sign.request.item' required model not inherited _inherit = ['mail.thread', 'mail.activity.mixin'] -->
+        <!-- <record id="sign_request_line_rule_portal" model="ir.rule">
             <field name="name">Portal Sign Requests Line</field>
             <field name="model_id" ref="otl_document_sign.model_otl_document_sign_request_item"/>
             <field name="domain_force">[('message_partner_ids','child_of',[user.partner_id.id])]</field>
@@ -125,7 +126,7 @@
             <field name="perm_read" eval="True"/>
             <field name="perm_create" eval="False"/>
             <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
-        </record>
+        </record> -->
 
     </data>
 

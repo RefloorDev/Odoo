@@ -5,14 +5,14 @@
         <field name="model">otl_document_sign.template.share</field>
         <field name="arch" type="xml">
             <form string="Multiple Signature Requests">
-                <span class="text-muted" attrs="{'invisible': [('url', '=', False)]}">Share this link and Odoo will create a new document per person who clicks on the link. The link is private, only those that receive the link will be able to sign it.</span>
-                <group attrs="{'invisible': [('url', '=', False)]}">
+                <span class="text-muted" invisible="url == False">Share this link and Odoo will create a new document per person who clicks on the link. The link is private, only those that receive the link will be able to sign it.</span>
+                <group invisible="url == False">
                     <field name="url" widget="CopyClipboardChar" readonly="1"/>
                 </group>
-                <span attrs="{'invisible': [('url', '!=', False)]}">To be able to share, there should be only one responsible for all the fields.</span>
+                <span invisible="url != False">To be able to share, there should be only one responsible for all the fields.</span>
                 <footer>
                     <button string="Close" class="btn-primary" special="cancel"/>
-                    <button string="Sign Now" name="open" type="object" attrs="{'invisible': [('url', '=', False)]}"/>
+                    <button string="Sign Now" name="open" type="object" invisible="url == False"/>
                 </footer>
             </form>
         </field>

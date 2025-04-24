@@ -23,7 +23,7 @@
                             <field name="update_existing_record"/>
                             <field name="enable_ssl"/>
                             <field name="active" invisible="1"/>
-                            <field name="client_token" attrs="{'invisible': [('api_type', 'not in', ['boomi', 'order_checklist'])]}"/>
+                            <field name="client_token" invisible="api_type not in ['boomi', 'order_checklist']"/>
                         </group>
                     </sheet>
                 </form>
@@ -34,12 +34,12 @@
             <field name="name">team.improveit.configuration.tree</field>
             <field name="model">team.improveit.configuration</field>
             <field name="arch" type="xml">
-                <tree>
+                <list>
                     <field name="name"/>
                     <field name="client_id"/>
                      <field name="username"/>
                     <field name="grant_type"/>
-                </tree>
+                </list>
             </field>
         </record>
 
@@ -48,7 +48,7 @@
         <record id="action_api_team_improveit_configuration" model="ir.actions.act_window">
             <field name="name">API Improveit Configuration</field>
             <field name="res_model">team.improveit.configuration</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">
                     Click here to create Api Configuration.

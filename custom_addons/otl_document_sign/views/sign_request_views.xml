@@ -64,13 +64,13 @@
         <field name="name">otl_document_sign.request.tree</field>
         <field name="model">otl_document_sign.request</field>
         <field name="arch" type="xml">
-            <tree create="false">
+            <list create="false">
                 <field name="reference"/>
                 <field name="template_id"/>
                 <field name="state"/>
                 <field name="progress"/>
                 <field name="activity_exception_decoration" widget="activity_exception"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -80,11 +80,12 @@
         <field name="arch" type="xml">
             <form create="false" edit="false">
                 <header>
-                    <button string="Resend" type="object" states="canceled" name="action_resend" class="oe_highlight oe_read_only"/>
+                        <field name="state" widget="statusbar" statusbar_visible="sent,signed"/>
+                    <button string="Resend" type="object" invisible="state != 'canceled'" name="action_resend" class="oe_highlight oe_read_only"/>
                     <button string="Preview" type="object" name="go_to_document" class="oe_highlight"/>
-                    <button string="Download Document" type="object" states="signed" name="get_completed_document" class="oe_read_only oe_highlight"/>
+                    <button string="Download Document" type="object" invisible="state != 'signed'" name="get_completed_document" class="oe_read_only oe_highlight"/>
                     <button name="%(otl_document_sign.action_sign_request_send_copy)d" string="Send a Copy" type="action"/>
-                    <button string="Cancel" type="object" states="sent,signed" name="action_canceled" class="oe_read_only" confirm="This will delete all the already completed documents of this request and disable every sent accesses, are you sure?"/>
+                    <button string="Cancel" type="object" invisible="state in ('sent', 'signed')"  name="action_canceled" class="oe_read_only" confirm="This will delete all the already completed documents of this request and disable every sent accesses, are you sure?"/>
                     <field name="state" widget="statusbar" statusbar_visible="sent,signed"/>
                 </header>
                 <sheet>
@@ -102,13 +103,13 @@
                             </div>
                         </button>
                     </div>
-                    <widget name="web_ribbon" text="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>
+                    <widget name="web_ribbon" text="Archived" bg_color="bg-danger" invisible="active == True"/>
                     <field name="integrity" invisible="1"/>
                     <div class="oe_title">
                         <label for="reference" class="oe_edit_only"/>
                         <h1><field name="reference"/></h1>
                     </div>
-                    <div class="alert alert-warning" role="alert" attrs="{'invisible': [('integrity', '=', True)]}">
+                    <div class="alert alert-warning" role="alert" invisible="integrity == True">
                         The integrity of the document's history cannot be verified. This could mean that signature values or the underlying PDF document may have been modified after the fact.
                     </div>
 
@@ -122,11 +123,12 @@
                         </group>
                     </group>
                 </sheet>
-                <div class="oe_chatter">
+                <chatter/>
+                <!-- <div class="oe_chatter">
                      <field name="message_follower_ids" widget="mail_followers"/>
                      <field name="activity_ids" widget="mail_activity"/>
                      <field name="message_ids" widget="mail_thread"/>
-                </div>
+                </div> -->
             </form>
         </field>
     </record>
@@ -166,7 +168,7 @@
     <record id="sign_request_action" model="ir.actions.act_window">
         <field name="name">Signatures</field>
         <field name="res_model">otl_document_sign.request</field>
-        <field name="view_mode">kanban,tree,form,activity</field>
+        <field name="view_mode">kanban,list,form,activity</field>
         <field name="search_view_id" ref="sign_request_view_search"/>
         <field name="context">{'search_default_my_sign_request': 1}</field>
         <field name="help" type="html">
@@ -184,12 +186,12 @@
         <field name="name">otl_document_sign.request.item.tree</field>
         <field name="model">otl_document_sign.request.item</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="partner_id"/>
                 <field name="signer_email" class="oe_read_only"/>
                 <field name="role_id" class="oe_read_only"/>
                 <field name="state" class="oe_read_only"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -224,7 +226,7 @@
     <record id="sign_request_item_action" model="ir.actions.act_window">
         <field name="name">Signature Request Items</field>
         <field name="res_model">otl_document_sign.request.item</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
     </record>
 
     <!-- After installation of the module, open the related menu -->

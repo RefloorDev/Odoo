@@ -7,7 +7,7 @@ import time
 import uuid
 
 from email.utils import formataddr
-from PyPDF2 import PdfFileReader, PdfFileWriter
+from PyPDF2 import PdfFileReader, PdfFileWriter, PdfReader
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
@@ -50,7 +50,7 @@ class SignRequest(models.Model):
     def _default_access_token(self):
         return str(uuid.uuid4())
 
-    def _expand_states(self, states, domain, order):
+    def _expand_states(self, states, domain):
         return [key for key, val in type(self).state.selection]
 
     template_id = fields.Many2one('otl_document_sign.template', string="Template", required=True)
@@ -67,9 +67,9 @@ class SignRequest(models.Model):
 
     completed_document = fields.Binary(readonly=True, string="Completed Document", attachment=True)
 
-    nb_wait = fields.Integer(string="Sent Requests", compute="_compute_count", store=True)
-    nb_closed = fields.Integer(string="Completed Signatures", compute="_compute_count", store=True)
-    nb_total = fields.Integer(string="Requested Signatures", compute="_compute_count", store=True)
+    nb_wait = fields.Integer(string="Sent Requests", compute="_compute_count_sudo", store=True)
+    nb_closed = fields.Integer(string="Completed Signatures", compute="_compute_count_sudo", store=True)
+    nb_total = fields.Integer(string="Requested Signatures", compute="_compute_count_sudo", store=True)
     progress = fields.Char(string="Progress", compute="_compute_count")
     start_sign = fields.Boolean(string="Signature Started", help="At least one signer has signed the document.", compute="_compute_count")
     integrity = fields.Boolean(string="Integrity of the Sign request", compute='_compute_hashes')
@@ -88,10 +88,8 @@ class SignRequest(models.Model):
     model_id = fields.Many2one('ir.model', string="Model", related='template_id.model_id', store=True)
     res_id = fields.Integer('Selected Res ID', copy=False)
 
-
-
     @api.depends('request_item_ids.state')
-    def _compute_count(self):
+    def _compute_count_sudo(self):
         for rec in self:
             wait, closed = 0, 0
             for s in rec.request_item_ids:
@@ -102,6 +100,16 @@ class SignRequest(models.Model):
             rec.nb_wait = wait
             rec.nb_closed = closed
             rec.nb_total = wait + closed
+
+    @api.depends('request_item_ids.state')
+    def _compute_count(self):
+        for rec in self:
+            wait, closed = 0, 0
+            for s in rec.request_item_ids:
+                if s.state == "sent":
+                    wait += 1
+                if s.state == "completed":
+                    closed += 1
             rec.start_sign = bool(closed)
             rec.progress = "{} / {}".format(closed, wait + closed)
             if closed:
@@ -181,7 +189,7 @@ class SignRequest(models.Model):
             "name": _("Access History"),
             "type": "ir.actions.act_window",
             "res_model": "otl_document_sign.log",
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'domain': [('sign_request_id', '=', self.id)],
         }
 
@@ -254,7 +262,7 @@ class SignRequest(models.Model):
         if not self.template_id.sign_item_ids:
             return False
 
-        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(self.template_id.attachment_id.datas)), strict=False, overwriteWarnings=False)
+        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(self.template_id.attachment_id.datas)), strict=False)
         return old_pdf.isEncrypted
 
     def action_canceled(self):
@@ -408,7 +416,7 @@ class SignRequest(models.Model):
             self.completed_document = self.template_id.attachment_id.datas
             return
 
-        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(self.template_id.attachment_id.datas)), strict=False, overwriteWarnings=False)
+        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(self.template_id.attachment_id.datas)), strict=False)
 
         isEncrypted = old_pdf.isEncrypted
         if isEncrypted and not old_pdf.decrypt(password):
@@ -498,7 +506,7 @@ class SignRequest(models.Model):
 
         can.save()
 
-        item_pdf = PdfFileReader(packet, overwriteWarnings=False)
+        item_pdf = PdfFileReader(packet)
         new_pdf = PdfFileWriter()
 
         for p in range(0, old_pdf.getNumPages()):
@@ -521,7 +529,8 @@ class SignRequest(models.Model):
             self.completed_document = self.template_id.attachment_id.datas
             return
 
-        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(self.template_id.attachment_id.datas)), strict=False, overwriteWarnings=False)
+        # old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(self.template_id.attachment_id.datas)), strict=False)
+        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(self.template_id.attachment_id.datas)), strict=False)
 
         isEncrypted = old_pdf.isEncrypted
         if isEncrypted and not old_pdf.decrypt(password):
@@ -611,7 +620,8 @@ class SignRequest(models.Model):
 
         can.save()
 
-        item_pdf = PdfFileReader(packet, overwriteWarnings=False)
+        # item_pdf = PdfFileReader(packet, overwriteWarnings=False)
+        item_pdf = PdfFileReader(packet)
         new_pdf = PdfFileWriter()
 
         for p in range(0, old_pdf.getNumPages()):
@@ -747,13 +757,13 @@ class SignRequestItem(models.Model):
                 continue
             if not signer.create_uid.email:
                 continue
-            tpl = self.env.ref('otl_document_sign.sign_template_mail_request')
-            body = tpl.render({
-                'record': signer,
-                'link': url_join(base_url, "sign/document/mail/%(request_id)s/%(access_token)s" % {'request_id': signer.sign_request_id.id, 'access_token': signer.access_token}),
-                'subject': subject,
-                'body': message if message != '<p><br></p>' else False,
-            }, engine='ir.qweb', minimal_qcontext=True)
+            # tpl = self.env.ref('otl_document_sign.sign_template_mail_request')
+            # body = tpl.render({
+            #     'record': signer,
+            #     'link': url_join(base_url, "sign/document/mail/%(request_id)s/%(access_token)s" % {'request_id': signer.sign_request_id.id, 'access_token': signer.access_token}),
+            #     'subject': subject,
+            #     'body': message if message != '<p><br></p>' else False,
+            # }, engine='ir.qweb', minimal_qcontext=True)
 
             if not signer.signer_email:
                 raise UserError(_("Please configure the signer's email address"))

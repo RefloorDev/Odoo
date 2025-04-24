@@ -8,7 +8,7 @@ from uuid import uuid4
 from odoo import _
 from odoo.exceptions import UserError
 
-from odoo.addons.payment.models.payment_acquirer import _partner_split_name
+# from odoo.addons.payment.models.payment_acquirer import _partner_split_name
 
 _logger = logging.getLogger(__name__)
 
