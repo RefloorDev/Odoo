@@ -14,6 +14,7 @@ This module customizing sale module to create a sale contract & followups.
         'security/ir.model.access.csv',
         'security/user_security.xml',
         'data/ir_actions_server.xml',
+        'data/ir_actions_server_sale_order.xml',
         'data/appointment_sequence_data.xml',
         'data/payment_data.xml',
         'data/cron_data.xml',
