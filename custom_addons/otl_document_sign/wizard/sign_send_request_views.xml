@@ -14,12 +14,13 @@
                 <group>
                     <field name="signer_id" invisible="signers_count != 0" required="'signers_count', '=', 0" context="{'force_email':True}"/>
                     <field name="signers_count" invisible="1"/>
-                    <field name="reference" required="1"/>
+                    <field name="reference1"/>
                     <field name="is_user_signer" invisible="1"/>
                     <field name="template_id" invisible="1" kanban_view_ref="%(otl_document_sign.sign_template_view_kanban_mobile)s"/>
-                    <field name="follower_ids" widget="many2many_tags" placeholder="Write email or search contact..."/>
+                    <field name="related_model_id" invisible="1"/>
+                    <field name="follower_ids" invisible="1" widget="many2many_tags" placeholder="Write email or search contact..."/>
                     <field name="subject" placeholder="Signature Request" invisible="context.get('sign_directly_without_mail',False)"/>
-                    <field name="message" placeholder="Optional Message..." invisible="context.get('sign_directly_without_mail',False)"/>
+                    <field name="message" placeholder="Optional Message..." invisible="context.get('sign_directly_without_mail',False)" widget="html" class="oe_form_field_html" options="{'sanitize': False}"/>
                     <label for="filename" invisible="context.get('sign_directly_without_mail',True)"/>
                     <div class="o_row" invisible="context.get('sign_directly_without_mail',True)">
                         <field name="filename"  placeholder="Name for the file" nolabel="1" />

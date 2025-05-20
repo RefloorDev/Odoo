@@ -386,6 +386,23 @@ class ResUsers(models.Model):
         #     }
         return result
 
+    def get_stair_width_id(self, data={}):
+        result = {
+            'result': 'Success',
+            'message': 'Master Data retrieved successfully.'
+        }
+        team_quote_question_id = self.env['team.quote.question'].search([('code', '=', 'StairWidth')], limit=1)
+        if team_quote_question_id:
+            result.update({
+                'stair_width_id': team_quote_question_id.id,
+            })
+            return result
+        else:
+            result = {
+            'result': 'False',
+            'message': 'Stair Width ID is not found.'
+        }
+
     def get_sales_appointment_api_offline(self,user_id):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
         result = {
@@ -804,7 +821,7 @@ class ProductTemplate(models.Model):
         min_sale_price = float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.min_sale_price')) or 0.0
         for product in products:
             stair_product = self.search([
-                ('type', '=', 'type'),
+                ('type', '=', 'consu'),
                 ('product_variant_ids', '!=', False),
                 ('categ_id.name', 'ilike', 'Stairs'),
                 ('grade', '=', product.grade)
@@ -2008,10 +2025,10 @@ class TeamCustomerAppointment(models.Model):
     def action_start_sync_to_i360(self, appointment_id, sale_order_id):
         time.sleep(3)
         # Create new cursor
-        new_cr = self.pool.cursor()
+        # new_cr = self.pool.cursor()
         try:
             # Switch to environment with new cursor 
-            self = self.with_env(self.env(cr=new_cr))
+            # self = self.with_env(self.env(cr=new_cr))
             # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
@@ -3457,7 +3474,7 @@ class TeamCustomerAppointment(models.Model):
 
     def action_start_sync_manual_arrival_date_to_i360(self, appointment_id):
         time.sleep(3)
-        with api.Environment.manage():
+        try:
             # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
@@ -3486,7 +3503,9 @@ class TeamCustomerAppointment(models.Model):
             self.env.cr.commit()
             new_cr.close()
             _logger.info('------End of action_start_sync_manual_arrival_date_to_i360------: %s' % (appointment_id))
-
+        except Exception as e:
+            _logger.info('------Exception in action_start_sync_manual_arrival_date_to_i360------: %s' % (e))
+            new_cr.rollback()
         return True
 
     @api.model
@@ -3707,7 +3726,7 @@ class SaleOrder(models.Model):
             }
         :return:
         """
-        acquirer = self.env.ref('payment_bancard.payment_acquirer_authorize')
+        acquirer = self.env.ref('payment.payment_provider_authorize')
         card_type = ''
         for order in self:
             transaction = AuthorizeAPICustom(acquirer)
@@ -3733,19 +3752,23 @@ class SaleOrder(models.Model):
             card_type = response.get('transactionResponse', {}).get('accountType', '')
             # [FIX] order update restricting to avoid concurrent error
             #order.write({'authorize_transaction_id': transaction_ref, 'card_type': card_type})
-            currency = order.pricelist_id.currency_id
+            currency = order.currency_id
             partner = order.partner_id
+            transc_ref = response.get('transactionResponse', {}) and response.get('transactionResponse', {}).get('transId', '') + ' ' + response.get('transactionResponse', {}).get('transId', '') + ' ' + fields.Datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT) or ''
             vals = {
                 'amount': data.get('amount', 0),
                 'currency_id': currency.id,
                 'partner_id': partner.id,
+                'provider_id': acquirer.id,
+                'reference': transc_ref,
                 'sale_order_ids': [(6, 0, self.ids)],
-                'acquirer_id': acquirer.id,
-                'acquirer_reference': response.get('transactionResponse', {}).get('transId', ''),
-                'date': fields.Datetime.now(),
+                'payment_method_id': self.env.ref('payment.payment_method_card').id,
+                # 'acquirer_id': acquirer.id,
+                # 'acquirer_reference': response.get('transactionResponse', {}).get('transId', ''),
+                # 'date': fields.Datetime.now(),
             }
-            transaction = self.env['payment.transaction'].create(vals)
-            transaction._set_transaction_done()
+            transaction = self.env['payment.transaction'].create([vals])
+            transaction._set_done()
             self.env['otl.card.transaction.log'].create({
                 'sale_order_id': order.id,
                 'name': transaction_ref,

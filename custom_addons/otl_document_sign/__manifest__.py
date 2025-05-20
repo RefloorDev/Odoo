@@ -2,16 +2,17 @@
 
 {
     'name': 'Document Sign',
-    'version': '1.0',
+    'version': '1.0.2',
     'category': 'Sales',
-    'version': '1.0.1',
     'author': 'Sagar Mokariya',
     'summary': "Send Documents for Signing",
     'description': """ This module allows you to send documents for signing. """,
     'website': 'www.xeonglobal.com',
-    'depends': ['mail', 'attachment_indexation', 'portal', 'sms','base','sale'],
+    'depends': [
+        'mail', 'attachment_indexation', 'portal', 'sms', 'base', 'sale'
+    ],
     'data': [
-         'security/security.xml',
+        'security/security.xml',
         'security/ir.model.access.csv',
         'views/sign_template_views_mobile.xml',
         'wizard/sign_send_request_views.xml',
@@ -29,10 +30,19 @@
         'report/sign_log_reports.xml',
         'data/sign_data.xml',
     ],
-    'qweb': ['static/src/xml/*.xml'],
-    'demo': [
-        'data/sign_demo.xml',
-    ],
+    # 'assets': {
+    #     'web.assets_backend': [
+    #         'otl_document_sign/static/src/xml/kanban_button_template.xml',
+    #         'otl_document_sign/static/src/js/kanban_button_components.js',
+    #     ],
+    # },
+    'assets': {
+        'web.assets_backend': [
+            'otl_document_sign/static/src/xml/dynamic_reference_field.xml',
+            'otl_document_sign/static/src/js/dynamic_reference_field.js',
+            'otl_document_sign/static/src/js/reference_field.js',
+        ],
+    },
     'application': True,
     'installable': True,
     'license': 'OPL-1',

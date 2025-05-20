@@ -142,7 +142,7 @@ class TeamContractQuestions(models.Model):
     question_id = fields.Many2one('team.quote.question',string='Question',ondelete='restrict')
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     appointment_id = fields.Many2one('team.customer.appointment', 'Appointment',required=True)
-    answers = fields.One2many('team.contract.answer.line','question_id', string='Answers', copy=True, ondelete='cascade')
+    answers = fields.One2many('team.contract.answer.line','question_id', string='Answers', copy=True)
     order_id = fields.Many2one('sale.order', string="Sale Order", ondelete='cascade')
     answer_data = fields.Char('Answer', compute='_compute_answers')
     room_measurement_id = fields.Many2one('team.contract.room.measurement.line', 'Custom room measurement Id')

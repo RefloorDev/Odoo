@@ -429,40 +429,40 @@
                         <page string="Payment Info" name="payment_transaction" invisible="state not in ('sale', 'done')">
                             <group>
                                 <group string="Down Payment">
-                                    <field name="promotion_code_id" readonly="1"/>
-                                    <field name="stair_calc_based_on" readonly="1"/>
-                                    <field name="calc_based_on" readonly="1"/>
-                                    <field name="msrp_amount" readonly="1"/>
-                                    <field name="additional_cost" readonly="1"/>
-                                    <field name="one_year_price" readonly="1"/>
-                                    <field name="excluded_amount_promotion" readonly="1"/>
-                                    <field name="savings_amount" readonly="1"/>
-                                    <field name="final_sale_price" readonly="1"/>
-                                    <field name="payment_method" readonly="1"/>
-                                    <field name="check_number" password="True" invisible="payment_method != 'check'" readonly="1"/>
-                                    <field name="check_account_number" password="True" invisible="payment_method != 'check'" readonly="1"/>
-                                    <field name="check_routing_number" password="True" invisible="payment_method != 'check'" readonly="1"/>
-                                    <field name="down_payment_amount" readonly="1" />
+                                    <field name="promotion_code_id" readonly="1" force_save="1"/>
+                                    <field name="stair_calc_based_on" readonly="1" force_save="1"/>
+                                    <field name="calc_based_on" readonly="1" force_save="1"/>
+                                    <field name="msrp_amount" readonly="1" force_save="1"/>
+                                    <field name="additional_cost" readonly="1" force_save="1"/>
+                                    <field name="one_year_price" readonly="1" force_save="1"/>
+                                    <field name="excluded_amount_promotion" readonly="1" force_save="1"/>
+                                    <field name="savings_amount" readonly="1" force_save="1"/>
+                                    <field name="final_sale_price" readonly="1" force_save="1"/>
+                                    <field name="payment_method" readonly="1" force_save="1"/>
+                                    <field name="check_number" password="True" invisible="payment_method != 'check'" readonly="1" force_save="1"/>
+                                    <field name="check_account_number" password="True" invisible="payment_method != 'check'" readonly="1" force_save="1"/>
+                                    <field name="check_routing_number" password="True" invisible="payment_method != 'check'" readonly="1" force_save="1"/>
+                                    <field name="down_payment_amount" readonly="1" force_save="1"/>
                                 </group>
                                 <group string="Balance Due">
-                                    <field name="balance_payment_method" readonly="1"/>
-                                    <field name="balance_amount" readonly="1"/>
-                                    <field name="deposit_amount" invisible="1"/>
-                                    <field name="grand_amount_total" string="Sold Amount" readonly="1"/>
+                                    <field name="balance_payment_method" readonly="1" force_save="1"/>
+                                    <field name="balance_amount" readonly="1" force_save="1"/>
+                                    <field name="deposit_amount" invisible="1" force_save="1"/>
+                                    <field name="grand_amount_total" string="Sold Amount" readonly="1" force_save="1"/>
                                 </group>
                                 <group string="Finance">
-                                    <field name="finance_option_id" readonly="1"/>
-                                    <field name="finance_amount" readonly="1"/>
+                                    <field name="finance_option_id" readonly="1" force_save="1"/>
+                                    <field name="finance_amount" readonly="1" force_save="1"/>
                                 </group>
                                 <group>
-                                    <field name="monthly_promo" readonly="1"/>
-                                    <field name="discount" invisible="1"/>
-                                    <field name="adjustment" invisible="1"/>
-                                    <field name="recision_date" readonly="1"/>
-                                    <field name="cards" invisible="1"/>
+                                    <field name="monthly_promo" readonly="1" force_save="1"/>
+                                    <field name="discount" invisible="1" force_save="1"/>
+                                    <field name="adjustment" invisible="1" force_save="1"/>
+                                    <field name="recision_date" readonly="1" force_save="1"/>
+                                    <field name="cards" invisible="1" force_save="1"/>
                                 </group>
                                 <group string="Transaction Log" invisible="cards != True">
-                                    <field name="card_transaction_log_line" nolabel="1" readonly="1">
+                                    <field name="card_transaction_log_line" nolabel="1" readonly="1" force_save="1">
                                         <list string="Transaction Log">
                                             <field name="name"/>
                                             <field name="state"/>

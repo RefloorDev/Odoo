@@ -3,6 +3,19 @@
 
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+from lxml import etree
+
+from odoo.fields import Reference
+from odoo.exceptions import ValidationError
+
+class DynamicReference(Reference):
+    def convert_to_cache(self, value, record):
+        # Dynamically patch selection from context at validation time
+        selection = record.env.context.get('resource_reference_selection')
+        if selection:
+            self._selection = selection
+        return super().convert_to_cache(value, record)
+
 
 class SignSendRequest(models.TransientModel):
     _name = 'otl_document_sign.send.request'
@@ -24,7 +37,9 @@ class SignSendRequest(models.TransientModel):
         }) for role in roles]
         if self.env.context.get('sign_directly_without_mail'):
             res['signer_id'] = self.env.user.partner_id.id
+
         return res
+
 
     template_id = fields.Many2one('otl_document_sign.template', required=True, ondelete='cascade')
     signer_ids = fields.One2many('otl_document_sign.send.request.signer', 'sign_send_request_id', string="Signers")
@@ -37,19 +52,17 @@ class SignSendRequest(models.TransientModel):
     message = fields.Html("Message")
     filename = fields.Char("Filename", required=True)
     related_model_id = fields.Many2one('ir.model', 'Related Model', related='template_id.model_id', store=True)
-    reference = fields.Reference(string='Related Document',
-                                 selection='_reference_models')
-
+    reference = fields.Char(string="Reference")
+    
     @api.model
-    def _reference_models(self):
-        template_id = self.env.context.get('active_id')
-        models = []
-        if template_id:
-            template = self.env['otl_document_sign.template'].browse(template_id)
-            if template.model_id:
-                models = [(template.model_id.model, template.model_id.name)]
-        return models
+    def _selection_target_model(self):
+        return [(model.model, model.name) for model in self.env['ir.model'].sudo().search([])]
 
+    reference1 = fields.Reference(
+        string="Related Document",
+        selection='_selection_target_model',
+        tracking=True,
+    )
 
     @api.depends('signer_ids.partner_id', 'signer_id', 'signers_count')
     def _compute_is_user_signer(self):
@@ -70,7 +83,7 @@ class SignSendRequest(models.TransientModel):
         reference = self.filename
         subject = self.subject
         message = self.message
-        return self.env['otl_document_sign.request'].initialize_new(self.reference.id, template_id, signers, followers, reference, subject, message, send, without_mail)
+        return self.env['otl_document_sign.request'].initialize_new(self.reference1.id, template_id, signers, followers, reference, subject, message, send, without_mail)
         #modified
     def send_request(self):
         res = self.create_request()
@@ -117,6 +130,14 @@ class SignSendRequest(models.TransientModel):
                 'name_list': [item.partner_id.name for item in request.request_item_ids[1:]],
             },
         }
+    
+    @api.model_create_multi
+    def create(self, vals_list):
+        selection = self.env.context.get('resource_reference_selection', [])
+        if selection:
+            # ✅ Patch before validation
+            self._fields['reference']._selection = selection
+        return super().create(vals_list)
 
 
 class SignSendRequestSigner(models.TransientModel):

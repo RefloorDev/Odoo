@@ -33,6 +33,12 @@
             <!-- <field name="view_template_id" ref="default_acquirer_button"/> -->
             <field name="image_128" type="base64" file="payment_bancard/static/src/img/authorize_icon.png"/>
             <field name="module_id" ref="base.module_payment_authorize"/>
+            <field name="payment_method_ids"
+               eval="[Command.set([
+                         ref('payment.payment_method_ach_direct_debit'),
+                         ref('payment.payment_method_card'),
+                     ])]"
+        />
             <!-- <field name="description" type="html">
                 <p>
                     A payment gateway to accept online payments via credit cards and e-checks.

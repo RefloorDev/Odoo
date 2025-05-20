@@ -121,3 +121,4 @@ access_location_entity_key_line_user,location.entity.key.line.user,model_otl_loc
 access_location_entity_key_line_manager,location.entity.key.line.manager,model_otl_location_entity_key_line,base.group_system,1,1,1,1
 
 access_otl_day_wise_sync_status_report_all,access.otl.day.wise.sync.status.report.all,model_otl_day_wise_sync_status_report,,1,1,1,1
+access_otl_generate_token_all,access.otl.generate.token.all,model_otl_generate_token,,1,1,1,1

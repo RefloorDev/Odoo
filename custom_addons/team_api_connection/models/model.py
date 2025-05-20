@@ -3289,7 +3289,9 @@ class SaleOrder(models.Model):
 
     @api.model
     def verify_parameters(self, data):
-        if not self.env['sale.order'].browse(int(data.get('order_id', 0))).exists():
+        sale_order_id = self.env['sale.order'].search([('id', '=', int(data.get('order_id', 0)))], limit=1)
+        print('sale_order_idsale_order_idsale_order_id----', sale_order_id)
+        if not sale_order_id:
             return False
         # if not data.get('total_amount', 0):
         #     return False
@@ -5321,7 +5323,7 @@ class SaleOrder(models.Model):
                             sale_order_vals.update({'other_files_uploaded': True})
                     # enable_additional_comment_api = eval(
                     #     str(self.env['ir.config_parameter'].sudo().get_param('enable_additional_comment_api')))
-                    enable_additional_comment_api = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_additional_comment_api'))
+                    enable_additional_comment_api = str2bool(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_additional_comment_api'))
                     if sale_order.appointment_result == 'Sold' and enable_additional_comment_api and not sale_order.additional_comment_synced:
                         result = sale_order.create_additional_comments_in_i360()
                         if result.get('success', '') == 'true':
@@ -5940,7 +5942,8 @@ class SaleOrder(models.Model):
             }
         :return:
         """
-        acquirer = self.env.ref('payment_bancard.payment_acquirer_authorize')
+        # acquirer = self.env.ref('payment_bancard.payment_acquirer_authorize')
+        acquirer = self.env.ref('payment.payment_provider_authorize')
         for order in self:
             transaction = AuthorizeAPICustom(acquirer)
             if order.authorize_transaction_id:
@@ -6003,7 +6006,8 @@ class SaleOrder(models.Model):
             }
         :return:
         """
-        acquirer = self.env.ref('payment_bancard.payment_acquirer_authorize')
+        # acquirer = self.env.ref('payment_bancard.payment_acquirer_authorize')
+        acquirer = self.env.ref('payment.payment_provider_authorize')
         for order in self:
             values = self.prepare_capture_payment_values(acquirer, order, data)
             transaction = AuthorizeAPICustom(acquirer)

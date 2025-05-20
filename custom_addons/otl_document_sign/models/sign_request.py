@@ -7,7 +7,7 @@ import time
 import uuid
 
 from email.utils import formataddr
-from PyPDF2 import PdfFileReader, PdfFileWriter, PdfReader
+from PyPDF2 import PdfFileReader, PdfFileWriter
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph

@@ -1322,6 +1322,13 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         if status:
             result = models.execute_kw(DB, int(uid), password, 'res.users', 'get_master_data_contents', [{'app_version': app_version}])
+            stair_width_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_width_id', [{}])
+            questionnaires = result.get('questionnaires', [])
+            if questionnaires and stair_width_data and stair_width_data.get('stair_width_id', False):
+                for questionnaire in questionnaires:
+                    if questionnaire.get("id") == stair_width_data.get('stair_width_id', False):
+                        questionnaire["id"] = 9
+            result['questionnaires'] = questionnaires
         else:
             result = message
         return json.dumps(result)
@@ -1835,7 +1842,6 @@ class APIHomes(API_Homes):
             data = data.get('data', {})
         _logger.info("------------create_order_and_update_measurements_encoded params- 2nd: %s------------------" % (params))
         decode_options = ast.literal_eval(str(params.get('decode_options', {'verify_signature': True})))
-        decoded_data = data
         if not token:
             _logger.info("------------Token Missing in main create_order_and_update_measurements_encoded api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
@@ -1847,6 +1853,18 @@ class APIHomes(API_Homes):
             _logger.info("------------password missing in main create_order_and_update_measurements_encoded api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
+        if status:
+            stair_width_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_width_id', [{}])
+            # Handle application issue with static room id 9 
+            # Fix question_id 9 to 42 in answer list if present
+            if data and "answer" in data and isinstance(data["answer"], list) and stair_width_data and stair_width_data.get('stair_width_id', False):
+                update_answer = []
+                for ans in data["answer"]:
+                    if isinstance(ans, dict) and ans.get("question_id") == 9:
+                        ans["question_id"] = stair_width_data.get('stair_width_id', False)
+                    update_answer.append(ans)
+                data["answer"] = update_answer
+        decoded_data = data
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="otl_document_sign.BadgeComponentTemplate">
+        <span t-att-class="'badge ' + (props.color || 'badge-primary')">
+            <t t-esc="props.text"/>
+        </span>
+    </t>
+</templates>
