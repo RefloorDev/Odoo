@@ -402,6 +402,24 @@ class ResUsers(models.Model):
             'result': 'False',
             'message': 'Stair Width ID is not found.'
         }
+            
+    def get_stair_cover_risers(self, data={}):
+        result = {
+            'result': 'Success',
+            'message': 'Master Data retrieved successfully.'
+        }
+        team_quote_question_id = self.env['team.quote.question'].search([('code', '=', 'CurrentCoveringType')], limit=1)
+        if team_quote_question_id:
+            result.update({
+                'stair_cover_risers': team_quote_question_id.id,
+            })
+            return result
+        else:
+            result = {
+            'result': 'False',
+            'message': 'Stair Width ID is not found.'
+        }
+
 
     def get_sales_appointment_api_offline(self,user_id):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
@@ -2189,7 +2207,7 @@ class TeamCustomerAppointment(models.Model):
                             sale_order_vals.update({'other_files_uploaded': True})
                     # enable_additional_comment_api = eval(
                     #     str(self.env['ir.config_parameter'].sudo().get_param('enable_additional_comment_api')))
-                    enable_additional_comment_api = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_additional_comment_api'))
+                    enable_additional_comment_api = str2bool(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_additional_comment_api'))
                     if sale_order.appointment_result == 'Sold' and enable_additional_comment_api and not sale_order.additional_comment_synced:
                         result = sale_order.create_additional_comments_in_i360()
                         if result.get('success', '') == 'true':
@@ -2518,7 +2536,7 @@ class TeamCustomerAppointment(models.Model):
                             for line in valid_transactions_lines:
                                 authorize_transaction_id = line.name or ''
                                 if authorize_transaction_id:
-                                    acquirer = self.env.ref('payment_bancard.payment_acquirer_authorize')
+                                    acquirer = self.env.ref('payment.payment_provider_authorize')
                                     transaction = AuthorizeAPICustom(acquirer)
                                     response = transaction.void(authorize_transaction_id or '')
                                     if response.get('x_trans_id', ''):

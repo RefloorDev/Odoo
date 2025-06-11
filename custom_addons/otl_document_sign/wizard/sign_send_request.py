@@ -20,6 +20,7 @@ class DynamicReference(Reference):
 class SignSendRequest(models.TransientModel):
     _name = 'otl_document_sign.send.request'
     _description = 'Sign send request'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     @api.model
     def default_get(self, fields):

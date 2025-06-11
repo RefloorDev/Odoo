@@ -1323,11 +1323,19 @@ class APIHomes(API_Homes):
         if status:
             result = models.execute_kw(DB, int(uid), password, 'res.users', 'get_master_data_contents', [{'app_version': app_version}])
             stair_width_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_width_id', [{}])
+            get_stair_cover_risers_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_cover_risers', [{}])
             questionnaires = result.get('questionnaires', [])
-            if questionnaires and stair_width_data and stair_width_data.get('stair_width_id', False):
+            stair_width_id = stair_width_data.get('stair_width_id')
+            stair_cover_risers_id = get_stair_cover_risers_data.get('stair_cover_risers')
+            if questionnaires:
                 for questionnaire in questionnaires:
-                    if questionnaire.get("id") == stair_width_data.get('stair_width_id', False):
+                    if stair_width_id and questionnaire.get("id") == stair_width_id:
                         questionnaire["id"] = 9
+                    elif stair_cover_risers_id and questionnaire.get("id") == stair_cover_risers_id:
+                        questionnaire["id"] = 8
+                        for quote_label in questionnaire.get("quote_label", []):
+                            if quote_label.get("question_id") == stair_cover_risers_id:
+                                quote_label["question_id"] = 8
             result['questionnaires'] = questionnaires
         else:
             result = message
@@ -1855,13 +1863,21 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         if status:
             stair_width_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_width_id', [{}])
+            get_stair_cover_risers_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_cover_risers', [{}])
             # Handle application issue with static room id 9 
             # Fix question_id 9 to 42 in answer list if present
-            if data and "answer" in data and isinstance(data["answer"], list) and stair_width_data and stair_width_data.get('stair_width_id', False):
+            if data and "answer" in data and isinstance(data["answer"], list) and (
+                (stair_width_data and stair_width_data.get('stair_width_id', False)) or 
+                (get_stair_cover_risers_data and get_stair_cover_risers_data.get('stair_cover_risers', False))):
                 update_answer = []
                 for ans in data["answer"]:
+                    updated_question_id = False
                     if isinstance(ans, dict) and ans.get("question_id") == 9:
-                        ans["question_id"] = stair_width_data.get('stair_width_id', False)
+                        updated_question_id = stair_width_data.get('stair_width_id', False)
+                    elif isinstance(ans, dict) and ans.get("question_id") == 8:
+                        updated_question_id = get_stair_cover_risers_data.get('stair_cover_risers', False)
+                    if updated_question_id:
+                        ans["question_id"] = updated_question_id
                     update_answer.append(ans)
                 data["answer"] = update_answer
         decoded_data = data

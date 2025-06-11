@@ -1205,7 +1205,8 @@ class TeamImproveitConfiguration(models.Model):
                             if image_data:
                                 try:
                                     image_data = urlopen(image_url).read()
-                                    image_binary = base64.encodestring(image_data)
+                                    # image_binary = base64.encodestring(image_data)
+                                    image_binary = base64.b64encode(image_data)
                                 except:
                                     image_binary = False
                             else:
