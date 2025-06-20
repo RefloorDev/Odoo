@@ -43,6 +43,16 @@ _logger = logging.getLogger(__name__)
 
 
 class JsonRPCDispatcherInherit(http.JsonRPCDispatcher):
+    
+    # def _response(self, result=None, error=None):
+    #     response = {'jsonrpc': '2.0', 'id': self.request_id}
+    #     if error is not None:
+    #         response['error'] = error
+    #     if result is not None:
+    #         response['result'] = result
+
+    #     return self.request.make_json_response(response)
+    
     def _response(self, result=None, error=None):
         response = {'jsonrpc': '2.01', 'id': self.request_id}
         if error is not None:
@@ -51,7 +61,7 @@ class JsonRPCDispatcherInherit(http.JsonRPCDispatcher):
             response['result'] = result
             # Try to parse and format result if it's a string
             if isinstance(result, str):
-                result_dict = ast.literal_eval(result)
+                # result_dict = ast.literal_eval(result)
                 try:
                     result_dict = ast.literal_eval(result)
                     if 'override_json_result' in result_dict and result_dict.get('override_json_result', 0):
@@ -68,6 +78,7 @@ class JsonRPCDispatcherInherit(http.JsonRPCDispatcher):
         # body = json.dumps(response, default=lambda obj: obj.isoformat() if hasattr(obj, 'isoformat') else str(obj))
         # return self.request.make_json_response(body, status=error and error.pop('http_status', 200) or 200, headers=[('Content-Type', mime), ('Content-Length', len(body))])
         return self.request.make_json_response(response, status=error and error.pop('http_status', 200) or 200, headers=[('Content-Type', mime), ('Content-Length', len(response))])
+
 
 class JsonRequest_API(http.Controller):
 

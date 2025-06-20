@@ -4806,6 +4806,136 @@ class SaleOrder(models.Model):
                         'message': 'Wrong Appointment id',
                         'result': 'Failed'
                     }
+                if not order.room_measurement_line:
+                    team_room_obj = self.env['team.contract.room.measurement.line'].search(
+                        [('appointment_id', '=', appointment_id)])
+                    if team_room_obj:
+                        team_room_obj.write({'order_id': order.id})
+                if not order.contract_question_line:
+                    team_question_obj = self.env['team.contract.question.line'].search(
+                        [('appointment_id', '=', appointment_id)])
+                    if team_question_obj:
+                        team_question_obj.write({'order_id': order.id})
+                if not order.room_transition_line:
+                    room_transition_obj = self.env['team.contract.transition.line'].search(
+                        [('appointment_id', '=', appointment_id)])
+                    if room_transition_obj:
+                        room_transition_obj.write({'order_id': order.id})
+                model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+                sign_requests = self.env['otl_document_sign.request'].sudo().search(
+                    [('model_id', '=', model_id.id), ('res_id', '=', order.id)], order='create_date desc')
+                if sign_requests:
+                    sign_logs = self.env['otl_document_sign.log'].search(
+                        [('sign_request_id', 'in', sign_requests.ids)])
+                    if sign_logs:
+                        sign_logs.sudo().with_context(delete_log=True).unlink()
+                    sign_requests.sudo().unlink()
+                order_vals = {}
+                if order.appointment_id.completed_date:
+                    order_vals.update({'date_order': order.appointment_id.completed_date})
+                if data.get('recision_date', False):
+                    order_vals.update({'recision_date': data.get('recision_date', False)})
+                if order_vals:
+                    order.write(order_vals)
+                if appointment.app_version_id:
+                    if order.coapplicant_skip or not order.appointment_id.co_applicant:
+                        document_template_id = appointment.app_version_id.sale_contract_tmpl_id_ncp.id or False
+                    else:
+                        document_template_id = appointment.app_version_id.sale_contract_tmpl_id.id or False
+                else:
+                    if order.coapplicant_skip or not order.appointment_id.co_applicant:
+                        document_template_id = self.env['ir.config_parameter'].sudo().get_param(
+                            'team_sale_contract.sale_contract_tmpl_id_ncp') or False
+                    else:
+                        document_template_id = self.env['ir.config_parameter'].sudo().get_param(
+                            'team_sale_contract.sale_contract_tmpl_id') or False
+                if document_template_id:
+                    template = self.env['otl_document_sign.template'].sudo().browse(int(document_template_id))
+                    # if template.sign_item_ids.filtered(lambda x: x.type_id.option_field):
+                    #     if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
+                    #             (not contract_plumbing_option_1 and not contract_plumbing_option_2):
+                    #         return {
+                    #             'result': 'Failed',
+                    #             'message': 'Plumbing option should select either one option'
+                    #         }
+                    vals = {
+                        'template_id': template.id,
+                        'reference': template.name,
+                        'model_id': template.model_id.id,
+                        'res_id': order.id,
+                    }
+                    _logger.info("Creating sign request with values::: %s", vals)
+                    sign_request = sign_req_obj.create(vals)
+                    _logger.info("Created sign request with ID:::::::: %s", sign_request and sign_request.id or 'None')
+                    if sign_request:
+                        item_vals = {
+                            'partner_id': order.partner_id.id,
+                            'sign_request_id': sign_request.id,
+                            'role_id': template.sign_item_ids and template.sign_item_ids.mapped('responsible_id').id,
+
+                        }
+                        request_item = sign_req_item_obj.create(item_vals)
+                        if request_item:
+                            sign_request.action_sent()
+                            current_request_item = sign_request.request_item_ids
+                            sign_item_types = self.env['otl_document_sign.item.type'].sudo().search_read(
+                                [('model_id', '=', template.model_id.id)])
+                            if current_request_item:
+                                for item_type in sign_item_types:
+                                    if item_type['auto_field']:
+                                        auto_fields = item_type['auto_field'].split('.')
+                                        selected_record = self.env[
+                                            current_request_item.model_id.model].sudo().search(
+                                            [('id', '=', current_request_item.res_id)], limit=1)
+                                        auto_field = selected_record if selected_record else current_request_item.partner_id
+                                        for field in auto_fields:
+                                            if auto_field and field in auto_field:
+                                                auto_field = auto_field[field]
+                                            else:
+                                                auto_field = ""
+                                                break
+                                        if auto_field == 0.0:
+                                            if isinstance(auto_field, bool):
+                                                auto_field = ''
+                                            else:
+                                                auto_field = '0.0'
+                                        if isinstance(auto_field, date):
+                                            lg = self.env['res.lang']._lang_get(self.env.user.lang)
+                                            auto_field = auto_field.strftime(lg.date_format) or auto_field
+                                        SignItemValue = self.env['otl_document_sign.request.item.value']
+                                        sign_item_ids = sign_request.template_id.sign_item_ids.filtered(lambda
+                                                                                                            r: not r.responsible_id or r.responsible_id.id == request_item.role_id.id)
+                                        for sign_item_id in sign_item_ids:
+                                            id_sign_item = False
+                                            if sign_item_id.type_id.id == int(item_type['id']):
+                                                id_sign_item = sign_item_id
+                                            if id_sign_item:
+                                                if item_type['option_field']  == 'option':
+                                                    if item_type['name']  == 'initials7' and not contract_plumbing_option_1:
+                                                        continue
+                                                    elif item_type['name']  == 'initials8' and not contract_plumbing_option_2:
+                                                        continue
+
+                                                item_value = SignItemValue.create(
+                                                    {'sign_item_id': id_sign_item.id, 'sign_request_id': sign_request.id,
+                                                        'value': auto_field, 'sign_request_item_id': request_item.id})
+                            sr_values = self.env['otl_document_sign.request.item.value'].sudo().search(
+                                [('sign_request_id', '=', sign_request.id)])
+                            item_values = {}
+                            for value in sr_values:
+                                item_values[value.sign_item_id.id] = value.value
+                            request_item.sign(request_item.signature)
+                            current_date = fields.Date.context_today(self).strftime(DEFAULT_SERVER_DATE_FORMAT)
+                            request_item.write({'signing_date': current_date, 'state': 'completed'})
+                            # request_item.action_completed()
+                            # sign_request.action_signed()
+                            sign_request.write({'state': 'signed'})
+                            # appointment.write({'start_sync_to_i360': True})
+                    result = {
+                        'message': 'Document created successfully',
+                        'result': 'Success',
+                    }
+                    _logger.info("------Document created successfully-------------")
             else:
                 _logger.info("------Empty Appointment id-------------")
                 result = {

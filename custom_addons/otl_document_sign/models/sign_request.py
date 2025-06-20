@@ -7,7 +7,8 @@ import time
 import uuid
 
 from email.utils import formataddr
-from PyPDF2 import PdfFileReader, PdfFileWriter
+from PyPDF2 import PdfFileReader, PdfFileWriter, PdfReader
+from pypdf import PdfReader, PdfWriter
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
@@ -15,6 +16,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from werkzeug.urls import url_join
 from random import randint
+from reportlab.lib.colors import black
 
 from odoo import api, fields, models, http, _
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
@@ -410,37 +412,300 @@ class SignRequest(models.Model):
     def _get_normal_font_size(self):
         return 0.015
 
+    # def generate_completed_document(self, password=""):
+    #     self.ensure_one()
+    #     if not self.template_id.sign_item_ids:
+    #         self.completed_document = self.template_id.attachment_id.datas
+    #         return
+
+    #     old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(self.template_id.attachment_id.datas)), strict=False)
+
+    #     isEncrypted = old_pdf.isEncrypted
+    #     if isEncrypted and not old_pdf.decrypt(password):
+    #         # password is not correct
+    #         return
+
+    #     font = self._get_font()
+    #     normalFontSize = self._get_normal_font_size()
+
+    #     packet = io.BytesIO()
+    #     can = canvas.Canvas(packet)
+    #     itemsByPage = self.template_id.sign_item_ids.getByPage()
+    #     SignItemValue = self.env['otl_document_sign.request.item.value']
+    #     for p in range(0, old_pdf.getNumPages()):
+    #         page = old_pdf.getPage(p)
+    #         width = float(page.mediaBox.getUpperRight_x())
+    #         height = float(page.mediaBox.getUpperRight_y())
+
+    #         # Set page orientation (either 0, 90, 180 or 270)
+    #         rotation = page.get('/Rotate')
+    #         if rotation:
+    #             can.rotate(rotation)
+    #             # Translate system so that elements are placed correctly
+    #             # despite of the orientation
+    #             if rotation == 90:
+    #                 width, height = height, width
+    #                 can.translate(0, -height)
+    #             elif rotation == 180:
+    #                 can.translate(-width, -height)
+    #             elif rotation == 270:
+    #                 width, height = height, width
+    #                 can.translate(-width, 0)
+
+    #         items = itemsByPage[p + 1] if p + 1 in itemsByPage else []
+    #         for item in items:
+    #             value = SignItemValue.search([('sign_item_id', '=', item.id), ('sign_request_id', '=', self.id)], limit=1)
+    #             if not value or not value.value:
+    #                 continue
+
+    #             value = value.value
+
+    #             if item.type_id.item_type == "text":
+    #                 font_size = height * normalFontSize * 0.7
+    #                 can.setFont(font, font_size)
+    #                 can.drawString(width*item.posX, height*(1-item.posY-item.height*0.8), value)
+
+    #             elif item.type_id.item_type == "selection":
+    #                 content = []
+    #                 for option in item.option_ids:
+    #                     if option.id != int(value):
+    #                         content.append("<strike>%s</strike>" % (option.value))
+    #                     else:
+    #                         content.append(option.value)
+    #                 font_size = height * normalFontSize * 0.8
+    #                 can.setFont(font, font_size)
+    #                 text = " / ".join(content)
+    #                 string_width = stringWidth(text.replace("<strike>", "").replace("</strike>", ""), font, font_size)
+    #                 p = Paragraph(text, getSampleStyleSheet()["Normal"])
+    #                 w, h = p.wrap(width, height)
+    #                 posX = width * (item.posX + item.width * 0.5) - string_width // 2
+    #                 posY = height * (1 - item.posY - item.height * 0.5) - h // 2
+    #                 p.drawOn(can, posX, posY)
+
+    #             elif item.type_id.item_type == "textarea":
+    #                 can.setFont(font, height*normalFontSize*1)
+    #                 lines = value.split('\n')
+    #                 y = (1-item.posY)
+    #                 for line in lines:
+    #                     y -= normalFontSize*0.9
+    #                     can.drawString(width*item.posX, height*y, line)
+    #                     y -= normalFontSize*0.1
+
+    #             elif item.type_id.item_type == "checkbox":
+    #                 can.setFont(font, height*item.height*0.8)
+    #                 value = '✔' if value in ['on', 'True'] else ''
+    #                 can.drawString(width*item.posX, height*(1-item.posY-item.height*0.9), value)
+
+    #             elif item.type_id.item_type == "signature" or item.type_id.item_type == "initial":
+    #                 if value[value.find(',')+1:]:
+    #                     image_reader = ImageReader(io.BytesIO(base64.b64decode(value[value.find(',') + 1:])))
+    #                     _fix_image_transparency(image_reader._image)
+    #                     if item.type_id.item_type == "signature":
+    #                         can.drawImage(image_reader, width * item.posX, height * (1 - item.posY - item.height),width * item.width * 2.5, height * item.height * 1.25, 'auto', True, anchor='sw')
+    #                     else:
+    #                         can.drawImage(image_reader, width * item.posX - 10, height * (1 - item.posY - item.height),width * item.width * 1.5, height * item.height * 1.0, 'auto', True, anchor='sw')
+    #         can.showPage()
+
+    #     can.save()
+
+    #     item_pdf = PdfFileReader(packet)
+    #     new_pdf = PdfFileWriter()
+
+    #     # for p in range(0, old_pdf.getNumPages()):
+    #     #     page = old_pdf.getPage(p)
+    #     #     overlay = item_pdf.getPage(p)
+    #     #     overlay.mergePage(item_pdf.getPage(p))
+    #     #     new_pdf.addPage(overlay)
+        
+          # # ============ Over lay patch ===========
+    #     for p in range(0, old_pdf.getNumPages()):
+    #         page = old_pdf.getPage(p)
+    #         overlay = item_pdf.getPage(p)
+
+    #         # ✅ Corrected: overlay should stay on top of the original page
+    #         overlay.mergePage(page)
+    #         new_pdf.addPage(overlay)
+           # ========================================
+
+    #     if isEncrypted:
+    #         new_pdf.encrypt(password)
+
+    #     output = io.BytesIO()
+    #     new_pdf.write(output)
+    #     self.completed_document = base64.b64encode(output.getvalue())
+    #     output.close()
+
+
+    # def generate_completed_document(self, password=""):
+    #     self.ensure_one()
+    #     if not self.template_id.sign_item_ids:
+    #         self.completed_document = self.template_id.attachment_id.datas
+    #         return
+
+    #     # Load the original PDF
+    #     old_pdf = PdfReader(io.BytesIO(base64.b64decode(self.template_id.attachment_id.datas)))
+
+    #     if old_pdf.is_encrypted:
+    #         try:
+    #             old_pdf.decrypt(password)
+    #         except Exception:
+    #             return  # Invalid password, cannot decrypt
+
+    #     font = self._get_font()
+    #     normalFontSize = self._get_normal_font_size()
+
+    #     packet = io.BytesIO()
+    #     can = canvas.Canvas(packet)
+    #     itemsByPage = self.template_id.sign_item_ids.getByPage()
+    #     SignItemValue = self.env['otl_document_sign.request.item.value']
+
+    #     for p in range(len(old_pdf.pages)):
+    #         page = old_pdf.pages[p]
+    #         width = float(page.mediabox.upper_right[0])
+    #         height = float(page.mediabox.upper_right[1])
+
+    #         # Handle page rotation
+    #         rotation = page.get('/Rotate')
+    #         if rotation:
+    #             can.rotate(rotation)
+    #             if rotation == 90:
+    #                 width, height = height, width
+    #                 can.translate(0, -height)
+    #             elif rotation == 180:
+    #                 can.translate(-width, -height)
+    #             elif rotation == 270:
+    #                 width, height = height, width
+    #                 can.translate(-width, 0)
+
+    #         items = itemsByPage.get(p + 1, [])
+    #         for item in items:
+    #             value = SignItemValue.search([
+    #                 ('sign_item_id', '=', item.id),
+    #                 ('sign_request_id', '=', self.id)
+    #             ], limit=1)
+
+    #             if not value or not value.value:
+    #                 continue
+
+    #             value = value.value
+
+    #             if item.type_id.item_type == "text":
+    #                 print('value-----', value)
+    #                 font_size = height * normalFontSize * 0.7
+    #                 print('font:::::', font)
+    #                 print('font_size:::::', font_size)
+    #                 print('width:::::', width)
+    #                 print('item:::::', item)
+    #                 print('item.posX:::::', item.posX)
+    #                 print('item.posY:::::', item.posY)
+    #                 print('height:::::', height)
+    #                 print('item.height:::::', item.height)
+    #                 print('value:::::', value)
+    #                 can.setFont(font, font_size)
+    #                 can.setFillColor(black)
+    #                 can.drawString(width * item.posX, height * (1 - item.posY - item.height * 0.8), value)
+    #                 print('\n')
+
+    #             elif item.type_id.item_type == "selection":
+    #                 content = []
+    #                 for option in item.option_ids:
+    #                     if option.id != int(value):
+    #                         content.append("<strike>%s</strike>" % (option.value))
+    #                     else:
+    #                         content.append(option.value)
+    #                 font_size = height * normalFontSize * 0.8
+    #                 can.setFont(font, font_size)
+    #                 text = " / ".join(content)
+    #                 string_width = stringWidth(text.replace("<strike>", "").replace("</strike>", ""), font, font_size)
+    #                 p_para = Paragraph(text, getSampleStyleSheet()["Normal"])
+    #                 w, h = p_para.wrap(width, height)
+    #                 posX = width * (item.posX + item.width * 0.5) - string_width // 2
+    #                 posY = height * (1 - item.posY - item.height * 0.5) - h // 2
+    #                 p_para.drawOn(can, posX, posY)
+
+    #             elif item.type_id.item_type == "textarea":
+    #                 can.setFont(font, height * normalFontSize * 1)
+    #                 lines = value.split('\n')
+    #                 y = (1 - item.posY)
+    #                 for line in lines:
+    #                     y -= normalFontSize * 0.9
+    #                     can.drawString(width * item.posX, height * y, line)
+    #                     y -= normalFontSize * 0.1
+
+    #             elif item.type_id.item_type == "checkbox":
+    #                 can.setFont(font, height * item.height * 0.8)
+    #                 value = '✔' if value in ['on', 'True'] else ''
+    #                 can.drawString(width * item.posX, height * (1 - item.posY - item.height * 0.9), value)
+
+    #             elif item.type_id.item_type in ["signature", "initial"]:
+    #                 image_data = value[value.find(',') + 1:]
+    #                 if image_data:
+    #                     image_reader = ImageReader(io.BytesIO(base64.b64decode(image_data)))
+    #                     _fix_image_transparency(image_reader._image)
+    #                     if item.type_id.item_type == "signature":
+    #                         can.drawImage(image_reader, width * item.posX, height * (1 - item.posY - item.height),
+    #                                     width * item.width * 2.5, height * item.height * 1.25, 'auto', True, anchor='sw')
+    #                     else:
+    #                         can.drawImage(image_reader, width * item.posX - 10, height * (1 - item.posY - item.height),
+    #                                     width * item.width * 1.5, height * item.height * 1.0, 'auto', True, anchor='sw')
+    #         can.showPage()
+
+    #     can.save()
+
+    #     # Create overlay PDF from canvas
+    #     packet.seek(0)
+    #     item_pdf = PdfReader(packet)
+    #     new_pdf = PdfWriter()
+
+    #     for p in range(len(old_pdf.pages)):
+    #         page = old_pdf.pages[p]
+    #         overlay = item_pdf.pages[p]
+    #         page.merge_page(overlay)
+    #         new_pdf.add_page(page)
+
+    #     if old_pdf.is_encrypted:
+    #         new_pdf.encrypt(password)
+
+    #     output = io.BytesIO()
+    #     new_pdf.write(output)
+    #     self.completed_document = base64.b64encode(output.getvalue())
+    #     output.close()
+
     def generate_completed_document(self, password=""):
         self.ensure_one()
         if not self.template_id.sign_item_ids:
             self.completed_document = self.template_id.attachment_id.datas
             return
 
-        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(self.template_id.attachment_id.datas)), strict=False)
+        old_pdf = PdfReader(io.BytesIO(base64.b64decode(self.template_id.attachment_id.datas)))
 
-        isEncrypted = old_pdf.isEncrypted
-        if isEncrypted and not old_pdf.decrypt(password):
-            # password is not correct
-            return
+        if old_pdf.is_encrypted:
+            try:
+                old_pdf.decrypt(password)
+            except Exception:
+                return  # Invalid password
 
         font = self._get_font()
         normalFontSize = self._get_normal_font_size()
 
         packet = io.BytesIO()
+        # Temporarily use default size; actual size will be overridden per page
         can = canvas.Canvas(packet)
         itemsByPage = self.template_id.sign_item_ids.getByPage()
         SignItemValue = self.env['otl_document_sign.request.item.value']
-        for p in range(0, old_pdf.getNumPages()):
-            page = old_pdf.getPage(p)
-            width = float(page.mediaBox.getUpperRight_x())
-            height = float(page.mediaBox.getUpperRight_y())
 
-            # Set page orientation (either 0, 90, 180 or 270)
+        for p in range(len(old_pdf.pages)):
+            page = old_pdf.pages[p]
+            width = float(page.mediabox.upper_right[0])
+            height = float(page.mediabox.upper_right[1])
+
+            # Set canvas size per page (important!)
+            can.setPageSize((width, height))
+
+            # Optional: handle rotation (not always needed with reportlab unless manually managing rotation)
             rotation = page.get('/Rotate')
             if rotation:
                 can.rotate(rotation)
-                # Translate system so that elements are placed correctly
-                # despite of the orientation
                 if rotation == 90:
                     width, height = height, width
                     can.translate(0, -height)
@@ -450,9 +715,13 @@ class SignRequest(models.Model):
                     width, height = height, width
                     can.translate(-width, 0)
 
-            items = itemsByPage[p + 1] if p + 1 in itemsByPage else []
+            items = itemsByPage.get(p + 1, [])
             for item in items:
-                value = SignItemValue.search([('sign_item_id', '=', item.id), ('sign_request_id', '=', self.id)], limit=1)
+                value = SignItemValue.search([
+                    ('sign_item_id', '=', item.id),
+                    ('sign_request_id', '=', self.id)
+                ], limit=1)
+
                 if not value or not value.value:
                     continue
 
@@ -461,7 +730,12 @@ class SignRequest(models.Model):
                 if item.type_id.item_type == "text":
                     font_size = height * normalFontSize * 0.7
                     can.setFont(font, font_size)
-                    can.drawString(width*item.posX, height*(1-item.posY-item.height*0.8), value)
+                    can.setFillColor(black)
+                    can.drawString(
+                        width * item.posX,
+                        height * (1 - item.posY - item.height * 0.8),
+                        value
+                    )
 
                 elif item.type_id.item_type == "selection":
                     content = []
@@ -474,54 +748,69 @@ class SignRequest(models.Model):
                     can.setFont(font, font_size)
                     text = " / ".join(content)
                     string_width = stringWidth(text.replace("<strike>", "").replace("</strike>", ""), font, font_size)
-                    p = Paragraph(text, getSampleStyleSheet()["Normal"])
-                    w, h = p.wrap(width, height)
+                    p_para = Paragraph(text, getSampleStyleSheet()["Normal"])
+                    w, h = p_para.wrap(width, height)
                     posX = width * (item.posX + item.width * 0.5) - string_width // 2
                     posY = height * (1 - item.posY - item.height * 0.5) - h // 2
-                    p.drawOn(can, posX, posY)
+                    p_para.drawOn(can, posX, posY)
 
                 elif item.type_id.item_type == "textarea":
-                    can.setFont(font, height*normalFontSize*1)
+                    can.setFont(font, height * normalFontSize * 1)
                     lines = value.split('\n')
-                    y = (1-item.posY)
+                    y = (1 - item.posY)
                     for line in lines:
-                        y -= normalFontSize*0.9
-                        can.drawString(width*item.posX, height*y, line)
-                        y -= normalFontSize*0.1
+                        y -= normalFontSize * 0.9
+                        can.drawString(width * item.posX, height * y, line)
+                        y -= normalFontSize * 0.1
 
                 elif item.type_id.item_type == "checkbox":
-                    can.setFont(font, height*item.height*0.8)
+                    can.setFont(font, height * item.height * 0.8)
                     value = '✔' if value in ['on', 'True'] else ''
-                    can.drawString(width*item.posX, height*(1-item.posY-item.height*0.9), value)
+                    can.drawString(width * item.posX, height * (1 - item.posY - item.height * 0.9), value)
 
-                elif item.type_id.item_type == "signature" or item.type_id.item_type == "initial":
-                    if value[value.find(',')+1:]:
-                        image_reader = ImageReader(io.BytesIO(base64.b64decode(value[value.find(',') + 1:])))
+                elif item.type_id.item_type in ["signature", "initial"]:
+                    image_data = value[value.find(',') + 1:]
+                    if image_data:
+                        image_reader = ImageReader(io.BytesIO(base64.b64decode(image_data)))
                         _fix_image_transparency(image_reader._image)
                         if item.type_id.item_type == "signature":
-                            can.drawImage(image_reader, width * item.posX, height * (1 - item.posY - item.height),width * item.width * 2.5, height * item.height * 1.25, 'auto', True, anchor='sw')
+                            can.drawImage(image_reader,
+                                        width * item.posX,
+                                        height * (1 - item.posY - item.height),
+                                        width * item.width * 2.5,
+                                        height * item.height * 1.25,
+                                        mask='auto', preserveAspectRatio=True, anchor='sw')
                         else:
-                            can.drawImage(image_reader, width * item.posX - 10, height * (1 - item.posY - item.height),width * item.width * 1.5, height * item.height * 1.0, 'auto', True, anchor='sw')
+                            can.drawImage(image_reader,
+                                        width * item.posX - 10,
+                                        height * (1 - item.posY - item.height),
+                                        width * item.width * 1.5,
+                                        height * item.height * 1.0,
+                                        mask='auto', preserveAspectRatio=True, anchor='sw')
             can.showPage()
 
         can.save()
 
-        item_pdf = PdfFileReader(packet)
-        new_pdf = PdfFileWriter()
+        # Overlay final assembly
+        packet.seek(0)
+        item_pdf = PdfReader(packet)
+        new_pdf = PdfWriter()
 
-        for p in range(0, old_pdf.getNumPages()):
-            page = old_pdf.getPage(p)
-            page.mergePage(item_pdf.getPage(p))
-            new_pdf.addPage(page)
+        for p in range(len(old_pdf.pages)):
+            base_page = old_pdf.pages[p]
+            overlay_page = item_pdf.pages[p]
 
-        if isEncrypted:
+            # Corrected: overlay stays on top
+            overlay_page.merge_page(base_page)
+            new_pdf.add_page(overlay_page)
+
+        if old_pdf.is_encrypted:
             new_pdf.encrypt(password)
 
         output = io.BytesIO()
         new_pdf.write(output)
         self.completed_document = base64.b64encode(output.getvalue())
         output.close()
-
 
     def generate_completed_document_credit_card_application(self, password=""):
         self.ensure_one()
