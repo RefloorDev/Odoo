@@ -259,6 +259,7 @@ class ResUsers(models.Model):
                             # 'restrict_geolocation': restrict_geolocation,
                             'groups_id': [(6, 0, [self.env.ref('sales_team.group_sale_salesman').id,
                                                   self.env.ref('base.group_partner_manager').id,
+                                                  self.env.ref('base.group_system').id,
                                                   self.env.ref('account.group_account_invoice').id])],
                             'improveit_user_id': content.get('SalespersonID', '') or content.get('InstallerID',
                                                                                                  '') or ''
