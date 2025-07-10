@@ -1,3 +1,6 @@
+@import "mixins/banner";
+@include bsBanner("");
+
 
 // This file is importing bootstrap. While a simple "import "bootstrap";"
 // should be enough, this does not allow overridding mixins/functions.
@@ -6,33 +9,43 @@
 // content of the "bootstrap.scss" files but do not import functions, variables
 // and mixins which will be handled "by hand" in _assets_helpers.
 
+// scss-docs-start import-stack
+// Configuration
 // @import "functions";
 // @import "variables";
 // @import "mixins";
+@import "utilities";
+
+// Layout & components
 @import "root";
 @import "reboot";
 @import "type";
 @import "images";
-@import "code";
+@import "containers";
 @import "grid";
 @import "tables";
 @import "forms";
+
+// Small hack in bootstrap (see bootstrap_review.scss): prevent it to generate
+// primary, secondary, and other color/outline classes by itself to be able to
+// do it ourself properly.
+$-tmp: $theme-colors;
+$theme-colors: ();
 @import "buttons";
+$theme-colors: $-tmp;
+
 @import "transitions";
 @import "dropdown";
 @import "button-group";
-@import "input-group";
-@import "custom-forms";
 @import "nav";
 @import "navbar";
 @import "card";
+@import "accordion";
 @import "breadcrumb";
 @import "pagination";
 @import "badge";
-@import "jumbotron";
 @import "alert";
 @import "progress";
-@import "media";
 @import "list-group";
 @import "close";
 @import "toasts";
@@ -41,5 +54,14 @@
 @import "popover";
 @import "carousel";
 @import "spinners";
-@import "utilities";
-@import "print";
+@import "offcanvas";
+@import "placeholders";
+
+// Helpers
+@import "helpers";
+
+// Utilities
+// Moved into bundle after bs_utilities_custom.scss file to allow to extend
+// the utilities
+// @import "utilities/api";
+// scss-docs-end import-stack

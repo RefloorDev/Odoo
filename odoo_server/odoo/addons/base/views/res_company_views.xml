@@ -5,17 +5,25 @@
             <field name="name">res.company.form</field>
             <field name="model">res.company</field>
             <field name="arch" type="xml">
-                <form string="Company">
+                <form string="Company" duplicate="0">
                   <sheet>
-                    <field name="logo" widget="image"  class="oe_avatar"/>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button"
+                                name="action_all_company_branches"
+                                type="object"
+                                invisible="not all_child_ids"
+                                icon="fa-sitemap"
+                                string="Branches"/>
+                    </div>
+                    <field name="logo" widget="image" class="oe_avatar"/>
                     <div class="oe_title">
-                        <label for="name" class="oe_edit_only"/>
+                        <label for="name"/>
                         <h1>
-                            <field name="name"/>
+                            <field name="name" placeholder="e.g. My Company"/>
                         </h1>
                     </div>
                     <notebook colspan="4">
-                        <page string="General Information">
+                        <page string="General Information" name="general_info">
                             <group>
                                 <group>
                                     <field name="partner_id" string="Contact" readonly="1" required="0" groups="base.group_no_one"/>
@@ -26,22 +34,25 @@
                                         <field name="city" placeholder="City" class="o_address_city"/>
                                         <field name="state_id" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
                                         <field name="zip" placeholder="ZIP" class="o_address_zip"/>
-                                        <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True}'/>
+                                        <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/>
                                     </div>
-                                    <field name="phone"/>
-                                    <field name="email"/>
-                                    <field name="website" string="Website" widget="url" placeholder="e.g. https://www.odoo.com"/>
-                                </group>
-                                <group>
                                     <field name="vat"/>
                                     <field name="company_registry"/>
                                     <field name="currency_id" options="{'no_create': True, 'no_open': True}" id="company_currency" context="{'active_test': False}"/>
-                                    <field name="parent_id"  groups="base.group_multi_company"/>
-                                    <field name="sequence" invisible="1"/>
-                                    <field name="favicon" widget="image" class="float-left oe_avatar" groups="base.group_no_one"/>
+                                </group>
+                                <group>
+                                    <field name="phone" class="o_force_ltr"/>
+                                    <field name="mobile" class="o_force_ltr"/>
+                                    <field name="email"/>
+                                    <field name="website" string="Website" widget="url" placeholder="e.g. https://www.odoo.com"/>
+                                    <field name="parent_id" groups="base.group_no_one"/>
+                                    <field name="color" widget="color_picker"/>
                                 </group>
                                 <group name="social_media"/>
                             </group>
+                        </page>
+                        <page string="Branches" name="branches">
+                            <field name="child_ids" nolabel="1" context="{'default_parent_id': id}"/>
                         </page>
                     </notebook>
                     </sheet>
@@ -49,14 +60,15 @@
             </field>
         </record>
         <record id="view_company_tree" model="ir.ui.view">
-            <field name="name">res.company.tree</field>
+            <field name="name">res.company.list</field>
             <field name="model">res.company</field>
             <field name="arch" type="xml">
-                <tree string="Companies">
+                <list string="Companies" decoration-muted="not active">
                     <field name="sequence" widget="handle"/>
                     <field name="name"/>
-                    <field name="partner_id"/>
-                </tree>
+                    <field name="partner_id" required="0"/>
+                    <field name="child_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                </list>
             </field>
         </record>
         <record id="view_res_company_kanban" model="ir.ui.view">
@@ -64,39 +76,34 @@
             <field name="model">res.company</field>
             <field name="arch" type="xml">
                 <kanban>
-                    <field name="name"/>
-                    <field name="email"/>
-                    <field name="phone"/>
                     <templates>
-                        <t t-name="kanban-box">
-                            <div t-attf-class="oe_kanban_global_click">
-                                <div t-attf-class="#{!selection_mode ? 'text-center' : ''}">
-                                    <i class="fa fa-building" role="img" aria-label="Enterprise" title="Enterprise"></i> <strong><field name="name"/></strong>
+                        <t t-name="card">
+                            <div t-attf-class="#{!selection_mode ? 'text-center' : ''}">
+                                <i class="fa fa-building" role="img" aria-label="Enterprise" title="Enterprise"></i> <field class="fw-bold fs-5" name="name"/>
+                            </div>
+                            <hr class="mt4 mb4"/>
+                            <div class="row" t-if="!selection_mode">
+                                <div t-if="record.email.value" class="col-6 text-center">
+                                    <strong>Email:</strong>
                                 </div>
-                                <hr class="mt4 mb4"/>
-                                <div class="row" t-if="!selection_mode">
-                                    <div t-if="record.email.value" class="col-6 text-center">
-                                        <strong>Email:</strong>
-                                    </div>
-                                    <div t-if="record.phone.value" class="col-6 text-center">
-                                        <strong>Phone</strong>
-                                    </div>
-                                    <div t-if="record.email.value" class="col-6 text-center">
-                                        <field name="email"/>
-                                    </div>
-                                    <div t-if="record.phone.value" class="col-6 text-center">
-                                        <field name="phone"/>
-                                    </div>
+                                <div t-if="record.phone.value" class="col-6 text-center">
+                                    <strong>Phone</strong>
                                 </div>
-                                <div t-else="">
-                                    <div t-if="record.email.value">
-                                        <strong>Email:</strong>
-                                        <field name="email"/>
-                                    </div>
-                                    <div t-if="record.phone.value">
-                                        <strong>Phone:</strong>
-                                        <field name="phone"/>
-                                    </div>
+                                <div t-if="record.email.value" class="col-6 text-center">
+                                    <field name="email"/>
+                                </div>
+                                <div t-if="record.phone.value" class="col-6 text-center o_force_ltr">
+                                    <field name="phone"/>
+                                </div>
+                            </div>
+                            <div t-else="">
+                                <div t-if="record.email.value">
+                                    <strong>Email:</strong>
+                                    <field name="email"/>
+                                </div>
+                                <div t-if="record.phone.value" class="o_force_ltr">
+                                    <strong>Phone:</strong>
+                                    <field name="phone"/>
                                 </div>
                             </div>
                         </t>
@@ -104,18 +111,12 @@
                 </kanban>
             </field>
         </record>
-        <record id="company_normal_action_tree" model="ir.actions.act_window">
-            <field name="name">Companies</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="res_model">res.company</field>
-            <field name="view_mode">tree,form</field>
-            <field name="domain">[('id','=',active_id)]</field>
-        </record>
         <record id="action_res_company_form" model="ir.actions.act_window">
             <field name="name">Companies</field>
-            <field name="type">ir.actions.act_window</field>
             <field name="res_model">res.company</field>
-            <field name="view_mode">tree,kanban,form</field>
+            <field name="path">companies</field>
+            <field name="view_mode">list,kanban,form</field>
+            <field name="domain">[('parent_id', '=', False)]</field>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
                 Create a new company

@@ -12,8 +12,6 @@ class AccountJournal(models.Model):
         " If not set means that will be used to register accounting entries not related to invoicing legal documents."
         " For Example: Receipts, Tax Payments, Register journal entries")
     l10n_latam_company_use_documents = fields.Boolean(compute='_compute_l10n_latam_company_use_documents')
-    l10n_latam_country_code = fields.Char(
-        related='company_id.country_id.code', help='Technical field used to hide/show fields regarding the localization')
 
     @api.depends('company_id')
     def _compute_l10n_latam_company_use_documents(self):
@@ -25,16 +23,29 @@ class AccountJournal(models.Model):
         self.l10n_latam_use_documents = self.type in ['sale', 'purchase'] and \
             self.l10n_latam_company_use_documents
 
+    def _compute_has_sequence_holes(self):
+        use_documents_journals = self.filtered(lambda j: j.l10n_latam_use_documents)
+        use_documents_journals.has_sequence_holes = False
+        if other_journals := self - use_documents_journals:
+            super(AccountJournal, other_journals)._compute_has_sequence_holes()
+
     @api.constrains('l10n_latam_use_documents')
     def check_use_document(self):
         for rec in self:
-            if rec.env['account.move'].search([('journal_id', '=', rec.id), ('state', '!=', 'draft')], limit=1):
+            if rec.env['account.move'].search_count([('journal_id', '=', rec.id), ('posted_before', '=', True)], limit=1):
                 raise ValidationError(_(
                     'You can not modify the field "Use Documents?" if there are validated invoices in this journal!'))
 
-    @api.onchange('type', 'l10n_latam_use_documents')
-    def _onchange_type(self):
-        res = super()._onchange_type()
-        if self.l10n_latam_use_documents:
-            self.refund_sequence = False
-        return res
+    @api.depends('type', 'l10n_latam_use_documents')
+    def _compute_debit_sequence(self):
+        super()._compute_debit_sequence()
+        for journal in self:
+            if journal.l10n_latam_use_documents:
+                journal.debit_sequence = False
+
+    @api.depends('type', 'l10n_latam_use_documents')
+    def _compute_refund_sequence(self):
+        super()._compute_refund_sequence()
+        for journal in self:
+            if journal.l10n_latam_use_documents:
+                journal.refund_sequence = False

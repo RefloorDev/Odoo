@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0+e\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-02-25 08:44+0000\n"
-"PO-Revision-Date: 2020-02-25 08:44+0000\n"
+"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"PO-Revision-Date: 2024-09-25 08:39+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -16,8 +16,25 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: pos_six
+#. odoo-javascript
+#: code:addons/pos_six/static/src/app/payment_six.js:0
+msgid "Balance Failed"
+msgstr ""
+
+#. module: pos_six
+#: model:ir.model,name:pos_six.model_pos_config
+msgid "Point of Sale Configuration"
+msgstr ""
+
+#. module: pos_six
 #: model:ir.model,name:pos_six.model_pos_payment_method
 msgid "Point of Sale Payment Methods"
+msgstr ""
+
+#. module: pos_six
+#. odoo-javascript
+#: code:addons/pos_six/static/src/app/balance_button/balance_button.xml:0
+msgid "Send Balance"
 msgstr ""
 
 #. module: pos_six
@@ -26,15 +43,13 @@ msgid "Six Terminal IP"
 msgstr ""
 
 #. module: pos_six
-#. openerp-web
-#: code:addons/pos_six/static/src/js/payment_six.js:0
-#, python-format
-msgid "Terminal Error"
+#. odoo-javascript
+#: code:addons/pos_six/static/src/app/payment_six.js:0
+msgid "The balance operation failed."
 msgstr ""
 
 #. module: pos_six
-#. openerp-web
-#: code:addons/pos_six/static/src/js/payment_six.js:0
-#, python-format
+#. odoo-javascript
+#: code:addons/pos_six/static/src/app/payment_six.js:0
 msgid "Transaction was not processed correctly"
 msgstr ""

@@ -3,24 +3,42 @@
 # 	* link_tracker
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Luis M. Ontalba <luis.martinez@tecnativa.com>, 2019
-# Antonio Trueba, 2019
-# Jon Perez <jop@odoo.com>, 2019
+# Wil Odoo, 2024
+# Larissa Manderfeld, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-12-05 12:33+0000\n"
-"PO-Revision-Date: 2019-08-26 09:11+0000\n"
-"Last-Translator: Jon Perez <jop@odoo.com>, 2019\n"
-"Language-Team: Spanish (https://www.transifex.com/odoo/teams/41243/es/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Larissa Manderfeld, 2024\n"
+"Language-Team: Spanish (https://app.transifex.com/odoo/teams/41243/es/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: es\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
+
+#. module: link_tracker
+#: model_terms:ir.ui.view,arch_db:link_tracker.utm_campaign_view_kanban
+msgid "<i class=\"fa fa-fw fa-mouse-pointer\" aria-label=\"Clicks\" role=\"img\"/>"
+msgstr "<i class=\"fa fa-fw fa-mouse-pointer\" aria-label=\"Clicks\" role=\"img\"/>"
+
+#. module: link_tracker
+#: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_view_form
+msgid "<span class=\"o_stat_text\">Visit Page</span>"
+msgstr "<span class=\"o_stat_text\">Visitar página</span>"
+
+#. module: link_tracker
+#: model:ir.model.fields,field_description:link_tracker.field_link_tracker__absolute_url
+msgid "Absolute URL"
+msgstr "URL absoluta"
+
+#. module: link_tracker
+#: model:ir.model.fields,field_description:link_tracker.field_link_tracker__label
+msgid "Button label"
+msgstr "Etiqueta del botón"
 
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker__campaign_id
@@ -31,7 +49,7 @@ msgstr "Campaña"
 #. module: link_tracker
 #: model:ir.actions.act_window,name:link_tracker.link_tracker_click_action_statistics
 msgid "Click Statistics"
-msgstr ""
+msgstr "Estadísticas de clics"
 
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker__link_click_ids
@@ -40,7 +58,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:link_tracker.utm_campaign_view_form
 #: model_terms:ir.ui.view,arch_db:link_tracker.utm_campaign_view_kanban
 msgid "Clicks"
-msgstr "Clicks"
+msgstr "Clics"
 
 #. module: link_tracker
 #: model:ir.model.constraint,message:link_tracker.constraint_link_tracker_code_code
@@ -51,6 +69,18 @@ msgstr "El código debe ser único."
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker__link_code_ids
 msgid "Codes"
 msgstr "Códigos"
+
+#. module: link_tracker
+#. odoo-python
+#: code:addons/link_tracker/models/link_tracker.py:0
+msgid ""
+"Combinations of Link Tracker values (URL, campaign, medium, source, and label) must be unique.\n"
+"The following combinations are already used: \n"
+"- %(error_lines)s"
+msgstr ""
+"Las combinaciones de valores del rastreador de enlaces (URL, campaña, medio, origen y etiqueta) deben ser únicas.\n"
+"Las siguientes combinaciones ya están en uso: \n"
+"- %(error_lines)s"
 
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker_click__country_id
@@ -79,21 +109,17 @@ msgid "Created on"
 msgstr "Creado el"
 
 #. module: link_tracker
+#. odoo-python
+#: code:addons/link_tracker/models/link_tracker.py:0
+msgid "Creating a Link Tracker without URL is not possible"
+msgstr "No puede crear un rastreador de enlaces sin una URL"
+
+#. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker__display_name
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker_click__display_name
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker_code__display_name
 msgid "Display Name"
 msgstr "Nombre mostrado"
-
-#. module: link_tracker
-#: model:ir.model.fields,field_description:link_tracker.field_link_tracker__favicon
-msgid "Favicon"
-msgstr "Favicon"
-
-#. module: link_tracker
-#: model:ir.model.fields,field_description:link_tracker.field_link_tracker__icon_src
-msgid "Favicon Source"
-msgstr "Origen del favicon"
 
 #. module: link_tracker
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_click_view_search
@@ -116,14 +142,7 @@ msgstr "ID"
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker_click__ip
 msgid "Internet Protocol"
-msgstr "Protocolo internet"
-
-#. module: link_tracker
-#: model:ir.model.fields,field_description:link_tracker.field_link_tracker____last_update
-#: model:ir.model.fields,field_description:link_tracker.field_link_tracker_click____last_update
-#: model:ir.model.fields,field_description:link_tracker.field_link_tracker_code____last_update
-msgid "Last Modified on"
-msgstr "Última modificación en"
+msgstr "Protocolo de internet"
 
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker__write_uid
@@ -144,62 +163,72 @@ msgstr "Última actualización el"
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker_code__link_id
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_click_view_search
 msgid "Link"
-msgstr "Vínculo"
+msgstr "Enlace"
 
 #. module: link_tracker
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_click_view_form
 msgid "Link Click"
-msgstr ""
+msgstr "Clic en el enlace"
 
 #. module: link_tracker
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_click_view_graph
 msgid "Link Clicks"
-msgstr ""
+msgstr "Clics en el enlace"
 
 #. module: link_tracker
 #: model:ir.actions.act_window,name:link_tracker.link_tracker_action
 #: model:ir.model,name:link_tracker.model_link_tracker
 #: model:ir.ui.menu,name:link_tracker.link_tracker_menu_main
 msgid "Link Tracker"
-msgstr "Rastr. enlaces"
+msgstr "Rastreador de enlaces"
 
 #. module: link_tracker
 #: model:ir.model,name:link_tracker.model_link_tracker_click
 msgid "Link Tracker Click"
-msgstr ""
+msgstr "Clic en el rastreador de enlace"
 
 #. module: link_tracker
 #: model:ir.model,name:link_tracker.model_link_tracker_code
 msgid "Link Tracker Code"
-msgstr ""
+msgstr "Código del rastreador de enlace "
 
 #. module: link_tracker
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_view_graph
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_view_search
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_view_tree
 msgid "Links"
-msgstr "Vínculos"
+msgstr "Enlaces"
 
 #. module: link_tracker
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_click_view_tree
 msgid "Links Clicks"
-msgstr ""
+msgstr "Clics en los enlaces"
+
+#. module: link_tracker
+#: model:ir.model,name:link_tracker.model_mail_render_mixin
+msgid "Mail Render Mixin"
+msgstr "Mixin de renderización de correo"
 
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker__medium_id
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_view_search
 msgid "Medium"
-msgstr "Media"
+msgstr "Medio"
+
+#. module: link_tracker
+#: model_terms:ir.actions.act_window,help:link_tracker.link_tracker_click_action_statistics
+msgid "No data yet!"
+msgstr "¡Todavía no hay información!"
 
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker__count
 msgid "Number of Clicks"
-msgstr "Número de Clicks"
+msgstr "Número de clics"
 
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_utm_campaign__click_count
 msgid "Number of clicks generated by the campaign"
-msgstr ""
+msgstr "Número de clics generados por la campaña."
 
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker__title
@@ -214,33 +243,28 @@ msgstr "URL redireccionada"
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker_code__code
 msgid "Short URL Code"
-msgstr "URL corta"
+msgstr "Código URL corto"
 
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker__code
 msgid "Short URL code"
-msgstr "URL corta"
+msgstr "Código URL corto"
 
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker__source_id
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_view_search
 msgid "Source"
-msgstr "Fuente"
+msgstr "Origen"
 
 #. module: link_tracker
 #: model:ir.actions.act_window,name:link_tracker.link_tracker_action_campaign
 msgid "Statistics of Clicks"
-msgstr "Estadísticas de Clicks"
+msgstr "Estadísticas de clics"
 
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker__url
 msgid "Target URL"
 msgstr "URL objetivo"
-
-#. module: link_tracker
-#: model:ir.model.constraint,message:link_tracker.constraint_link_tracker_url_utms_uniq
-msgid "The URL and the UTM combination must be unique"
-msgstr ""
 
 #. module: link_tracker
 #: model:ir.model.fields,help:link_tracker.field_link_tracker__campaign_id
@@ -265,7 +289,7 @@ msgid ""
 "This is the source of the link, e.g. Search Engine, another domain, or name "
 "of email list"
 msgstr ""
-"Esto es la fuente del enlace. Por ejemplo: motor de búsqueda, otro dominio o"
+"Esto es el origen del enlace. Por ejemplo: motor de búsqueda, otro dominio o"
 " nombre en listado de correos electrónicos"
 
 #. module: link_tracker
@@ -275,8 +299,9 @@ msgstr "Título y URL"
 
 #. module: link_tracker
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker__short_url
+#: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_view_form
 msgid "Tracked URL"
-msgstr "URL seguidas"
+msgstr "URL rastreada"
 
 #. module: link_tracker
 #: model_terms:ir.actions.act_window,help:link_tracker.link_tracker_action
@@ -285,8 +310,8 @@ msgid ""
 "Trackers are used to collect count stat about click on links and generate "
 "short URLs."
 msgstr ""
-"Los rastreadores se utilizan para recopilar estadísticas de conteo sobre "
-"clics en enlaces y generar URL cortas."
+"Los rastreadores sirven para obtener estadísticas sobre los clics en enlaces"
+" y generar URL cortas."
 
 #. module: link_tracker
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_view_form
@@ -296,13 +321,13 @@ msgstr "URL"
 #. module: link_tracker
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_view_form
 msgid "UTM"
-msgstr ""
+msgstr "UTM"
 
 #. module: link_tracker
 #: model:ir.model,name:link_tracker.model_utm_campaign
 #: model:ir.model.fields,field_description:link_tracker.field_link_tracker_click__campaign_id
 msgid "UTM Campaign"
-msgstr "Campaña de UTM"
+msgstr "Campaña UTM"
 
 #. module: link_tracker
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_view_form
@@ -311,12 +336,20 @@ msgid "Visit Page"
 msgstr "Visitar página"
 
 #. module: link_tracker
+#. odoo-python
 #: code:addons/link_tracker/models/link_tracker.py:0
-#, python-format
 msgid "Visit Webpage"
 msgstr "Visitar página web"
 
 #. module: link_tracker
 #: model_terms:ir.ui.view,arch_db:link_tracker.link_tracker_view_form
 msgid "Website Link"
-msgstr "Enlace a página web"
+msgstr "Enlace a sitio web"
+
+#. module: link_tracker
+#. odoo-python
+#: code:addons/link_tracker/models/link_tracker.py:0
+msgid "“%s” is not a valid link, links cannot redirect to the current page."
+msgstr ""
+"%s no es un enlace válido. Los enlaces no pueden redirigir a la página "
+"actual."

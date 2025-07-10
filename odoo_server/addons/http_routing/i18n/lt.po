@@ -3,19 +3,19 @@
 # 	* http_routing
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Anatolij, 2019
-# digitouch UAB <digitouchagencyeur@gmail.com>, 2019
-# Linas Versada <linaskrisiukenas@gmail.com>, 2019
+# Anatolij, 2024
+# digitouch UAB <digitouchagencyeur@gmail.com>, 2024
+# Linas Versada <linaskrisiukenas@gmail.com>, 2024
+# Martin Trigaux, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:14+0000\n"
-"PO-Revision-Date: 2019-08-26 09:11+0000\n"
-"Last-Translator: Linas Versada <linaskrisiukenas@gmail.com>, 2019\n"
-"Language-Team: Lithuanian (https://www.transifex.com/odoo/teams/41243/lt/)\n"
+"POT-Creation-Date: 2024-09-26 08:57+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Martin Trigaux, 2024\n"
+"Language-Team: Lithuanian (https://app.transifex.com/odoo/teams/41243/lt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -29,8 +29,10 @@ msgstr "403: Neleidžiama"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.404
-msgid "404: Page not found!"
-msgstr "404: Puslapis nerastas!"
+msgid ""
+"<b>Don't panic.</b> If you think it's our mistake, please send us a message "
+"on"
+msgstr ""
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.error_message
@@ -49,14 +51,30 @@ msgid "Error"
 msgstr "Klaida"
 
 #. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "Error 404"
+msgstr ""
+
+#. module: http_routing
 #: model:ir.model,name:http_routing.model_ir_http
 msgid "HTTP Routing"
 msgstr "HTTP nukreipimas"
 
 #. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
 #: model_terms:ir.ui.view,arch_db:http_routing.500
 msgid "Home"
 msgstr "Pradžia"
+
+#. module: http_routing
+#: model:ir.model,name:http_routing.model_res_lang
+msgid "Languages"
+msgstr "Kalbos"
+
+#. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "Maybe you were looking for one of these <b>popular pages?</b>"
+msgstr ""
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.400
@@ -69,14 +87,19 @@ msgid "QWeb"
 msgstr "QWeb"
 
 #. module: http_routing
+#: model:ir.model,name:http_routing.model_ir_qweb
+msgid "Qweb"
+msgstr "QWEB"
+
+#. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.400
 msgid "Take a look at the error message below."
 msgstr ""
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
-msgid "The error occured while rendering the template"
-msgstr "Atvaizduojant šabloną įvyko klaida"
+msgid "The error occurred while rendering the template"
+msgstr ""
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.403
@@ -84,24 +107,21 @@ msgid "The page you were looking for could not be authorized."
 msgstr "Puslapis, kurio ieškote, negalėjo būti patvirtintas."
 
 #. module: http_routing
-#: model_terms:ir.ui.view,arch_db:http_routing.404
-msgid ""
-"The page you were looking for could not be found; it is possible you have\n"
-"                            typed the address incorrectly, but it has most probably been removed due\n"
-"                            to the recent reorganisation."
-msgstr ""
-
-#. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
 msgid "Traceback"
 msgstr "Atsekti"
 
 #. module: http_routing
-#: model:ir.model,name:http_routing.model_ir_ui_view
-msgid "View"
-msgstr "Rodinys"
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "We couldn't find the page you're looking for!"
+msgstr ""
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
 msgid "and evaluating the following expression:"
 msgstr "ir vertinant šį išsireiškimą:"
+
+#. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "this page"
+msgstr "šis puslapis"

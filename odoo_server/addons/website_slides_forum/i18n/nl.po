@@ -3,19 +3,18 @@
 # 	* website_slides_forum
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Yenthe Van Ginneken <yenthespam@gmail.com>, 2019
-# Gunther Clauwaert <gclauwae@hotmail.com>, 2019
-# Erwin van der Ploeg <erwin@odooexperts.nl>, 2019
+# Wil Odoo, 2024
+# Erwin van der Ploeg <erwin@odooexperts.nl>, 2024
+# Manon Rondou, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:13+0000\n"
-"PO-Revision-Date: 2019-08-26 09:16+0000\n"
-"Last-Translator: Erwin van der Ploeg <erwin@odooexperts.nl>, 2019\n"
-"Language-Team: Dutch (https://www.transifex.com/odoo/teams/41243/nl/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Manon Rondou, 2025\n"
+"Language-Team: Dutch (https://app.transifex.com/odoo/teams/41243/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -36,17 +35,17 @@ msgid ""
 "question or add a question comment."
 msgstr ""
 "<b>Antwoorden moeten geen vragen toevoegen of uitbreiden</b>. In plaats hier"
-" van wijzigt u de vraag of voegt u een reactie toe."
+" van wijzig je de vraag of voeg je een reactie toe."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid ""
-"<b>Answers should not add or expand questions</b>. Insteadeither edit the "
+"<b>Answers should not add or expand questions</b>. Instead, either edit the "
 "question or add a comment."
 msgstr ""
-"<b>Antwoorden moeten geen vragen toevoegen of uitbreiden</b>. In plaats "
-"hiervan wijzigt u de vraag of voegt u een reactie toe."
+"<b>Antwoorden moeten geen vragen toevoegen of uitbreiden</b>. Wijzig liever "
+"de vraag of voeg liever een reactie toe."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -56,7 +55,7 @@ msgid ""
 "the other answers."
 msgstr ""
 "<b>Antwoorden moeten geen vragen toevoegen of uitbreiden</b>. In plaats hier van\n"
-"voegt u een reactie toe op de andere antwoorden."
+"voeg je een reactie toe op de andere antwoorden."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -68,7 +67,7 @@ msgid ""
 " use commenting facility."
 msgstr ""
 "<b>Antwoorden moeten geen debat starten</b>\n"
-"Deze community Q&amp;A is geen discussiegroep. Vermijd aub debatten in uw antwoord omdat ze vaak de essentie van de vraag en antwoorden vertroebelen. Voor korte discussies plaatst u best een reactie."
+"Deze community Q&amp;A is geen discussiegroep. Vermijd aub debatten in je antwoord omdat ze vaak de essentie van de vraag en antwoorden vertroebelen. Voor korte discussies plaats je best een reactie."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -109,7 +108,7 @@ msgid ""
 msgstr ""
 "<b>Antwoorden moeten niet gewoon een link geven naar\n"
 "een oplossing.</b> Bied in de plaats de oplossing\n"
-"aan in uw antwoord, zelfs als het een\n"
+"aan in je antwoord, zelfs als het een\n"
 "kopie is. Links zijn welkom, maar moeten enkel antwoorden\n"
 "aanvullen, bronnen toevoegen of extra leesmateriaal toevoegen."
 
@@ -121,9 +120,9 @@ msgid ""
 "You can search questions by their title or tags. It’s also OK to answer your"
 " own question."
 msgstr ""
-"<b>Controleer of er al een gelijkaardige vraag bestaat - voordat u ze "
-"stelt.</b> U kan vragen zoeken op hun titel of labels. Het is tevens OK om "
-"uw eigen vraag te beantwoorden."
+"<b>Controleer of er al een gelijkaardige vraag bestaat - voordat je ze "
+"stelt.</b> Je kunt vragen zoeken op hun titel of labels. Het is tevens OK om"
+" je eigen vraag te beantwoorden."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -136,48 +135,47 @@ msgstr ""
 "relevant zijn voor deze community."
 
 #. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What kinds of questions can I ask here?</b> <i class=\"fa fa-caret-down "
-"float-right\"></i>"
-msgstr ""
-"<b>Wat voor vragen kan ik hier stellen?</b><i class=\"fa fa-caret-down "
-"float-right\"></i>"
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What should I avoid in my answers?</b> <i class=\"fa fa-caret-down float-"
-"right\"></i>"
-msgstr ""
-"<b>Wat zou ik moeten vermeiden in mijn antwoorden?</b><i class=\"fa fa-"
-"caret-down float-right\"></i>"
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What should I avoid in my questions?</b> <i class=\"fa fa-caret-down "
-"float-right\"></i>"
-msgstr ""
-"<b>Wat zou ik moeten vermeiden in mijn vragen?</b><i class=\"fa fa-caret-"
-"down float-right\"></i>"
-
-#. module: website_slides_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.slide_fullscreen
 msgid ""
-"<i class=\"fa fa-comments\"/><span class=\"ml-1 d-none d-md-inline-"
-"block\">Ask a question</span>"
+"<i class=\"fa fa-comments\"/><span class=\"ms-1 d-none d-md-inline-"
+"block\">Forum</span>"
 msgstr ""
-"<i class=\"fa fa-comments\"/><span class=\"ml-1 d-none d-md-inline-"
-"block\">Stel een vraag</span>"
+"<i class=\"fa fa-comments\"/><span class=\"ms-1 d-none d-md-inline-"
+"block\">Forum</span>"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
-msgid "<i class=\"fa fa-home\"/> Course"
-msgstr "<i class=\"fa fa-home\"/>Cursus"
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What kind of questions can I ask here?</span>"
+msgstr "<span class=\"flex-grow-1\">Wat voor vragen kan ik hier stellen?</span>"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What should I avoid in my answers?</span>"
+msgstr ""
+"<span class=\"flex-grow-1\">Wat moet ik vermijden in mijn antwoorden?</span>"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What should I avoid in my questions?</span>"
+msgstr "<span class=\"flex-grow-1\">Wat moet ik vermijden in mijn vragen?</span>"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"<span class=\"flex-grow-1\">Why can other people edit my "
+"questions/answers?</span>"
+msgstr ""
+"<span class=\"flex-grow-1\">Waarom kunnen andere mensen mijn "
+"vragen/antwoorden bewerken?</span>"
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_breadcrumb
+msgid "<strong>Forum</strong>"
+msgstr "<strong>Forum</strong>"
 
 #. module: website_slides_forum
 #: model:forum.forum,name:website_slides_forum.forum_forum_demo_channel_0
@@ -185,19 +183,21 @@ msgid "Basics of Gardening"
 msgstr "Basis van tuinieren"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Check our Courses <i class=\"fa fa-chevron-right\"/>"
-msgstr "Bekijk onze cursussen <i class=\"fa fa-chevron-right\"/>"
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_all_all_entries
+msgid "Check out our courses <i class=\"fa fa-long-arrow-right\"/>"
+msgstr "Bekijk onze cursussen <i class=\"fa fa-long-arrow-right\"/>"
 
 #. module: website_slides_forum
-#. openerp-web
-#: code:addons/website_slides_forum/static/src/xml/website_slides_forum_channel.xml:0
-#, python-format
-msgid "Communication"
-msgstr "Communicatie"
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
+msgid "Come back later to monitor and moderate what is posted on your Forums."
+msgstr ""
+"Kom regelmatig terug om te controleren en te modereren wat er op je forums "
+"wordt gepost."
 
 #. module: website_slides_forum
+#: model:ir.model,name:website_slides_forum.model_slide_channel
 #: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__slide_channel_id
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_all_all_entries
 msgid "Course"
 msgstr "Cursus"
 
@@ -212,26 +212,27 @@ msgid "Courses"
 msgstr "Cursussen"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Courses Discussions"
-msgstr "Cursussen discussies"
-
-#. module: website_slides_forum
-#. openerp-web
-#: code:addons/website_slides_forum/static/src/xml/website_slides_forum_channel.xml:0
-#, python-format
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_forum_action_channel
 msgid "Create a Forum"
 msgstr "Maak een forum aan"
 
 #. module: website_slides_forum
-#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
-msgid "Create a new forum post"
-msgstr "Maak een nieuwe forum post aan"
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Dismiss"
+msgstr "Afwijzen"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Description"
-msgstr "Omschrijving"
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Dismiss message"
+msgstr "Bericht negeren"
+
+#. module: website_slides_forum
+#: model:ir.model.fields,help:website_slides_forum.field_forum_forum__slide_channel_ids
+msgid "Edit the course linked to this forum on the course form."
+msgstr ""
+"Bewerk de cursus die aan dit forum is gekoppeld op het cursusformulier."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -240,43 +241,68 @@ msgid ""
 "For example, if you ask an interesting question or give a helpful answer, "
 "your input will be upvoted. On the other hand if the answer is misleading - "
 "it will be downvoted. Each vote in favor will generate 10 points, each vote "
-"against will subtract 10 points. There is a limit of 200 points that can be "
+"against will subtract 2 points. There is a limit of 200 points that can be "
 "accumulated for a question or answer per day. The table given at the end "
 "explains reputation point requirements for each type of moderation task."
 msgstr ""
-"Bijvoorbeeld, als u een interessante vraag stelt of een nuttig antwoord "
-"geeft, zal er op uw input omhoog worden gestemd. Als het antwoord misleidend"
-" is zal het naar beneden worden gestemd. Elke stem voor genereert 10 punten,"
-" elke stem tegen trekt 10 punten af. Er is een limiet voor een vraag of "
-"antwoord van 200 geaccumuleerde punten per dag. De tabel op het einde "
-"verklaart de vereisten voor reputatiepunten en de vereisten voor elke soort "
-"van moderator taak."
+"Bijvoorbeeld, als je een interessante vraag stelt of een nuttig antwoord "
+"geeft, zal je input omhoog gestemd worden. Als het antwoord echter "
+"misleidend is, zal het naar beneden worden gestemd. Elke voorstem genereert "
+"10 punten en elke tegenstem krijgt 2 punten aftrek. Er is een limiet voor "
+"een vraag of antwoord van 200 punten per dag. De tabel op het einde "
+"verklaart de vereisten voor reputatiepunten voor elk soort moderatortaak."
 
 #. module: website_slides_forum
 #: model:ir.model,name:website_slides_forum.model_forum_forum
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum
-#: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_report_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.course_main
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.slide_fullscreen
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_breadcrumb
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
 msgid "Forum"
 msgstr "Forum"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
-msgid "Forum Posts"
-msgstr "Forum berichten"
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.snippet_options
+msgid "Forum Page"
+msgstr "Forumpagina"
 
 #. module: website_slides_forum
+#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_channel
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
+msgid "Forum Posts"
+msgstr "Forumposts"
+
+#. module: website_slides_forum
+#: model:ir.model.fields,help:website_slides_forum.field_forum_forum__visibility
+msgid ""
+"Forum linked to a Course, the visibility is the one applied on the course."
+msgstr ""
+"Forum gekoppeld aan een cursus, de zichtbaarheid is die die op de cursus "
+"wordt toegepast."
+
+#. module: website_slides_forum
+#: model:ir.actions.act_window,name:website_slides_forum.forum_forum_action_channel
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum_forum
 msgid "Forums"
 msgstr "Forums"
 
 #. module: website_slides_forum
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid "Hide Intro"
-msgstr "Verberg intro"
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_forum_action_channel
+msgid "Forums allow your attendees to ask questions to your community."
+msgstr "Op forums kunnen je deelnemers vragen stellen aan je community."
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "Here a table with the privileges and the karma level"
+msgstr "Hier een tabel met de privileges en het karmaniveau"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "If this approach is not for you, please respect the community."
+msgstr "Als deze aanpak niets voor jou is, respecteer dan de community."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -288,11 +314,21 @@ msgid ""
 "motivation is “I would like others to explain ______ to me”, then you are "
 "probably OK."
 msgstr ""
-"Als u in een van deze voorbeelden past of als uw motivatie om de vraag te "
-"stellen is: \"Ik wil graag deelnemen aan een discussie over ______\", dan "
-"zou u dit niet hier moeten stellen, maar op onze mailinglijsten. Als uw "
+"Als je in een van deze voorbeelden past of als je motivatie om de vraag te "
+"stellen is: “IIk wil graag deelnemen aan een discussie over ______”, dan zou"
+" je dit niet hier moeten stellen, maar op onze mailinglijsten. Als je "
 "motivatie echter is: \"Ik zou graag willen dat anderen mij ______ "
-"uitleggen\", dan bent u waarschijnlijk op de goede plek."
+"uitleggen\", dan ben je waarschijnlijk op de goede plek."
+
+#. module: website_slides_forum
+#: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__image_1920
+msgid "Image"
+msgstr "Afbeelding"
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.res_config_settings_view_form
+msgid "Manage Forums"
+msgstr "Forums beheren"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -301,40 +337,75 @@ msgid "More over:"
 msgstr "Meer over:"
 
 #. module: website_slides_forum
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
+msgid "No Forum Post yet!"
+msgstr "Nog geen Forum posts!"
+
+#. module: website_slides_forum
 #: model:ir.model.fields,field_description:website_slides_forum.field_slide_channel__forum_total_posts
 msgid "Number of active forum posts"
-msgstr "Aantal actieve forum berichten"
+msgstr "Aantal actieve forumposts"
 
 #. module: website_slides_forum
 #: model:ir.model.constraint,message:website_slides_forum.constraint_slide_channel_forum_uniq
-msgid "Only one forum per slide channel!"
-msgstr "Slechts één forum per slide kanaal!"
+msgid "Only one course per forum!"
+msgstr "Slechts één cursus per forum!"
 
 #. module: website_slides_forum
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum_post
 msgid "Posts"
-msgstr "Berichten"
+msgstr "Posts"
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.snippet_options
+msgid "Separate Courses"
+msgstr "Verschillende cursussen"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid "Register"
-msgstr "Registreer"
+msgid ""
+"Share and discuss the best content and new marketing ideas, build your "
+"professional profile and become a better marketer together."
+msgstr ""
+"Deel en discussieer over de beste inhoud en nieuwe marketingideeën, bouw je "
+"professionele profiel en wordt samen een betere marketeer."
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
-msgid "Review"
-msgstr "Controle"
+#: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__visibility
+msgid "Show Course To"
+msgstr "Toon cursus aan"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "See all Courses"
-msgstr "Bekijk alle cursussen"
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Sign up"
+msgstr "Aanmelden"
 
 #. module: website_slides_forum
-#: model:ir.model,name:website_slides_forum.model_slide_channel
-msgid "Slide Channel"
-msgstr "Presentatiekanaal"
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"The goal of this site is create a relevant knowledge base that would answer "
+"questions related to Odoo."
+msgstr ""
+"Het doel van deze website is om een relevante kennisbasis te maken die "
+"vragen gerelateerd aan Odoo beantwoord."
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"Therefore questions and answers can be edited like wiki pages by experienced"
+" users of this site in order to improve the overall quality of the knowledge"
+" base content. Such privileges are granted based on user karma level: you "
+"will be able to do the same once your karma gets high enough."
+msgstr ""
+"Daarom kunnen vragen en antwoorden gewijzigd worden zoals wiki pagina's door"
+" ervaren gebruikers van deze website om zo de algemene kwaliteit te "
+"verbeteren van de kennis en inhoud. Zulke privileges worden toegewezen "
+"gebaseerd op het karma niveau: je zal hetzelfde kunnen doen wanneer je karma"
+" hoog genoeg is."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -344,17 +415,7 @@ msgid ""
 "programmers. You can ask questions about:"
 msgstr ""
 "Deze community is voor professionals en andere enthousiaste gebruikers, "
-"partners en programmeurs. U kan vragen stellen over:"
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"This community is for professionals and enthusiasts of our products and services.\n"
-"                                        <br>Share and discuss the best content and new marketing ideas, build your professional profile and become a better marketer together."
-msgstr ""
-"De community is voor professionals en enthousiasten van onze producten en diensten. \n"
-"<br>Deel en discussieer over de beste inhoud en nieuwe marketing ideeën, bouw uw professionele profiel en wordt samen een betere marketeer."
+"partners en programmeurs. Je kunt vragen stellen over:"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -363,8 +424,8 @@ msgid ""
 "To prevent your question from being flagged and possibly removed, avoid "
 "asking subjective questions where …"
 msgstr ""
-"Om te voorkomen dat uw vraag wordt gemarkeerd en mogelijk verwijderd, "
-"vermijd subjectieve vragen waar ..."
+"Om te voorkomen dat je vraag wordt gemarkeerd en mogelijk verwijderd, "
+"vermijd subjectieve vragen waar …"
 
 #. module: website_slides_forum
 #: model:forum.forum,name:website_slides_forum.forum_forum_demo_channel_2
@@ -401,7 +462,7 @@ msgid ""
 " site and push other questions off the front page."
 msgstr ""
 "Het is aan te raden enkel praktische, beantwoordbare vragen te stellen die "
-"gebaseerd zijn op problemen die u ondervind. Chatterige, open vragen "
+"gebaseerd zijn op problemen die je ondervind. Chatterige, open vragen "
 "verminderen de bruikbaarheid van deze website en duwen andere vragen van de "
 "eerste pagina."
 
@@ -411,48 +472,42 @@ msgid "eLearning"
 msgstr "eLearning"
 
 #. module: website_slides_forum
-#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_channel
-#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_report
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_post_view_graph_slides
 msgid "eLearning Forum Posts"
-msgstr "eLearning forum berichten"
-
-#. module: website_slides_forum
-#: model:ir.actions.act_window,name:website_slides_forum.forum_forum_action_channel
-msgid "eLearning Forums"
-msgstr "eLearning forums"
+msgstr "eLearning forumposts"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "every answer is equally valid: “What’s your favorite ______?”"
-msgstr "elk antwoord is even valide: \"Wat is uw favoriete ______?”"
+msgstr "elk antwoord is even valide: “Wat is je favoriete ______?”"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "how to configure or customize Odoo to specific business needs,"
 msgstr ""
-"Hoe Odoo te configureren of personaliseren naar specifieke zakelijke "
+"hoe Odoo te configureren of personaliseren naar specifieke zakelijke "
 "behoeftes,"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "how to develop modules for your own need,"
-msgstr "Hoe modules te ontwikkelen voor eigen gebruik,"
+msgstr "hoe modules te ontwikkelen voor eigen gebruik,"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "how to install Odoo on a specific infrastructure,"
-msgstr "Hoe Odoo te installeren op een specifieke infrastructuur,"
+msgstr "hoe Odoo te installeren op een specifieke infrastructuur,"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "it is a rant disguised as a question: “______ sucks, am I right?”"
-msgstr "het is een klacht vermomt in een vraag: \"______ suckt, heb ik gelijk?\""
+msgstr ""
+"het is een klacht vermomt in een vraag: “______ waardeloos, heb ik gelijk?”"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -467,8 +522,8 @@ msgid ""
 "there is no actual problem to be solved: “I’m curious if other people feel "
 "like I do.”"
 msgstr ""
-"er is geen probleem om op te lossen: \"Ik ben nieuwsgierig of andere mensen "
-"zich voelen zoals mij.\""
+"er is geen probleem om op te lossen: “Ik ben nieuwsgierig of andere mensen "
+"zich voelen zoals mij.”"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -477,15 +532,15 @@ msgid ""
 "we are being asked an open-ended, hypothetical question: “What if ______ "
 "happened?”"
 msgstr ""
-"we krijgen een open-einde, hypothetische vraag gesteld: \"Wat als  ______ "
-"gebeurde?\""
+"we krijgen een open-einde, hypothetische vraag gesteld: “Wat als  ______ "
+"gebeurde?”"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "what's the best way to use Odoo for a specific business need,"
 msgstr ""
-"Wat is de beste manier om Odoo te gebruiken voor een specifieke "
+"wat is de beste manier om Odoo te gebruiken voor een specifieke "
 "bedrjifsbehoefte,"
 
 #. module: website_slides_forum
@@ -495,5 +550,5 @@ msgid ""
 "your answer is provided along with the question, and you expect more "
 "answers: “I use ______ for ______, what do you use?”"
 msgstr ""
-"uw antwoord is aangeboden samen met de vraag, en u verwacht meer antwoorden:"
-" “Ik gebruik ______ voor ______, wat gebruikt u?”"
+"je antwoord is aangeboden samen met de vraag, en je verwacht meer "
+"antwoorden: “Ik gebruik ______ voor ______, wat gebruik je?”"

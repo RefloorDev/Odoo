@@ -15,16 +15,16 @@
     </record>
 
     <record id="lunch_alert_view_tree" model="ir.ui.view">
-        <field name="name">lunch.alert.tree</field>
+        <field name="name">lunch.alert.list</field>
         <field name="model">lunch.alert</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="name"/>
                 <field name="mode"/>
-                <field name="message" invisible="1"/>
+                <field name="message" column_invisible="True"/>
                 <field name="available_today"/>
                 <field name="active" widget="boolean_toggle"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -35,31 +35,29 @@
             <form string="alert form">
                 <sheet>
                     <div class="oe_title" name="title">
-                        <label for="name" class="oe_edit_only"/>
+                        <label for="name"/>
                         <h1>
-                            <field name="name"/>
+                            <field name="name" placeholder="e.g. Order before 11am"/>
                         </h1>
                     </div>
                     <group>
                         <group>
                             <field name="mode" widget="radio"/>
-                            <field name="recipients" attrs="{'invisible': [['mode', '!=', 'chat']]}" widget="radio"/>
+                            <field name="recipients" invisible="mode != 'chat'" widget="radio"/>
                             <field name="location_ids" widget="many2many_tags" required="1"/>
                             <field name="until"/>
-                            <field name="active"/>
+                            <field name="active" widget="boolean_toggle"/>
                         </group>
                         <group>
-                            <field name="recurrency_monday"/>
-                            <field name="recurrency_tuesday"/>
-                            <field name="recurrency_wednesday"/>
-                            <field name="recurrency_thursday"/>
-                            <field name="recurrency_friday"/>
-                            <field name="recurrency_saturday"/>
-                            <field name="recurrency_sunday"/>
-                            <label for="notification_time" attrs="{'invisible': [['mode', '!=', 'chat']]}"/>
-                            <div class="o_row" attrs="{'invisible': [['mode', '!=', 'chat']]}">
-                                <field name="notification_time" attrs="{'required': [('mode', '=', 'chat')]}" widget="float_time"/>
-                                <field name="notification_moment"/>
+                            <div class="o_td_label">
+                                <label for="notification_time" invisible="mode != 'chat'"/>
+                            </div>
+                            <div class="o_col">
+                                <widget name="week_days"/>
+                                <div class="o_row" invisible="mode != 'chat'">
+                                    <field name="notification_time" required="mode == 'chat'" widget="float_time"/>
+                                    <field name="notification_moment"/>
+                                </div>
                             </div>
                             <field name="tz" groups="base.group_no_one"/>
                         </group>
@@ -72,11 +70,34 @@
         </field>
     </record>
 
+    <record id="lunch_alert_view_kanban" model="ir.ui.view">
+        <field name="name">lunch.alert.kanban</field>
+        <field name="model">lunch.alert</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <templates>
+                    <t t-name="card">
+                        <field class="fw-bold fs-5" name="name"/>
+                        <div>
+                            <field name="mode"/>
+                            <span invisible="mode != 'chat'">
+                                to <field name="recipients"/>
+                                on <field name="notification_time"/>
+                                <field name="notification_moment"/>
+                            </span>
+                        </div>
+                        <field name="location_ids" widget="many2many_tags"/>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
     <record id="lunch_alert_action" model="ir.actions.act_window">
         <field name="name">Lunch Alerts</field>
         <field name="res_model">lunch.alert</field>
         <field name="search_view_id" ref="lunch_alert_view_search"/>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form,kanban</field>
         <field name="domain">['|', ('active', '=', True), ('active', '=', False)]</field>
         <field name="context">{}</field>
         <field name="view_id" ref="lunch_alert_view_tree"/>

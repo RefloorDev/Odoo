@@ -12,6 +12,7 @@ class TestSurveyRandomize(TransactionCase):
         page_1 = Question.create({
             'title': 'Page 1',
             'is_page': True,
+            'question_type': False,
             'sequence': 1,
             'random_questions_count': 3
         })
@@ -21,6 +22,7 @@ class TestSurveyRandomize(TransactionCase):
         page_2 = Question.create({
             'title': 'Page 2',
             'is_page': True,
+            'question_type': False,
             'sequence': 100,
             'random_questions_count': 5
         })
@@ -30,6 +32,7 @@ class TestSurveyRandomize(TransactionCase):
         page_3 = Question.create({
             'title': 'Page 2',
             'is_page': True,
+            'question_type': False,
             'sequence': 1000,
             'random_questions_count': 4
         })
@@ -42,7 +45,7 @@ class TestSurveyRandomize(TransactionCase):
             'questions_selection': 'random'
         })
 
-        generated_questions = self.survey1._prepare_answer_questions()
+        generated_questions = self.survey1._prepare_user_input_predefined_questions()
 
         self.assertEqual(len(generated_questions.ids), 10, msg="Expected 10 unique questions")
         self.assertEqual(len(generated_questions.filtered(lambda question: question.page_id == page_1)), 3, msg="Expected 3 questions in page 1")
@@ -52,7 +55,7 @@ class TestSurveyRandomize(TransactionCase):
     def _add_questions(self, question_and_pages, page, count):
         for i in range(count):
             question_and_pages |= self.env['survey.question'].sudo().create({
-                'title': page.title + ' Q' + str(i + 1),
+                'title': f'{page.title} Q{i + 1}',
                 'sequence': page.sequence + (i + 1)
             })
 

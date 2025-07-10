@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
-
 from odoo import models, fields, api, _
 import json
 import base64
@@ -145,15 +143,14 @@ class ResUsers(models.Model):
     def update_device_id(self, values):
         login = values.pop('login', False)
         registered_id = values.get('device_reg_id', False)
-        user = self.search([('login', '=ilike', login)
-                            ])
-        users_with_same_device_id = self.search([('device_reg_id', '=', registered_id)
-                                                 ])
+        user = self.search([('login', '=ilike', login)])
+        users_with_same_device_id = self.search([('device_reg_id', '=', registered_id)])
         for same_id_user in users_with_same_device_id:
             same_id_user.write({'device_reg_id': ''})
         if user:
             res = user.write(values)
-            return res
+            return True or False
+        return False
 
     @api.model
     def get_user_image(self, uid):

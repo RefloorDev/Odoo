@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from odoo import api, fields, models, registry, _
 from odoo.exceptions import UserError
 from xml.etree.ElementTree import fromstring, ElementTree
@@ -438,7 +439,7 @@ class TeamImproveitConfiguration(models.Model):
                 product_template_values = {
                 'name': name,
                 'improveit_product_id': improveit_product_id,
-                'type': 'product',
+                'type': 'consu',
                 'list_price': price,
                 'payment_plan': payment_plan,
                 'description': description
@@ -754,7 +755,7 @@ class TeamImproveitConfiguration(models.Model):
                             product_template_values = {
                                 'name': name,
                                 'improveit_product_id': improveit_product_id,
-                                'type': 'product',
+                                'type': 'consu',
                                 'list_price': price,
                                 'payment_plan': payment_plan,
                                 'description': description,
@@ -801,7 +802,7 @@ class TeamImproveitConfiguration(models.Model):
                             product_template_values = {
                                 'name': name,
                                 'improveit_product_id': improveit_product_id,
-                                'type': 'product',
+                                'type': 'consu',
                                 'list_price': price,
                                 'payment_plan': payment_plan,
                                 'description':description,
@@ -1159,7 +1160,6 @@ class TeamImproveitConfiguration(models.Model):
             })
         return location_data
 
-
     def get_floor_color_api(self):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
         if configurations:
@@ -1174,12 +1174,14 @@ class TeamImproveitConfiguration(models.Model):
                     req.raise_for_status()
                     content = req.json()
                     location_dict = self.get_office_locations()
+                    floor_color_list = []
                     for color in content:
                         name = color.get('name') or ''
                         display_name_in_app = color.get('salesAppDisplayName') or color.get('name') or ''
                         product_lines = color.get('productLines', '') or color.get('ProductLines', '') or ''
                         color_up_charge_price = color.get('colorUpcharge', 0) or 0
                         in_stock = color.get('inStock', False) or False
+                        glue_down = color.get('glueDown', False) or False
                         special_order = color.get('specialOrder', False) or False
                         market_segments = color.get('marketSegment', '') or ''
                         office_location_ids = []
@@ -1205,13 +1207,34 @@ class TeamImproveitConfiguration(models.Model):
                             if image_data:
                                 try:
                                     image_data = urlopen(image_url).read()
-                                    image_binary = base64.encodestring(image_data)
+                                    # image_binary = base64.encodestring(image_data)
+                                    image_binary = base64.b64encode(image_data)
                                 except:
                                     image_binary = False
                             else:
                                 image_url = ''
                             product_line_template = product_lines.split(';')
                             products = self.env['product.product'].search([('product_tmpl_id.grade', 'in', product_line_template)])
+                            floor_color = self.env['floor.color'].with_context(active_test=False).search([('name', '=', name)], limit=1)
+                            floor_color_vals = {
+                                'name': name,
+                                'product_line': product_lines,
+                                'thumb_nail': thumb_nail,
+                                'url': image_url,
+                                'color_up_charge_price': color_up_charge_price,
+                                'display_name_in_app': display_name_in_app,
+                                'in_stock': in_stock,
+                                'glue_down': glue_down,
+                                'special_order': special_order,
+                                'office_location_ids': [(6, 0, office_location_ids)],
+                                'active': True
+                            }
+                            if floor_color:
+                                self.env['floor.color'].write(floor_color_vals)
+                            else:
+                                floor_color= self.env['floor.color'].create(floor_color_vals)
+                            if floor_color.id not in floor_color_list:
+                                floor_color_list.append(floor_color.id)
                             for product in products:
                                 if product.product_template_attribute_value_ids.filtered(lambda x: x.name == name and x.attribute_id.name == 'colour'):
                                     attachment = False
@@ -1224,6 +1247,7 @@ class TeamImproveitConfiguration(models.Model):
                                         'display_name_in_app': display_name_in_app,
                                         'image_variant_1920': image_binary,
                                         'in_stock': in_stock,
+                                        'glue_down': glue_down,
                                         'special_order': special_order,
                                         'office_location_ids': [(6, 0, office_location_ids)]
                                     })
@@ -1243,6 +1267,18 @@ class TeamImproveitConfiguration(models.Model):
 
                                         })
                                     product.write({'color_attachment_id': attachment and attachment.id or False})
+                                    floor_color_line = self.env['floor.color.line'].search([
+                                        ('floor_color_id', '=', floor_color.id),
+                                        ('product_id', '=', product.id)
+                                    ])
+                                    if not floor_color_line:
+                                        self.env['floor.color.line'].create({
+                                            'floor_color_id': floor_color.id,
+                                            'product_id': product.id,
+                                        })
+                    archive_floor_colors = self.env['floor.color'].search([('id', 'not in', floor_color_list)])
+                    for floor_color in archive_floor_colors:
+                        floor_color.write({'active': False})
                 except IOError:
                     error_msg = _("Something went wrong during token generation.")
                     raise self.env['res.config.settings'].get_config_warning(error_msg)
@@ -1609,7 +1645,7 @@ class TeamImproveitConfiguration(models.Model):
                 except IOError:
                     error_msg = _("Something went wrong during GetAppointmentResultDetails API execution.")
                     raise self.env['res.config.settings'].get_config_warning(error_msg)
-
+    
     def get_finance_order_checklist_api(self):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'order_checklist')])
         if configurations:
@@ -1651,7 +1687,8 @@ class TeamImproveitConfiguration(models.Model):
                 except IOError:
                     error_msg = _("Something went wrong during GetArrivalCompletionChecklist API execution.")
                     raise self.env['res.config.settings'].get_config_warning(error_msg)
-
+    
+    
     def action_sync_master_data(self, data={}):
         _logger.info('-------Starting: action_sync_master_data')
         for record in self.sudo().search([('api_type', '=', 'boomi')]):

@@ -3,18 +3,17 @@
 # 	* auth_oauth
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Arnis Putniņš <arnis@allegro.lv>, 2019
-# ievaputnina <ievai.putninai@gmail.com>, 2019
+# Armīns Jeltajevs <armins.jeltajevs@gmail.com>, 2024
+# ievaputnina <ievai.putninai@gmail.com>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-18 09:46+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: ievaputnina <ievai.putninai@gmail.com>, 2019\n"
-"Language-Team: Latvian (https://www.transifex.com/odoo/teams/41243/lv/)\n"
+"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: ievaputnina <ievai.putninai@gmail.com>, 2024\n"
+"Language-Team: Latvian (https://app.transifex.com/odoo/teams/41243/lv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -24,16 +23,11 @@ msgstr ""
 #. module: auth_oauth
 #: model_terms:ir.ui.view,arch_db:auth_oauth.providers
 msgid "- or -"
-msgstr ""
+msgstr "- vai -"
 
 #. module: auth_oauth
-#: model_terms:ir.ui.view,arch_db:auth_oauth.res_config_settings_view_form
-msgid "<i class=\"fa fa-fw fa-arrow-right\"/>Tutorial"
-msgstr ""
-
-#. module: auth_oauth
+#. odoo-python
 #: code:addons/auth_oauth/controllers/main.py:0
-#, python-format
 msgid "Access Denied"
 msgstr "Piekļuve liegta"
 
@@ -54,13 +48,8 @@ msgstr ""
 
 #. module: auth_oauth
 #: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__auth_endpoint
-msgid "Authentication URL"
+msgid "Authorization URL"
 msgstr ""
-
-#. module: auth_oauth
-#: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__body
-msgid "Body"
-msgstr "Galvenā daļa"
 
 #. module: auth_oauth
 #: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__css_class
@@ -71,7 +60,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__client_id
 #: model:ir.model.fields,field_description:auth_oauth.field_res_config_settings__auth_oauth_google_client_id
 msgid "Client ID"
-msgstr ""
+msgstr "Klienta ID"
 
 #. module: auth_oauth
 #: model_terms:ir.ui.view,arch_db:auth_oauth.res_config_settings_view_form
@@ -81,7 +70,7 @@ msgstr ""
 #. module: auth_oauth
 #: model:ir.model,name:auth_oauth.model_res_config_settings
 msgid "Config Settings"
-msgstr "Konfigurācijas iestatījumi"
+msgstr "Konfigurācijas uzstādījumi"
 
 #. module: auth_oauth
 #: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__create_uid
@@ -95,13 +84,13 @@ msgstr "Izveidots"
 
 #. module: auth_oauth
 #: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__data_endpoint
-msgid "Data URL"
+msgid "Data Endpoint"
 msgstr ""
 
 #. module: auth_oauth
 #: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__display_name
 msgid "Display Name"
-msgstr "Attēlotais nosaukums"
+msgstr "Nosaukums"
 
 #. module: auth_oauth
 #: model_terms:ir.ui.view,arch_db:auth_oauth.res_config_settings_view_form
@@ -114,19 +103,14 @@ msgid "ID"
 msgstr "ID"
 
 #. module: auth_oauth
-#: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider____last_update
-msgid "Last Modified on"
-msgstr "Pēdējoreiz modificēts"
-
-#. module: auth_oauth
 #: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__write_uid
 msgid "Last Updated by"
-msgstr "Pēdējoreiz atjaunoja"
+msgstr "Pēdējo reizi atjaunoja"
 
 #. module: auth_oauth
 #: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__write_date
 msgid "Last Updated on"
-msgstr "Pēdējoreiz atjaunots"
+msgstr "Pēdējās izmaiņas"
 
 #. module: auth_oauth
 #: model:ir.model.fields,help:auth_oauth.field_auth_oauth_provider__body
@@ -146,6 +130,11 @@ msgstr ""
 #. module: auth_oauth
 #: model:auth.oauth.provider,body:auth_oauth.provider_openerp
 msgid "Log in with Odoo.com"
+msgstr ""
+
+#. module: auth_oauth
+#: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__body
+msgid "Login button label"
 msgstr ""
 
 #. module: auth_oauth
@@ -197,17 +186,17 @@ msgstr ""
 #. module: auth_oauth
 #: model:ir.actions.act_window,name:auth_oauth.action_oauth_provider
 msgid "Providers"
-msgstr ""
+msgstr "Maksājumu sniedzēji"
 
 #. module: auth_oauth
 #: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__scope
 msgid "Scope"
-msgstr ""
+msgstr "Darbības joma"
 
 #. module: auth_oauth
 #: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__sequence
 msgid "Sequence"
-msgstr "Secība"
+msgstr "Sekvence"
 
 #. module: auth_oauth
 #: model:ir.model.fields,field_description:auth_oauth.field_res_config_settings__server_uri_google
@@ -215,29 +204,34 @@ msgid "Server uri"
 msgstr ""
 
 #. module: auth_oauth
+#. odoo-python
 #: code:addons/auth_oauth/controllers/main.py:0
-#, python-format
 msgid "Sign up is not allowed on this database."
 msgstr ""
 
 #. module: auth_oauth
 #: model:ir.model,name:auth_oauth.model_ir_config_parameter
 msgid "System Parameter"
+msgstr "Sistēmas parametrs"
+
+#. module: auth_oauth
+#: model_terms:ir.ui.view,arch_db:auth_oauth.res_config_settings_view_form
+msgid "Tutorial"
 msgstr ""
 
 #. module: auth_oauth
 #: model:ir.model,name:auth_oauth.model_res_users
-msgid "Users"
-msgstr "Lietotāji"
+msgid "User"
+msgstr "Lietotājs"
 
 #. module: auth_oauth
 #: model:ir.model.fields,field_description:auth_oauth.field_auth_oauth_provider__validation_endpoint
-msgid "Validation URL"
+msgid "UserInfo URL"
 msgstr ""
 
 #. module: auth_oauth
+#. odoo-python
 #: code:addons/auth_oauth/controllers/main.py:0
-#, python-format
 msgid ""
 "You do not have access to this database or your invitation has expired. "
 "Please ask for an invitation and be sure to follow the link in your "
@@ -253,4 +247,4 @@ msgstr ""
 #. module: auth_oauth
 #: model_terms:ir.ui.view,arch_db:auth_oauth.res_config_settings_view_form
 msgid "e.g. 1234-xyz.apps.googleusercontent.com"
-msgstr ""
+msgstr "piem. 1234-xyz.apps.googleusercontent.com"

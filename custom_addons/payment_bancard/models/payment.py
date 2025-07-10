@@ -11,7 +11,7 @@ import pytz
 from werkzeug import urls
 
 from odoo import api, fields, models, _
-from odoo.addons.payment.models.payment_acquirer import ValidationError
+# from odoo.addons.payment.models.payment_acquirer import ValidationError
 from odoo.addons.payment_paypal.controllers.main import PaypalController
 from odoo.tools.float_utils import float_compare
 
@@ -20,9 +20,9 @@ _logger = logging.getLogger(__name__)
 
 
 class AcquirerPaypal(models.Model):
-    _inherit = 'payment.acquirer'
+    _inherit = 'payment.provider'
 
-    provider = fields.Selection(selection_add=[('bancard', 'Bancard')])
+    code = fields.Selection(selection_add=[('bancard', 'Bancard')], ondelete={'bancard': 'set default'})
     bancard_login_id = fields.Char('API Login Id', required_if_provider='bancard', groups='base.group_user')
     bancard_transaction_key = fields.Char(string='API Transaction Key', groups='base.group_user')
 

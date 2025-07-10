@@ -3,20 +3,16 @@
 # 	* website_slides_forum
 # 
 # Translators:
-# Sergey Vilizhanin, 2019
-# Martin Trigaux, 2019
-# Collex100, 2019
-# Oleg Kuryan <oleg@ventor.tech>, 2019
-# Ivan Yelizariev <yelizariev@it-projects.info>, 2019
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:13+0000\n"
-"PO-Revision-Date: 2019-08-26 09:16+0000\n"
-"Last-Translator: Ivan Yelizariev <yelizariev@it-projects.info>, 2019\n"
-"Language-Team: Russian (https://www.transifex.com/odoo/teams/41243/ru/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Russian (https://app.transifex.com/odoo/teams/41243/ru/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -43,9 +39,11 @@ msgstr ""
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid ""
-"<b>Answers should not add or expand questions</b>. Insteadeither edit the "
+"<b>Answers should not add or expand questions</b>. Instead, either edit the "
 "question or add a comment."
 msgstr ""
+"<b>Ответы не должны дополнять или расширять вопросы</b>. Вместо этого либо "
+"отредактируйте вопрос, либо добавьте комментарий."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -66,6 +64,10 @@ msgid ""
 "to dilute the essence of questions and answers. For brief discussions please"
 " use commenting facility."
 msgstr ""
+"<b>Ответы не должны вызывать споров</b> Это сообщество вопросов и ответов не"
+" является дискуссионной группой. Пожалуйста, не устраивайте дебаты в своих "
+"ответах, так как они размывают суть вопросов и ответов. Для коротких "
+"обсуждений используйте возможность комментирования."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -90,6 +92,10 @@ msgid ""
 "include links to other questions or answers providing relevant additional "
 "information."
 msgstr ""
+"<b>Ответы не должны просто указывать на другие вопросы</b>. Вместо этого "
+"добавьте комментарий <i>\"Возможный дубликат...\"</i>. Однако не помешает "
+"включить ссылки на другие вопросы или ответы, содержащие соответствующую "
+"дополнительную информацию."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -113,6 +119,9 @@ msgid ""
 "You can search questions by their title or tags. It’s also OK to answer your"
 " own question."
 msgstr ""
+"<b>Прежде чем задавать вопрос, убедитесь, что вы искали похожие вопросы.</b>"
+" Вы можете искать вопросы по их названию или тегам. Также можно ответить на "
+"свой вопрос."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -121,96 +130,104 @@ msgid ""
 "<b>Please avoid asking questions that are too subjective and "
 "argumentative</b> or not relevant to this community."
 msgstr ""
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What kinds of questions can I ask here?</b> <i class=\"fa fa-caret-down "
-"float-right\"></i>"
-msgstr ""
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What should I avoid in my answers?</b> <i class=\"fa fa-caret-down float-"
-"right\"></i>"
-msgstr ""
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What should I avoid in my questions?</b> <i class=\"fa fa-caret-down "
-"float-right\"></i>"
-msgstr ""
+"<b>Пожалуйста, избегайте задавать слишком субъективные и спорные вопросы</b>"
+" или вопросы, не имеющие отношения к данному сообществу."
 
 #. module: website_slides_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.slide_fullscreen
 msgid ""
-"<i class=\"fa fa-comments\"/><span class=\"ml-1 d-none d-md-inline-"
-"block\">Ask a question</span>"
+"<i class=\"fa fa-comments\"/><span class=\"ms-1 d-none d-md-inline-"
+"block\">Forum</span>"
+msgstr ""
+"<i class=\"fa fa-comments\"/><span class=\"ms-1 d-none d-md-inline-"
+"block\">Форум</span>"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What kind of questions can I ask here?</span>"
 msgstr ""
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
-msgid "<i class=\"fa fa-home\"/> Course"
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What should I avoid in my answers?</span>"
 msgstr ""
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What should I avoid in my questions?</span>"
+msgstr ""
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"<span class=\"flex-grow-1\">Why can other people edit my "
+"questions/answers?</span>"
+msgstr ""
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_breadcrumb
+msgid "<strong>Forum</strong>"
+msgstr "<strong>Форум</strong>"
 
 #. module: website_slides_forum
 #: model:forum.forum,name:website_slides_forum.forum_forum_demo_channel_0
 msgid "Basics of Gardening"
+msgstr "Основы садоводства"
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_all_all_entries
+msgid "Check out our courses <i class=\"fa fa-long-arrow-right\"/>"
+msgstr "Ознакомьтесь с нашими курсами <i class=\"fa fa-long-arrow-right\"/>"
+
+#. module: website_slides_forum
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
+msgid "Come back later to monitor and moderate what is posted on your Forums."
 msgstr ""
+"Вернитесь позже, чтобы отслеживать и модерировать то, что размещается на "
+"ваших форумах."
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Check our Courses <i class=\"fa fa-chevron-right\"/>"
-msgstr ""
-
-#. module: website_slides_forum
-#. openerp-web
-#: code:addons/website_slides_forum/static/src/xml/website_slides_forum_channel.xml:0
-#, python-format
-msgid "Communication"
-msgstr "Общение"
-
-#. module: website_slides_forum
+#: model:ir.model,name:website_slides_forum.model_slide_channel
 #: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__slide_channel_id
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_all_all_entries
 msgid "Course"
-msgstr ""
+msgstr "Курс"
 
 #. module: website_slides_forum
 #: model:ir.model.fields,field_description:website_slides_forum.field_slide_channel__forum_id
 msgid "Course Forum"
-msgstr ""
+msgstr "Форум курса"
 
 #. module: website_slides_forum
 #: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__slide_channel_ids
 msgid "Courses"
-msgstr ""
+msgstr "Курсы"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Courses Discussions"
-msgstr ""
-
-#. module: website_slides_forum
-#. openerp-web
-#: code:addons/website_slides_forum/static/src/xml/website_slides_forum_channel.xml:0
-#, python-format
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_forum_action_channel
 msgid "Create a Forum"
-msgstr ""
+msgstr "Создать форум"
 
 #. module: website_slides_forum
-#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
-msgid "Create a new forum post"
-msgstr "Создать новый пост"
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Dismiss"
+msgstr "Отклонить"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Description"
-msgstr "Описание"
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Dismiss message"
+msgstr "Отклонить сообщение"
+
+#. module: website_slides_forum
+#: model:ir.model.fields,help:website_slides_forum.field_forum_forum__slide_channel_ids
+msgid "Edit the course linked to this forum on the course form."
+msgstr "Отредактируйте курс, связанный с этим форумом, в форме курса."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -219,36 +236,67 @@ msgid ""
 "For example, if you ask an interesting question or give a helpful answer, "
 "your input will be upvoted. On the other hand if the answer is misleading - "
 "it will be downvoted. Each vote in favor will generate 10 points, each vote "
-"against will subtract 10 points. There is a limit of 200 points that can be "
+"against will subtract 2 points. There is a limit of 200 points that can be "
 "accumulated for a question or answer per day. The table given at the end "
 "explains reputation point requirements for each type of moderation task."
 msgstr ""
+"Например, если вы зададите интересный вопрос или дадите полезный ответ, ваш "
+"вклад будет проголосован. С другой стороны, если ответ вводит в заблуждение "
+"- он будет проголосован ниже. Каждый голос \"за\" приносит 10 баллов, каждый"
+" голос \"против\" отнимает 2 балла. В день за вопрос или ответ может быть "
+"накоплено не более 200 баллов. В таблице, приведенной в конце, указаны "
+"требования к баллам репутации для каждого типа модераторских заданий."
 
 #. module: website_slides_forum
 #: model:ir.model,name:website_slides_forum.model_forum_forum
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum
-#: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_report_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.course_main
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.slide_fullscreen
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_breadcrumb
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
 msgid "Forum"
 msgstr "Форум"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
-msgid "Forum Posts"
-msgstr "Сообщения форума"
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.snippet_options
+msgid "Forum Page"
+msgstr "Страница форума"
 
 #. module: website_slides_forum
+#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_channel
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
+msgid "Forum Posts"
+msgstr "Сообщения на форуме"
+
+#. module: website_slides_forum
+#: model:ir.model.fields,help:website_slides_forum.field_forum_forum__visibility
+msgid ""
+"Forum linked to a Course, the visibility is the one applied on the course."
+msgstr ""
+"Форум, связанный с курсом, имеет ту видимость, которая применяется в курсе."
+
+#. module: website_slides_forum
+#: model:ir.actions.act_window,name:website_slides_forum.forum_forum_action_channel
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum_forum
 msgid "Forums"
 msgstr "Форумы"
 
 #. module: website_slides_forum
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid "Hide Intro"
-msgstr "Скрыть введение"
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_forum_action_channel
+msgid "Forums allow your attendees to ask questions to your community."
+msgstr "Форумы позволяют посетителям задавать вопросы вашему сообществу."
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "Here a table with the privileges and the karma level"
+msgstr "Вот таблица с привилегиями и уровнем кармы"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "If this approach is not for you, please respect the community."
+msgstr "Если такой подход не для вас, пожалуйста, уважайте сообщество."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -260,48 +308,98 @@ msgid ""
 "motivation is “I would like others to explain ______ to me”, then you are "
 "probably OK."
 msgstr ""
+"Если вы подходите под один из этих примеров или если ваша мотивация задать "
+"вопрос - \"я хотел бы принять участие в обсуждении ______\", то вам следует "
+"задавать его не здесь, а в наших списках рассылки. Однако если ваша "
+"мотивация - \"я хотел бы, чтобы другие объяснили мне, что такое ______\", то"
+" вы, вероятно, не против."
+
+#. module: website_slides_forum
+#: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__image_1920
+msgid "Image"
+msgstr "Изображение"
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.res_config_settings_view_form
+msgid "Manage Forums"
+msgstr "Управление форумами"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "More over:"
-msgstr "Более:"
+msgstr "Больше:"
+
+#. module: website_slides_forum
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
+msgid "No Forum Post yet!"
+msgstr "Пока нет сообщений на форуме!"
 
 #. module: website_slides_forum
 #: model:ir.model.fields,field_description:website_slides_forum.field_slide_channel__forum_total_posts
 msgid "Number of active forum posts"
-msgstr ""
+msgstr "Количество активных сообщений на форуме"
 
 #. module: website_slides_forum
 #: model:ir.model.constraint,message:website_slides_forum.constraint_slide_channel_forum_uniq
-msgid "Only one forum per slide channel!"
-msgstr ""
+msgid "Only one course per forum!"
+msgstr "Только один курс на форуме!"
 
 #. module: website_slides_forum
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum_post
 msgid "Posts"
-msgstr "Посты"
+msgstr "Записи"
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.snippet_options
+msgid "Separate Courses"
+msgstr "Отдельные курсы"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid "Register"
+msgid ""
+"Share and discuss the best content and new marketing ideas, build your "
+"professional profile and become a better marketer together."
+msgstr ""
+"Делитесь и обсуждайте лучший контент и новые маркетинговые идеи, повышайте "
+"свой профессиональный уровень и становитесь лучшим маркетологом вместе."
+
+#. module: website_slides_forum
+#: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__visibility
+msgid "Show Course To"
+msgstr "Показать курс"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Sign up"
 msgstr "Регистрация"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
-msgid "Review"
-msgstr "Обзор"
-
-#. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "See all Courses"
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"The goal of this site is create a relevant knowledge base that would answer "
+"questions related to Odoo."
 msgstr ""
+"Цель этого сайта - создать актуальную базу знаний, которая будет отвечать на"
+" вопросы, связанные с Odoo."
 
 #. module: website_slides_forum
-#: model:ir.model,name:website_slides_forum.model_slide_channel
-msgid "Slide Channel"
-msgstr "канал видео"
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"Therefore questions and answers can be edited like wiki pages by experienced"
+" users of this site in order to improve the overall quality of the knowledge"
+" base content. Such privileges are granted based on user karma level: you "
+"will be able to do the same once your karma gets high enough."
+msgstr ""
+"Поэтому вопросы и ответы могут редактироваться опытными пользователями этого"
+" сайта как вики-страницы, чтобы улучшить общее качество содержимого базы "
+"знаний. Такие привилегии предоставляются в зависимости от уровня кармы "
+"пользователя: вы сможете делать то же самое, как только ваша карма станет "
+"достаточно высокой."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -310,18 +408,8 @@ msgid ""
 "This community is for professional and enthusiast users, partners and "
 "programmers. You can ask questions about:"
 msgstr ""
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"This community is for professionals and enthusiasts of our products and services.\n"
-"                                        <br>Share and discuss the best content and new marketing ideas, build your professional profile and become a better marketer together."
-msgstr ""
-"Это сообщество предназначена для профессионалов и энтузиастов наших товаров "
-"и услуг. <br> Поделитесь и обсудите лучший содержание и новые маркетинговые "
-"идеи, постройте свой профессиональный профиль и станьте лучшим маркетологом "
-"вместе."
+"Это сообщество предназначено для профессиональных пользователей и "
+"энтузиастов, партнеров и программистов. Вы можете задать вопросы о:"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -330,11 +418,13 @@ msgid ""
 "To prevent your question from being flagged and possibly removed, avoid "
 "asking subjective questions where …"
 msgstr ""
+"Чтобы ваш вопрос не был отмечен и, возможно, удален, избегайте задавать "
+"субъективные вопросы, в которых .."
 
 #. module: website_slides_forum
 #: model:forum.forum,name:website_slides_forum.forum_forum_demo_channel_2
 msgid "Trees, Wood and Gardens"
-msgstr ""
+msgstr "Деревья, лес и сады"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
@@ -351,6 +441,11 @@ msgid ""
 "rough measure of the community trust to him/her. Various moderation tasks "
 "are gradually assigned to the users based on those points."
 msgstr ""
+"Если вопрос или ответ на него проголосовали, пользователь, опубликовавший "
+"их, получает некоторое количество баллов, которые называются \"баллами "
+"кармы\". Эти баллы служат приблизительной мерой доверия сообщества к нему. "
+"На основе этих баллов пользователям постепенно назначаются различные "
+"модераторские задания."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -360,29 +455,26 @@ msgid ""
 " that you face. Chatty, open-ended questions diminish the usefulness of this"
 " site and push other questions off the front page."
 msgstr ""
+"Вы должны задавать только практические вопросы, на которые можно ответить, "
+"основываясь на реальных проблемах, с которыми вы сталкиваетесь. Болтливые, "
+"открытые вопросы снижают полезность этого сайта и вытесняют другие вопросы с"
+" первой страницы."
 
 #. module: website_slides_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_forum_view_form
 msgid "eLearning"
-msgstr "Онлайн обучение"
+msgstr "eLearning"
 
 #. module: website_slides_forum
-#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_channel
-#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_report
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_post_view_graph_slides
 msgid "eLearning Forum Posts"
-msgstr ""
-
-#. module: website_slides_forum
-#: model:ir.actions.act_window,name:website_slides_forum.forum_forum_action_channel
-msgid "eLearning Forums"
-msgstr ""
+msgstr "сообщения форума eLearning"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "every answer is equally valid: “What’s your favorite ______?”"
-msgstr "каждый ответ в равной степени относится: \"Какой ваш любимый ______?\""
+msgstr "каждый ответ одинаково верен: \"Какой ваш любимый ______?\""
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -401,7 +493,7 @@ msgstr "как разрабатывать модули для собственн
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "how to install Odoo on a specific infrastructure,"
-msgstr "как установить Odoo на конкретной инфраструктуре,"
+msgstr "как установить Odoo на конкретную инфраструктуру,"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -413,7 +505,7 @@ msgstr "это громкие слова, замаскированный под 
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "specific questions about Odoo service offers, etc."
-msgstr "конкретные вопросы о Odoo сервисных предложениях, и др."
+msgstr "конкретные вопросы о предложениях услуг Odoo и т.д."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0

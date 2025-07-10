@@ -16,29 +16,24 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?"
-"2:1));\n"
+"Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?2:1));\n"
 
 #. module: hw_escpos
 #: code:addons/hw_escpos/controllers/main.py:302
-#, python-format
 msgid "         TOTAL"
 msgstr "TOTAL"
 
 #. module: hw_escpos
 #: code:addons/hw_escpos/controllers/main.py:312
-#, python-format
 msgid "        CHANGE"
 msgstr "REST"
 
 #. module: hw_escpos
 #: code:addons/hw_escpos/controllers/main.py:318
-#, python-format
 msgid "Discounts"
 msgstr "Reduceri:"
 
 #. module: hw_escpos
 #: code:addons/hw_escpos/controllers/main.py:293
-#, python-format
 msgid "Subtotal"
 msgstr "Subtotal"

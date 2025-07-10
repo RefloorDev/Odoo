@@ -4,8 +4,8 @@
     'version': '1.1',
     'summary': 'API',
     'description': "",
-    "author": "One Team US LLC",
-    'website': 'https://oneteam.us/',
+    "author": "Sagar Mokariya",
+    'website': 'https://www.xeonglobal.com',
     'depends': ['team_api_configuration', 'team_sale_contract', 'otl_user_case_insensitive_login'],
     'data': [
         'security/ir.model.access.csv',
@@ -19,5 +19,6 @@
     'installable': True,
     'external_dependencies': {
         'python': ['fusion_refloor'],
-    }
+    },
+    'license': 'OPL-1',
 }

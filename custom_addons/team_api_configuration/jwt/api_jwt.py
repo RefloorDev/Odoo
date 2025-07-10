@@ -2,7 +2,7 @@ import json
 import warnings
 
 from calendar import timegm
-from collections import Mapping
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 
 from .api_jws import PyJWS

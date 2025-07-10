@@ -12,7 +12,7 @@
                         <field name="model_id"/>
                         <field name="is_default"/>
                         <field name="action_id"/>
-                        <field name="active"/>
+                        <field name="active" widget="boolean_toggle"/>
                     </group>
                     <group>
                         <field name="domain" widget="domain" options="{'model': 'model_id'}"/>
@@ -26,7 +26,7 @@
         <record id="ir_filters_view_tree" model="ir.ui.view">
             <field name="model">ir.filters</field>
             <field name="arch" type="xml">
-                <tree string="Filters">
+                <list string="Filters">
                     <field name="name"/>
                     <field name="model_id"/>
                     <field name="user_id"/>
@@ -35,7 +35,7 @@
                     <field name="domain" groups="base.group_no_one"/>
                     <field name="context" groups="base.group_no_one"/>
                     <field name="sort" groups="base.group_no_one"/>
-                </tree>
+                </list>
             </field>
         </record>
         <record id="ir_filters_view_search" model="ir.ui.view">
@@ -59,7 +59,6 @@
         </record>
         <record id="actions_ir_filters_view" model="ir.actions.act_window">
             <field name="name">User-defined Filters</field>
-            <field name="type">ir.actions.act_window</field>
             <field name="res_model">ir.filters</field>
         </record>
         <menuitem parent="base.next_id_2" name="User-defined Filters"

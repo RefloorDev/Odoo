@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo noupdate="1">
-    
+
     <!-- Size -->
     <record id="product_attribute_size" model="product.attribute">
         <field name="name">Size</field>
@@ -31,7 +31,7 @@
         <field name="attribute_id" ref="product_attribute_size"/>
         <field name="sequence">5</field>
     </record>
-    
+
     <!-- Color -->
     <record id="product_attribute_value_color_1" model="product.attribute.value">
         <field name="name">Blue</field>
@@ -53,7 +53,7 @@
         <field name="attribute_id" ref="product.product_attribute_2"/>
         <field name="sequence">6</field>
     </record>
-    
+
     <!-- Gender -->
     <record id="product_attribute_gender" model="product.attribute">
         <field name="name">Gender</field>

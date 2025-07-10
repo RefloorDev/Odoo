@@ -13,15 +13,15 @@
                          <group>
                              <field name="reason"/>
                              <field name="date" string="Debit Note Date"/>
-                             <field name="copy_lines" attrs="{'invisible': [('move_type', 'in', ['in_refund', 'out_refund'])]}"/>
+                             <field name="copy_lines" invisible="move_type in ['in_refund', 'out_refund']"/>
                          </group>
                          <group>
                              <field name="journal_id" domain="[('type', '=', journal_type)]"/>
                          </group>
                     </group>
                     <footer>
-                        <button string='Create Debit Note' name="create_debit" type="object" class="btn-primary"/>
-                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                        <button string='Create Debit Note' name="create_debit" type="object" class="btn-primary" data-hotkey="q"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
                     </footer>
                </form>
             </field>
@@ -30,7 +30,7 @@
         <record id="action_view_account_move_debit" model="ir.actions.act_window">
             <field name="name">Create Debit Note</field>
             <field name="res_model">account.debit.note</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
             <field name="view_id" ref="view_account_debit_note"/>
             <field name="target">new</field>
             <field name="binding_model_id" ref="account.model_account_move" />

@@ -1,62 +1,40 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, models, _
-
-import logging
-_logger = logging.getLogger(__name__)
+from odoo import models, _
+from odoo.addons.account.models.chart_template import template
 
 
-class AccountChartTemplate(models.Model):
+class AccountChartTemplate(models.AbstractModel):
     _inherit = "account.chart.template"
 
-    @api.model
-    def generate_journals(self, acc_template_ref, company, journals_dict=None):
-        journal_to_add = [{'name': _('Inventory Valuation'), 'type': 'general', 'code': 'STJ', 'favorite': False, 'sequence': 8}]
-        return super(AccountChartTemplate, self).generate_journals(acc_template_ref=acc_template_ref, company=company, journals_dict=journal_to_add)
-
-    def generate_properties(self, acc_template_ref, company, property_list=None):
-        res = super(AccountChartTemplate, self).generate_properties(acc_template_ref=acc_template_ref, company=company)
-        PropertyObj = self.env['ir.property']  # Property Stock Journal
-        value = self.env['account.journal'].search([('company_id', '=', company.id), ('code', '=', 'STJ'), ('type', '=', 'general')], limit=1)
-        if value:
-            field = self.env['ir.model.fields'].search([('name', '=', 'property_stock_journal'), ('model', '=', 'product.category'), ('relation', '=', 'account.journal')], limit=1)
-            vals = {
-                'name': 'property_stock_journal',
-                'company_id': company.id,
-                'fields_id': field.id,
-                'value': 'account.journal,%s' % value.id,
-            }
-            properties = PropertyObj.search([('name', '=', 'property_stock_journal'), ('company_id', '=', company.id)])
-            if properties:
-                # the property exist: modify it
-                properties.write(vals)
-            else:
-                # create the property
-                PropertyObj.create(vals)
-
-        todo_list = [  # Property Stock Accounts
-            'property_stock_account_input_categ_id',
-            'property_stock_account_output_categ_id',
-            'property_stock_valuation_account_id',
-        ]
-        for record in todo_list:
-            account = getattr(self, record)
-            value = account and 'account.account,' + str(acc_template_ref[account.id]) or False
+    def _post_load_data(self, template_code, company, template_data):
+        super()._post_load_data(template_code, company, template_data)
+        company = company or self.env.company
+        fields_name = self.env['product.category']._get_stock_account_property_field_names()
+        ProductCategory = self.env['product.category'].with_company(company.id)
+        for fname in fields_name:
+            fallback = ProductCategory._fields[fname].get_company_dependent_fallback(ProductCategory).id
+            if ProductCategory.search_count([(fname, '!=', fallback)], limit=1):
+                continue
+            value = template_data.get(fname)
             if value:
-                field = self.env['ir.model.fields'].search([('name', '=', record), ('model', '=', 'product.category'), ('relation', '=', 'account.account')], limit=1)
-                vals = {
-                    'name': record,
-                    'company_id': company.id,
-                    'fields_id': field.id,
-                    'value': value,
-                }
-                properties = PropertyObj.search([('name', '=', record), ('company_id', '=', company.id)], limit=1)
-                if not properties:
-                    # create the property
-                    PropertyObj.create(vals)
-                elif not properties.value_reference:
-                    # update the property if False
-                    properties.write(vals)
+                self.env['ir.default'].set('product.category', fname, self.ref(value).id, company_id=company.id)
 
-        return res
+    @template(model='account.journal')
+    def _get_stock_account_journal(self, template_code):
+        return {
+            'inventory_valuation': {
+                'name': _('Inventory Valuation'),
+                'code': 'STJ',
+                'type': 'general',
+                'sequence': 10,
+                'show_on_dashboard': False,
+            },
+        }
+
+    @template()
+    def _get_stock_template_data(self, template_code):
+        return {
+            'property_stock_journal': 'inventory_valuation',
+        }

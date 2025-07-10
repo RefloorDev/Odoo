@@ -5,7 +5,7 @@
     'name': 'Indian - Purchase Report(GST)',
     'version': '1.0',
     'description': """GST Purchase Report""",
-    'category': 'Accounting/Accounting',
+    'category': 'Accounting/Localizations/Purchase',
     'depends': [
         'l10n_in',
         'purchase',
@@ -15,6 +15,6 @@
         'views/purchase_order_views.xml',
     ],
     'installable': True,
-    'application': False,
     'auto_install': True,
+    'license': 'LGPL-3',
 }

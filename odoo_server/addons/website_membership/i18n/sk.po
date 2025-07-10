@@ -3,19 +3,16 @@
 # 	* website_membership
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Jaroslav Bosansky <jaro.bosansky@ekoenergo.sk>, 2019
-# gebri <gebri@inmail.sk>, 2019
-# Jan Prokop, 2019
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:33+0000\n"
-"PO-Revision-Date: 2019-08-26 09:16+0000\n"
-"Last-Translator: Jan Prokop, 2019\n"
-"Language-Team: Slovak (https://www.transifex.com/odoo/teams/41243/sk/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Slovak (https://app.transifex.com/odoo/teams/41243/sk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -29,7 +26,7 @@ msgid ""
 "link\" title=\"External link\"/>"
 msgstr ""
 "<span class=\"fa fa-external-link\" role=\"img\" aria-label=\"External "
-"link\" title=\"Externý link\"/>"
+"link\" title=\"External link\"/>"
 
 #. module: website_membership
 #: model_terms:ir.ui.view,arch_db:website_membership.index
@@ -37,8 +34,8 @@ msgid "All"
 msgstr "Všetko"
 
 #. module: website_membership
-#: code:addons/website_membership/controllers/main.py:83
-#, python-format
+#. odoo-python
+#: code:addons/website_membership/controllers/main.py:0
 msgid "All Countries"
 msgstr "Všetky krajiny"
 
@@ -50,7 +47,12 @@ msgstr "Asociácie"
 #. module: website_membership
 #: model_terms:ir.ui.view,arch_db:website_membership.opt_index_google_map
 msgid "Close"
-msgstr "Zatvor"
+msgstr "Zatvoriť"
+
+#. module: website_membership
+#: model_terms:ir.ui.view,arch_db:website_membership.partner
+msgid "DROP BUILDING BLOCKS HERE TO MAKE THEM AVAILABLE ACROSS ALL MEMBERS"
+msgstr ""
 
 #. module: website_membership
 #: model_terms:ir.ui.view,arch_db:website_membership.index
@@ -58,26 +60,33 @@ msgid "Find a business partner"
 msgstr "Nájsť obchodného partnera"
 
 #. module: website_membership
-#: code:addons/website_membership/controllers/main.py:126
-#, python-format
+#. odoo-python
+#: code:addons/website_membership/controllers/main.py:0
 msgid "Free Members"
 msgstr "Bezplatný členovia"
 
 #. module: website_membership
 #: model_terms:ir.ui.view,arch_db:website_membership.opt_index_country
+#: model_terms:ir.ui.view,arch_db:website_membership.snippet_options
 msgid "Location"
-msgstr "Umiestnenie"
+msgstr "Miesto"
 
 #. module: website_membership
+#. odoo-python
+#: code:addons/website_membership/models/website.py:0
 #: model_terms:ir.ui.view,arch_db:website_membership.index
-#: model:website.menu,name:website_membership.menu_members
 msgid "Members"
 msgstr "Členovia"
 
 #. module: website_membership
+#: model_terms:ir.ui.view,arch_db:website_membership.snippet_options
+msgid "Members Page"
+msgstr ""
+
+#. module: website_membership
 #: model:ir.model,name:website_membership.model_membership_membership_line
 msgid "Membership Line"
-msgstr ""
+msgstr "Členská línia"
 
 #. module: website_membership
 #: model_terms:ir.ui.view,arch_db:website_membership.index
@@ -90,11 +99,12 @@ msgid "Our Members Directory"
 msgstr "Náš adresár členstva"
 
 #. module: website_membership
-#: model_terms:ir.ui.view,arch_db:website_membership.opt_index_google_map
-msgid "World Map"
-msgstr "Mapa sveta"
+#: model:ir.model,name:website_membership.model_website
+msgid "Website"
+msgstr "Webstránka"
 
 #. module: website_membership
-#: model_terms:ir.ui.view,arch_db:website_membership.index
-msgid "float-left"
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:website_membership.opt_index_google_map
+#: model_terms:ir.ui.view,arch_db:website_membership.snippet_options
+msgid "World Map"
+msgstr "Mapa sveta"

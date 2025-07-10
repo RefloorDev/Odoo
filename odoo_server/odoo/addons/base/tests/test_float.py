@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from math import log10
 
 from odoo.tests.common import TransactionCase
-from odoo.tools import float_compare, float_is_zero, float_repr, float_round, float_split_str
+from odoo.tools import float_compare, float_is_zero, float_repr, float_round, float_split, float_split_str
 
 
 class TestFloatPrecision(TransactionCase):
@@ -14,9 +13,9 @@ class TestFloatPrecision(TransactionCase):
         """ Test rounding methods with 2 digits. """
         currency = self.env.ref('base.EUR')
 
-        def try_round(amount, expected):
-            digits = max(0, -int(log10(currency.rounding)))
-            result = float_repr(currency.round(amount), precision_digits=digits)
+        def try_round(amount, expected, digits=2, method='HALF-UP'):
+            value = float_round(amount, precision_digits=digits, rounding_method=method)
+            result = float_repr(value, precision_digits=digits)
             self.assertEqual(result, expected, 'Rounding error: got %s, expected %s' % (result, expected))
 
         try_round(2.674,'2.67')
@@ -29,6 +28,10 @@ class TestFloatPrecision(TransactionCase):
         try_round(-0.005,'-0.01') # the rule is to round half away from zero
         try_round(6.6 * 0.175, '1.16') # 6.6 * 0.175 is rounded to 1.15 with epsilon = 53
         try_round(-6.6 * 0.175, '-1.16')
+        try_round(5.015, '5.02', method='HALF-EVEN')
+        try_round(5.025, '5.02', method='HALF-EVEN')
+        try_round(-5.015, '-5.02', method='HALF-EVEN')
+        try_round(-5.025, '-5.02', method='HALF-EVEN')
 
         def try_zero(amount, expected):
             self.assertEqual(currency.is_zero(amount), expected,
@@ -71,8 +74,10 @@ class TestFloatPrecision(TransactionCase):
             result = float_repr(value, precision_digits=digits)
             self.assertEqual(result, expected, 'Rounding error: got %s, expected %s' % (result, expected))
 
-        try_round(2.6745, '2.675')
-        try_round(-2.6745, '-2.675')
+        try_round(2.6735, '2.674')  # Tie rounds away from 0
+        try_round(-2.6735, '-2.674')  # Tie rounds away from 0
+        try_round(2.6745, '2.675')  # Tie rounds away from 0
+        try_round(-2.6745, '-2.675')  # Tie rounds away from 0
         try_round(2.6744, '2.674')
         try_round(-2.6744, '-2.674')
         try_round(0.0004, '0.000')
@@ -81,6 +86,34 @@ class TestFloatPrecision(TransactionCase):
         try_round(-357.4555, '-357.456')
         try_round(457.4554, '457.455')
         try_round(-457.4554, '-457.455')
+
+        # Try some rounding value with rounding method HALF-DOWN instead of HALF-UP
+        try_round(2.6735, '2.673', method='HALF-DOWN')  # Tie rounds towards 0
+        try_round(-2.6735, '-2.673', method='HALF-DOWN')  # Tie rounds towards 0
+        try_round(2.6745, '2.674', method='HALF-DOWN')  # Tie rounds towards 0
+        try_round(-2.6745, '-2.674', method='HALF-DOWN')  # Tie rounds towards 0
+        try_round(2.6744, '2.674', method='HALF-DOWN')
+        try_round(-2.6744, '-2.674', method='HALF-DOWN')
+        try_round(0.0004, '0.000', method='HALF-DOWN')
+        try_round(-0.0004, '-0.000', method='HALF-DOWN')
+        try_round(357.4555, '357.455', method='HALF-DOWN')
+        try_round(-357.4555, '-357.455', method='HALF-DOWN')
+        try_round(457.4554, '457.455', method='HALF-DOWN')
+        try_round(-457.4554, '-457.455', method='HALF-DOWN')
+
+        # Try some rounding value with rounding method HALF-EVEN instead of HALF-UP
+        try_round(2.6735, '2.674', method='HALF-EVEN')  # Tie rounds to the closest even number (i.e. up here)
+        try_round(-2.6735, '-2.674', method='HALF-EVEN')  # Tie rounds to the closest even number (i.e. up here)
+        try_round(2.6745, '2.674', method='HALF-EVEN')  # Tie rounds to the closest even number (i.e. down here)
+        try_round(-2.6745, '-2.674', method='HALF-EVEN')  # Tie rounds to the closest even number (i.e. down here)
+        try_round(2.6744, '2.674', method='HALF-EVEN')
+        try_round(-2.6744, '-2.674', method='HALF-EVEN')
+        try_round(0.0004, '0.000', method='HALF-EVEN')
+        try_round(-0.0004, '-0.000', method='HALF-EVEN')
+        try_round(357.4555, '357.456', method='HALF-EVEN')
+        try_round(-357.4555, '-357.456', method='HALF-EVEN')
+        try_round(457.4554, '457.455', method='HALF-EVEN')
+        try_round(-457.4554, '-457.455', method='HALF-EVEN')
 
         # Try some rounding value with rounding method UP instead of HALF-UP
         # We use 8.175 because when normalizing 8.175 with precision_digits=3 it gives
@@ -149,7 +182,7 @@ class TestFloatPrecision(TransactionCase):
         try_compare(-657.4444, -657.445, 1)
 
         # Rounding to unusual rounding units (e.g. coin values)
-        def try_round(amount, expected, precision_rounding=None, method='HALF-UP'):
+        def try_round(amount, expected, precision_rounding=None, method='HALF-UP'): # pylint: disable=function-redefined
             value = float_round(amount, precision_rounding=precision_rounding, rounding_method=method)
             result = float_repr(value, precision_digits=2)
             self.assertEqual(result, expected, 'Rounding error: got %s, expected %s' % (result, expected))
@@ -186,16 +219,29 @@ class TestFloatPrecision(TransactionCase):
         """ Test split method with 2 digits. """
         currency = self.env.ref('base.EUR')
 
-        def try_split(value, expected):
-            digits = max(0, -int(log10(currency.rounding)))
-            result = float_split_str(value, precision_digits=digits)
+        def try_split(value, expected, split_fun, rounding=None):
+            digits = max(0, -int(log10(currency.rounding))) if rounding is None else rounding
+            result = split_fun(value, precision_digits=digits)
             self.assertEqual(result, expected, 'Split error: got %s, expected %s' % (result, expected))
 
-        try_split(2.674, ('2', '67'))
-        try_split(2.675, ('2', '68'))   # in Python 2.7.2, round(2.675,2) gives 2.67
-        try_split(-2.675, ('-2', '68')) # in Python 2.7.2, round(2.675,2) gives 2.67
-        try_split(0.001, ('0', '00'))
-        try_split(-0.001, ('-0', '00'))
+        try_split(2.674, ('2', '67'), float_split_str)
+        try_split(2.675, ('2', '68'), float_split_str)   # in Python 2.7.2, round(2.675,2) gives 2.67
+        try_split(-2.675, ('-2', '68'), float_split_str) # in Python 2.7.2, round(2.675,2) gives 2.67
+        try_split(0.001, ('0', '00'), float_split_str)
+        try_split(-0.001, ('-0', '00'), float_split_str)
+        try_split(42, ('42', '00'), float_split_str)
+        try_split(0.1, ('0', '10'), float_split_str)
+        try_split(13.0, ('13', ''), float_split_str, rounding=0)
+
+        try_split(2.674, (2, 67), float_split)
+        try_split(2.675, (2, 68), float_split)   # in Python 2.7.2, round(2.675,2) gives 2.67
+        try_split(-2.675, (-2, 68), float_split) # in Python 2.7.2, round(2.675,2) gives 2.67
+        try_split(0.001, (0, 0), float_split)
+        try_split(-0.001, (0, 0), float_split)
+        try_split(42, (42, 0), float_split)
+        try_split(0.1, (0, 10), float_split)
+        try_split(13.0, (13, 0), float_split, rounding=0)
+
 
     def test_rounding_invalid(self):
         """ verify that invalid parameters are forbidden """
@@ -221,10 +267,19 @@ class TestFloatPrecision(TransactionCase):
             float_round(0.01, precision_digits=3, precision_rounding=0.01)
 
         with self.assertRaises(AssertionError):
+            float_round(-1.0, precision_digits=0, precision_rounding=0.1)
+
+        with self.assertRaises(AssertionError):
             float_round(1.25, precision_rounding=0.0)
 
         with self.assertRaises(AssertionError):
             float_round(1.25, precision_rounding=-0.1)
+
+        with self.assertRaises(AssertionError):
+            float_round(1.25, precision_digits=-1)
+
+        with self.assertRaises(AssertionError):
+            float_round(1.25, precision_digits=0.5)
 
     def test_amount_to_text_10(self):
         """ verify that amount_to_text works as expected """

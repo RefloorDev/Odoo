@@ -3,27 +3,63 @@
 # 	* analytic
 # 
 # Translators:
-# Martin Trigaux, 2019
-# krnkris, 2019
-# gezza <geza.nagy@oregional.hu>, 2019
-# Ákos Nagy <akos.nagy@oregional.hu>, 2019
-# Tibor Kőnig <konig.tibor@evitalit.hu>, 2019
-# Daniel Gerstenbrand <daniel.gerstenbrand@gmail.com>, 2019
-# Tamás Németh <ntomasz81@gmail.com>, 2019
+# f1b3a33e3b33fcf18004a5292e501f50_3500ca8 <373b677b151624c4521d9efc77b996fd_750224>, 2024
+# Gergő Kertész <gergo.kertesz@maxflow.hu>, 2024
+# Tamás Németh <ntomasz81@gmail.com>, 2024
+# Tamás Dombos, 2024
+# Ákos Nagy <akos.nagy@oregional.hu>, 2024
+# gezza <geza.nagy@oregional.hu>, 2024
+# Martin Trigaux, 2024
+# krnkris, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-12-05 12:32+0000\n"
-"PO-Revision-Date: 2019-08-26 09:08+0000\n"
-"Last-Translator: Tamás Németh <ntomasz81@gmail.com>, 2019\n"
-"Language-Team: Hungarian (https://www.transifex.com/odoo/teams/41243/hu/)\n"
+"POT-Creation-Date: 2025-01-27 13:03+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: krnkris, 2024\n"
+"Language-Team: Hungarian (https://app.transifex.com/odoo/teams/41243/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: hu\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_account.py:0
+msgid "%s (copy)"
+msgstr "%s (másolat)"
+
+#. module: analytic
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_plan_form_view
+msgid "<span class=\"o_stat_text\">Analytic Accounts</span>"
+msgstr ""
+
+#. module: analytic
+#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_form
+msgid "<span class=\"o_stat_text\">Gross Margin</span>"
+msgstr ""
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_plan.py:0
+msgid ""
+"A 'Project' plan needs to exist and its id needs to be set as "
+"`analytic.project_plan` in the system variables"
+msgstr ""
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+msgid "Account field"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__account_ids
+msgid "Accounts"
+msgstr "Számlák"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_needaction
@@ -32,20 +68,35 @@ msgstr "Akció szükséges"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__active
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__active
 msgid "Active"
 msgstr "Aktív"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_active_account
+msgid "Active account"
+msgstr ""
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.xml:0
+msgid "Add a Line"
+msgstr "Sor hozzáadása"
 
 #. module: analytic
 #: model_terms:ir.actions.act_window,help:analytic.action_account_analytic_account_form
 #: model_terms:ir.actions.act_window,help:analytic.action_analytic_account_form
 msgid "Add a new analytic account"
-msgstr "Új elemző hozzáférés létrehozása"
+msgstr "Új analitikus számla"
 
 #. module: analytic
-#: model_terms:ir.actions.act_window,help:analytic.account_analytic_tag_action
-msgid "Add a new tag"
-msgstr "Új címke"
+#: model:account.analytic.account,name:analytic.analytic_administratif
+msgid "Administrative"
+msgstr "Közigazgatási"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__all_account_count
+msgid "All Analytic Accounts Count"
+msgstr ""
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__amount
@@ -54,77 +105,81 @@ msgid "Amount"
 msgstr "Összeg"
 
 #. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+msgid "Amount field"
+msgstr ""
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.xml:0
+msgid "Analytic"
+msgstr "Analitika"
+
+#. module: analytic
 #: model:ir.model,name:analytic.model_account_analytic_account
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__name
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__account_id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__account_id
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__auto_account_id
+#: model:ir.model.fields,field_description:analytic.field_analytic_plan_fields_mixin__auto_account_id
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_form
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_search
-#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_filter
 msgid "Analytic Account"
 msgstr "Analitikus számla"
 
 #. module: analytic
-#: model:ir.model,name:analytic.model_account_analytic_distribution
-msgid "Analytic Account Distribution"
-msgstr ""
-
-#. module: analytic
-#: model:ir.actions.act_window,name:analytic.account_analytic_group_action
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_group_form_view
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_group_tree_view
-msgid "Analytic Account Groups"
-msgstr ""
-
-#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_res_config_settings__group_analytic_accounting
 #: model:res.groups,name:analytic.group_analytic_accounting
 msgid "Analytic Accounting"
 msgstr "Analitikus könyvvitel"
 
 #. module: analytic
-#: model:res.groups,name:analytic.group_analytic_tags
-msgid "Analytic Accounting Tags"
-msgstr ""
-
-#. module: analytic
 #: model:ir.actions.act_window,name:analytic.action_account_analytic_account_form
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__analytic_distribution_ids
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_list
 msgid "Analytic Accounts"
 msgstr "Analitikus számlák"
 
 #. module: analytic
-#: model:ir.model,name:analytic.model_account_analytic_group
-msgid "Analytic Categories"
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__account_count
+msgid "Analytic Accounts Count"
 msgstr ""
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__active_analytic_distribution
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_tag_form_view
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__analytic_distribution
+#: model:ir.model.fields,field_description:analytic.field_analytic_mixin__analytic_distribution
 msgid "Analytic Distribution"
-msgstr "Gyűjtő/elemző  felosztás"
+msgstr "Analitikus felosztás"
 
 #. module: analytic
-#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_graph
-#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_pivot
-#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_tree
-msgid "Analytic Entries"
-msgstr "Analitikus tételek"
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+#: model:ir.model,name:analytic.model_account_analytic_distribution_model
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_distribution_model_form_view
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_distribution_model_tree_view
+msgid "Analytic Distribution Model"
+msgstr ""
+
+#. module: analytic
+#: model:ir.actions.act_window,name:analytic.action_analytic_distribution_model
+msgid "Analytic Distribution Models"
+msgstr ""
 
 #. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_form
-msgid "Analytic Entry"
-msgstr "Analitikus tétel"
+msgid "Analytic Item"
+msgstr ""
 
 #. module: analytic
 #: model:ir.actions.act_window,name:analytic.account_analytic_line_action_entries
+#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_graph
+#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_pivot
+#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_tree
 msgid "Analytic Items"
-msgstr "Analitikai gyűjtőkód tételek"
+msgstr "Analitikus tételek"
 
 #. module: analytic
 #: model:ir.model,name:analytic.model_account_analytic_line
 msgid "Analytic Line"
-msgstr "Analitikus tétel"
+msgstr "Analitikus sor"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__line_ids
@@ -132,21 +187,59 @@ msgid "Analytic Lines"
 msgstr "Analitikus sorok"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__name
-msgid "Analytic Tag"
-msgstr "Analitikus címke"
+#: model:ir.model,name:analytic.model_analytic_mixin
+msgid "Analytic Mixin"
+msgstr ""
 
 #. module: analytic
-#: model:ir.actions.act_window,name:analytic.account_analytic_tag_action
-#: model:ir.model,name:analytic.model_account_analytic_tag
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_tag_form_view
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_tag_tree_view
-msgid "Analytic Tags"
-msgstr "Analitikus címkék"
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__analytic_plan_id
+msgid "Analytic Plan"
+msgstr "Analitikus terv"
 
 #. module: analytic
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_tag_form_view
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_tag_view_search
+#: model:ir.model,name:analytic.model_analytic_plan_fields_mixin
+msgid "Analytic Plan Fields"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model,name:analytic.model_account_analytic_applicability
+msgid "Analytic Plan's Applicabilities"
+msgstr ""
+
+#. module: analytic
+#: model:ir.actions.act_window,name:analytic.account_analytic_plan_action
+#: model:ir.model,name:analytic.model_account_analytic_plan
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_plan_form_view
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_plan_tree_view
+msgid "Analytic Plans"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__analytic_precision
+#: model:ir.model.fields,field_description:analytic.field_analytic_mixin__analytic_precision
+msgid "Analytic Precision"
+msgstr "Analitikus pontosság"
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_plan.py:0
+msgid "Analytical Accounts"
+msgstr ""
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_plan.py:0
+msgid "Analytical Plans"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__applicability
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__applicability_ids
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_plan_form_view
+msgid "Applicability"
+msgstr "Alkalmazhatóság"
+
+#. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_form
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_search
 msgid "Archived"
@@ -156,6 +249,17 @@ msgstr "Archivált"
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_search
 msgid "Associated Partner"
 msgstr "Kapcsolódó partner"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_asustek
+msgid "Asustek"
+msgstr ""
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_line.py:0
+msgid "At least one analytic account must be set"
+msgstr ""
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_attachment_count
@@ -171,45 +275,92 @@ msgstr "Egyenleg"
 #. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_kanban
 msgid "Balance:"
+msgstr "Egyenleg:"
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+msgid "Business domain"
 msgstr ""
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__product_uom_category_id
+#: model:account.analytic.account,name:analytic.analytic_partners_camp_to_camp
+msgid "Camp to Camp"
+msgstr ""
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_integration_c2c
+msgid "CampToCamp"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__category
 msgid "Category"
 msgstr "Kategória"
 
 #. module: analytic
 #: model:ir.actions.act_window,name:analytic.action_analytic_account_form
 msgid "Chart of Analytic Accounts"
-msgstr "Analitikus számlák számlatükre"
+msgstr "Analitikus számlatükör"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__children_ids
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__children_count
+msgid "Children Plans Count"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__children_ids
 msgid "Childrens"
+msgstr "Alárendelt"
+
+#. module: analytic
+#: model_terms:ir.actions.act_window,help:analytic.account_analytic_plan_action
+msgid "Click to add a new analytic account plan."
 msgstr ""
 
 #. module: analytic
-#: model_terms:ir.actions.act_window,help:analytic.account_analytic_group_action
-msgid "Click to add a new analytic account group."
-msgstr ""
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.xml:0
+msgid "Close"
+msgstr "Bezárás"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__color
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__color
+msgid "Color"
+msgstr "Szín"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__color
 msgid "Color Index"
-msgstr "Színjegyzék"
+msgstr "Szín index"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_commercial_marketing
+msgid "Commercial & Marketing"
+msgstr ""
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__company_id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__company_id
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__company_id
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__company_id
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__company_id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__company_id
 msgid "Company"
 msgstr "Vállalat"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__complete_name
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__complete_name
 msgid "Complete Name"
 msgstr "Teljes név"
+
+#. module: analytic
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_distribution_model_form_view
+msgid "Conditions to meet"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model,name:analytic.model_res_config_settings
+msgid "Config Settings"
+msgstr "Beállítások"
 
 #. module: analytic
 #: model:ir.model.fields,help:analytic.field_account_analytic_line__product_uom_category_id
@@ -217,18 +368,8 @@ msgid ""
 "Conversion between Units of Measure can only occur if they belong to the "
 "same category. The conversion will be made based on the ratios."
 msgstr ""
-"A mértékegységek közötti átváltás csak akkor valósul meg, ha ugyanabba a "
+"A mértékegységek közötti átváltás csak akkor lehetséges, ha ugyanabba a "
 "kategóriába tartoznak. Az átváltás az arányszámok alapján történik."
-
-#. module: analytic
-#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_form
-msgid "Cost/Revenue"
-msgstr "Költség/Bevétel"
-
-#. module: analytic
-#: model:ir.actions.act_window,name:analytic.account_analytic_line_action
-msgid "Costs & Revenues"
-msgstr "Költségek & Bevételek"
 
 #. module: analytic
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action
@@ -242,19 +383,19 @@ msgstr ""
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__create_uid
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__create_uid
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__create_uid
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__create_uid
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__create_uid
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__create_uid
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__create_uid
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__create_uid
 msgid "Created by"
 msgstr "Létrehozta"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__create_date
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__create_date
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__create_date
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__create_date
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__create_date
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__create_date
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__create_date
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__create_date
 msgid "Created on"
 msgstr "Létrehozva"
 
@@ -282,25 +423,82 @@ msgid "Date"
 msgstr "Dátum"
 
 #. module: analytic
+#: model:ir.model.fields,help:analytic.field_account_analytic_account__active
+msgid "Deactivate the account."
+msgstr ""
+
+#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__debit
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_list
 msgid "Debit"
 msgstr "Tartozik"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__description
+#: model:account.analytic.account,name:analytic.analytic_agrolait
+msgid "Deco Addict"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__default_applicability
+msgid "Default Applicability"
+msgstr ""
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_deltapc
+msgid "Delta PC"
+msgstr ""
+
+#. module: analytic
+#: model:account.analytic.plan,name:analytic.analytic_plan_departments
+msgid "Departments"
+msgstr "Részlegek"
+
+#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__name
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__description
 msgid "Description"
 msgstr "Leírás"
 
 #. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_desertic_hispafuentes
+msgid "Desertic - Hispafuentes"
+msgstr ""
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+msgid "Disable save"
+msgstr ""
+
+#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__display_name
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__display_name
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__display_name
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__display_name
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__display_name
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__display_name
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__display_name
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__display_name
 msgid "Display Name"
 msgstr "Megjelenített név"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__distribution_analytic_account_ids
+#: model:ir.model.fields,field_description:analytic.field_analytic_mixin__distribution_analytic_account_ids
+msgid "Distribution Analytic Account"
+msgstr ""
+
+#. module: analytic
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_distribution_model_form_view
+msgid "Distribution to apply"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__business_domain
+msgid "Domain"
+msgstr "Tartomány"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_rd_finance
+msgid "Finance"
+msgstr "Pénzügy"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_follower_ids
@@ -308,20 +506,20 @@ msgid "Followers"
 msgstr "Követők"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_channel_ids
-msgid "Followers (Channels)"
-msgstr "Követők (Csatornák)"
-
-#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_partner_ids
 msgid "Followers (Partners)"
 msgstr "Követők (Partnerek)"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__group_id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__group_id
-msgid "Group"
-msgstr "Csoport"
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+msgid "Force applicability"
+msgstr ""
+
+#. module: analytic
+#: model:ir.actions.act_window,name:analytic.account_analytic_line_action
+msgid "Gross Margin"
+msgstr ""
 
 #. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_search
@@ -330,17 +528,26 @@ msgid "Group By..."
 msgstr "Csoportosítás..."
 
 #. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__has_message
+msgid "Has Message"
+msgstr "Van üzenet"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_rd_hr
+msgid "Human Resources"
+msgstr "Személyügy"
+
+#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__id
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__id
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__id
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__id
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__id
 msgid "ID"
-msgstr "Azonosító"
+msgstr "ID"
 
 #. module: analytic
 #: model:ir.model.fields,help:analytic.field_account_analytic_account__message_needaction
-#: model:ir.model.fields,help:analytic.field_account_analytic_account__message_unread
 msgid "If checked, new messages require your attention."
 msgstr "Ha be van jelölve, akkor az új üzenetek figyelmet igényelnek."
 
@@ -351,15 +558,6 @@ msgstr ""
 "Ha be van jelölve, akkor néhány üzenetnél kézbesítési hiba lépett fel."
 
 #. module: analytic
-#: model:ir.model.fields,help:analytic.field_account_analytic_account__active
-msgid ""
-"If the active field is set to False, it will allow you to hide the account "
-"without removing it."
-msgstr ""
-"Ha az aktív mező hamisra állított, akkor eltüntetheti a számlát annak "
-"törlése nélkül."
-
-#. module: analytic
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action_entries
 msgid ""
@@ -367,6 +565,14 @@ msgid ""
 "                analytic accounts. You can track costs and revenues to analyse\n"
 "                your margins easily."
 msgstr ""
+"A rendszerben a vevői rendelések és projektek alapértelmezésben használják az\n"
+"                analitkus számlákat. Könnyedén nyomonkövetheti a költségeit és bevételeit a haszon \n"
+"                elemzéséhez."
+
+#. module: analytic
+#: model:account.analytic.plan,name:analytic.analytic_plan_internal
+msgid "Internal"
+msgstr "Belső"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_is_follower
@@ -374,36 +580,43 @@ msgid "Is Follower"
 msgstr "Követő"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account____last_update
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution____last_update
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group____last_update
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_line____last_update
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag____last_update
-msgid "Last Modified on"
-msgstr "Legutóbb frissítve"
-
-#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__write_uid
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__write_uid
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__write_uid
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__write_uid
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__write_uid
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__write_uid
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__write_uid
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__write_uid
 msgid "Last Updated by"
 msgstr "Frissítette"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__write_date
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__write_date
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__write_date
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__write_date
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__write_date
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__write_date
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__write_date
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__write_date
 msgid "Last Updated on"
-msgstr "Frissítve "
+msgstr "Frissítve"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_main_attachment_id
-msgid "Main Attachment"
-msgstr "Fő melléklet"
+#: model:account.analytic.account,name:analytic.analytic_rd_legal
+msgid "Legal"
+msgstr "Jogi"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_think_big_systems
+msgid "Lumber Inc"
+msgstr ""
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_luminous_technologies
+msgid "Luminous Technologies"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_applicability__applicability__mandatory
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_plan__default_applicability__mandatory
+msgid "Mandatory"
+msgstr ""
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_has_error
@@ -416,20 +629,46 @@ msgid "Messages"
 msgstr "Üzenetek"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__name
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__name
+#: model:account.analytic.account,name:analytic.analytic_millennium_industries
+msgid "Millennium Industries"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_applicability__business_domain__general
+msgid "Miscellaneous"
+msgstr "Egyéb"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__name
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_list
 msgid "Name"
 msgstr "Név"
 
 #. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_nebula
+msgid "Nebula"
+msgstr ""
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.xml:0
+msgid "New Model"
+msgstr ""
+
+#. module: analytic
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action_entries
 msgid "No activity yet"
-msgstr ""
+msgstr "Nincs tevékenység"
 
 #. module: analytic
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action
 msgid "No activity yet on this account"
+msgstr "Ezen a számlán nincs aktivitás."
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.xml:0
+msgid "No analytic plans found"
 msgstr ""
 
 #. module: analytic
@@ -444,7 +683,7 @@ msgstr "Hibák száma"
 
 #. module: analytic
 #: model:ir.model.fields,help:analytic.field_account_analytic_account__message_needaction_counter
-msgid "Number of messages which requires an action"
+msgid "Number of messages requiring action"
 msgstr "Üzenetek száma, melyek akciót igényelnek"
 
 #. module: analytic
@@ -453,34 +692,91 @@ msgid "Number of messages with delivery error"
 msgstr "Kézbesítési hibával rendelkező üzenetek száma"
 
 #. module: analytic
-#: model:ir.model.fields,help:analytic.field_account_analytic_account__message_unread_counter
-msgid "Number of unread messages"
-msgstr "Olvasatlan üzenetek száma"
+#. odoo-python
+#: code:addons/analytic/models/analytic_mixin.py:0
+msgid "One or more lines require a 100% analytic distribution."
+msgstr ""
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__parent_id
+#: model:account.analytic.account,name:analytic.analytic_internal
+msgid "Operating Costs"
+msgstr ""
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_mixin.py:0
+msgid "Operation not supported"
+msgstr "A művelet nem támogatott"
+
+#. module: analytic
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_applicability__applicability__optional
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_plan__default_applicability__optional
+msgid "Optional"
+msgstr "Választható"
+
+#. module: analytic
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_line__category__other
+msgid "Other"
+msgstr "Egyéb"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_our_super_product
+msgid "Our Super Product"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__parent_id
 msgid "Parent"
 msgstr "Szülő"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__parent_path
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__parent_path
 msgid "Parent Path"
 msgstr "Szülő útvonal"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__tag_id
-msgid "Parent tag"
-msgstr ""
-
-#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__partner_id
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__partner_id
 msgid "Partner"
 msgstr "Partner"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__percentage
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__partner_category_id
+msgid "Partner Category"
+msgstr ""
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
 msgid "Percentage"
 msgstr "Százalék"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__plan_id
+msgid "Plan"
+msgstr "Terv"
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+msgid "Product field"
+msgstr ""
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_rd_production
+msgid "Production"
+msgstr "Gyártás"
+
+#. module: analytic
+#: model:account.analytic.plan,name:analytic.analytic_plan_projects
+msgid "Project"
+msgstr "Projekt"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__account_id
+#: model:ir.model.fields,field_description:analytic.field_analytic_plan_fields_mixin__account_id
+msgid "Project Account"
+msgstr ""
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__unit_amount
@@ -494,6 +790,11 @@ msgid "Reference"
 msgstr "Hivatkozás"
 
 #. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_rd_department
+msgid "Research & Development"
+msgstr "Kutatás, fejlesztés"
+
+#. module: analytic
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action_entries
 msgid ""
@@ -502,6 +803,31 @@ msgid ""
 "                (fixed price invoices), on timesheets (based on the work done) or\n"
 "                on expenses (e.g. reinvoicing of travel costs)."
 msgstr ""
+"Bevételek  automatikusan létrehozásra kerülnek kimenő (vevői) számla \n"
+"                elkészítésekor. Kimenő (vevői) számlák elkészíthetőek a vevői rendelések alapján \n"
+"                (fix árú számlák), az időkimutatásokból (elvégzett munka alapján) vagy \n"
+"                kiadásokból (pl. utazási költség elszámolás)."
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__root_id
+msgid "Root"
+msgstr ""
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__root_plan_id
+msgid "Root Plan"
+msgstr ""
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.xml:0
+msgid "Save as new analytic distribution model"
+msgstr ""
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_seagate_p2
+msgid "Seagate P2"
+msgstr ""
 
 #. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_filter
@@ -509,38 +835,49 @@ msgid "Search Analytic Lines"
 msgstr "Analitikus sorok keresése"
 
 #. module: analytic
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_tag_view_search
-msgid "Search Analytic Tags"
-msgstr ""
-
-#. module: analytic
-#: model:ir.model.fields,help:analytic.field_account_analytic_tag__active
-msgid "Set active to false to hide the Analytic Tag without removing it."
-msgstr ""
-
-#. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__tag_ids
-msgid "Tags"
-msgstr "Címkék"
-
-#. module: analytic
-#: model:ir.model.constraint,message:analytic.constraint_account_analytic_distribution_check_percentage
+#: model:ir.model.fields,help:analytic.field_account_analytic_distribution_model__company_id
 msgid ""
-"The percentage of an analytic distribution should be between 0 and 100."
+"Select a company for which the analytic distribution will be used (e.g. "
+"create new customer invoice or Sales order if we select this company, it "
+"will automatically take this as an analytic account)"
 msgstr ""
 
 #. module: analytic
-#: code:addons/analytic/models/analytic_account.py:0
-#, python-format
+#: model:ir.model.fields,help:analytic.field_account_analytic_distribution_model__partner_category_id
 msgid ""
-"The selected account belongs to another company that the one you're trying "
-"to create an analytic item for"
+"Select a partner category for which the analytic distribution will be used "
+"(e.g. create new customer invoice or Sales order if we select this partner, "
+"it will automatically take this as an analytic account)"
 msgstr ""
 
 #. module: analytic
-#: model_terms:ir.actions.act_window,help:analytic.account_analytic_group_action
-msgid "This allows to classify your analytic accounts."
+#: model:ir.model.fields,help:analytic.field_account_analytic_distribution_model__partner_id
+msgid ""
+"Select a partner for which the analytic distribution will be used (e.g. "
+"create new customer invoice or Sales order if we select this partner, it "
+"will automatically take this as an analytic account)"
 msgstr ""
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__sequence
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__sequence
+msgid "Sequence"
+msgstr "Sorszám"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_spark
+msgid "Spark Systems"
+msgstr ""
+
+#. module: analytic
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_plan_form_view
+msgid "Subplans"
+msgstr ""
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_absences
+msgid "Time Off"
+msgstr "Szabadság"
 
 #. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_tree
@@ -548,24 +885,47 @@ msgid "Total"
 msgstr "Összesen"
 
 #. module: analytic
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_applicability__applicability__unavailable
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_plan__default_applicability__unavailable
+msgid "Unavailable"
+msgstr ""
+
+#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__product_uom_id
 msgid "Unit of Measure"
 msgstr "Mértékegység"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_unread
-msgid "Unread Messages"
-msgstr "Olvasatlan üzenetek"
-
-#. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_unread_counter
-msgid "Unread Messages Counter"
-msgstr "Olvasatlan üzenetek száma"
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__product_uom_category_id
+msgid "UoM Category"
+msgstr ""
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__user_id
 msgid "User"
 msgstr "Felhasználó"
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_account.py:0
+msgid ""
+"You can't set a different company on your analytic account since there are "
+"some analytic items linked to it."
+msgstr ""
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_plan.py:0
+msgid "You cannot add a parent to the base plan '%s'"
+msgstr ""
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_distribution_model.py:0
+msgid ""
+"You defined a distribution with analytic account(s) belonging to a specific "
+"company but a model shared between companies or with a different company"
+msgstr ""
 
 #. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_form

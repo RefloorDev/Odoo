@@ -3,18 +3,17 @@
 # 	* website_slides_forum
 # 
 # Translators:
-# Mustafa Rawi <mustafa@cubexco.com>, 2019
-# hoxhe Aits <hoxhe0@gmail.com>, 2019
-# Mohammed Ibrahim <m.ibrahim@mussder.com>, 2019
+# Wil Odoo, 2024
+# Malaz Abuidris <msea@odoo.com>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:13+0000\n"
-"PO-Revision-Date: 2019-08-26 09:16+0000\n"
-"Last-Translator: Mohammed Ibrahim <m.ibrahim@mussder.com>, 2019\n"
-"Language-Team: Arabic (https://www.transifex.com/odoo/teams/41243/ar/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Malaz Abuidris <msea@odoo.com>, 2025\n"
+"Language-Team: Arabic (https://app.transifex.com/odoo/teams/41243/ar/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -25,7 +24,8 @@ msgstr ""
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "(The above section was adapted from Stackoverflow’s FAQ.)"
-msgstr "(اقتبس النص أعلاه بتصرف من الأسئلة الشائعة في موقع Stackoverflow.)"
+msgstr ""
+"(تم اقتباس القسم أعلاه بتصرف من الأسئلة الشائعة في موقع Stackoverflow.)"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -41,9 +41,11 @@ msgstr ""
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid ""
-"<b>Answers should not add or expand questions</b>. Insteadeither edit the "
+"<b>Answers should not add or expand questions</b>. Instead, either edit the "
 "question or add a comment."
 msgstr ""
+"<b>لا ينبغي أن تضيف الإجابات أسئلة جديدة أو تزيد من غموض السؤال</b>. يمكنك "
+"تحرير السؤال أو إضافة تعليق عوضاً عن ذلك. "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -64,6 +66,9 @@ msgid ""
 "to dilute the essence of questions and answers. For brief discussions please"
 " use commenting facility."
 msgstr ""
+"<b>يجب ألا تتسبب الأسئلة في بداية مناقشات</b> صفحة الأسئلة والأجوبة "
+"المجتمعية هذه ليست مجموعة مناقشة. يرجى تفادي المناقشات في إجاباتك حيث أنها "
+"خارج إطار الأسئلة والأجوبة. للمناقشات الموجزة، يرجى استخدام صفحة التعليقات. "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -74,9 +79,9 @@ msgid ""
 "to include links to other questions or answers providing relevant additional"
 " information."
 msgstr ""
-"<b>لا ينبغي أن تكون الإجابات مجرد إشارة لأسئلة أخرى</b>. بدلًا من ذلك، أضف "
-"تعليقًا على السؤال للإشارة إلى \"احتمالية كون السؤال مكررًا...\". لكن يمكنك "
-"إضافة روابط لأسئلة أو إجابات أخرى لتوفير معلومات إضافية ذات صلة."
+"<b>لا ينبغي أن تكون الإجابات مجرد إشارة لأسئلة أخرى</b>. بدلاً من ذلك، أضف "
+"تعليقاً على السؤال للإشارة إلى \"احتمالية كون السؤال مكرراً...\". لكن يمكنك "
+"إضافة روابط لأسئلة أو إجابات أخرى لتوفير معلومات إضافية ذات صلة. "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -87,6 +92,9 @@ msgid ""
 "include links to other questions or answers providing relevant additional "
 "information."
 msgstr ""
+"<b>لا ينبغي أن تكون الإجابات مجرد إشارة لأسئلة أخرى</b>. بدلاً من ذلك، أضف "
+"تعليقاً على السؤال للإشارة إلى <i>\"احتمالية كون السؤال مكرراً...\"</i>. لكن"
+" يمكنك إضافة روابط لأسئلة أو إجابات أخرى لتوفير معلومات إضافية ذات صلة. "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -109,6 +117,8 @@ msgid ""
 "You can search questions by their title or tags. It’s also OK to answer your"
 " own question."
 msgstr ""
+"<b>قبل أن تسأل - تأكد من البحث عن سؤال مماثل.</b> يمكنك البحث عن الأسئلة عن "
+"طريق عناوينها أو علامات تصنيفها. لا بأس في أن تجيب على أسئلتك الخاصة. "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -117,96 +127,103 @@ msgid ""
 "<b>Please avoid asking questions that are too subjective and "
 "argumentative</b> or not relevant to this community."
 msgstr ""
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What kinds of questions can I ask here?</b> <i class=\"fa fa-caret-down "
-"float-right\"></i>"
-msgstr ""
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What should I avoid in my answers?</b> <i class=\"fa fa-caret-down float-"
-"right\"></i>"
-msgstr ""
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What should I avoid in my questions?</b> <i class=\"fa fa-caret-down "
-"float-right\"></i>"
-msgstr ""
+"<b>يرجى تجنب طرح الأسئلة غير الموضوعية والأسئلة المثيرة للجدل</b> أو الأسئلة"
+" التي لا صلة لها  بهذا المجتمع. "
 
 #. module: website_slides_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.slide_fullscreen
 msgid ""
-"<i class=\"fa fa-comments\"/><span class=\"ml-1 d-none d-md-inline-"
-"block\">Ask a question</span>"
+"<i class=\"fa fa-comments\"/><span class=\"ms-1 d-none d-md-inline-"
+"block\">Forum</span>"
 msgstr ""
+"<i class=\"fa fa-comments\"/><span class=\"ms-1 d-none d-md-inline-"
+"block\">المنتدى</span>"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
-msgid "<i class=\"fa fa-home\"/> Course"
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What kind of questions can I ask here?</span>"
+msgstr "<span class=\"flex-grow-1\">ما نوع الأسئلة التي يمكنني طرحها هنا؟</span> "
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What should I avoid in my answers?</span>"
+msgstr "<span class=\"flex-grow-1\">ما الذي يجب عليَّ تجنبه في إجاباتي؟</span> "
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What should I avoid in my questions?</span>"
+msgstr "<span class=\"flex-grow-1\">ما الذي يجب عليَّ تجنبه في أسئلتي؟</span>"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"<span class=\"flex-grow-1\">Why can other people edit my "
+"questions/answers?</span>"
 msgstr ""
+"<span class=\"flex-grow-1\">لِمَ بوسع الآخرين تعديل أسئلتي/إجاباتي؟</span> "
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_breadcrumb
+msgid "<strong>Forum</strong>"
+msgstr "<strong>المنتدى</strong> "
 
 #. module: website_slides_forum
 #: model:forum.forum,name:website_slides_forum.forum_forum_demo_channel_0
 msgid "Basics of Gardening"
-msgstr ""
+msgstr "مبادئ العناية بالحدائق "
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Check our Courses <i class=\"fa fa-chevron-right\"/>"
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_all_all_entries
+msgid "Check out our courses <i class=\"fa fa-long-arrow-right\"/>"
+msgstr "ألق نظرة على دوراتنا <i class=\"fa fa-long-arrow-right\"/> "
 
 #. module: website_slides_forum
-#. openerp-web
-#: code:addons/website_slides_forum/static/src/xml/website_slides_forum_channel.xml:0
-#, python-format
-msgid "Communication"
-msgstr "اتصالات"
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
+msgid "Come back later to monitor and moderate what is posted on your Forums."
+msgstr "عد لاحقاً للمراقبة والإشراف على ما يتم نشره على منتدياتك. "
 
 #. module: website_slides_forum
+#: model:ir.model,name:website_slides_forum.model_slide_channel
 #: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__slide_channel_id
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_all_all_entries
 msgid "Course"
-msgstr ""
+msgstr "دورة"
 
 #. module: website_slides_forum
 #: model:ir.model.fields,field_description:website_slides_forum.field_slide_channel__forum_id
 msgid "Course Forum"
-msgstr ""
+msgstr "منتدى الدورة"
 
 #. module: website_slides_forum
 #: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__slide_channel_ids
 msgid "Courses"
-msgstr ""
+msgstr "الدورات"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Courses Discussions"
-msgstr ""
-
-#. module: website_slides_forum
-#. openerp-web
-#: code:addons/website_slides_forum/static/src/xml/website_slides_forum_channel.xml:0
-#, python-format
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_forum_action_channel
 msgid "Create a Forum"
-msgstr ""
+msgstr "إنشاء منتدى"
 
 #. module: website_slides_forum
-#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
-msgid "Create a new forum post"
-msgstr "إنشاء مشاركة جديدة على المنتدى"
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Dismiss"
+msgstr "صرف "
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Description"
-msgstr "الوصف"
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Dismiss message"
+msgstr "إخفاء الرسالة "
+
+#. module: website_slides_forum
+#: model:ir.model.fields,help:website_slides_forum.field_forum_forum__slide_channel_ids
+msgid "Edit the course linked to this forum on the course form."
+msgstr "قم بتحرير الدورة المرتبطة بهذا المنتدى في استمارة الدورة. "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -215,36 +232,66 @@ msgid ""
 "For example, if you ask an interesting question or give a helpful answer, "
 "your input will be upvoted. On the other hand if the answer is misleading - "
 "it will be downvoted. Each vote in favor will generate 10 points, each vote "
-"against will subtract 10 points. There is a limit of 200 points that can be "
+"against will subtract 2 points. There is a limit of 200 points that can be "
 "accumulated for a question or answer per day. The table given at the end "
 "explains reputation point requirements for each type of moderation task."
 msgstr ""
+"على سبيل المثال، إذا قمت بطرح سؤال مثير للاهتمام أو منح إجابة مفيدة، سيتم "
+"التصويت لتأييد مشاركتك. وعلى خلاف ذلك، إذا كانت إجابتك مضللة، - سيتم التصويت"
+" ضد مشاركتك. ستحصل على 10 نقاط مقابل كل تصويت لصالحك، وستفقد 10 نقاط مقابل "
+"كل تصويت سلبي. يمكنك جمع 200 نقطة كحد أقصى لكل سؤال أو جواب في اليوم الواحد."
+" يوضح الجدول المعطى في النهاية متطلبات نقاط السمعة لكل نوع من أنواع مهام "
+"الإشراف. "
 
 #. module: website_slides_forum
 #: model:ir.model,name:website_slides_forum.model_forum_forum
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum
-#: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_report_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.course_main
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.slide_fullscreen
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_breadcrumb
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
 msgid "Forum"
 msgstr "المنتدى"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
-msgid "Forum Posts"
-msgstr "مشاركات المنتدى"
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.snippet_options
+msgid "Forum Page"
+msgstr "صفحة المنتدى"
 
 #. module: website_slides_forum
+#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_channel
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
+msgid "Forum Posts"
+msgstr "منشورات المنتدى "
+
+#. module: website_slides_forum
+#: model:ir.model.fields,help:website_slides_forum.field_forum_forum__visibility
+msgid ""
+"Forum linked to a Course, the visibility is the one applied on the course."
+msgstr "المنتدى المرتبط بدورة، إمكانية الرؤية هي المطبقة في الدورة. "
+
+#. module: website_slides_forum
+#: model:ir.actions.act_window,name:website_slides_forum.forum_forum_action_channel
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum_forum
 msgid "Forums"
 msgstr "المنتديات"
 
 #. module: website_slides_forum
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid "Hide Intro"
-msgstr "إخفاء المقدمة"
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_forum_action_channel
+msgid "Forums allow your attendees to ask questions to your community."
+msgstr "تسمح المنتديات للحاضرين بطرح الأسئلة على مجتمعك."
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "Here a table with the privileges and the karma level"
+msgstr "إليك جدول بالصلاحيات ومستوى الكارما "
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "If this approach is not for you, please respect the community."
+msgstr "إذا كانت هذه الطريقة لا تناسبك، رجاءً احترم المجتمع. "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -256,6 +303,20 @@ msgid ""
 "motivation is “I would like others to explain ______ to me”, then you are "
 "probably OK."
 msgstr ""
+"إذا كنت ضمن تلك الأمثلة المذكورة، أو إذا كان دافعك لطرح سؤال هو \"أود "
+"المشاركة في مناقشة حول ______\"، فلا يجب أن تقوم بطرح سؤالك هنا، وإنما في "
+"القائمة البريدية. ولكن إذا كان دافعك هو \"أود من الآخرين شرح ______ لي\"، "
+"فلا بأس بذلك. "
+
+#. module: website_slides_forum
+#: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__image_1920
+msgid "Image"
+msgstr "صورة"
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.res_config_settings_view_form
+msgid "Manage Forums"
+msgstr "إدارة المنتديات"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -264,40 +325,74 @@ msgid "More over:"
 msgstr "المزيد:"
 
 #. module: website_slides_forum
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
+msgid "No Forum Post yet!"
+msgstr "لا توجد منشورات في المنتدى بعد! "
+
+#. module: website_slides_forum
 #: model:ir.model.fields,field_description:website_slides_forum.field_slide_channel__forum_total_posts
 msgid "Number of active forum posts"
-msgstr ""
+msgstr "عدد منشورات المنتدى النشطة "
 
 #. module: website_slides_forum
 #: model:ir.model.constraint,message:website_slides_forum.constraint_slide_channel_forum_uniq
-msgid "Only one forum per slide channel!"
-msgstr ""
+msgid "Only one course per forum!"
+msgstr "دورة واحدة فقط لكل منتدى "
 
 #. module: website_slides_forum
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum_post
 msgid "Posts"
-msgstr "مشاركات"
+msgstr "المنشورات "
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.snippet_options
+msgid "Separate Courses"
+msgstr "دورات منفصلة"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid "Register"
+msgid ""
+"Share and discuss the best content and new marketing ideas, build your "
+"professional profile and become a better marketer together."
+msgstr ""
+"قم بمشاركة ومناقشة أفضل الأفكار عن المحتوى، وبناء ملفك التعريفي المهني وأصبح"
+" مسوقاً أفضل. "
+
+#. module: website_slides_forum
+#: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__visibility
+msgid "Show Course To"
+msgstr "إظهار الدورة لـ "
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Sign up"
 msgstr "تسجيل"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
-msgid "Review"
-msgstr "مراجعة"
-
-#. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "See all Courses"
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"The goal of this site is create a relevant knowledge base that would answer "
+"questions related to Odoo."
 msgstr ""
+"الهدف من هذا الموقع الإلكتروني هو إنشاء قاعدة معرفية للإجابة عن الأسئلة "
+"المتعلقة بأودو. "
 
 #. module: website_slides_forum
-#: model:ir.model,name:website_slides_forum.model_slide_channel
-msgid "Slide Channel"
-msgstr "قناة الشريحة"
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"Therefore questions and answers can be edited like wiki pages by experienced"
+" users of this site in order to improve the overall quality of the knowledge"
+" base content. Such privileges are granted based on user karma level: you "
+"will be able to do the same once your karma gets high enough."
+msgstr ""
+"ولهذا، يمكن تحرير الأسئلة والأجوبة كصفحات ويكيبيديا بواسطة المستخدمين ذوي "
+"الخبرة في هذا الموقع الإلكتروني في سبيل تحسين الجودة الكلية لمحتوى قاعدة "
+"المعرفة. يتم منح تلك الصلاحيات بناءً على مستوى الكارما للمستخدم: ستتمكن من "
+"القيام بذلك أيضاً عندما تصل إلى مستوى عالٍ من الكارما. "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -306,16 +401,8 @@ msgid ""
 "This community is for professional and enthusiast users, partners and "
 "programmers. You can ask questions about:"
 msgstr ""
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"This community is for professionals and enthusiasts of our products and services.\n"
-"                                        <br>Share and discuss the best content and new marketing ideas, build your professional profile and become a better marketer together."
-msgstr ""
-"هذا المجتمع مخصص للمحترفين والمتحمسين لمنتجاتنا وخدماتنا.\n"
-"                                         <br>يمكنك مشاركة ومناقشة أفضل محتوى وأفكار تسويقية جديدة وبناء ملف تعريفك المهني لكي تصبح مسوقًا أفضل."
+"هذا المجتمع خاص للمستخدمين المحترفين والراغبين في تعلم المزيد والشركاء "
+"والمبرمجين. يمكنك طرح أسئلة حول: "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -324,11 +411,13 @@ msgid ""
 "To prevent your question from being flagged and possibly removed, avoid "
 "asking subjective questions where …"
 msgstr ""
+"لتجنب الإبلاغ عن سؤالك أو احتمالية إزالته، تجنب طرح الأسئلة غير الموضوعية "
+"... "
 
 #. module: website_slides_forum
 #: model:forum.forum,name:website_slides_forum.forum_forum_demo_channel_2
 msgid "Trees, Wood and Gardens"
-msgstr ""
+msgstr "الأشجار، الخشب، والحدائق "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
@@ -345,6 +434,10 @@ msgid ""
 "rough measure of the community trust to him/her. Various moderation tasks "
 "are gradually assigned to the users based on those points."
 msgstr ""
+"عندما يتم التصويت تأييداً لسؤال أو جواب، سيكتسب المستخدم الذي قام بنشره بعض "
+"النقاط، والتي تسمى بـ \"نقاط كارما\". تمثل هذه النقاط مقياساً عاماً لثقة "
+"المجتمع بذلك المستخدم. بعد ذلك، يتم إسناد مهام إشرافية متنوعة إلى المستخدمين"
+" بناءً على تلك النقاط. "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -354,23 +447,19 @@ msgid ""
 " that you face. Chatty, open-ended questions diminish the usefulness of this"
 " site and push other questions off the front page."
 msgstr ""
+"عليك فقط طرح الأسئلة العملية التي يمكن الإجابة عليها بناءً على المشاكل "
+"الفعلية التي تواجهها. تقلل الأسئلة الحوارية والمفتوحة من فائدة هذا الموقع "
+"وتدفع بالأسئلة الأخرى بعيداً عن الصفحة الرئيسية. "
 
 #. module: website_slides_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_forum_view_form
 msgid "eLearning"
-msgstr "eLearning"
+msgstr "التعلم الإلكتروني "
 
 #. module: website_slides_forum
-#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_channel
-#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_report
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_post_view_graph_slides
 msgid "eLearning Forum Posts"
-msgstr ""
-
-#. module: website_slides_forum
-#: model:ir.actions.act_window,name:website_slides_forum.forum_forum_action_channel
-msgid "eLearning Forums"
-msgstr ""
+msgstr "منشورات منتدى التعلم الإلكتروني "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -382,13 +471,13 @@ msgstr "كافة الإجابات مسموح بها: \"ما ______ المفضل 
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "how to configure or customize Odoo to specific business needs,"
-msgstr "كيفية إعداد أو تخصيص أودو لاحتياجات أعمال معينة،"
+msgstr "كيفية تهيئة أو تخصيص أودو لاحتياجات أعمال معينة، "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "how to develop modules for your own need,"
-msgstr "كيفية تطوير موديولات حسب حاجتك،"
+msgstr "كيفية تطوير تطبيقات لتلائم احتياجاتك، "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -400,7 +489,7 @@ msgstr "كيفية تثبيت أودو على بنية تحتية معينة،"
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "it is a rant disguised as a question: “______ sucks, am I right?”"
-msgstr "إنه هراء على شكل سؤال: “______ مقرف، أليس كذلك؟\""
+msgstr "إنها ثرثرة على شكل سؤال: \"______ سيء، أليس كذلك؟\" "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -424,7 +513,7 @@ msgstr ""
 msgid ""
 "we are being asked an open-ended, hypothetical question: “What if ______ "
 "happened?”"
-msgstr "يُطرح علينا سؤال فرضي تخيلي: \"ماذا لو حدث ______؟\""
+msgstr "يُطرح علينا سؤال فرضي مفتوح: \"ماذا لو حدث ______؟\" "
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0

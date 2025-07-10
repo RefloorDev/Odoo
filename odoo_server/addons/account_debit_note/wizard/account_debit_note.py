@@ -24,7 +24,8 @@ class AccountDebitNote(models.TransientModel):
                                      "We won't copy them for debit notes from credit notes. ")
     # computed fields
     move_type = fields.Char(compute="_compute_from_moves")
-    journal_type = fields.Char(compute="_compute_from_moves")
+    journal_type = fields.Char(compute="_compute_journal_type")
+    country_code = fields.Char(related='move_ids.company_id.country_id.code')
 
     @api.model
     def default_get(self, fields):
@@ -32,6 +33,10 @@ class AccountDebitNote(models.TransientModel):
         move_ids = self.env['account.move'].browse(self.env.context['active_ids']) if self.env.context.get('active_model') == 'account.move' else self.env['account.move']
         if any(move.state != "posted" for move in move_ids):
             raise UserError(_('You can only debit posted moves.'))
+        elif any(move.debit_origin_id for move in move_ids):
+            raise UserError(_("You can't make a debit note for an invoice that is already linked to a debit note."))
+        elif any(move.move_type not in ['out_invoice', 'in_invoice', 'out_refund', 'in_refund'] for move in move_ids):
+            raise UserError(_("You can make a debit note only for a Customer Invoice, a Customer Credit Note, a Vendor Bill or a Vendor Credit Note."))
         res['move_ids'] = [(6, 0, move_ids.ids)]
         return res
 
@@ -39,14 +44,18 @@ class AccountDebitNote(models.TransientModel):
     def _compute_from_moves(self):
         for record in self:
             move_ids = record.move_ids
-            record.move_type = move_ids[0].type if len(move_ids) == 1 or not any(m.type != move_ids[0].type for m in move_ids) else False
+            record.move_type = move_ids[0].move_type if len(move_ids) == 1 or not any(m.move_type != move_ids[0].move_type for m in move_ids) else False
+
+    @api.depends('move_type')
+    def _compute_journal_type(self):
+        for record in self:
             record.journal_type = record.move_type in ['in_refund', 'in_invoice'] and 'purchase' or 'sale'
 
     def _prepare_default_values(self, move):
-        if move.type in ('in_refund', 'out_refund'):
-            type = 'in_invoice' if move.type == 'in_refund' else 'out_invoice'
+        if move.move_type in ('in_refund', 'out_refund'):
+            type = 'in_invoice' if move.move_type == 'in_refund' else 'out_invoice'
         else:
-            type = move.type
+            type = move.move_type
         default_values = {
                 'ref': '%s, %s' % (move.name, self.reason) if self.reason else move.name,
                 'date': self.date or move.date,
@@ -54,9 +63,9 @@ class AccountDebitNote(models.TransientModel):
                 'journal_id': self.journal_id and self.journal_id.id or move.journal_id.id,
                 'invoice_payment_term_id': None,
                 'debit_origin_id': move.id,
-                'type': type,
+                'move_type': type,
             }
-        if not self.copy_lines or move.type in [('in_refund', 'out_refund')]:
+        if not self.copy_lines or move.move_type in [('in_refund', 'out_refund')]:
             default_values['line_ids'] = [(5, 0, 0)]
         return default_values
 
@@ -65,10 +74,8 @@ class AccountDebitNote(models.TransientModel):
         new_moves = self.env['account.move']
         for move in self.move_ids.with_context(include_business_fields=True): #copy sale/purchase links
             default_values = self._prepare_default_values(move)
-            new_move = move.with_context(internal_type='debit_note').copy(default=default_values) # Context key is used for l10n_latam_invoice_document for ar/cl/pe
-            move_msg = _(
-                "This debit note was created from:") + " <a href=# data-oe-model=account.move data-oe-id=%d>%s</a>" % (
-                       move.id, move.name)
+            new_move = move.copy(default=default_values)
+            move_msg = _("This debit note was created from: %s", move._get_html_link())
             new_move.message_post(body=move_msg)
             new_moves |= new_move
 
@@ -76,7 +83,8 @@ class AccountDebitNote(models.TransientModel):
             'name': _('Debit Notes'),
             'type': 'ir.actions.act_window',
             'res_model': 'account.move',
-            }
+            'context': {'default_move_type': default_values['move_type']},
+        }
         if len(new_moves) == 1:
             action.update({
                 'view_mode': 'form',
@@ -84,7 +92,7 @@ class AccountDebitNote(models.TransientModel):
             })
         else:
             action.update({
-                'view_mode': 'tree,form',
+                'view_mode': 'list,form',
                 'domain': [('id', 'in', new_moves.ids)],
             })
         return action

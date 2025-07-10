@@ -1,29 +1,22 @@
 # -*- encoding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models, _
+from odoo import fields, models
 
 
 class PurchaseRequisition(models.Model):
     _inherit = 'purchase.requisition'
 
-    def _get_picking_in(self):
-        pick_in = self.env.ref('stock.picking_type_in', raise_if_not_found=False)
-        company = self.env.company
-        if not pick_in or pick_in.sudo().warehouse_id.company_id.id != company.id:
-            pick_in = self.env['stock.picking.type'].search(
-                [('warehouse_id.company_id', '=', company.id), ('code', '=', 'incoming')],
-                limit=1,
-            )
-        return pick_in
+    def _default_picking_type_id(self):
+        picking_type = self.env['stock.picking.type'].search([('warehouse_id.company_id', '=', self.env.company.id), ('code', '=', 'incoming')], limit=1)
+        if not picking_type:
+            self.env['stock.warehouse']._warehouse_redirect_warning()
+        return picking_type
 
     warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse', domain="[('company_id', '=', company_id)]")
-    picking_type_id = fields.Many2one('stock.picking.type', 'Operation Type', required=True, default=_get_picking_in, domain="['|',('warehouse_id', '=', False), ('warehouse_id.company_id', '=', company_id)]")
-
-    def _prepare_tender_values(self, product_id, product_qty, product_uom, location_id, name, origin, company_id, values):
-        res = super(PurchaseRequisition, self)._prepare_tender_values(product_id, product_qty, product_uom, location_id, name, origin, company_id, values)
-        res['line_ids'][0][2]['move_dest_id'] = values.get('move_dest_ids') and values['move_dest_ids'][0].id or False
-        return res
+    picking_type_id = fields.Many2one(
+        'stock.picking.type', 'Operation Type', required=True, default=_default_picking_type_id,
+        domain="['|',('warehouse_id', '=', False), ('warehouse_id.company_id', '=', company_id)]")
 
 
 class PurchaseRequisitionLine(models.Model):

@@ -1,13 +1,9 @@
-odoo.define('mass_mailing.website_integration', function (require) {
-"use strict";
+/** @odoo-module **/
 
-var config = require('web.config');
-var core = require('web.core');
-var Dialog = require('web.Dialog');
-var utils = require('web.utils');
-var publicWidget = require('web.public.widget');
-
-var _t = core._t;
+import { _t } from "@web/core/l10n/translation";
+import publicWidget from "@web/legacy/js/public/public_widget";
+import {ReCaptcha} from "@google_recaptcha/js/recaptcha";
+import { rpc } from "@web/core/network/rpc";
 
 publicWidget.registry.subscribe = publicWidget.Widget.extend({
     selector: ".js_subscribe",
@@ -17,41 +13,87 @@ publicWidget.registry.subscribe = publicWidget.Widget.extend({
     },
 
     /**
-     * @override
+     * @constructor
      */
-    start: function () {
-        var self = this;
-        var def = this._super.apply(this, arguments);
-        this.$popup = this.$target.closest('.o_newsletter_modal');
-        if (this.$popup.length) {
-            // No need to check whether the user subscribed or not if the input
-            // is in a popup as the popup won't open if he did subscribe.
-            return def;
-        }
-
-        var always = function (data) {
-            var isSubscriber = data.is_subscriber;
-            self.$('.js_subscribe_btn').prop('disabled', isSubscriber);
-            self.$('input.js_subscribe_email')
-                .val(data.email || "")
-                .prop('disabled', isSubscriber);
-            self.$target.removeClass('d-none');
-            self.$('.js_subscribe_btn').toggleClass('d-none', !!isSubscriber);
-            self.$('.js_subscribed_btn').toggleClass('d-none', !isSubscriber);
-        };
-        return Promise.all([def, this._rpc({
-            route: '/website_mass_mailing/is_subscriber',
-            params: {
-                'list_id': this.$target.data('list-id'),
-            },
-        }).then(always).guardedCatch(always)]);
+    init: function () {
+        this._super(...arguments);
+        this._recaptcha = new ReCaptcha();
+        this.notification = this.bindService("notification");
     },
     /**
      * @override
      */
-    destroy: function () {
-        this.$target.addClass('d-none');
+    willStart: function () {
+        this._recaptcha.loadLibs();
+        return this._super(...arguments);
+    },
+    /**
+     * @override
+     */
+    start: function () {
+        var def = this._super.apply(this, arguments);
+
+        if (this.editableMode) {
+            // Since there is an editor option to choose whether "Thanks" button
+            // should be visible or not, we should not vary its visibility here.
+            return def;
+        }
+        const always = this._updateView.bind(this);
+        const inputName = this.el.querySelector('input').name;
+        return Promise.all([def, rpc('/website_mass_mailing/is_subscriber', {
+            'list_id': this._getListId(),
+            'subscription_type': inputName,
+        }).then(always, always)]);
+    },
+    /**
+     * @override
+     */
+    destroy() {
+        this._updateView({is_subscriber: false});
         this._super.apply(this, arguments);
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * Modifies the elements to have the view of a subscriber/non-subscriber.
+     *
+     * @todo should probably be merged with _updateSubscribeControlsStatus
+     * @param {Object} data
+     */
+    _updateView(data) {
+        this._updateSubscribeControlsStatus(!!data.is_subscriber);
+
+        // js_subscribe_email is kept by compatibility (it was the old name of js_subscribe_value)
+        const valueInputEl = this.el.querySelector('input.js_subscribe_value, input.js_subscribe_email');
+        valueInputEl.value = data.value || '';
+
+        // Compat: remove d-none for DBs that have the button saved with it.
+        this.el.classList.remove('d-none');
+    },
+    /**
+     * Updates the visibility of the subscribe and subscribed buttons.
+     *
+     * @param {boolean} isSubscriber
+     */
+    _updateSubscribeControlsStatus(isSubscriber) {
+        const thanksWrapEl = this.el.querySelector('.js_subscribed_wrap');
+        const subscribeWrapEl = this.el.querySelector('.js_subscribe_wrap');
+        const subscribeBtnEl = this.el.querySelector('.js_subscribe_btn');
+
+        subscribeBtnEl.disabled = isSubscriber;
+        subscribeWrapEl.classList.toggle('d-none', isSubscriber);
+        thanksWrapEl.classList.toggle('d-none', !isSubscriber);
+
+        // js_subscribe_email is kept by compatibility (it was the old name of js_subscribe_value)
+        const valueInputEl = this.el.querySelector('input.js_subscribe_value, input.js_subscribe_email');
+        valueInputEl.disabled = isSubscriber;
+    },
+
+    _getListId: function () {
+        return this.$el.closest('[data-snippet=s_newsletter_block').data('list-id') || this.$el.data('list-id');
     },
 
     //--------------------------------------------------------------------------
@@ -61,145 +103,64 @@ publicWidget.registry.subscribe = publicWidget.Widget.extend({
     /**
      * @private
      */
-    _onSubscribeClick: function () {
+    _onSubscribeClick: async function () {
         var self = this;
-        var $email = this.$(".js_subscribe_email:visible");
-
-        if ($email.length && !$email.val().match(/.+@.+/)) {
-            this.$target.addClass('o_has_error').find('.form-control').addClass('is-invalid');
+        const inputName = this.$('input').attr('name');
+        const $input = this.$(".js_subscribe_value:visible, .js_subscribe_email:visible"); // js_subscribe_email is kept by compatibility (it was the old name of js_subscribe_value)
+        if (inputName === 'email' && $input.length && !$input.val().match(/.+@.+/)) {
+            this.$el.addClass('o_has_error').find('.form-control').addClass('is-invalid');
             return false;
         }
-        this.$target.removeClass('o_has_error').find('.form-control').removeClass('is-invalid');
-        this._rpc({
-            route: '/website_mass_mailing/subscribe',
-            params: {
-                'list_id': this.$target.data('list-id'),
-                'email': $email.length ? $email.val() : false,
-            },
+        this.$el.removeClass('o_has_error').find('.form-control').removeClass('is-invalid');
+        const tokenObj = await this._recaptcha.getToken('website_mass_mailing_subscribe');
+        if (tokenObj.error) {
+            self.notification.add(tokenObj.error, {
+                type: 'danger',
+                title: _t("Error"),
+                sticky: true,
+            });
+            return false;
+        }
+        rpc('/website_mass_mailing/subscribe', {
+            'list_id': this._getListId(),
+            'value': $input.length ? $input.val() : false,
+            'subscription_type': inputName,
+            recaptcha_token_response: tokenObj.token,
         }).then(function (result) {
-            self.$(".js_subscribe_btn").addClass('d-none');
-            self.$(".js_subscribed_btn").removeClass('d-none');
-            self.$('input.js_subscribe_email').prop('disabled', !!result);
-            if (self.$popup.length) {
-                self.$popup.modal('hide');
+            let toastType = result.toast_type;
+            if (toastType === 'success') {
+                self._updateSubscribeControlsStatus(true);
+
+                const $popup = self.$el.closest('.o_newsletter_modal');
+                if ($popup.length) {
+                    $popup.modal('hide');
+                }
             }
-            self.displayNotification({
-                type: 'success',
-                title: _t("Success"),
-                message: result.toast_content,
+            self.notification.add(result.toast_content, {
+                type: toastType,
+                title: toastType === 'success' ? _t('Success') : _t('Error'),
                 sticky: true,
             });
         });
     },
 });
 
-publicWidget.registry.newsletter_popup = publicWidget.Widget.extend({
-    selector: ".o_newsletter_popup",
-    disabledInEditableMode: false,
+/**
+ * This widget tries to fix snippets that were malformed because of a missing
+ * upgrade script. Without this, some newsletter snippets coming from users
+ * upgraded from a version lower than 16.0 may not be able to update their
+ * newsletter block.
+ *
+ * TODO an upgrade script should be made to fix databases and get rid of this.
+ */
+publicWidget.registry.fixNewsletterListClass = publicWidget.Widget.extend({
+    selector: '.s_newsletter_subscribe_form:not(.s_subscription_list), .s_newsletter_block',
 
     /**
      * @override
      */
-    start: function () {
-        var self = this;
-        var defs = [this._super.apply(this, arguments)];
-        this.websiteID = this._getContext().website_id;
-        this.listID = parseInt(this.$target.attr('data-list-id'));
-        if (!this.listID || (utils.get_cookie(_.str.sprintf("newsletter-popup-%s-%s", this.listID, this.websiteID)) && !self.editableMode)) {
-            return Promise.all(defs);
-        }
-        if (this.$target.data('content') && this.editableMode) {
-            // To avoid losing user changes.
-            this._dialogInit(this.$target.data('content'));
-            this.$target.removeData('quick-open');
-            this.massMailingPopup.open();
-        } else {
-            defs.push(this._rpc({
-                route: '/website_mass_mailing/get_content',
-                params: {
-                    newsletter_id: self.listID,
-                },
-            }).then(function (data) {
-                self._dialogInit(data.popup_content, data.email || '');
-                if (!self.editableMode && !data.is_subscriber) {
-                    if (config.device.isMobile) {
-                        setTimeout(function () {
-                            self._showBanner();
-                        }, 5000);
-                    } else {
-                        $(document).on('mouseleave.open_popup_event', self._showBanner.bind(self));
-                    }
-                } else {
-                    $(document).off('mouseleave.open_popup_event');
-                }
-                // show popup after choosing a newsletter
-                if (self.$target.data('quick-open')) {
-                    self.massMailingPopup.open();
-                    self.$target.removeData('quick-open');
-                }
-            }));
-        }
-
-        return Promise.all(defs);
+    start() {
+        this.$target[0].classList.add('s_newsletter_list');
+        return this._super(...arguments);
     },
-    /**
-     * @override
-     */
-    destroy: function () {
-        if (this.massMailingPopup) {
-            this.massMailingPopup.close();
-        }
-        this._super.apply(this, arguments);
-    },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * @param {string} content
-     * @private
-     */
-    _dialogInit: function (content, email) {
-        var self = this;
-        this.massMailingPopup = new Dialog(this, {
-            technical: false,
-            $content: $('<div/>').html(content),
-            $parentNode: this.$target,
-            backdrop: !this.editableMode,
-            dialogClass: 'p-0' + (this.editableMode ? ' o_editable oe_structure oe_empty' : ''),
-            renderFooter: false,
-            size: 'medium',
-        });
-        this.massMailingPopup.opened().then(function () {
-            var $modal = self.massMailingPopup.$modal;
-            $modal.find('header button.close').on('mouseup', function (ev) {
-                ev.stopPropagation();
-            });
-            $modal.addClass('o_newsletter_modal');
-            $modal.find('.oe_structure').attr('data-editor-message', _t('DRAG BUILDING BLOCKS HERE'));
-            $modal.find('.modal-dialog').addClass('modal-dialog-centered');
-            $modal.find('.js_subscribe').data('list-id', self.listID)
-                  .find('input.js_subscribe_email').val(email);
-            self.trigger_up('widgets_start_request', {
-                editableMode: self.editableMode,
-                $target: $modal,
-            });
-        });
-        this.massMailingPopup.on('closed', this, function () {
-            var $modal = self.massMailingPopup.$modal;
-            if ($modal) { // The dialog might have never been opened
-                self.$el.data('content', $modal.find('.modal-body').html());
-            }
-        });
-    },
-    /**
-     * @private
-     */
-    _showBanner: function () {
-        this.massMailingPopup.open();
-        utils.set_cookie(_.str.sprintf("newsletter-popup-%s-%s", this.listID, this.websiteID), true);
-        $(document).off('mouseleave.open_popup_event');
-    },
-});
 });

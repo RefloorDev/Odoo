@@ -1,19 +1,25 @@
-odoo.define('mass_mailing.field_html_tests', function (require) {
-"use strict";
+/** @odoo-module **/
 
-var ajax = require('web.ajax');
-var FormView = require('web.FormView');
-var FieldHtml = require('web_editor.field.html');
-var MassMailingFieldHtml = require('mass_mailing.FieldHtml');
-var testUtils = require('web.test_utils');
-var weTestUtils = require('web_editor.test_utils');
-var Wysiwyg = require('web_editor.wysiwyg');
+import weTestUtils from "@web_editor/../tests/test_utils";
+import { makeView, setupViewRegistries } from "@web/../tests/views/helpers";
+import {
+    editInput,
+    getFixture,
+    makeDeferred,
+    nextTick,
+    patchWithCleanup,
+} from "@web/../tests/helpers/utils";
+import { assets } from "@web/core/assets";
+import { Wysiwyg } from '@web_editor/js/wysiwyg/wysiwyg';
 
+let serverData;
+let fixture;
 
 QUnit.module('mass_mailing', {}, function () {
-QUnit.module('field html', {
-    beforeEach: function () {
-        this.data = weTestUtils.wysiwygData({
+QUnit.module('field html', (hooks) => {
+    hooks.beforeEach(() => {
+        fixture = getFixture();
+        const models = weTestUtils.wysiwygData({
             'mailing.mailing': {
                 fields: {
                     display_name: {
@@ -37,72 +43,82 @@ QUnit.module('field html', {
                 }],
             },
         });
+        serverData = { models };
+        setupViewRegistries();
 
-        testUtils.mock.patch(ajax, {
-            loadAsset: function (xmlId) {
-                if (xmlId === 'template.assets') {
-                    return Promise.resolve({
-                        cssLibs: [],
-                        cssContents: ['.field_body {background-color: red;}']
-                    });
-                }
-                if (xmlId === 'template.assets_all_style') {
-                    return Promise.resolve({
-                        cssLibs: $('link[href]:not([type="image/x-icon"])').map(function () {
-                            return $(this).attr('href');
-                        }).get(),
-                        cssContents: ['.field_body {background-color: red;}']
-                    });
-                }
-                throw 'Wrong template';
+        patchWithCleanup(Wysiwyg.prototype, {
+            async _getColorpickerTemplate() {
+                return weTestUtils.COLOR_PICKER_TEMPLATE;
+            },
+            async _getAssets() {
+                return [{
+                    cssLibs: [],
+                    jsLibs: [],
+                }];
             },
         });
-    },
-    afterEach: function () {
-        testUtils.mock.unpatch(ajax);
-    },
-}, function () {
-
-QUnit.test('save arch and html', async function (assert) {
-    assert.expect(4);
-
-    var form = await testUtils.createView({
-        View: FormView,
-        model: 'mailing.mailing',
-        data: this.data,
-        arch: '<form>' +
-            '   <field name="body_html" class="oe_read_only" widget="html"'+
-            '       options="{'+
-            '                \'cssReadonly\': \'template.assets\','+
-            '       }"'+
-            '   />'+
-            '   <field name="body_arch" class="oe_edit_only" widget="mass_mailing_html"'+
-            '       options="{'+
-            '                \'snippets\': \'web_editor.snippets\','+
-            '                \'cssEdit\': \'template.assets\','+
-            '                \'inline-field\': \'body_html\''+
-            '       }"'+
-            '   />'+
-            '</form>',
-        res_id: 1,
     });
-    var $fieldReadonly = form.$('.oe_form_field[name="body_html"]');
-    var $fieldEdit = form.$('.oe_form_field[name="body_arch"]');
 
-    assert.strictEqual($fieldReadonly.css('display'), 'block', "should display the readonly mode");
-    assert.strictEqual($fieldEdit.css('display'), 'none', "should hide the edit mode");
+    QUnit.test('save arch and html', async function (assert) {
+        assert.expect(2);
 
-    await testUtils.form.clickEdit(form);
+        await makeView({
+            type: "form",
+            resModel: 'mailing.mailing',
+            resId: 1,
+            serverData,
+            arch: '<form>' +
+                '   <field name="body_html" class="oe_read_only"'+
+                '       options="{'+
+                '                \'cssReadonly\': \'template.assets\','+
+                '       }"'+
+                '   />'+
+                '   <field name="body_arch" class="oe_edit_only" widget="mass_mailing_html"'+
+                '       options="{'+
+                '                \'snippets\': \'web_editor.snippets\','+
+                '                \'cssEdit\': \'template.assets\','+
+                '                \'inline-field\': \'body_html\''+
+                '       }"'+
+                '   />'+
+                '</form>',
+        });
+        await nextTick();
+        let fieldReadonly = fixture.querySelector('.o_field_widget[name="body_html"]');
+        let fieldEdit = fixture.querySelector('.o_field_widget[name="body_arch"]');
 
-    $fieldReadonly = form.$('.oe_form_field[name="body_html"]');
-    $fieldEdit = form.$('.oe_form_field[name="body_arch"]');
+        assert.strictEqual($(fieldReadonly).css('display'), 'none', "should hide the readonly mode");
+        assert.strictEqual($(fieldEdit).css('display'), 'block', "should display the edit mode");
+    });
 
-    assert.strictEqual($fieldReadonly.css('display'), 'none', "should hide the readonly mode");
-    assert.strictEqual($fieldEdit.css('display'), 'block', "should display the edit mode");
+    QUnit.test('component destroyed while loading', async function (assert) {
+        const def = makeDeferred();
+        patchWithCleanup(assets, {
+            loadBundle() {
+                assert.step("loadBundle");
+                return def;
+            }
+        })
 
-    form.destroy();
-});
+        await makeView({
+            type: "form",
+            resModel: 'mailing.mailing',
+            resId: 1,
+            serverData,
+            arch: `
+                <form>
+                    <field name="display_name"/>
+                    <field name="body_arch" widget="mass_mailing_html" invisible="display_name == 'hide'"/>
+                </form>`,
+        });
 
-});
+        assert.containsOnce(fixture, ".o_field_widget[name=body_arch]");
+        await editInput(fixture, ".o_field_widget[name=display_name] input", "hide");
+        assert.containsNone(fixture, ".o_field_widget[name=body_arch]");
+
+        def.resolve();
+        await nextTick();
+        assert.containsNone(fixture, ".o_field_widget[name=body_arch]");
+        assert.verifySteps(["loadBundle"]);
+    });
 });
 });

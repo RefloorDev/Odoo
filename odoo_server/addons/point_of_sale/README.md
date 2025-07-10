@@ -1,7 +1,7 @@
 Odoo Point of Sale
 -----------------------------
 
-Odoo's <a href="https://www.odoo.com/page/point-of-sale">Point of Sale</a>
+Odoo's <a href="https://www.odoo.com/app/point-of-sale-shop">Point of Sale</a>
 introduces a super clean interface with no installation required that runs
 online and offline on modern hardwares.
 
@@ -17,7 +17,7 @@ Work with the hardware you already have
 Odoo's POS is a web application that can run on any device that can display
 websites with little to no setup required.
 
-### Touchscreen or Keyboard ?
+### Touchscreen or Keyboard?
 
 The Point of Sale works perfectly on any kind of touch enabled device, whether
 it's multi-touch tablets like an iPad or keyboardless resistive touchscreen
@@ -58,7 +58,7 @@ in parallel to not make your customers wait.
 ### Blazing fast search
 
 Scan products, browse through hierarchical categories, or get quick information
-about products with the blasting fast filter accross all your products.
+about products with the blasting fast filter across all your products.
 
 Integrated Inventory Management
 -------------------------------

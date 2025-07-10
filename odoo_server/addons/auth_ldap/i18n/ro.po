@@ -3,22 +3,39 @@
 # 	* auth_ldap
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Dorin Hongu <dhongu@gmail.com>, 2019
+# Lyall Kindmurr, 2024
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:32+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: Dorin Hongu <dhongu@gmail.com>, 2019\n"
-"Language-Team: Romanian (https://www.transifex.com/odoo/teams/41243/ro/)\n"
+"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Romanian (https://app.transifex.com/odoo/teams/41243/ro/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: ro\n"
 "Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?2:1));\n"
+
+#. module: auth_ldap
+#: model:ir.model.fields,help:auth_ldap.field_res_company_ldap__ldap_filter
+msgid ""
+"    Filter used to look up user accounts in the LDAP database. It is an    arbitrary LDAP filter in string representation. Any `%s` placeholder    will be replaced by the login (identifier) provided by the user, the filter    should contain at least one such placeholder.\n"
+"\n"
+"    The filter must result in exactly one (1) result, otherwise the login will    be considered invalid.\n"
+"\n"
+"    Example (actual attributes depend on LDAP server and setup):\n"
+"\n"
+"        (&(objectCategory=person)(objectClass=user)(sAMAccountName=%s))\n"
+"\n"
+"    or\n"
+"\n"
+"        (|(mail=%s)(uid=%s))\n"
+"    "
+msgstr ""
 
 #. module: auth_ldap
 #: model:ir.model.fields,help:auth_ldap.field_res_company_ldap__create_user
@@ -42,7 +59,7 @@ msgstr "Companie"
 #. module: auth_ldap
 #: model:ir.model,name:auth_ldap.model_res_company_ldap
 msgid "Company LDAP configuration"
-msgstr ""
+msgstr "Configurare Companie LDAP"
 
 #. module: auth_ldap
 #: model:ir.model,name:auth_ldap.model_res_config_settings
@@ -62,7 +79,14 @@ msgstr "Creat de"
 #. module: auth_ldap
 #: model:ir.model.fields,field_description:auth_ldap.field_res_company_ldap__create_date
 msgid "Created on"
-msgstr "Creat în"
+msgstr "Creat pe"
+
+#. module: auth_ldap
+#: model:ir.model.fields,help:auth_ldap.field_res_company_ldap__ldap_base
+msgid ""
+"DN of the user search scope: all descendants of this base will be searched "
+"for users."
+msgstr ""
 
 #. module: auth_ldap
 #: model:ir.model.fields,field_description:auth_ldap.field_res_company_ldap__display_name
@@ -89,7 +113,7 @@ msgstr "Parametri LDAP"
 #. module: auth_ldap
 #: model_terms:ir.ui.view,arch_db:auth_ldap.res_config_settings_view_form
 msgid "LDAP Server"
-msgstr ""
+msgstr "Server LDAP"
 
 #. module: auth_ldap
 #: model:ir.model.fields,field_description:auth_ldap.field_res_company_ldap__ldap_server
@@ -122,11 +146,6 @@ msgid "LDAP password"
 msgstr "Parola LDAP"
 
 #. module: auth_ldap
-#: model:ir.model.fields,field_description:auth_ldap.field_res_company_ldap____last_update
-msgid "Last Modified on"
-msgstr "Ultima modificare la"
-
-#. module: auth_ldap
 #: model:ir.model.fields,field_description:auth_ldap.field_res_company_ldap__write_uid
 msgid "Last Updated by"
 msgstr "Ultima actualizare făcută de"
@@ -142,10 +161,12 @@ msgid "Login Information"
 msgstr "Informații de autentificare"
 
 #. module: auth_ldap
-#: code:addons/auth_ldap/models/res_company_ldap.py:202
-#, python-format
+#. odoo-python
+#: code:addons/auth_ldap/models/res_company_ldap.py:0
 msgid "No local user found for LDAP login and not configured to create one"
 msgstr ""
+"Niciun utilizator local nu a fost găsit pentru autentificarea LDAP și nu a "
+"fost configurat pentru a crea unul"
 
 #. module: auth_ldap
 #: model_terms:ir.ui.view,arch_db:auth_ldap.view_ldap_installer_form
@@ -207,6 +228,11 @@ msgid "Use TLS"
 msgstr "Folosește TLS"
 
 #. module: auth_ldap
+#: model:ir.model,name:auth_ldap.model_res_users
+msgid "User"
+msgstr "Utilizator"
+
+#. module: auth_ldap
 #: model_terms:ir.ui.view,arch_db:auth_ldap.view_ldap_installer_form
 msgid "User Information"
 msgstr "Informații utilizator"
@@ -215,8 +241,3 @@ msgstr "Informații utilizator"
 #: model:ir.model.fields,help:auth_ldap.field_res_company_ldap__user
 msgid "User to copy when creating new users"
 msgstr "Utilizator de copiat atunci când se creează utilizatori noi"
-
-#. module: auth_ldap
-#: model:ir.model,name:auth_ldap.model_res_users
-msgid "Users"
-msgstr "Utilizatori"

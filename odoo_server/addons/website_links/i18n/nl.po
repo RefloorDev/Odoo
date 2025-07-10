@@ -3,19 +3,18 @@
 # 	* website_links
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Cas Vissers <casvissers@brahoo.nl>, 2019
-# Yenthe Van Ginneken <yenthespam@gmail.com>, 2019
-# Erwin van der Ploeg <erwin@odooexperts.nl>, 2019
+# Manon Rondou, 2024
+# Wil Odoo, 2024
+# Erwin van der Ploeg <erwin@odooexperts.nl>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-27 09:12+0000\n"
-"PO-Revision-Date: 2019-08-26 09:15+0000\n"
-"Last-Translator: Erwin van der Ploeg <erwin@odooexperts.nl>, 2019\n"
-"Language-Team: Dutch (https://www.transifex.com/odoo/teams/41243/nl/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Erwin van der Ploeg <erwin@odooexperts.nl>, 2025\n"
+"Language-Team: Dutch (https://app.transifex.com/odoo/teams/41243/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -23,31 +22,33 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: website_links
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_links/static/src/js/website_links_charts.js:0
-#, python-format
-msgid " clicks"
-msgstr "klikken"
-
-#. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links_charts.js:0
-#, python-format
-msgid " countries"
-msgstr "landen"
-
-#. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links_charts.js:0
-#, python-format
 msgid "# of clicks"
 msgstr "# klikken"
 
 #. module: website_links
-#: model_terms:ir.ui.view,arch_db:website_links.share_page_menu
-msgid "<span title=\"Track this page to count clicks\">Track this Page</span>"
-msgstr ""
-"<span title=\"Volg deze pagina om kikken te tellen\">Volg deze pagina</span>"
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links_charts.js:0
+msgid "%(clicks)s clicks"
+msgstr "%(clicks)s klikken"
+
+#. module: website_links
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links_charts.js:0
+msgid "%(count)s countries"
+msgstr "%(count)s landen"
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+#: model_terms:ir.ui.view,arch_db:website_links.graphs
+msgid "<i class=\"fa fa-copy me-2\"/>Copy"
+msgstr "<i class=\"fa fa-copy me-2\"/>Kopie"
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "<span class=\"text-muted me-1\">Sort By:</span>"
+msgstr "<span class=\"text-muted me-1\">Sorteren op:</span>"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
@@ -61,13 +62,18 @@ msgstr "<strong>Kanaal</strong>"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
+msgid "<strong>Name</strong>"
+msgstr "<strong>Name</strong>"
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.graphs
 msgid "<strong>Original URL</strong>"
 msgstr "<strong>Originele URL</strong>"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
 msgid "<strong>Redirected URL</strong>"
-msgstr "<strong>Doorverwijs URL</strong>"
+msgstr "<strong>Verwijzende URL</strong>"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
@@ -86,63 +92,51 @@ msgstr "Alle tijden"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid ""
-"Campaign <i class=\"fa fa-info-circle\" data-toggle=\"tooltip\" data-"
-"placement=\"top\" role=\"img\" aria-label=\"Tooltip info\" title=\"Defines "
-"the context of your link. It might be an event you want to promote or a "
-"special promotion.\"/>"
-msgstr ""
-"Campagne <i class=\"fa fa-info-circle\" data-toggle=\"tooltip\" data-"
-"placement=\"top\" role=\"img\" aria-label=\"Tooltip info\" title=\"Defines "
-"the context of your link. It might be an event you want to promote or a "
-"special promotion.\"/>"
+msgid "Campaign"
+msgstr "Campagne"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links.js:0
-#, python-format
-msgid "Copied"
-msgstr "Gekopieerd"
-
-#. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links.js:0
+#. odoo-javascript
 #: code:addons/website_links/static/src/xml/recent_link.xml:0
-#, python-format
 msgid "Copy"
-msgstr "Kopieer"
-
-#. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:0
-#: model_terms:ir.ui.view,arch_db:website_links.graphs
-#, python-format
-msgid "Edit code"
-msgstr "Wijzig code"
-
-#. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links.js:0
-#, python-format
-msgid "Generating link..."
-msgstr "Link genereren..."
+msgstr "Kopiëren"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid "Get tracked link"
-msgstr "Krijg gevolgde link"
+msgid "Create a Link tracker"
+msgstr "Maak een Link tracker"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:0
-#, python-format
-msgid "Icon"
-msgstr "Icoon"
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "Create another Tracker"
+msgstr "Maak een andere Tracker"
+
+#. module: website_links
+#. odoo-javascript
+#: code:addons/website_links/static/src/xml/website_links_tags_wrapper.xml:0
+msgid "Create option \""
+msgstr "Maak optie \""
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+#: model_terms:ir.ui.view,arch_db:website_links.graphs
+msgid "Edit code"
+msgstr "Code bewerken"
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "Generate Link Tracker"
+msgstr "Link Tracker genereren"
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "Last Clicks"
+msgstr "Laatste klikken"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
 msgid "Last Month"
-msgstr " Vorige maand"
+msgstr "Vorige maand"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
@@ -150,29 +144,28 @@ msgid "Last Week"
 msgstr "Vorige week"
 
 #. module: website_links
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links.js:0
+#: code:addons/website_links/static/src/js/website_links_code_editor.js:0
+msgid "Link Copied!"
+msgstr "Link gekopieerd!"
+
+#. module: website_links
 #: model:ir.model,name:website_links.model_link_tracker
-#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+#: model:ir.ui.menu,name:website_links.menu_link_tracker
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
 msgid "Link Tracker"
-msgstr "Opvolging links"
+msgstr "Link Tracker"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid ""
-"Medium <i class=\"fa fa-info-circle\" data-toggle=\"tooltip\" data-"
-"placement=\"top\" role=\"img\" aria-label=\"Tooltip info\" title=\"Defines "
-"the medium used to share your link. It might be an email, or a Facebook Ads "
-"for instance.\"/>"
-msgstr ""
-"Kanaal <i class=\"fa fa-info-circle\" data-toggle=\"tooltip\" data-"
-"placement=\"top\" role=\"img\" aria-label=\"Tooltip info\" title=\"Defines "
-"the medium used to share your link. It might be an e-mail, or a Facebook Ads"
-" for instance.\"/>"
+msgid "Medium"
+msgstr "Medium"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid "Most Clicked"
-msgstr "Meest geklikt"
+msgid "Name"
+msgstr "Naam"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
@@ -180,9 +173,20 @@ msgid "Newest"
 msgstr "Nieuwste"
 
 #. module: website_links
+#. odoo-javascript
+#: code:addons/website_links/static/src/js/website_links_charts.js:0
+msgid "No data"
+msgstr "Geen data"
+
+#. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid "Recently Used"
-msgstr "Recentelijk gebruikt"
+msgid "Number of Clicks"
+msgstr "Aantal klikken"
+
+#. module: website_links
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "Read More"
+msgstr "Lees meer"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
@@ -190,21 +194,13 @@ msgid ""
 "Share this page with a <strong>short link</strong> that includes "
 "<strong>analytics trackers</strong>."
 msgstr ""
-"Deel deze pagina met een <strong>short link</strong> die <strong>analytische"
-" trackers</strong> bevat."
+"Deel deze pagina met een <strong>verkorte link</strong> die "
+"<strong>analytische trackers</strong> bevat."
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid ""
-"Source <i class=\"fa fa-info-circle\" data-toggle=\"tooltip\" data-"
-"placement=\"top\" role=\"img\" aria-label=\"Tooltip info\" title=\"Defines "
-"the source from which your traffic will come from, Facebook or Twitter for "
-"instance.\"/>"
-msgstr ""
-"Bron <i class=\"fa fa-info-circle\" data-toggle=\"tooltip\" data-"
-"placement=\"top\" role=\"img\" aria-label=\"Tooltip info\" title=\"Defines "
-"the source from which your traffic will come from, Facebook or Twitter for "
-"instance.\"/>"
+msgid "Source"
+msgstr "Bron"
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
@@ -213,34 +209,25 @@ msgid "Statistics"
 msgstr "Statistieken"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:0
-#, python-format
-msgid "Stats"
-msgstr "Statistieken"
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "Target Link"
+msgstr "Doel-koppeling"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links.js:0
+#. odoo-javascript
 #: code:addons/website_links/static/src/js/website_links_code_editor.js:0
-#, python-format
 msgid "The code cannot be left empty"
 msgstr "De code kan niet leeg gelaten worden"
 
 #. module: website_links
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_links/static/src/js/website_links_charts.js:0
-#: code:addons/website_links/static/src/js/website_links_charts.js:0
-#: code:addons/website_links/static/src/js/website_links_charts.js:0
-#, python-format
 msgid "There is no data to show"
 msgstr "Er zijn geen gegevens om te tonen"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/js/website_links.js:0
+#. odoo-javascript
 #: code:addons/website_links/static/src/js/website_links_code_editor.js:0
-#, python-format
 msgid "This code is already taken"
 msgstr "Deze code is al in gebruik"
 
@@ -256,99 +243,92 @@ msgstr ""
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid "URL"
-msgstr "URL"
+msgid "Tracked Link"
+msgstr "Getraceerde link"
 
 #. module: website_links
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_links/static/src/js/website_links.js:0
-#, python-format
 msgid "Unable to get recent links"
 msgstr "Onmogelijk om recente links op te halen"
 
 #. module: website_links
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_links/static/src/js/website_links_charts.js:0
-#, python-format
 msgid "Undefined"
 msgstr "Niet gedefinieerd"
 
 #. module: website_links
-#: code:addons/website_links/models/link_tracker.py:0
-#, python-format
-msgid "Visit Webpage Statistics"
-msgstr "Bezoek website statistieken"
+#. odoo-javascript
+#: code:addons/website_links/static/src/xml/recent_link.xml:0
+msgid "Visit Link"
+msgstr "Bezoek Link"
 
 #. module: website_links
-#. openerp-web
+#. odoo-python
+#: code:addons/website_links/models/link_tracker.py:0
+msgid "Visit Webpage Statistics"
+msgstr "Website statistieken weergeven"
+
+#. module: website_links
+#. odoo-javascript
 #: code:addons/website_links/static/src/js/website_links.js:0
-#, python-format
 msgid "You don't have any recent links."
-msgstr "U heeft geen recente links."
+msgstr "Je hebt geen recente links."
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
 msgid "Your tracked links"
-msgstr "Uw gevolgde links"
+msgstr "Je getraceerde links"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:0
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
-#, python-format
 msgid "cancel"
 msgstr "annuleren"
 
 #. module: website_links
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_links/static/src/xml/recent_link.xml:0
-#, python-format
 msgid "clicks"
 msgstr "klikken"
 
 #. module: website_links
-#: model_terms:ir.ui.view,arch_db:website_links.graphs
-msgid "copy"
-msgstr "kopieer"
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
+msgid "e.g. \"Black Friday Mailing Campaign\""
+msgstr "bijv. 'Campagne Black Friday Mailing'"
 
 #. module: website_links
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_links/static/src/js/website_links.js:0
-#, python-format
-msgid "e.g. Newsletter, Social Network, .."
-msgstr "Bijv. Nieuwsbrieven, social netwerk, ..."
+msgid "e.g. InMails, Ads, Social, ..."
+msgstr "bijv. InMails, Ads, Social, ..."
 
 #. module: website_links
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_links/static/src/js/website_links.js:0
-#, python-format
-msgid "e.g. Promotion of June, Winter Newsletter, .."
-msgstr "Bijv. Promotie van juni, winter nieuwsbrief, .."
+msgid "e.g. June Sale, Paris Roadshow, ..."
+msgstr "bijv. June Sale, Paris Roadshow, ..."
 
 #. module: website_links
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_links/static/src/js/website_links.js:0
-#, python-format
-msgid "e.g. Search Engine, Website page, .."
-msgstr "Bijv. Zoekmachines, Website pagina, .."
+msgid "e.g. LinkedIn, Facebook, Leads, ..."
+msgstr "bijv. LinkedIn, Facebook, Leads, ..."
 
 #. module: website_links
 #: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
-msgid "e.g. https://www.odoo.com/page/contactus"
-msgstr "Bijv. https://www.odoo.com/page/contactus"
+msgid "e.g. https://www.odoo.com/contactus"
+msgstr "Bijv. https://www.odoo.com/contactus"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:0
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
-#, python-format
 msgid "ok"
 msgstr "ok"
 
 #. module: website_links
-#. openerp-web
-#: code:addons/website_links/static/src/xml/recent_link.xml:0
+#: model_terms:ir.ui.view,arch_db:website_links.create_shorten_url
 #: model_terms:ir.ui.view,arch_db:website_links.graphs
-#, python-format
 msgid "or"
 msgstr "of"

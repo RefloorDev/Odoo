@@ -42,7 +42,45 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-class JsonRequest_API(http.JsonRequest):
+class JsonRPCDispatcherInherit(http.JsonRPCDispatcher):
+    
+    # def _response(self, result=None, error=None):
+    #     response = {'jsonrpc': '2.0', 'id': self.request_id}
+    #     if error is not None:
+    #         response['error'] = error
+    #     if result is not None:
+    #         response['result'] = result
+
+    #     return self.request.make_json_response(response)
+    
+    def _response(self, result=None, error=None):
+        response = {'jsonrpc': '2.01', 'id': self.request_id}
+        if error is not None:
+            response['error'] = error 
+        if result is not None:
+            response['result'] = result
+            # Try to parse and format result if it's a string
+            if isinstance(result, str):
+                # result_dict = ast.literal_eval(result)
+                try:
+                    result_dict = ast.literal_eval(result)
+                    if 'override_json_result' in result_dict and result_dict.get('override_json_result', 0):
+                        mime = 'application/json'
+                        # body = json.dumps(result_dict, default=lambda obj: obj.isoformat() if hasattr(obj, 'isoformat') else str(obj))
+                        # body = json.dumps(result_dict, default=date_utils.json_default)
+                        return self.request.make_json_response(result_dict, status=error and error.pop('http_status', 200) or 200, headers=[('Content-Type', mime), ('Content-Length', len(result_dict))])
+                        # return self.request.make_json_response(body, status=error and error.pop('http_status', 200) or 200, headers=[('Content-Type', mime), ('Content-Length', len(body))])
+                except Exception as e:
+                    _logger.error("Failed to parse result string: %s. Error: %s. Result was: %s", str(e), type(e).__name__, result)
+            
+        response['session_id'] = request.session.sid if request and request.session else None
+        mime = 'application/json'
+        # body = json.dumps(response, default=lambda obj: obj.isoformat() if hasattr(obj, 'isoformat') else str(obj))
+        # return self.request.make_json_response(body, status=error and error.pop('http_status', 200) or 200, headers=[('Content-Type', mime), ('Content-Length', len(body))])
+        return self.request.make_json_response(response, status=error and error.pop('http_status', 200) or 200, headers=[('Content-Type', mime), ('Content-Length', len(response))])
+
+
+class JsonRequest_API(http.Controller):
 
     def _json_response(self, result=None, error=None):
 
@@ -79,7 +117,7 @@ class JsonRequest_API(http.JsonRequest):
         )
 
 
-http.JsonRequest._json_response = JsonRequest_API._json_response
+http.Controller._json_response = JsonRequest_API._json_response
 
 
 class API_Homes(http.Controller):
@@ -123,7 +161,9 @@ class API_Homes(http.Controller):
             _logger.info(f"Authentication - authenticate_user -odoo - after db connection - user : {username}")
             registered_id = user_values.get('device_reg_id', '')
             if uid:
-                user = request.env['res.users'].browse(uid)
+                # user = request.env['res.users'].browse(uid)
+                user = request.env['res.users'].sudo().browse(uid)
+                                
                 if restrict_multi_login and user.token_name and user.device_reg_id and user.device_reg_id != registered_id:
                     _logger.error(f"Authentication - authenticate_user -odoo - user : {username} ; already logged-in another device")
                     result.update({
@@ -418,7 +458,7 @@ class API_Homes(http.Controller):
             if type(file) == werkzeug.datastructures.FileStorage:
                 image_binary = (file.read())
                 file_data.update(
-                    {'uid': int(uid), 'image': base64.encodestring(image_binary), 'file_name': file.filename})
+                    {'uid': int(uid), 'image': base64.b64encode(image_binary).decode('utf-8'), 'file_name': file.filename})
                 data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment', 'create_attachment',
                                          [file_data])
                 if data:
@@ -1056,7 +1096,8 @@ class API_Homes(http.Controller):
     @route('/api/add_transitions', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def transition_add(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', '')
         data = params.get('data', {})
         result = {}
@@ -1126,7 +1167,8 @@ class API_Homes(http.Controller):
             @apiSampleRequest off
         """
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', '')
         data = params.get('data', {})
         result = {}
@@ -1154,7 +1196,7 @@ class API_Homes(http.Controller):
         return json.dumps(result)
 
     @route('/api/update_material_room', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True, )
-    def update_material(self, **kwargs):
+    def update_material_room(self, **kwargs):
         """
             update_material_room
             @api {POST}/api/update_material_room Update Material/Tile Color
@@ -1551,7 +1593,8 @@ class API_Homes(http.Controller):
             @apiSampleRequest off
         """
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', '')
         data = params.get('data', {})
         result = {}
@@ -1977,7 +2020,8 @@ class API_Homes(http.Controller):
             @apiSampleRequest off
         """
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', '')
         data = params.get('data', {})
         result = {}
@@ -2010,7 +2054,8 @@ class API_Homes(http.Controller):
     @route('/api/material_list', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def material_list(self, **kwargs):
             models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-            params = request.jsonrequest.copy()
+            # params = request.jsonrequest.copy()
+            params = request.httprequest.get_json()
             params = dict(params)
             token = params.get('token', '')
             data = params.get('data', {})
@@ -2042,7 +2087,8 @@ class API_Homes(http.Controller):
     @route('/api/remove_transition', type='json', auth="none", methods=['POST'], csrf=False)
     def transition_delete_api(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -2152,7 +2198,8 @@ class API_Homes(http.Controller):
             @apiSampleRequest off
         """
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', '')
         data = params.get('data', {})
         result = {}
@@ -2284,7 +2331,8 @@ class API_Homes(http.Controller):
     @route('/api/add_contract_measurement_questions', type='json', auth="none", methods=['POST'], csrf=False,allow_none=True, )
     def add_contract_measurement_questions(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', '')
         data = params.get('data', {})
         result = {}
@@ -2348,7 +2396,8 @@ class API_Homes(http.Controller):
     @route('/api/update_contract_measurement_questions', type='json', auth="none", methods=['POST'], csrf=False,allow_none=True, )
     def update_contract_measurement_questions(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', '')
         data = params.get('data', [])
         result = {}
@@ -2392,7 +2441,8 @@ class API_Homes(http.Controller):
     @route('/api/UnlinkAttachment', type='json', auth="none", methods=['POST'], csrf=False)
     def unlink_attachment_api(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -2505,7 +2555,7 @@ class API_Homes(http.Controller):
             if type(file) == werkzeug.datastructures.FileStorage:
                 image_binary = (file.read())
                 file_data.update(
-                    {'uid': int(uid), 'image': base64.encodestring(image_binary), 'file_name': file.filename})
+                    {'uid': int(uid), 'image': base64.b64encode(image_binary).decode('utf-8'), 'file_name': file.filename})
                 data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment', 'create_attachment',
                                          [file_data])
             if data:
@@ -2642,7 +2692,8 @@ class API_Homes(http.Controller):
     @route('/api/remove_contract_question_line', type='json', auth="none", methods=['POST'], csrf=False)
     def remove_contract_question_api(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -2666,7 +2717,8 @@ class API_Homes(http.Controller):
     @route('/api/remove_contract_room_measurement_line', type='json', auth="none", methods=['POST'], csrf=False)
     def remove_contract_room_measurement_api(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -2692,7 +2744,8 @@ class API_Homes(http.Controller):
     @route('/api/edit_contract_room_measurement_line', type='json', auth="none", methods=['POST'], csrf=False)
     def edit_contract_room_measurement_line(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -2718,7 +2771,8 @@ class API_Homes(http.Controller):
     @route('/api/list_contract_room_measurement_line', type='json', auth="none", methods=['POST'], csrf=False)
     def list_contract_room_measurement_line(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -2746,7 +2800,8 @@ class API_Homes(http.Controller):
     @route('/api/summary_contract_room_measurement_line', type='json', auth="none", methods=['POST'], csrf=False)
     def summary_contract_room_measurement_line(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -2773,7 +2828,8 @@ class API_Homes(http.Controller):
     @route('/api/create_sale_quotation', type='json', auth="none", methods=['POST'], csrf=False)
     def create_sale_quotation(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -2800,7 +2856,8 @@ class API_Homes(http.Controller):
     @route('/api/update_summary_contract_room_measurement_line', type='json', auth="none", methods=['POST'], csrf=False)
     def update_summary_contract_room_measurement_line(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -2826,7 +2883,8 @@ class API_Homes(http.Controller):
     @route('/api/create_payment_transaction', type='json', auth="none", methods=['POST'], csrf=False)
     def create_payment_transaction(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -2848,7 +2906,8 @@ class API_Homes(http.Controller):
     @route('/api/create_payment_transaction_cash', type='json', auth="none", methods=['POST'], csrf=False)
     def create_payment_transaction_cash(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -2870,7 +2929,8 @@ class API_Homes(http.Controller):
     @route('/api/create_payment_transaction_card', type='json', auth="none", methods=['POST'], csrf=False)
     def create_payment_transaction_card(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -2892,7 +2952,8 @@ class API_Homes(http.Controller):
     @route('/api/create_payment_transaction_check', type='json', auth="none", methods=['POST'], csrf=False)
     def create_payment_transaction_check(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -3019,7 +3080,7 @@ class API_Homes(http.Controller):
                 if type(applicant_signature) == werkzeug.datastructures.FileStorage:
                     image_binary = (applicant_signature.read())
                     file_data.update(
-                        {'uid': int(uid), 'image': base64.encodestring(image_binary),
+                        {'uid': int(uid), 'image': base64.b64encode(image_binary).decode('utf-8'),
                          'file_name': applicant_signature.filename})
                     applicant_signature_data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment',
                                                                  'create_attachment',
@@ -3031,7 +3092,7 @@ class API_Homes(http.Controller):
                 if type(co_applicant_signature) == werkzeug.datastructures.FileStorage:
                     image_binary = (co_applicant_signature.read())
                     file_data.update(
-                        {'uid': int(uid), 'image': base64.encodestring(image_binary),
+                        {'uid': int(uid), 'image': base64.b64encode(image_binary).decode('utf-8'),
                          'file_name': co_applicant_signature.filename})
                     co_applicant_signature_data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment',
                                                                     'create_attachment',
@@ -3043,7 +3104,7 @@ class API_Homes(http.Controller):
                 if type(applicant_initial) == werkzeug.datastructures.FileStorage:
                     image_binary = (applicant_initial.read())
                     file_data.update(
-                        {'uid': int(uid), 'image': base64.encodestring(image_binary),
+                        {'uid': int(uid), 'image': base64.b64encode(image_binary).decode('utf-8'),
                          'file_name': applicant_initial.filename})
                     applicant_initial_data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment',
                                                                  'create_attachment',
@@ -3055,7 +3116,7 @@ class API_Homes(http.Controller):
                 if type(co_applicant_initial) == werkzeug.datastructures.FileStorage:
                     image_binary = (co_applicant_initial.read())
                     file_data.update(
-                        {'uid': int(uid), 'image': base64.encodestring(image_binary),
+                        {'uid': int(uid), 'image': base64.b64encode(image_binary).decode('utf-8'),
                          'file_name': co_applicant_initial.filename})
                     co_applicant_initial_data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment',
                                                                     'create_attachment',
@@ -3084,7 +3145,8 @@ class API_Homes(http.Controller):
     @route('/api/create_credit_application', type='json', auth="none", methods=['POST'], csrf=False)
     def create_credit_application(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         params = dict(params)
         token = params.get('token', False)
         data = params.get('data', False)
@@ -3531,7 +3593,7 @@ class API_Homes(http.Controller):
             if type(file) == werkzeug.datastructures.FileStorage:
                 image_binary = (file.read())
                 file_data.update(
-                    {'uid': int(uid), 'image': base64.encodestring(image_binary), 'file_name': file.filename})
+                    {'uid': int(uid), 'image': base64.b64encode(image_binary).decode('utf-8'), 'file_name': file.filename})
                 data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment', 'create_attachment',
                                          [file_data])
             if data:

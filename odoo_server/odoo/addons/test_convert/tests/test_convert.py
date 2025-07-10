@@ -9,7 +9,8 @@ from lxml.builder import E
 
 import odoo
 from odoo.tests import common
-from odoo.tools.convert import xml_import, _eval_xml
+from odoo.tools.convert import convert_file, xml_import, _eval_xml
+from odoo.tools.misc import file_path
 
 Field = E.field
 Value = E.value
@@ -17,25 +18,6 @@ Value = E.value
 class TestEvalXML(common.TransactionCase):
     def eval_xml(self, node, obj=None):
         return _eval_xml(obj, node, self.env)
-
-    def test_function_eval(self):
-        def id_get(): pass
-        Obj = collections.namedtuple('Obj', ['module', 'idref', 'id_get'])
-        obj = Obj('test_convert', {}, id_get)
-
-        try:
-            test_datetime = ET.XML("<function name='action_test_date' model='test_convert.test_model' eval='[datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")]'/>")
-            self.eval_xml(node=test_datetime, obj=obj)
-            test_time = ET.XML("<function name='action_test_time' model='test_convert.test_model' eval='[time.strftime(\"%Y-%m-%d %H:%M:%S\")]'/>")
-            self.eval_xml(node=test_time, obj=obj)
-            test_timedelta = ET.XML("<function name='action_test_date' model='test_convert.test_model' eval='[(datetime.today()-timedelta(days=365)).strftime(\"%Y-%m-%d %H:%M:%S\")]'/>")
-            self.eval_xml(node=test_timedelta, obj=obj)
-            test_relativedelta = ET.XML("<function name='action_test_date' model='test_convert.test_model' eval='[(datetime.today()+relativedelta(months=3)).strftime(\"%Y-%m-%d %H:%M:%S\")]'/>")
-            self.eval_xml(node=test_relativedelta, obj=obj)
-            test_timezone = ET.XML("<function name='action_test_timezone' model='test_convert.test_model' eval='[pytz.timezone(\"Asia/Calcutta\")]'/>")
-            self.eval_xml(node=test_timezone, obj=obj)
-        except ValueError as e:
-            self.fail(e.message)
 
     def test_char(self):
         self.assertEqual(
@@ -96,7 +78,7 @@ class TestEvalXML(common.TransactionCase):
             self.eval_xml(Field('test_nofile.txt', type='file'), obj)
 
     def test_function(self):
-        obj = xml_import(self.cr, 'test_convert', None, 'init')
+        obj = xml_import(self.env, 'test_convert', None, 'init')
 
         # pass args in eval
         xml = E.function(
@@ -145,7 +127,7 @@ class TestEvalXML(common.TransactionCase):
         self.assertEqual(kwargs, {})
 
     def test_function_kwargs(self):
-        obj = xml_import(self.cr, 'test_convert', None, 'init')
+        obj = xml_import(self.env, 'test_convert', None, 'init')
 
         # pass args and kwargs in child elements
         xml = E.function(
@@ -194,7 +176,7 @@ class TestEvalXML(common.TransactionCase):
         self.assertEqual(kwargs, {})
 
     def test_function_function(self):
-        obj = xml_import(self.cr, 'test_convert', None, 'init')
+        obj = xml_import(self.env, 'test_convert', None, 'init')
 
         xml = E.function(
             E.function(model="test_convert.usered", name="search", eval="[[]]"),
@@ -207,10 +189,100 @@ class TestEvalXML(common.TransactionCase):
         self.assertEqual(args, ())
         self.assertEqual(kwargs, {})
 
+    def test_o2m_sub_records(self):
+        # patch the model's class with a proxy that copies the argument
+        Model = self.registry['test_convert.test_model']
+        call_args = []
+
+        def _load_records(self, data_list, update=False):
+            call_args.append(data_list)
+            # pylint: disable=bad-super-call
+            return super(Model, self)._load_records(data_list, update=update)
+
+        self.patch(Model, '_load_records', _load_records)
+
+        # import a record with a subrecord
+        xml = ET.fromstring("""
+            <record id="test_convert.test_o2m_record" model="test_convert.test_model">
+                <field name="usered_ids">
+                    <record id="test_convert.test_o2m_subrecord" model="test_convert.usered">
+                        <field name="name">subrecord</field>
+                    </record>
+                </field>
+            </record>
+        """.strip())
+        obj = xml_import(self.env, 'test_convert', None, 'init')
+        obj._tag_record(xml)
+
+        # check that field 'usered_ids' is not passed
+        self.assertEqual(len(call_args), 1)
+        for data in call_args[0]:
+            self.assertNotIn('usered_ids', data['values'],
+                             "Unexpected value in O2M When loading XML with sub records")
+
+    def test_translated_field(self):
+        """Tests importing a data file with a lang set in the environment sets the source (en_US)
+        rather than setting the translation (fr_FR)
+        This is currently the expected behavior.
+        Maybe one day we would like that `convert_file` and `xml_import` respect the environment lang,
+        but currently the API, and code blocks using `convert_file`/`xml_import` expect to set the source (en_US)
+        """
+        self.env['res.lang']._activate_lang('fr_FR')
+        env_fr = self.env(context=dict(self.env.context, lang='fr_FR'))
+        record = self.env.ref('test_convert.test_translated_field')
+
+        # 1. Test xml_import, which is sometimes imported and used directly in addons' code
+        # Change the value of the record `name` field
+        record.name = 'bar'
+        self.assertEqual(record.name, 'bar')
+        # Reset the value to the one from the XML data file,
+        # with a lang passed in the environment.
+        filepath = file_path('test_convert/data/test_translated_field/test_model_data.xml')
+        doc = ET.parse(filepath)
+        obj = xml_import(env_fr, 'test_convert', {}, mode='init', xml_filename=filepath)
+        obj.parse(doc.getroot())
+        self.assertEqual(record.with_context(lang=None).name, 'foo')
+
+        # 2. Test convert_file with an XML
+        # Change the value of the record `name` field
+        record.name = 'bar'
+        self.assertEqual(record.name, 'bar')
+        # Reset the value to the one from the XML data file,
+        # with a lang passed in the environment.
+        convert_file(env_fr, 'test_convert', 'data/test_translated_field/test_model_data.xml', {})
+        self.assertEqual(record.with_context(lang=None).name, 'foo')
+
+        # 3. Test convert_file with a CSV
+        # Change the value of the record `name` field
+        record.name = 'bar'
+        self.assertEqual(record.name, 'bar')
+        # Reset the value to the one from the XML data file,
+        # with a lang passed in the environment.
+        convert_file(env_fr, 'test_convert', 'data/test_translated_field/test_convert.test_model.csv', {})
+        self.assertEqual(record.with_context(lang=None).name, 'foo')
+
     @unittest.skip("not tested")
     def test_xml(self):
         pass
 
-    @unittest.skip("not tested")
     def test_html(self):
-        pass
+        self.assertEqual(
+            self.eval_xml(Field(ET.fromstring(
+            """<parent>
+                <t t-if="True">
+                    <t t-out="'text'"/>
+                </t>
+                <t t-else="">
+                    <t t-out="'text2'"></t>
+                </t>
+            </parent>"""), type="html")),
+            """<parent>
+                <t t-if="True">
+                    <t t-out="'text'"></t>
+                </t>
+                <t t-else="">
+                    <t t-out="'text2'"></t>
+                </t>
+            </parent>""",
+            "Evaluating an HTML field should give empty nodes instead of self-closing tags"
+        )

@@ -3,18 +3,16 @@
 # 	* mail_bot
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Yenthe Van Ginneken <yenthespam@gmail.com>, 2019
-# Erwin van der Ploeg <erwin@odooexperts.nl>, 2019
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:11+0000\n"
-"Last-Translator: Erwin van der Ploeg <erwin@odooexperts.nl>, 2019\n"
-"Language-Team: Dutch (https://www.transifex.com/odoo/teams/41243/nl/)\n"
+"POT-Creation-Date: 2024-12-16 13:40+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Dutch (https://app.transifex.com/odoo/teams/41243/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -22,8 +20,8 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid ""
 "Aaaaaw that's really cute but, you know, bots don't work that way. You're "
 "too human for me! Let's keep it professional ❤️"
@@ -32,100 +30,71 @@ msgstr ""
 " menselijk voor mij! Laten we het professioneel houden ❤️"
 
 #. module: mail_bot
-#: model:ir.model,name:mail_bot.model_res_partner
-msgid "Contact"
-msgstr "Contact"
-
-#. module: mail_bot
 #: model:ir.model.fields.selection,name:mail_bot.selection__res_users__odoobot_state__disabled
 msgid "Disabled"
 msgstr "Uitgeschakeld"
 
 #. module: mail_bot
-#: model:ir.model,name:mail_bot.model_mail_channel
+#: model:ir.model,name:mail_bot.model_discuss_channel
 msgid "Discussion Channel"
-msgstr "Discussiekanaal"
+msgstr "Chatkanaal"
 
 #. module: mail_bot
-#: model:ir.model.fields,field_description:mail_bot.field_mail_bot__display_name
-msgid "Display Name"
-msgstr "Schermnaam"
-
-#. module: mail_bot
-#: model:ir.model,name:mail_bot.model_mail_thread
-msgid "Email Thread"
-msgstr "E-mail discussie"
-
-#. module: mail_bot
-#. openerp-web
-#: code:addons/mail_bot/static/src/js/mailbot_service.js:0
-#, python-format
-msgid "Enable desktop notifications to chat"
-msgstr "Schakel desktop notificaties in om te chatten"
-
-#. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid ""
-"Great! 👍<br/>Now, try to <b>send an attachment</b>, like a picture of your "
-"cute dog..."
+"Good, you can customize canned responses in the Discuss "
+"application.%(new_line)s%(new_line)s%(bold_start)sIt's the end of this "
+"overview%(bold_end)s, you can now %(bold_start)sclose this "
+"conversation%(bold_end)s or start the tour again with typing "
+"%(command_start)sstart the tour%(command_end)s. Enjoy discovering Odoo!"
 msgstr ""
-"Geweldig! 👍<br/>Probeer nu <b>een bijlage te versturen</b>, zoals een foto "
-"van uw schattige hond..."
+"Goed, je kunt voorgedefinieerde antwoorden aanpassen in de Chat-app. "
+"%(new_line)s%(new_line)s%(bold_start)sDit is het einde van dit overzicht. "
+"%(bold_end)sJe kunt nu %(bold_start)sdit gesprek sluiten%(bold_end)s of de "
+"rondleiding opnieuw starten door %(command_start)sstart de "
+"rondleiding%(command_end)s te typen. Veel plezier met het ontdekken van "
+"Odoo!"
 
 #. module: mail_bot
-#: model:ir.model,name:mail_bot.model_ir_http
-msgid "HTTP Routing"
-msgstr "HTTP routing"
-
-#. module: mail_bot
-#: code:addons/mail_bot/models/mail_channel.py:0
-#, python-format
-msgid ""
-"Hello,<br/>Odoo's chat helps employees collaborate efficiently. I'm here to "
-"help you discover its features.<br/><b>Try to send me an emoji :)</b>"
-msgstr ""
-"Hallo, <br/>Odoo's chat helpt medewerkers efficiënt samen te werken. Ik ben "
-"hier om je te helpen de functies ervan te ontdekken.<br/> <b>Probeer me een "
-"emoji te sturen :)</b>"
-
-#. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
+msgid ""
+"Great! 👍%(new_line)sTo access special commands, %(bold_start)sstart your "
+"sentence with%(bold_end)s %(command_start)s/%(command_end)s. Try getting "
+"help."
+msgstr ""
+"Super! 👍 %(new_line)sOm toegang te krijgen tot speciale opdrachten, "
+"%(bold_start)sbegin je je zin "
+"met%(bold_end)s%(command_start)s/%(command_end)s. Probeer hulp te krijgen."
+
+#. module: mail_bot
+#. odoo-python
+#: code:addons/mail_bot/models/res_users.py:0
+msgid "Hello,"
+msgstr "Hallo,"
+
+#. module: mail_bot
+#. odoo-python
+#: code:addons/mail_bot/models/mail_bot.py:0
 msgid "Hmmm..."
 msgstr "Hmmm..."
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid "I'm afraid I don't understand. Sorry!"
 msgstr "Ik begrijp het helaas niet. Sorry!"
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid ""
-"I'm just a bot... :( You can check <a "
-"href=\"https://www.odoo.com/page/docs\">our documentation</a>) for more "
-"information!"
+"I'm not smart enough to answer your question.%(new_line)sTo follow my guide,"
+" ask: %(command_start)sstart the tour%(command_end)s."
 msgstr ""
-"Ik ben maar een bot ... :( Je kunt <a "
-"href=\"https://www.odoo.com/page/docs\">onze documentatie</a> raadplegen) "
-"voor meer informatie!"
-
-#. module: mail_bot
-#: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
-msgid ""
-"I'm not smart enough to answer your question.<br/>To follow my guide, ask"
-msgstr ""
-"Ik ben niet slim genoeg om je vraag te beantwoorden. <br/>Om mijn te helpen,"
-" vraag"
-
-#. module: mail_bot
-#: model:ir.model.fields,field_description:mail_bot.field_mail_bot__id
-msgid "ID"
-msgstr "ID"
+"Ik ben niet slim genoeg om je vraag te beantwoorden. %(new_line)sOm mijn "
+"gids te volgen, vraag: %(command_start)sstart de rondleiding%(command_end)s."
 
 #. module: mail_bot
 #: model:ir.model.fields.selection,name:mail_bot.selection__res_users__odoobot_state__idle
@@ -133,34 +102,21 @@ msgid "Idle"
 msgstr "Inactief"
 
 #. module: mail_bot
-#: model:ir.model.fields,field_description:mail_bot.field_mail_bot____last_update
-msgid "Last Modified on"
-msgstr "Laatst gewijzigd op"
-
-#. module: mail_bot
 #: model:ir.model,name:mail_bot.model_mail_bot
 msgid "Mail Bot"
-msgstr "Mail bot"
+msgstr "Mailbot"
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid ""
-"Not a cute dog, but you get it 😊<br/>To access special features, <b>start "
-"your sentence with '/'</b>. Try to get help."
+"Not exactly. To continue the tour, send an emoji: "
+"%(bold_start)stype%(bold_end)s%(command_start)s :)%(command_end)s and press "
+"enter."
 msgstr ""
-"Geen schattige hond, maar je snapt het 😊 Om toegang te krijgen tot speciale "
-"functies, start je je zin met '/'. Probeer hulp te krijgen."
-
-#. module: mail_bot
-#: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
-msgid ""
-"Not exactly. To continue the tour, send an emoji, <b>type \":)\"</b> and "
-"press enter."
-msgstr ""
-"Niet helemaal. Om de tour te vervolgen verzend u een emoji, <b>type "
-"\":)\"</b>en druk op enter."
+"Niet precies. Stuur een emoji: %(bold_start)styp%(bold_end)s "
+"%(command_start)s:)%(command_end)s en druk op enter om de rondleiding voort "
+"te zetten."
 
 #. module: mail_bot
 #: model:ir.model.fields.selection,name:mail_bot.selection__res_users__odoobot_state__not_initialized
@@ -168,24 +124,36 @@ msgid "Not initialized"
 msgstr "Niet geïnitialiseerd"
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid ""
-"Not sure wat you are doing. Please press / and wait for the propositions. "
-"Select \"help\" and press enter"
+"Not sure what you are doing. Please, type %(command_start)s/%(command_end)s "
+"and wait for the propositions. Select %(command_start)shelp%(command_end)s "
+"and press enter."
 msgstr ""
-"Ik weet niet wat u aan het doen bent. Druk alstublieft : en wacht voor de "
-"voorstellen. Selecteer \"help\" en druk dan op enter."
+"Ik weet niet zeker wat je doet. Typ %(command_start)s/%(command_end)s en "
+"wacht op de voorstellen. Selecteer %(command_start)shelp%(command_end)s en "
+"druk op Enter."
 
 #. module: mail_bot
-#. openerp-web
-#: code:addons/mail_bot/static/src/js/systray_messaging_menu.js:0
-#, python-format
+#. odoo-python
+#: code:addons/mail_bot/models/mail_bot.py:0
 msgid ""
-"Odoo will not have the permission to send native notifications on this "
-"device."
+"Not sure what you are doing. Please, type %(command_start)s:%(command_end)s "
+"and wait for the propositions. Select one of them and press enter."
 msgstr ""
-"Odoo heeft geen toegang om native berichten te versturen op dit apparaat."
+"Ik weet niet zeker wat je doet. Typ %(command_start)s:%(command_end)s en "
+"wacht op de voorstellen. Selecteer er een en druk op Enter."
+
+#. module: mail_bot
+#. odoo-python
+#: code:addons/mail_bot/models/res_users.py:0
+msgid ""
+"Odoo's chat helps employees collaborate efficiently. I'm here to help you "
+"discover its features."
+msgstr ""
+"Odoo's chat helpt om werknemers efficiënt samen te werken. Ik ben hier om je"
+" te helpen de functies ervan te ontdekken."
 
 #. module: mail_bot
 #: model:ir.model.fields,field_description:mail_bot.field_res_users__odoobot_state
@@ -193,16 +161,19 @@ msgid "OdooBot Status"
 msgstr "OdooBot status"
 
 #. module: mail_bot
-#. openerp-web
-#: code:addons/mail_bot/static/src/js/mailbot_service.js:0
-#, python-format
-msgid "OdooBot has a request"
-msgstr "OdooBot heeft een verzoek"
+#: model:ir.model.fields,field_description:mail_bot.field_res_users__odoobot_failed
+msgid "Odoobot Failed"
+msgstr "Odoobot mislukt"
 
 #. module: mail_bot
 #: model:ir.model.fields.selection,name:mail_bot.selection__res_users__odoobot_state__onboarding_attachement
-msgid "Onboarding attachement"
+msgid "Onboarding attachment"
 msgstr "Onboarding bijlage"
+
+#. module: mail_bot
+#: model:ir.model.fields.selection,name:mail_bot.selection__res_users__odoobot_state__onboarding_canned
+msgid "Onboarding canned"
+msgstr "Onboarding standaardantwoorden"
 
 #. module: mail_bot
 #: model:ir.model.fields.selection,name:mail_bot.selection__res_users__odoobot_state__onboarding_command
@@ -220,121 +191,157 @@ msgid "Onboarding ping"
 msgstr "Onboarding ping"
 
 #. module: mail_bot
-#. openerp-web
-#: code:addons/mail_bot/static/src/js/systray_messaging_menu.js:0
-#, python-format
-msgid "Permission denied"
-msgstr "Toegang geweigerd"
-
-#. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
-msgid "Pong."
-msgstr "Pong."
-
-#. module: mail_bot
-#: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid ""
 "Sorry I'm sleepy. Or not! Maybe I'm just trying to hide my unawareness of "
-"human language...<br/>I can show you features if you write"
+"human language...%(new_line)sI can show you features if you write: "
+"%(command_start)sstart the tour%(command_end)s."
 msgstr ""
-"Sorry ik ben slaperig. Of niet! Misschien probeer ik gewoon mijn "
-"onwetendheid over menselijke taal te verbergen ...<br/> Ik kan je "
-"eigenschappen laten zien als je schrijft"
+"Sorry, ik ben slaperig. Of niet! Misschien probeer ik mijn onwetendheid over"
+" menselijke taal te verbergen ... %(new_line)sTyp: %(command_start)sstart de"
+" rondleiding%(command_end)s om verschillende functies te bekijken."
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid ""
-"Sorry, I am not listening. To get someone's attention, <b>ping him</b>. "
-"Write \"@odoobot\" and select me."
+"Sorry, I am not listening. To get someone's attention, %(bold_start)sping "
+"him%(bold_end)s. Write %(command_start)s@OdooBot%(command_end)s and select "
+"me."
 msgstr ""
-"Sorry, ik luister niet. Als je iemands aandacht wilt trekken, moet je hem "
-"<b>een ping sturen</b>. Schrijf \"@odoobot\" en selecteer mij."
+"Sorry, ik was niet aan het luisteren. %(bold_start)sPing een "
+"persoon%(bold_end)s om de aandacht te trekken. Schrijf "
+"%(command_start)s@OdooBot%(command_end)s en selecteer mij."
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
+msgid "Thanks"
+msgstr "Bedankt"
+
+#. module: mail_bot
+#. odoo-python
+#: code:addons/mail_bot/models/mail_bot.py:0
+msgid "Thanks for your feedback. Goodbye!"
+msgstr "Bedankt voor je feedback. Tot ziens!"
+
+#. module: mail_bot
+#. odoo-python
+#: code:addons/mail_bot/models/mail_bot.py:0
 msgid "That's not nice! I'm a bot but I have feelings... 💔"
-msgstr "Dat is niet vriendelijk! Ik ben een bot maar heb ook gevoelens... 💔"
-
-#. module: mail_bot
-#: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
-msgid ""
-"To <b>send an attachment</b>, click the 📎 icon on the right, and select a "
-"file."
 msgstr ""
-"Als u een bijlage wilt verzenden, klikt u op het pictogram 📎 aan de "
-"rechterkant en selecteert u een bestand."
+"Dat is niet vriendelijk! Ik ben een bot, maar ik heb ook gevoelens... 💔"
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
+msgid "This is a temporary canned response to see how canned responses work."
+msgstr ""
+"Dit is een tijdelijk standaardantwoord om te zien hoe deze antwoorden "
+"werken."
+
+#. module: mail_bot
+#. odoo-python
+#: code:addons/mail_bot/models/mail_bot.py:0
+msgid ""
+"To %(bold_start)ssend an attachment%(bold_end)s, click on the "
+"%(paperclip_icon)s icon and select a file."
+msgstr ""
+"Om een %(bold_start)sbijlage te versturen%(bold_end)s, klik op "
+"de%(paperclip_icon)s-icoon en selecteer een bestand."
+
+#. module: mail_bot
+#. odoo-python
+#: code:addons/mail_bot/models/mail_bot.py:0
 msgid "To start, try to send me an emoji :)"
 msgstr "Probeer mij een emoji te sturen om te starten :)"
 
 #. module: mail_bot
+#. odoo-python
+#: code:addons/mail_bot/models/res_users.py:0
+msgid "Try to send me an emoji"
+msgstr "Probeer mij een emoji te sturen"
+
+#. module: mail_bot
+#. odoo-python
+#: code:addons/mail_bot/models/mail_bot.py:0
+msgid ""
+"Unfortunately, I'm just a bot 😞 I don't understand! If you need help "
+"discovering our product, please check %(document_link_start)sour "
+"documentation%(document_link_end)s or %(slides_link_start)sour "
+"videos%(slides_link_end)s."
+msgstr ""
+"Helaas ben ik maar een bot 😞 Ik begrijp het niet! Als je hulp nodig hebt bij"
+" het ontdekken van ons product, raadpleeg dan onze %(document_link_start)s "
+"documentatie%(document_link_end)s of %(slides_link_start)sonze "
+"video's%(slides_link_end)s."
+
+#. module: mail_bot
 #: model:ir.model,name:mail_bot.model_res_users
-msgid "Users"
-msgstr "Gebruikers"
+msgid "User"
+msgstr "Gebruiker"
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid ""
-"Wow you are a natural!<br/>Ping someone to grab its attention with "
-"@nameoftheuser. <b>Try to ping me using @OdooBot</b> in a sentence."
+"Wonderful! 😇%(new_line)sTry typing %(command_start)s:%(command_end)s to use "
+"canned responses. I've created a temporary one for you."
 msgstr ""
-"Wow je bent een natuurlijktalent! <br/>Ping iemand om zijn aandacht te "
-"trekken met @gebruikersnaam. <b>Probeer me te pingen met @OdooBot </b>in een"
-" zin."
+"Geweldig! 😇%(new_line)sTyp %(command_start)s:%(command_end)s om "
+"standaardantwoorden te gebruiken. Ik heb voor jou een tijdelijke versie "
+"gemaakt."
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid ""
-"Yep, I am here! 🎉 <br/>You finished the tour, you can <b>close this chat "
-"window</b>. Enjoy discovering Odoo."
+"Wow you are a natural!%(new_line)sPing someone with @username to grab their "
+"attention. %(bold_start)sTry to ping me using%(bold_end)s "
+"%(command_start)s@OdooBot%(command_end)s in a sentence."
 msgstr ""
-"Ja, ik ben hier! 🎉 Je hebt de rondleiding voltooid,<b> je kunt dit "
-"chatvenster sluiten</b>. Geniet van het ontdekken van Odoo."
+"Wauw, je bent een natuurtalent! %(new_line)sPing iemand met @gebruikersnaam "
+"om zijn of haar aandacht te trekken. %(bold_start)sProbeer me te "
+"pingen%(bold_end)s door %(command_start)s@OdooBot%(command_end)s in een zin "
+"te gebruiken."
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
-msgid "Yep, OdooBot is in the place!"
-msgstr "Yep, OdooBot is er klaar voor!"
+msgid ""
+"Yep, I am here! 🎉 %(new_line)sNow, try %(bold_start)ssending an "
+"attachment%(bold_end)s, like a picture of your cute dog..."
+msgstr ""
+"Ja, hier ben ik! 🎉 %(new_line)sProbeer nu %(bold_start)seen bijlage te "
+"verzenden%(bold_end)s, zoals een foto van je schattige hond ..."
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid "fuck"
 msgstr "fuck"
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid "help"
 msgstr "help"
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid "i love you"
 msgstr "Ik hou van je"
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid "love"
 msgstr "liefde"
 
 #. module: mail_bot
+#. odoo-python
 #: code:addons/mail_bot/models/mail_bot.py:0
-#: code:addons/mail_bot/models/mail_bot.py:0
-#: code:addons/mail_bot/models/mail_bot.py:0
-#, python-format
 msgid "start the tour"
-msgstr "start de tour"
+msgstr "start de rondleiding"

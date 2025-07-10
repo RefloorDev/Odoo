@@ -3,27 +3,59 @@
 # 	* analytic
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Felix Schubert <felix.schubert@go-erp.com>, 2019
-# Andreas Stauder <andreas.stauder@brain-tec.ch>, 2019
-# Johannes Croe <jcr@odoo.com>, 2019
-# Michael Schütt <michael.schuett.lwl@gmail.com>, 2019
-# Chris Egal <sodaswed@web.de>, 2019
-# Leon Grill <leg@odoo.com>, 2019
+# Wil Odoo, 2024
+# Larissa Manderfeld, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-09 12:17+0000\n"
-"PO-Revision-Date: 2019-08-26 09:08+0000\n"
-"Last-Translator: Leon Grill <leg@odoo.com>, 2019\n"
-"Language-Team: German (https://www.transifex.com/odoo/teams/41243/de/)\n"
+"POT-Creation-Date: 2025-01-27 13:03+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Larissa Manderfeld, 2024\n"
+"Language-Team: German (https://app.transifex.com/odoo/teams/41243/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_account.py:0
+msgid "%s (copy)"
+msgstr "%s (Kopie)"
+
+#. module: analytic
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_plan_form_view
+msgid "<span class=\"o_stat_text\">Analytic Accounts</span>"
+msgstr "<span class=\"o_stat_text\">Kostenstellen</span>"
+
+#. module: analytic
+#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_form
+msgid "<span class=\"o_stat_text\">Gross Margin</span>"
+msgstr "<span class=\"o_stat_text\">Bruttomarge</span>"
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_plan.py:0
+msgid ""
+"A 'Project' plan needs to exist and its id needs to be set as "
+"`analytic.project_plan` in the system variables"
+msgstr ""
+"Es muss ein „Projekt“-Plan existieren und seine ID muss in den "
+"Systemvariablen als `analytic.project_plan` festgelegt sein"
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+msgid "Account field"
+msgstr "Kontenfeld"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__account_ids
+msgid "Accounts"
+msgstr "Konten"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_needaction
@@ -32,20 +64,35 @@ msgstr "Aktion notwendig"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__active
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__active
 msgid "Active"
 msgstr "Aktiv"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_active_account
+msgid "Active account"
+msgstr "Aktives Konto"
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.xml:0
+msgid "Add a Line"
+msgstr "Zeile hinzufügen"
 
 #. module: analytic
 #: model_terms:ir.actions.act_window,help:analytic.action_account_analytic_account_form
 #: model_terms:ir.actions.act_window,help:analytic.action_analytic_account_form
 msgid "Add a new analytic account"
-msgstr "Fügen Sie ein neues Analysekonto hinzu"
+msgstr "Eine neue Kostenstelle hinzufügen"
 
 #. module: analytic
-#: model_terms:ir.actions.act_window,help:analytic.account_analytic_tag_action
-msgid "Add a new tag"
-msgstr "Klicken Sie, um einen neuen Tag hinzuzufügen."
+#: model:account.analytic.account,name:analytic.analytic_administratif
+msgid "Administrative"
+msgstr "Verwaltung"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__all_account_count
+msgid "All Analytic Accounts Count"
+msgstr "Anzahl aller Kostenstellen"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__amount
@@ -54,98 +101,142 @@ msgid "Amount"
 msgstr "Betrag"
 
 #. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+msgid "Amount field"
+msgstr "Betragsfeld"
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.xml:0
+msgid "Analytic"
+msgstr "Kostenrechnung"
+
+#. module: analytic
 #: model:ir.model,name:analytic.model_account_analytic_account
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__name
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__account_id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__account_id
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__auto_account_id
+#: model:ir.model.fields,field_description:analytic.field_analytic_plan_fields_mixin__auto_account_id
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_form
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_search
-#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_filter
 msgid "Analytic Account"
 msgstr "Kostenstelle"
 
 #. module: analytic
-#: model:ir.model,name:analytic.model_account_analytic_distribution
-msgid "Analytic Account Distribution"
-msgstr "Kostenstellenverteilung"
-
-#. module: analytic
-#: model:ir.actions.act_window,name:analytic.account_analytic_group_action
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_group_form_view
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_group_tree_view
-msgid "Analytic Account Groups"
-msgstr "Kostenstellengruppen"
-
-#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_res_config_settings__group_analytic_accounting
 #: model:res.groups,name:analytic.group_analytic_accounting
 msgid "Analytic Accounting"
 msgstr "Kostenrechnung"
 
 #. module: analytic
-#: model:res.groups,name:analytic.group_analytic_tags
-msgid "Analytic Accounting Tags"
-msgstr "Kostenstellenstichwörter"
-
-#. module: analytic
 #: model:ir.actions.act_window,name:analytic.action_account_analytic_account_form
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__analytic_distribution_ids
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_list
 msgid "Analytic Accounts"
-msgstr "Kostenstellenkonten"
+msgstr "Kostenstellen"
 
 #. module: analytic
-#: model:ir.model,name:analytic.model_account_analytic_group
-msgid "Analytic Categories"
-msgstr "Analytische Kategorien"
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__account_count
+msgid "Analytic Accounts Count"
+msgstr "Anzahl Kostenstellen"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__active_analytic_distribution
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_tag_form_view
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__analytic_distribution
+#: model:ir.model.fields,field_description:analytic.field_analytic_mixin__analytic_distribution
 msgid "Analytic Distribution"
-msgstr "Kostenstellen Distribution"
+msgstr "Kostenverteilung"
 
 #. module: analytic
-#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_graph
-#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_pivot
-#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_tree
-msgid "Analytic Entries"
-msgstr "Kostenstellenbuchungen"
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+#: model:ir.model,name:analytic.model_account_analytic_distribution_model
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_distribution_model_form_view
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_distribution_model_tree_view
+msgid "Analytic Distribution Model"
+msgstr "Verteilungsschlüssel für Kostenstellen"
+
+#. module: analytic
+#: model:ir.actions.act_window,name:analytic.action_analytic_distribution_model
+msgid "Analytic Distribution Models"
+msgstr "Verteilungsschlüssel für Kostenstellen"
 
 #. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_form
-msgid "Analytic Entry"
-msgstr "Kostenstellen-Buchung"
+msgid "Analytic Item"
+msgstr "Kostenstellenbuchung"
 
 #. module: analytic
 #: model:ir.actions.act_window,name:analytic.account_analytic_line_action_entries
+#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_graph
+#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_pivot
+#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_tree
 msgid "Analytic Items"
-msgstr "Kostenstellen Buchungen"
+msgstr "Kostenstellenbuchungen"
 
 #. module: analytic
 #: model:ir.model,name:analytic.model_account_analytic_line
 msgid "Analytic Line"
-msgstr "Kostenstellen-Buchungen"
+msgstr "Kostenstellenbuchungen"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__line_ids
 msgid "Analytic Lines"
-msgstr "Kostenstellen Buchungen"
+msgstr "Kostenstellenbuchungen"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__name
-msgid "Analytic Tag"
-msgstr "Kostenstellen Tag"
+#: model:ir.model,name:analytic.model_analytic_mixin
+msgid "Analytic Mixin"
+msgstr "Kostenrechnung Mixin"
 
 #. module: analytic
-#: model:ir.actions.act_window,name:analytic.account_analytic_tag_action
-#: model:ir.model,name:analytic.model_account_analytic_tag
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_tag_form_view
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_tag_tree_view
-msgid "Analytic Tags"
-msgstr "Kostenstellen Tags"
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__analytic_plan_id
+msgid "Analytic Plan"
+msgstr "Kostenstellenplan"
 
 #. module: analytic
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_tag_view_search
+#: model:ir.model,name:analytic.model_analytic_plan_fields_mixin
+msgid "Analytic Plan Fields"
+msgstr "Felder des Kostenstellenplans"
+
+#. module: analytic
+#: model:ir.model,name:analytic.model_account_analytic_applicability
+msgid "Analytic Plan's Applicabilities"
+msgstr "Anwendbarkeit des Kostenstellenplans"
+
+#. module: analytic
+#: model:ir.actions.act_window,name:analytic.account_analytic_plan_action
+#: model:ir.model,name:analytic.model_account_analytic_plan
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_plan_form_view
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_plan_tree_view
+msgid "Analytic Plans"
+msgstr "Kostenstellenpläne"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__analytic_precision
+#: model:ir.model.fields,field_description:analytic.field_analytic_mixin__analytic_precision
+msgid "Analytic Precision"
+msgstr "Kostengenauigkeit"
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_plan.py:0
+msgid "Analytical Accounts"
+msgstr "Kostenstellen"
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_plan.py:0
+msgid "Analytical Plans"
+msgstr "Kostenstellenpläne"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__applicability
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__applicability_ids
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_plan_form_view
+msgid "Applicability"
+msgstr "Anwendbarkeit"
+
+#. module: analytic
+#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_form
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_search
 msgid "Archived"
 msgstr "Archiviert"
@@ -156,9 +247,20 @@ msgid "Associated Partner"
 msgstr "Zugehöriger Partner"
 
 #. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_asustek
+msgid "Asustek"
+msgstr "Asustek"
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_line.py:0
+msgid "At least one analytic account must be set"
+msgstr "Es muss mindestens eine Kostenstelle eingestellt sein"
+
+#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_attachment_count
 msgid "Attachment Count"
-msgstr "# Anhänge"
+msgstr "Anzahl Anhänge"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__balance
@@ -169,45 +271,92 @@ msgstr "Saldo"
 #. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_kanban
 msgid "Balance:"
-msgstr "Saldo"
+msgstr "Saldo:"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__product_uom_category_id
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+msgid "Business domain"
+msgstr "Geschäftsdomain"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_partners_camp_to_camp
+msgid "Camp to Camp"
+msgstr "Camp to Camp"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_integration_c2c
+msgid "CampToCamp"
+msgstr "CampToCamp"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__category
 msgid "Category"
 msgstr "Kategorie"
 
 #. module: analytic
 #: model:ir.actions.act_window,name:analytic.action_analytic_account_form
 msgid "Chart of Analytic Accounts"
-msgstr "Kostenstellen"
+msgstr "Kostenstellenplan"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__children_ids
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__children_count
+msgid "Children Plans Count"
+msgstr "Anzahl Unterpläne"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__children_ids
 msgid "Childrens"
-msgstr "Kinder"
+msgstr "Untergeordnete"
 
 #. module: analytic
-#: model_terms:ir.actions.act_window,help:analytic.account_analytic_group_action
-msgid "Click to add a new analytic account group."
-msgstr "Klicken Sie hier, um eine neue Kostenstellengruppe hinzuzufügen."
+#: model_terms:ir.actions.act_window,help:analytic.account_analytic_plan_action
+msgid "Click to add a new analytic account plan."
+msgstr "Klicken, um eine neuen Kostenstellenplan zu erstellen."
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__color
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.xml:0
+msgid "Close"
+msgstr "Schließen"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__color
+msgid "Color"
+msgstr "Farbe"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__color
 msgid "Color Index"
 msgstr "Farbkennzeichnung"
 
 #. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_commercial_marketing
+msgid "Commercial & Marketing"
+msgstr "Werbung & Marketing"
+
+#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__company_id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__company_id
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__company_id
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__company_id
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__company_id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__company_id
 msgid "Company"
 msgstr "Unternehmen"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__complete_name
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__complete_name
 msgid "Complete Name"
 msgstr "Vollständiger Name"
+
+#. module: analytic
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_distribution_model_form_view
+msgid "Conditions to meet"
+msgstr "Zu erfüllende Bedingungen"
+
+#. module: analytic
+#: model:ir.model,name:analytic.model_res_config_settings
+msgid "Config Settings"
+msgstr "Konfigurationseinstellungen "
 
 #. module: analytic
 #: model:ir.model.fields,help:analytic.field_account_analytic_line__product_uom_category_id
@@ -215,19 +364,8 @@ msgid ""
 "Conversion between Units of Measure can only occur if they belong to the "
 "same category. The conversion will be made based on the ratios."
 msgstr ""
-"Die Umrechnung zwischen Mengeneinheiten kann nur erfolgen, wenn sie "
-"derselben Kategorie angehören. Die Umrechnung erfolgt auf Basis der "
-"Kennzahlen."
-
-#. module: analytic
-#: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_form
-msgid "Cost/Revenue"
-msgstr "Kosten/Erlöse"
-
-#. module: analytic
-#: model:ir.actions.act_window,name:analytic.account_analytic_line_action
-msgid "Costs & Revenues"
-msgstr "Kosten & Erlöse"
+"Die Umrechnung zwischen Maßeinheiten kann nur erfolgen, wenn sie derselben "
+"Kategorie angehören. Die Umrechnung erfolgt auf Basis der Kennzahlen."
 
 #. module: analytic
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action
@@ -237,23 +375,23 @@ msgid ""
 "                invoices, expenses or timesheets."
 msgstr ""
 "Kosten werden automatisch hinterlegt, wenn Sie Lieferantenrechnungen, Spesen"
-" oder Stundenzettel erfassen."
+" oder Zeiterfassungen registrieren."
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__create_uid
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__create_uid
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__create_uid
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__create_uid
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__create_uid
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__create_uid
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__create_uid
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__create_uid
 msgid "Created by"
 msgstr "Erstellt von"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__create_date
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__create_date
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__create_date
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__create_date
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__create_date
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__create_date
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__create_date
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__create_date
 msgid "Created on"
 msgstr "Erstellt am"
 
@@ -281,46 +419,103 @@ msgid "Date"
 msgstr "Datum"
 
 #. module: analytic
+#: model:ir.model.fields,help:analytic.field_account_analytic_account__active
+msgid "Deactivate the account."
+msgstr "Das Konto deaktivieren."
+
+#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__debit
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_list
 msgid "Debit"
 msgstr "Soll"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__description
+#: model:account.analytic.account,name:analytic.analytic_agrolait
+msgid "Deco Addict"
+msgstr "Deco Addict"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__default_applicability
+msgid "Default Applicability"
+msgstr "Standardanwendbarkeit"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_deltapc
+msgid "Delta PC"
+msgstr "Delta PC"
+
+#. module: analytic
+#: model:account.analytic.plan,name:analytic.analytic_plan_departments
+msgid "Departments"
+msgstr "Abteilungen"
+
+#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__name
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__description
 msgid "Description"
 msgstr "Beschreibung"
 
 #. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_desertic_hispafuentes
+msgid "Desertic - Hispafuentes"
+msgstr "Desertic - Hispafuentes"
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+msgid "Disable save"
+msgstr "Speicherung deaktivieren"
+
+#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__display_name
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__display_name
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__display_name
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__display_name
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__display_name
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__display_name
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__display_name
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__display_name
 msgid "Display Name"
 msgstr "Anzeigename"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_follower_ids
-msgid "Followers"
-msgstr "Abonnenten"
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__distribution_analytic_account_ids
+#: model:ir.model.fields,field_description:analytic.field_analytic_mixin__distribution_analytic_account_ids
+msgid "Distribution Analytic Account"
+msgstr "Verteilung der Kostenstellen"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_channel_ids
-msgid "Followers (Channels)"
-msgstr "Abonnenten (Kanäle)"
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_distribution_model_form_view
+msgid "Distribution to apply"
+msgstr "Anzuwendende Verteilung"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__business_domain
+msgid "Domain"
+msgstr "Bereich"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_rd_finance
+msgid "Finance"
+msgstr "Finanzen"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_follower_ids
+msgid "Followers"
+msgstr "Follower"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_partner_ids
 msgid "Followers (Partners)"
-msgstr "Abonnenten (Partner)"
+msgstr "Follower (Partner)"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__group_id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__group_id
-msgid "Group"
-msgstr "Gruppe"
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+msgid "Force applicability"
+msgstr "Anwendbarkeit erzwingen"
+
+#. module: analytic
+#: model:ir.actions.act_window,name:analytic.account_analytic_line_action
+msgid "Gross Margin"
+msgstr "Bruttomarge"
 
 #. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_search
@@ -329,33 +524,34 @@ msgid "Group By..."
 msgstr "Gruppieren nach ..."
 
 #. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__has_message
+msgid "Has Message"
+msgstr "Hat eine Nachricht"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_rd_hr
+msgid "Human Resources"
+msgstr "Personalwesen"
+
+#. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__id
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__id
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__id
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__id
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__id
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__id
 msgid "ID"
 msgstr "ID"
 
 #. module: analytic
 #: model:ir.model.fields,help:analytic.field_account_analytic_account__message_needaction
-#: model:ir.model.fields,help:analytic.field_account_analytic_account__message_unread
 msgid "If checked, new messages require your attention."
-msgstr "Falls markiert, benötigen neue Nachrichten Ihre Kenntnisnahme."
+msgstr "Falls markiert, erfordern neue Nachrichten Ihre Aufmerksamkeit."
 
 #. module: analytic
 #: model:ir.model.fields,help:analytic.field_account_analytic_account__message_has_error
 msgid "If checked, some messages have a delivery error."
-msgstr "Wenn gewählt, ist das Senden einiger Nachrichten fehlgeschlagen."
-
-#. module: analytic
-#: model:ir.model.fields,help:analytic.field_account_analytic_account__active
-msgid ""
-"If the active field is set to False, it will allow you to hide the account "
-"without removing it."
 msgstr ""
-"Mit Aktivierung wird die Anzeige für das Finanzkonto verborgen, ohne es "
-"löschen zu müssen."
+"Falls markiert, weisen einige Nachrichten einen Zustellungsfehler auf."
 
 #. module: analytic
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action
@@ -365,50 +561,62 @@ msgid ""
 "                analytic accounts. You can track costs and revenues to analyse\n"
 "                your margins easily."
 msgstr ""
-"In Odoo werden Kundenaufträge und Projekte mit Hilfe von\n"
-"analytische Konten gepflegt. Sie können einfach Kosten und Erlöse nachverfolgen um ihre Margen zu analysieren."
+"In Odoo werden Verkaufsaufträge und Projekte mit Hilfe von\n"
+"Kostenstellen gepflegt. Sie können einfach Kosten und Erlöse nachverfolgen, um ihre Margen zu analysieren."
+
+#. module: analytic
+#: model:account.analytic.plan,name:analytic.analytic_plan_internal
+msgid "Internal"
+msgstr "Intern"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_is_follower
 msgid "Is Follower"
-msgstr "Ist ein Abonnent"
-
-#. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account____last_update
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution____last_update
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group____last_update
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_line____last_update
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag____last_update
-msgid "Last Modified on"
-msgstr "Letzte Änderung am"
+msgstr "Ist Follower"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__write_uid
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__write_uid
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__write_uid
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__write_uid
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__write_uid
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__write_uid
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__write_uid
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__write_uid
 msgid "Last Updated by"
 msgstr "Zuletzt aktualisiert von"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__write_date
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__write_date
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__write_date
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_applicability__write_date
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__write_date
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__write_date
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_tag__write_date
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__write_date
 msgid "Last Updated on"
 msgstr "Zuletzt aktualisiert am"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_main_attachment_id
-msgid "Main Attachment"
-msgstr "Hauptanhänge"
+#: model:account.analytic.account,name:analytic.analytic_rd_legal
+msgid "Legal"
+msgstr "Rechtliches"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_think_big_systems
+msgid "Lumber Inc"
+msgstr "Lumber Inc"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_luminous_technologies
+msgid "Luminous Technologies"
+msgstr "Luminous Technologies"
+
+#. module: analytic
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_applicability__applicability__mandatory
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_plan__default_applicability__mandatory
+msgid "Mandatory"
+msgstr "Erforderlich"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_has_error
 msgid "Message Delivery error"
-msgstr "Fehler beim Senden der Nachricht"
+msgstr "Nachricht mit Zustellungsfehler"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_ids
@@ -416,11 +624,31 @@ msgid "Messages"
 msgstr "Nachrichten"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__name
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__name
+#: model:account.analytic.account,name:analytic.analytic_millennium_industries
+msgid "Millennium Industries"
+msgstr "Millennium Industries"
+
+#. module: analytic
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_applicability__business_domain__general
+msgid "Miscellaneous"
+msgstr "Sonstiges"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__name
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_list
 msgid "Name"
 msgstr "Name"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_nebula
+msgid "Nebula"
+msgstr "Nebula"
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.xml:0
+msgid "New Model"
+msgstr "Neues Modell"
 
 #. module: analytic
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action_entries
@@ -431,6 +659,12 @@ msgstr "Noch keine Aktivität"
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action
 msgid "No activity yet on this account"
 msgstr "Noch keine Aktivität auf diesem Konto"
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.xml:0
+msgid "No analytic plans found"
+msgstr "Keine Kostenstellenpläne gefunden"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_needaction_counter
@@ -444,43 +678,101 @@ msgstr "Anzahl der Fehler"
 
 #. module: analytic
 #: model:ir.model.fields,help:analytic.field_account_analytic_account__message_needaction_counter
-msgid "Number of messages which requires an action"
+msgid "Number of messages requiring action"
 msgstr "Anzahl der Nachrichten, die eine Aktion erfordern"
 
 #. module: analytic
 #: model:ir.model.fields,help:analytic.field_account_analytic_account__message_has_error_counter
 msgid "Number of messages with delivery error"
-msgstr "Anzahl der Nachrichten mit einem Fehler beim Senden."
+msgstr "Anzahl der Nachrichten mit Zustellungsfehler."
 
 #. module: analytic
-#: model:ir.model.fields,help:analytic.field_account_analytic_account__message_unread_counter
-msgid "Number of unread messages"
-msgstr "Anzahl ungelesener Nachrichten"
+#. odoo-python
+#: code:addons/analytic/models/analytic_mixin.py:0
+msgid "One or more lines require a 100% analytic distribution."
+msgstr ""
+"Eine oder mehrere Zeilen erfordern eine Verteilung der Kosten von 100 %."
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__parent_id
+#: model:account.analytic.account,name:analytic.analytic_internal
+msgid "Operating Costs"
+msgstr "Betriebskosten"
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_mixin.py:0
+msgid "Operation not supported"
+msgstr "Vorgang nicht unterstützt"
+
+#. module: analytic
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_applicability__applicability__optional
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_plan__default_applicability__optional
+msgid "Optional"
+msgstr "Optional"
+
+#. module: analytic
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_line__category__other
+msgid "Other"
+msgstr "Andere"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_our_super_product
+msgid "Our Super Product"
+msgstr "Unsere Super-Produkte"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__parent_id
 msgid "Parent"
 msgstr "Übergeordnet"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_group__parent_path
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__parent_path
 msgid "Parent Path"
 msgstr "Übergeordneter Pfad"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__tag_id
-msgid "Parent tag"
-msgstr "Übergeordnetes Stichwort"
-
-#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__partner_id
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__partner_id
 msgid "Partner"
 msgstr "Partner"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution__percentage
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__partner_category_id
+msgid "Partner Category"
+msgstr "Partnerkategorie"
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
 msgid "Percentage"
 msgstr "Prozentsatz"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__plan_id
+msgid "Plan"
+msgstr "Plan"
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.js:0
+msgid "Product field"
+msgstr "Produktfeld"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_rd_production
+msgid "Production"
+msgstr "Produktion"
+
+#. module: analytic
+#: model:account.analytic.plan,name:analytic.analytic_plan_projects
+msgid "Project"
+msgstr "Projekt"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__account_id
+#: model:ir.model.fields,field_description:analytic.field_analytic_plan_fields_mixin__account_id
+msgid "Project Account"
+msgstr "Projektkonto"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__unit_amount
@@ -494,6 +786,11 @@ msgid "Reference"
 msgstr "Referenz"
 
 #. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_rd_department
+msgid "Research & Development"
+msgstr "Forschung & Entwicklung"
+
+#. module: analytic
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action
 #: model_terms:ir.actions.act_window,help:analytic.account_analytic_line_action_entries
 msgid ""
@@ -502,75 +799,114 @@ msgid ""
 "                (fixed price invoices), on timesheets (based on the work done) or\n"
 "                on expenses (e.g. reinvoicing of travel costs)."
 msgstr ""
-"Erlöse werden automatisch erzeugt, wenn Sie einen Kundenrechnung anlegen.\n"
-"Kundenrechnungen können auf der Grundlage von Kundenaufträgen erstellt werden.\n"
-"(Festpreisrechnungen), auf Stundenzetteln (auf der Grundlage der geleisteten Arbeit) oder\n"
-"auf Spesen (z.B. Neuabrechnung von Reisekosten)."
+"Umsätze werden automatisch erstellt, wenn Sie Kundenrechnungen\n"
+"generieren. Kundenrechnungen können auf der Grundlage von Verkaufsaufträgen erstellt werden\n"
+"(Festpreisrechnungen), auf Zeiterfassungen (basierend auf der geleisteten Arbeit) oder\n"
+"auf Spesen (z. B. Weiterberechnung von Reisekosten)."
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__root_id
+msgid "Root"
+msgstr "Stamm"
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__root_plan_id
+msgid "Root Plan"
+msgstr "Stammplan"
+
+#. module: analytic
+#. odoo-javascript
+#: code:addons/analytic/static/src/components/analytic_distribution/analytic_distribution.xml:0
+msgid "Save as new analytic distribution model"
+msgstr "Als Verteilungsschlüssel für Kostenstellen speichern"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_seagate_p2
+msgid "Seagate P2"
+msgstr "Seagate P2"
 
 #. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_filter
 msgid "Search Analytic Lines"
-msgstr "Suche Kostenstellen Buchungen"
+msgstr "Kostenstellenbuchungen suchen"
 
 #. module: analytic
-#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_tag_view_search
-msgid "Search Analytic Tags"
-msgstr "Suche Analytische Stichwörter"
-
-#. module: analytic
-#: model:ir.model.fields,help:analytic.field_account_analytic_tag__active
-msgid "Set active to false to hide the Analytic Tag without removing it."
-msgstr ""
-"Setzen Sie active auf false, um das Analytic Tag auszublenden, ohne es zu "
-"entfernen."
-
-#. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__tag_ids
-msgid "Tags"
-msgstr "Stichwörter"
-
-#. module: analytic
-#: model:ir.model.constraint,message:analytic.constraint_account_analytic_distribution_check_percentage
+#: model:ir.model.fields,help:analytic.field_account_analytic_distribution_model__company_id
 msgid ""
-"The percentage of an analytic distribution should be between 0 and 100."
+"Select a company for which the analytic distribution will be used (e.g. "
+"create new customer invoice or Sales order if we select this company, it "
+"will automatically take this as an analytic account)"
 msgstr ""
-"Der Prozentsatz einer analytischen Verteilung sollte zwischen 0 und 100 "
-"liegen."
+"Wählen Sie ein Unternehmen, für das diese Kostenstellenverteilung genutzt "
+"werden soll (z. B. bei der Erstellung einer neuen Kundenrechnung oder einem "
+"neuen Verkaufsauftrag soll dann diese Kostenstelle automatisch eingetragen "
+"werden, wenn dieses Unternehmen ausgewählt wird)."
 
 #. module: analytic
-#: code:addons/analytic/models/analytic_account.py:0
-#, python-format
+#: model:ir.model.fields,help:analytic.field_account_analytic_distribution_model__partner_category_id
 msgid ""
-"The selected account belongs to another company that the one you're trying "
-"to create an analytic item for"
+"Select a partner category for which the analytic distribution will be used "
+"(e.g. create new customer invoice or Sales order if we select this partner, "
+"it will automatically take this as an analytic account)"
 msgstr ""
-"Das ausgewählte Konto gehört zu einem anderen Unternehmen, für das Sie ein "
-"Analyseelement erstellen möchten"
+"Wählen Sie eine Partnerkategorie, für die diese Kostenstellenverteilung "
+"genutzt werden soll (z. B. bei der Erstellung einer neuen Kundenrechnung "
+"oder einem neuen Verkaufsauftrag soll dann diese Kostenstelle automatisch "
+"eingetragen werden, wenn dieser Partner ausgewählt wird)."
 
 #. module: analytic
-#: model_terms:ir.actions.act_window,help:analytic.account_analytic_group_action
-msgid "This allows to classify your analytic accounts."
-msgstr "Auf diese Weise können Sie Ihre Analysekonten klassifizieren."
+#: model:ir.model.fields,help:analytic.field_account_analytic_distribution_model__partner_id
+msgid ""
+"Select a partner for which the analytic distribution will be used (e.g. "
+"create new customer invoice or Sales order if we select this partner, it "
+"will automatically take this as an analytic account)"
+msgstr ""
+"Wählen Sie einen Partner, für den diese Kostenstellenverteilung genutzt "
+"werden soll (z. B. bei der Erstellung einer neuen Kundenrechnung oder einem "
+"neuen Verkaufsauftrag soll dann diese Kostenstelle automatisch eingetragen "
+"werden, wenn dieser Partner ausgewählt wird)."
+
+#. module: analytic
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_distribution_model__sequence
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_plan__sequence
+msgid "Sequence"
+msgstr "Sequenz"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_spark
+msgid "Spark Systems"
+msgstr "Spark Systems"
+
+#. module: analytic
+#: model_terms:ir.ui.view,arch_db:analytic.account_analytic_plan_form_view
+msgid "Subplans"
+msgstr "Unterpläne"
+
+#. module: analytic
+#: model:account.analytic.account,name:analytic.analytic_absences
+msgid "Time Off"
+msgstr "Abwesenheit"
 
 #. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_line_tree
 msgid "Total"
-msgstr "Total"
+msgstr "Gesamt"
+
+#. module: analytic
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_applicability__applicability__unavailable
+#: model:ir.model.fields.selection,name:analytic.selection__account_analytic_plan__default_applicability__unavailable
+msgid "Unavailable"
+msgstr "Nicht verfügbar"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__product_uom_id
 msgid "Unit of Measure"
-msgstr "Mengeneinheit"
+msgstr "Maßeinheit"
 
 #. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_unread
-msgid "Unread Messages"
-msgstr "Ungelesene Nachrichten"
-
-#. module: analytic
-#: model:ir.model.fields,field_description:analytic.field_account_analytic_account__message_unread_counter
-msgid "Unread Messages Counter"
-msgstr "Anzahl ungelesener Nachrichten"
+#: model:ir.model.fields,field_description:analytic.field_account_analytic_line__product_uom_category_id
+msgid "UoM Category"
+msgstr "Maßeinheitskategorie"
 
 #. module: analytic
 #: model:ir.model.fields,field_description:analytic.field_account_analytic_line__user_id
@@ -578,6 +914,34 @@ msgid "User"
 msgstr "Benutzer"
 
 #. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_account.py:0
+msgid ""
+"You can't set a different company on your analytic account since there are "
+"some analytic items linked to it."
+msgstr ""
+"Sie können in Ihrer Kostenstelle kein anderes Unternehmen einstellen, da "
+"einige Kostenbuchungen damit verknüpft sind."
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_plan.py:0
+msgid "You cannot add a parent to the base plan '%s'"
+msgstr ""
+"Sie können keine übergeordnete Kostenstelle zum Basisplan „%s“ hinzufügen."
+
+#. module: analytic
+#. odoo-python
+#: code:addons/analytic/models/analytic_distribution_model.py:0
+msgid ""
+"You defined a distribution with analytic account(s) belonging to a specific "
+"company but a model shared between companies or with a different company"
+msgstr ""
+"Sie haben eine Verteilung mit Kostenstellen festgelegt, die zu einem "
+"bestimmten Unternehmen gehören, aber einen Verteilungsschlüssel, der "
+"zwischen Unternehmen oder mit einem anderen Unternehmen geteilt wird"
+
+#. module: analytic
 #: model_terms:ir.ui.view,arch_db:analytic.view_account_analytic_account_form
 msgid "e.g. Project XYZ"
-msgstr "z.B. Projekt XYZ"
+msgstr "z. B. Projekt XYZ"

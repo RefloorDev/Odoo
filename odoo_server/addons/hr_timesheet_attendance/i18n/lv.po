@@ -1,25 +1,52 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# * hr_timesheet_attendance
+# 	* hr_timesheet_attendance
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Arnis Putniņš <arnis@allegro.lv>, 2019
-# ievaputnina <ievai.putninai@gmail.com>, 2019
+# Martin Trigaux, 2024
+# ievaputnina <ievai.putninai@gmail.com>, 2024
+# Arnis Putniņš <arnis@allegro.lv>, 2024
+# Will Sensors, 2025
+# Armīns Jeltajevs <armins.jeltajevs@gmail.com>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~11.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-21 13:17+0000\n"
-"PO-Revision-Date: 2019-08-26 09:11+0000\n"
-"Last-Translator: ievaputnina <ievai.putninai@gmail.com>, 2019\n"
-"Language-Team: Latvian (https://www.transifex.com/odoo/teams/41243/lv/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Armīns Jeltajevs <armins.jeltajevs@gmail.com>, 2025\n"
+"Language-Team: Latvian (https://app.transifex.com/odoo/teams/41243/lv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: lv\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);\n"
+
+#. module: hr_timesheet_attendance
+#: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__attendance_cost
+msgid "Attendance Cost"
+msgstr ""
+
+#. module: hr_timesheet_attendance
+#: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__total_attendance
+msgid "Attendance Time"
+msgstr ""
+
+#. module: hr_timesheet_attendance
+#: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__company_id
+msgid "Company"
+msgstr "Uzņēmums"
+
+#. module: hr_timesheet_attendance
+#: model_terms:ir.actions.act_window,help:hr_timesheet_attendance.action_hr_timesheet_attendance_report
+msgid "Compare the time recorded by your employees with their attendance."
+msgstr ""
+
+#. module: hr_timesheet_attendance
+#: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__cost_difference
+msgid "Cost Difference"
+msgstr ""
 
 #. module: hr_timesheet_attendance
 #: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__date
@@ -30,12 +57,13 @@ msgstr "Datums"
 #. module: hr_timesheet_attendance
 #: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__display_name
 msgid "Display Name"
-msgstr "Attēlotais nosaukums"
+msgstr "Nosaukums"
 
 #. module: hr_timesheet_attendance
-#: model:ir.actions.act_window,name:hr_timesheet_attendance.action_hr_timesheet_attendance_report
-msgid "HR Timesheet/Attendance Report"
-msgstr ""
+#: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__employee_id
+#: model_terms:ir.ui.view,arch_db:hr_timesheet_attendance.view_hr_timesheet_attendance_report_search
+msgid "Employee"
+msgstr "Darbinieks"
 
 #. module: hr_timesheet_attendance
 #: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__id
@@ -43,13 +71,45 @@ msgid "ID"
 msgstr "ID"
 
 #. module: hr_timesheet_attendance
-#: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report____last_update
-msgid "Last Modified on"
-msgstr "Pēdējoreiz modificēts"
+#: model_terms:ir.ui.view,arch_db:hr_timesheet_attendance.view_hr_timesheet_attendance_report_search
+msgid "Last Week"
+msgstr "Pagājusī nedēļa"
 
 #. module: hr_timesheet_attendance
-#: model:ir.ui.menu,name:hr_timesheet_attendance.menu_hr_timesheet_attendance_report
-msgid "Timesheet / Attendance"
+#: model:ir.model,name:hr_timesheet_attendance.model_ir_ui_menu
+msgid "Menu"
+msgstr "Izvēlne"
+
+#. module: hr_timesheet_attendance
+#: model_terms:ir.ui.view,arch_db:hr_timesheet_attendance.view_hr_timesheet_attendance_report_search
+msgid "My Department"
+msgstr "Mana struktūrvienība"
+
+#. module: hr_timesheet_attendance
+#: model_terms:ir.ui.view,arch_db:hr_timesheet_attendance.view_hr_timesheet_attendance_report_search
+msgid "My Team"
+msgstr "Mana komanda"
+
+#. module: hr_timesheet_attendance
+#: model_terms:ir.actions.act_window,help:hr_timesheet_attendance.action_hr_timesheet_attendance_report
+msgid "No data yet!"
+msgstr "Vēl nav datu!"
+
+#. module: hr_timesheet_attendance
+#: model_terms:ir.ui.view,arch_db:hr_timesheet_attendance.view_hr_timesheet_attendance_report_search
+msgid "This Week"
+msgstr "Šī nedēļa"
+
+#. module: hr_timesheet_attendance
+#: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__total_difference
+msgid "Time Difference"
+msgstr ""
+
+#. module: hr_timesheet_attendance
+#: model_terms:ir.ui.view,arch_db:hr_timesheet_attendance.hr_timesheet_attendance_report_view_graph
+#: model_terms:ir.ui.view,arch_db:hr_timesheet_attendance.view_hr_timesheet_attendance_report_pivot
+#: model_terms:ir.ui.view,arch_db:hr_timesheet_attendance.view_hr_timesheet_attendance_report_search
+msgid "Timesheet Attendance"
 msgstr ""
 
 #. module: hr_timesheet_attendance
@@ -58,27 +118,22 @@ msgid "Timesheet Attendance Report"
 msgstr ""
 
 #. module: hr_timesheet_attendance
-#: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__total_attendance
-msgid "Total Attendance"
-msgstr "Kopējais apmeklējums"
+#: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__timesheets_cost
+msgid "Timesheet Cost"
+msgstr "Laika uzskaites izmaksas"
 
 #. module: hr_timesheet_attendance
-#: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__total_difference
-msgid "Total Difference"
-msgstr "Kopēja starpība"
+#: model:ir.actions.act_window,name:hr_timesheet_attendance.action_hr_timesheet_attendance_report
+#: model:ir.ui.menu,name:hr_timesheet_attendance.menu_hr_timesheet_attendance_report
+msgid "Timesheets / Attendance Analysis"
+msgstr ""
 
 #. module: hr_timesheet_attendance
 #: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__total_timesheet
-msgid "Total Timesheet"
-msgstr "Darba uzsk. tabeles kopsumma"
+msgid "Timesheets Time"
+msgstr "Laika uzskaites laiks"
 
 #. module: hr_timesheet_attendance
-#: model:ir.model.fields,field_description:hr_timesheet_attendance.field_hr_timesheet_attendance_report__user_id
-msgid "User"
-msgstr "Lietotājs"
-
-#. module: hr_timesheet_attendance
-#: model_terms:ir.ui.view,arch_db:hr_timesheet_attendance.view_hr_timesheet_attendance_report_pivot
 #: model_terms:ir.ui.view,arch_db:hr_timesheet_attendance.view_hr_timesheet_attendance_report_search
-msgid "timesheet attendance"
-msgstr ""
+msgid "Today"
+msgstr "Šodien"

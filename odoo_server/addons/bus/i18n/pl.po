@@ -3,21 +3,17 @@
 # 	* bus
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Mariusz, 2019
-# Piotr Szlązak <szlazakpiotr@gmail.com>, 2019
-# Marcin Młynarczyk <mlynarczyk@gmail.com>, 2019
-# Andrzej Donczew <a.donczew@hadron.eu.com>, 2019
-# Maksym <ms@myodoo.pl>, 2019
+# Wil Odoo, 2024
+# Marta Wacławek, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: Maksym <ms@myodoo.pl>, 2019\n"
-"Language-Team: Polish (https://www.transifex.com/odoo/teams/41243/pl/)\n"
+"POT-Creation-Date: 2025-01-27 13:03+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Marta Wacławek, 2025\n"
+"Language-Team: Polish (https://app.transifex.com/odoo/teams/41243/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -25,19 +21,24 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
 
 #. module: bus
-#: model:ir.model.constraint,message:bus.constraint_bus_presence_bus_user_presence_unique
-msgid "A user can only have one IM status."
-msgstr "Użytkownik może mieć tylko jeden status komunikatora."
+#: model:ir.model,name:bus.model_res_groups
+msgid "Access Groups"
+msgstr "Grupy dostępu"
 
 #. module: bus
-#: model:ir.model,name:bus.model_ir_autovacuum
-msgid "Automatic Vacuum"
-msgstr "Automatyczne sprzątanie"
+#: model:ir.model,name:bus.model_ir_attachment
+msgid "Attachment"
+msgstr "Załącznik"
 
 #. module: bus
 #: model:ir.model.fields.selection,name:bus.selection__bus_presence__status__away
 msgid "Away"
 msgstr "Zaraz wracam"
+
+#. module: bus
+#: model:ir.model,name:bus.model_bus_listener_mixin
+msgid "Can send messages via bus.bus"
+msgstr "Może wysyłać wiadomości przez bus.bus"
 
 #. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_bus__channel
@@ -47,7 +48,7 @@ msgstr "Kanał"
 #. module: bus
 #: model:ir.model,name:bus.model_bus_bus
 msgid "Communication Bus"
-msgstr ""
+msgstr "Magistrala komunikacyjna"
 
 #. module: bus
 #: model:ir.model,name:bus.model_res_partner
@@ -57,7 +58,7 @@ msgstr "Kontakt"
 #. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_bus__create_uid
 msgid "Created by"
-msgstr "Utworzona przez"
+msgstr "Utworzył(a)"
 
 #. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_bus__create_date
@@ -71,6 +72,11 @@ msgid "Display Name"
 msgstr "Nazwa wyświetlana"
 
 #. module: bus
+#: model:ir.model,name:bus.model_ir_http
+msgid "HTTP Routing"
+msgstr "Wytyczanie HTTP"
+
+#. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_bus__id
 #: model:ir.model.fields,field_description:bus.field_bus_presence__id
 msgid "ID"
@@ -82,12 +88,6 @@ msgstr "ID"
 #: model:ir.model.fields,field_description:bus.field_res_users__im_status
 msgid "IM Status"
 msgstr "Status komunikatora"
-
-#. module: bus
-#: model:ir.model.fields,field_description:bus.field_bus_bus____last_update
-#: model:ir.model.fields,field_description:bus.field_bus_presence____last_update
-msgid "Last Modified on"
-msgstr "Data ostatniej modyfikacji"
 
 #. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_presence__last_poll
@@ -115,6 +115,11 @@ msgid "Message"
 msgstr "Wiadomość"
 
 #. module: bus
+#: model:ir.model,name:bus.model_ir_model
+msgid "Models"
+msgstr "Modele"
+
+#. module: bus
 #: model:ir.model.fields.selection,name:bus.selection__bus_presence__status__offline
 msgid "Offline"
 msgstr "Niedostępny"
@@ -125,18 +130,68 @@ msgid "Online"
 msgstr "Dostępny"
 
 #. module: bus
+#. odoo-javascript
+#: code:addons/bus/static/src/outdated_page_watcher_service.js:0
+#: code:addons/bus/static/src/services/assets_watchdog_service.js:0
+#: code:addons/bus/static/src/services/bus_service.js:0
+msgid "Refresh"
+msgstr "Odśwież"
+
+#. module: bus
+#. odoo-javascript
+#: code:addons/bus/static/src/outdated_page_watcher_service.js:0
+#: code:addons/bus/static/src/services/bus_service.js:0
+msgid ""
+"Save your work and refresh to get the latest updates and avoid potential "
+"issues."
+msgstr ""
+
+#. module: bus
+#. odoo-javascript
+#: code:addons/bus/static/src/services/assets_watchdog_service.js:0
+msgid "The page appears to be out of date."
+msgstr "Strona wydaje się być nieaktualna."
+
+#. module: bus
+#. odoo-javascript
+#: code:addons/bus/static/src/outdated_page_watcher_service.js:0
+#: code:addons/bus/static/src/services/bus_service.js:0
+msgid "The page is out of date"
+msgstr ""
+
+#. module: bus
+#: model:ir.model,name:bus.model_res_users
+msgid "User"
+msgstr "Użytkownik"
+
+#. module: bus
 #: model:ir.model,name:bus.model_bus_presence
 msgid "User Presence"
 msgstr "Obecność użytkownika"
 
 #. module: bus
-#: model:ir.model,name:bus.model_res_users
+#: model:ir.model,name:bus.model_res_users_settings
+msgid "User Settings"
+msgstr "Ustawienia użytkownika"
+
+#. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_presence__user_id
 msgid "Users"
 msgstr "Użytkownicy"
 
 #. module: bus
-#: code:addons/bus/controllers/main.py:0
-#, python-format
-msgid "bus.Bus not available in test mode"
+#. odoo-python
+#: code:addons/bus/controllers/home.py:0
+msgid ""
+"Your password is the default (admin)! If this system is exposed to untrusted"
+" users it is important to change it immediately for security reasons. I will"
+" keep nagging you about it!"
 msgstr ""
+"Twoje hasło jest domyślne (admin)! Jeśli ten system jest narażony na "
+"niezaufanych użytkowników, należy go natychmiast zmienić ze względów "
+"bezpieczeństwa.  Będę Cię o to nękał!"
+
+#. module: bus
+#: model:ir.model,name:bus.model_ir_websocket
+msgid "websocket message handling"
+msgstr "obsługa komunikatów websocket"

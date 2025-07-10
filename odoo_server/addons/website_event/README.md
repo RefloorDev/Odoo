@@ -62,7 +62,7 @@ Leverage Social Media
 
 ### Optimize: from Ads to Conversions
 
-Create new landing pages easily with the Odoo inline edition feature. Send visitors of your different marketing campaigns to event landing pages to optimize conversions.
+Create new landing pages easily with the Odoo inline editing feature. Send visitors of your different marketing campaigns to event landing pages to optimize conversions.
 
 And Much More...
 ----------------
@@ -105,7 +105,7 @@ Fully Integrated With Others Apps
 Promote products, sell online, optimize visitors' shopping experiences.
 
 
-### Blogs
+### Blog
 
 Write news, attract new visitors, build customer loyalty.
 

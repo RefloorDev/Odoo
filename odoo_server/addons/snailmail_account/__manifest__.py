@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "snailmail_account",
+    'name': "Snail Mail - Account",
     'description': """
 Allows users to send invoices by post
 =====================================================
         """,
-    'category': 'Tools',
+    'category': 'Hidden/Tools',
     'version': '0.1',
     'depends': ['account', 'snailmail'],
     'data': [
         'views/res_config_settings_views.xml',
-        'views/assets.xml',
-        'wizard/account_invoice_send_views.xml',
     ],
     'auto_install': True,
+    'license': 'LGPL-3',
 }

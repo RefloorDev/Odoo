@@ -3,21 +3,21 @@
 # 	* product_matrix
 # 
 # Translators:
-# Tommi Rintala <tommi.rintala@gmail.com>, 2019
-# Martin Trigaux, 2019
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2019
-# Tuomas Lyyra <tuomas.lyyra@legenda.fi>, 2019
-# Simo Suurla <simo@suurla.fi>, 2019
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2020
+# Tiffany Chang, 2024
+# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
+# Martin Trigaux, 2024
+# Simo Suurla <simo@suurla.fi>, 2024
+# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
+# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:13+0000\n"
-"PO-Revision-Date: 2019-08-26 09:13+0000\n"
-"Last-Translator: Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2020\n"
-"Language-Team: Finnish (https://www.transifex.com/odoo/teams/41243/fi/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2024\n"
+"Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -25,30 +25,51 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: product_matrix
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid ""
+"<small>Switch to the \"else\" condition of this block to view or edit the "
+"table.</small>"
+msgstr ""
+"<small>Siirry tämän lohkon \"else\"-ehtoon nähdäksesi tai muokataksesi "
+"taulukkoa.</small>"
+
+#. module: product_matrix
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid "<strong>Product matrix block</strong>"
+msgstr "<strong>Tuotematriisilohko</strong>"
+
+#. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_color_1
 msgid "Blue"
 msgstr "Sininen"
 
 #. module: product_matrix
-#. openerp-web
-#: code:addons/product_matrix/static/src/js/section_and_note_widget.js:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid "Cell name"
+msgstr "Solun nimi"
+
+#. module: product_matrix
+#. odoo-javascript
+#: code:addons/product_matrix/static/src/xml/product_matrix_dialog.xml:0
 msgid "Choose Product Variants"
-msgstr ""
+msgstr "Valitse tuotevariantit"
 
 #. module: product_matrix
-#. openerp-web
-#: code:addons/product_matrix/static/src/js/section_and_note_widget.js:0
-#, python-format
-msgid "Close"
-msgstr "Sulje"
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid "Column name"
+msgstr "Sarakkeen nimi"
 
 #. module: product_matrix
-#. openerp-web
-#: code:addons/product_matrix/static/src/js/section_and_note_widget.js:0
-#, python-format
+#. odoo-javascript
+#: code:addons/product_matrix/static/src/xml/product_matrix_dialog.xml:0
 msgid "Confirm"
 msgstr "Vahvista"
+
+#. module: product_matrix
+#. odoo-javascript
+#: code:addons/product_matrix/static/src/xml/product_matrix_dialog.xml:0
+msgid "Discard"
+msgstr "Hylkää"
 
 #. module: product_matrix
 #: model:product.attribute,name:product_matrix.product_attribute_gender
@@ -58,29 +79,28 @@ msgstr "Sukupuoli"
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_m
 msgid "Men"
-msgstr ""
+msgstr "Miehet"
 
 #. module: product_matrix
 #: model:product.template,name:product_matrix.matrix_product_template_shirt
 msgid "My Company Tshirt (GRID)"
-msgstr ""
+msgstr "Yritykseni T-paita (RUUDUKKO)"
 
 #. module: product_matrix
-#. openerp-web
+#. odoo-javascript
 #: code:addons/product_matrix/static/src/xml/product_matrix.xml:0
-#, python-format
 msgid "Not available"
 msgstr "Ei saatavilla"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_color_2
 msgid "Pink"
-msgstr ""
+msgstr "Vaaleanpunainen"
 
 #. module: product_matrix
 #: model:ir.model,name:product_matrix.model_product_template
-msgid "Product Template"
-msgstr "Tuotemalli"
+msgid "Product"
+msgstr "Tuote"
 
 #. module: product_matrix
 #: model:ir.model,name:product_matrix.model_product_template_attribute_value
@@ -90,12 +110,12 @@ msgstr "Tuotemallin ominaisuuden arvo"
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_color_4
 msgid "Rainbow"
-msgstr ""
+msgstr "Sateenkaari"
 
 #. module: product_matrix
 #: model:product.template,description_sale:product_matrix.matrix_product_template_shirt
 msgid "Show your company love around you =)."
-msgstr ""
+msgstr "Näytä yrityksesi rakkautta ympärilläsi =)."
 
 #. module: product_matrix
 #: model:product.attribute,name:product_matrix.product_attribute_size
@@ -103,24 +123,32 @@ msgid "Size"
 msgstr "Koko"
 
 #. module: product_matrix
-#: model:product.template,uom_name:product_matrix.matrix_product_template_shirt
-msgid "Units"
-msgstr "Yksiköt"
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid ""
+"The matrix of product variants of this order will be displayed here, if "
+"there are any."
+msgstr ""
+"Tässä näytetään tämän tilauksen tuotevaihtoehtojen matriisi, jos niitä on."
+
+#. module: product_matrix
+#: model_terms:ir.ui.view,arch_db:product_matrix.extra_price
+msgid "Variant price"
+msgstr "Variantin hinta"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_w
 msgid "Women"
-msgstr ""
+msgstr "Naiset"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_size_xl
 msgid "XL"
-msgstr ""
+msgstr "XL"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_size_xs
 msgid "XS"
-msgstr ""
+msgstr "XS"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_color_3

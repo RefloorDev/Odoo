@@ -3,23 +3,27 @@
 # 	* hr_gamification
 # 
 # Translators:
-# yizhaq agronov <yizhaq@gmail.com>, 2019
-# Yihya Hugirat <hugirat@gmail.com>, 2019
-# ZVI BLONDER <ZVIBLONDER@gmail.com>, 2020
+# yizhaq agronov <yizhaq@gmail.com>, 2024
+# Martin Trigaux, 2024
+# Ha Ketem <haketem@gmail.com>, 2024
+# yael terner, 2024
+# ZVI BLONDER <ZVIBLONDER@gmail.com>, 2024
+# Yihya Hugirat <hugirat@gmail.com>, 2024
+# or balmas, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:32+0000\n"
-"PO-Revision-Date: 2019-08-26 09:10+0000\n"
-"Last-Translator: ZVI BLONDER <ZVIBLONDER@gmail.com>, 2020\n"
-"Language-Team: Hebrew (https://www.transifex.com/odoo/teams/41243/he/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: or balmas, 2025\n"
+"Language-Team: Hebrew (https://app.transifex.com/odoo/teams/41243/he/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: he\n"
-"Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: (n % 10 == 0 && n % 1 == 0 && n > 10) ? 2 : 3;\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: 2;\n"
 
 #. module: hr_gamification
 #: model_terms:ir.actions.act_window,help:hr_gamification.goals_menu_groupby_action2
@@ -70,7 +74,7 @@ msgstr ""
 #. module: hr_gamification
 #: model:ir.model,name:hr_gamification.model_hr_employee_base
 msgid "Basic Employee"
-msgstr "עובד בסיסי"
+msgstr "עובד רגיל"
 
 #. module: hr_gamification
 #: model_terms:ir.ui.view,arch_db:hr_gamification.view_badge_wizard_reward
@@ -82,29 +86,29 @@ msgstr "בטל"
 #: model:ir.ui.menu,name:hr_gamification.gamification_challenge_menu_hr
 #: model:ir.ui.menu,name:hr_gamification.menu_hr_gamification
 msgid "Challenges"
-msgstr ""
+msgstr "אתגרים"
 
 #. module: hr_gamification
 #: model_terms:ir.actions.act_window,help:hr_gamification.challenge_list_action2
 msgid "Create a new challenge"
-msgstr ""
+msgstr "יצירת אתגר חדש"
 
 #. module: hr_gamification
 #: model_terms:ir.actions.act_window,help:hr_gamification.goals_menu_groupby_action2
 msgid "Create a new goal"
-msgstr ""
+msgstr "יצירת יעד חדש"
 
 #. module: hr_gamification
 #: model_terms:ir.ui.view,arch_db:hr_gamification.view_badge_wizard_reward
 msgid "Describe what they did and why it matters (will be public)"
-msgstr ""
+msgstr "תאר מה הם עשו ולמה זה חשוב (יהיה פומבי)"
 
 #. module: hr_gamification
 #: model:ir.model.fields,field_description:hr_gamification.field_hr_employee__direct_badge_ids
 #: model:ir.model.fields,field_description:hr_gamification.field_hr_employee_base__direct_badge_ids
 #: model:ir.model.fields,field_description:hr_gamification.field_hr_employee_public__direct_badge_ids
 msgid "Direct Badge"
-msgstr ""
+msgstr "תג ישיר"
 
 #. module: hr_gamification
 #: model:ir.model.fields,field_description:hr_gamification.field_gamification_badge_user__employee_id
@@ -129,12 +133,12 @@ msgstr ""
 #. module: hr_gamification
 #: model:ir.model,name:hr_gamification.model_gamification_badge
 msgid "Gamification Badge"
-msgstr ""
+msgstr "תג משחק"
 
 #. module: hr_gamification
 #: model:ir.model,name:hr_gamification.model_gamification_badge_user
 msgid "Gamification User Badge"
-msgstr ""
+msgstr "משחוק תג משתמש"
 
 #. module: hr_gamification
 #: model:ir.model,name:hr_gamification.model_gamification_badge_user_wizard
@@ -144,13 +148,13 @@ msgstr ""
 #. module: hr_gamification
 #: model:ir.model.fields,field_description:hr_gamification.field_res_users__goal_ids
 msgid "Goal"
-msgstr ""
+msgstr "יעד"
 
 #. module: hr_gamification
 #: model:ir.actions.act_window,name:hr_gamification.goals_menu_groupby_action2
 #: model:ir.ui.menu,name:hr_gamification.gamification_goal_menu_hr
 msgid "Goals History"
-msgstr ""
+msgstr "היסטוריה של יעדים"
 
 #. module: hr_gamification
 #: model_terms:ir.ui.view,arch_db:hr_gamification.hr_employee_public_view_form
@@ -172,25 +176,20 @@ msgstr ""
 #. module: hr_gamification
 #: model:ir.model.fields,field_description:hr_gamification.field_gamification_badge__granted_employees_count
 msgid "Granted Employees Count"
-msgstr ""
+msgstr "ספירת עובדים מוענקת"
 
 #. module: hr_gamification
 #: model:ir.model.fields,field_description:hr_gamification.field_hr_employee__has_badges
 #: model:ir.model.fields,field_description:hr_gamification.field_hr_employee_base__has_badges
 #: model:ir.model.fields,field_description:hr_gamification.field_hr_employee_public__has_badges
 msgid "Has Badges"
-msgstr ""
+msgstr "יש תגים"
 
 #. module: hr_gamification
 #: model_terms:ir.ui.view,arch_db:hr_gamification.hr_employee_public_view_form
 #: model_terms:ir.ui.view,arch_db:hr_gamification.hr_hr_employee_view_form
 msgid "Received Badges"
 msgstr ""
-
-#. module: hr_gamification
-#: model:ir.model.fields,help:hr_gamification.field_gamification_badge_user_wizard__user_id
-msgid "Related user name for the resource to manage its access."
-msgstr "שם משתמש קשור למשאב לניהול הגישה שלו."
 
 #. module: hr_gamification
 #: model:ir.actions.act_window,name:hr_gamification.action_reward_wizard
@@ -204,20 +203,16 @@ msgid "Reward Employee with"
 msgstr ""
 
 #. module: hr_gamification
-#: code:addons/hr_gamification/models/gamification.py:18
-#, python-format
+#. odoo-python
+#: code:addons/hr_gamification/models/gamification.py:0
 msgid "The selected employee does not correspond to the selected user."
 msgstr ""
 
 #. module: hr_gamification
+#: model:ir.model,name:hr_gamification.model_res_users
 #: model:ir.model.fields,field_description:hr_gamification.field_gamification_badge_user_wizard__user_id
 msgid "User"
 msgstr "משתמש"
-
-#. module: hr_gamification
-#: model:ir.model,name:hr_gamification.model_res_users
-msgid "Users"
-msgstr "משתמשים"
 
 #. module: hr_gamification
 #: model_terms:ir.ui.view,arch_db:hr_gamification.view_badge_wizard_reward
@@ -225,15 +220,9 @@ msgid "What are you thankful for?"
 msgstr ""
 
 #. module: hr_gamification
-#: code:addons/hr_gamification/wizard/gamification_badge_user_wizard.py:22
-#, python-format
+#. odoo-python
+#: code:addons/hr_gamification/wizard/gamification_badge_user_wizard.py:0
 msgid "You can not send a badge to yourself."
-msgstr ""
-
-#. module: hr_gamification
-#: code:addons/hr_gamification/wizard/gamification_badge_user_wizard.py:19
-#, python-format
-msgid "You can send badges only to employees linked to a user."
 msgstr ""
 
 #. module: hr_gamification

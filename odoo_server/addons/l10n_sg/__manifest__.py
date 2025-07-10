@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-
-# Copyright (C) 2014 Tech Receptives (<http://techreceptives.com>)
-
 {
     'name': 'Singapore - Accounting',
+    'website': 'https://www.odoo.com/documentation/master/applications/finance/fiscal_localizations/singapore.html',
+    'icon': '/account/static/description/l10n.png',
+    'countries': ['sg'],
     'author': 'Tech Receptives',
-    'version': '2.0',
-    'category': 'Localization',
+    'version': '2.2',
+    'category': 'Accounting/Localizations/Account Charts',
     'description': """
 Singapore accounting chart and localization.
 =======================================================
@@ -18,16 +17,22 @@ This module add, for accounting:
  - Field PermitNo and PermitNoDate on invoice
 
     """,
-    'depends': ['base', 'account'],
+    'depends': [
+        'account_qr_code_emv',
+        'account',
+    ],
+    'auto_install': ['account'],
     'data': [
         'data/l10n_sg_chart_data.xml',
-        'data/account_data.xml',
         'data/account_tax_report_data.xml',
-        'data/account_tax_data.xml',
-        'data/account_chart_template_data.xml',
         'views/account_invoice_view.xml',
+        'views/res_bank_views.xml',
         'views/res_company_view.xml',
         'views/res_partner_view.xml',
     ],
+    'demo': [
+        'demo/demo_company.xml',
+    ],
     'post_init_hook': '_preserve_tag_on_taxes',
+    'license': 'LGPL-3',
 }

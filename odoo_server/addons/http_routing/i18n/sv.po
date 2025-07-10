@@ -3,20 +3,23 @@
 # 	* http_routing
 # 
 # Translators:
-# Kristoffer Grundström <hamnisdude@gmail.com>, 2019
-# Martin Trigaux, 2019
-# Anders Wallenquist <anders.wallenquist@vertel.se>, 2019
-# Robin Chatfield <robin.chatfield@gmail.com>, 2019
-# Kim Asplund <kim.asplund@gmail.com>, 2020
+# Martin Trigaux, 2024
+# Robin Chatfield <robin.chatfield@gmail.com>, 2024
+# Mikael Åkerberg <mikael.akerberg@mariaakerberg.com>, 2024
+# Lasse L, 2024
+# Robin Calvin, 2024
+# Jakob Krabbe <jakob.krabbe@vertel.se>, 2024
+# Daniel Löfgren, 2024
+# Anders Wallenquist <anders.wallenquist@vertel.se>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:14+0000\n"
-"PO-Revision-Date: 2019-08-26 09:11+0000\n"
-"Last-Translator: Kim Asplund <kim.asplund@gmail.com>, 2020\n"
-"Language-Team: Swedish (https://www.transifex.com/odoo/teams/41243/sv/)\n"
+"POT-Creation-Date: 2024-09-26 08:57+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Anders Wallenquist <anders.wallenquist@vertel.se>, 2024\n"
+"Language-Team: Swedish (https://app.transifex.com/odoo/teams/41243/sv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -30,14 +33,18 @@ msgstr "403: Förbjuden"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.404
-msgid "404: Page not found!"
-msgstr "404: Sidan saknas"
+msgid ""
+"<b>Don't panic.</b> If you think it's our mistake, please send us a message "
+"on"
+msgstr ""
+"<b>Ingen panik.</b> Om du anser att det är vårt misstag, skicka ett "
+"meddelande till oss på"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.error_message
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
 msgid "<strong>Error message:</strong>"
-msgstr ""
+msgstr "<strong>Felmeddelande:</strong>"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.500
@@ -50,19 +57,35 @@ msgid "Error"
 msgstr "Fel"
 
 #. module: http_routing
-#: model:ir.model,name:http_routing.model_ir_http
-msgid "HTTP Routing"
-msgstr "HTTP Routing"
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "Error 404"
+msgstr "Fel 404"
 
 #. module: http_routing
+#: model:ir.model,name:http_routing.model_ir_http
+msgid "HTTP Routing"
+msgstr "HTTP-routing"
+
+#. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
 #: model_terms:ir.ui.view,arch_db:http_routing.500
 msgid "Home"
 msgstr "Hem"
 
 #. module: http_routing
+#: model:ir.model,name:http_routing.model_res_lang
+msgid "Languages"
+msgstr "Språk"
+
+#. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "Maybe you were looking for one of these <b>popular pages?</b>"
+msgstr "Du kanske letade efter en av dessa <b>populära sidor?</b>"
+
+#. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.400
 msgid "Oops! Something went wrong."
-msgstr ""
+msgstr "Oops! Något gick fel."
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
@@ -70,27 +93,24 @@ msgid "QWeb"
 msgstr "QWeb"
 
 #. module: http_routing
+#: model:ir.model,name:http_routing.model_ir_qweb
+msgid "Qweb"
+msgstr "Qweb"
+
+#. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.400
 msgid "Take a look at the error message below."
-msgstr ""
+msgstr "Ta en titt på felmeddelandet nedan."
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
-msgid "The error occured while rendering the template"
-msgstr ""
+msgid "The error occurred while rendering the template"
+msgstr "Felet uppstod vid rendering av mallen"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.403
 msgid "The page you were looking for could not be authorized."
-msgstr ""
-
-#. module: http_routing
-#: model_terms:ir.ui.view,arch_db:http_routing.404
-msgid ""
-"The page you were looking for could not be found; it is possible you have\n"
-"                            typed the address incorrectly, but it has most probably been removed due\n"
-"                            to the recent reorganisation."
-msgstr ""
+msgstr "Sidan du letade efter kunde inte godkännas."
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
@@ -98,11 +118,16 @@ msgid "Traceback"
 msgstr "Spåra tillbaka"
 
 #. module: http_routing
-#: model:ir.model,name:http_routing.model_ir_ui_view
-msgid "View"
-msgstr "Visa"
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "We couldn't find the page you're looking for!"
+msgstr "Vi kunde inte hitta sidan du letar efter!"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
 msgid "and evaluating the following expression:"
-msgstr ""
+msgstr "och utvärderar följande uttryck:"
+
+#. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "this page"
+msgstr "den här sidan"

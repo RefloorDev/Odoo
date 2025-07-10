@@ -3,8 +3,9 @@
     <menuitem name="eLearning"
         id="website_slides_menu_root"
         web_icon="website_slides,static/description/icon.png"
-        groups="website.group_website_publisher"
-        action="slide_channel_action_overview"/>
+        groups="website_slides.group_website_slides_officer"
+        action="slide_channel_action_overview"
+        sequence="100"/>
 
     <!-- Main top menu elements -->
     <menuitem name="Courses"
@@ -14,6 +15,7 @@
     <menuitem name="Reporting"
         id="website_slides_menu_report"
         parent="website_slides_menu_root"
+        groups="website_slides.group_website_slides_manager"
         sequence="9"/>
     <menuitem name="Configuration"
         id="website_slides_menu_configuration"
@@ -31,11 +33,6 @@
         parent="website_slides_menu_courses"
         sequence="2"
         action="slide_slide_action"/>
-    <menuitem name="Reviews"
-        id="website_slides_menu_courses_reviews"
-        parent="website_slides_menu_courses"
-        sequence="3"
-        action="rating_rating_action_slide_channel"/>
 
     <!-- Reporting sub-menu -->
     <menuitem name="Courses"
@@ -48,15 +45,20 @@
         parent="website_slides_menu_report"
         sequence="2"
         action="slide_slide_action_report"/>
+    <menuitem name="Attendees"
+        id="website_slides_menu_report_attendees"
+        parent="website_slides_menu_report"
+        sequence="5"
+        action="slide_channel_partner_action_report"/>
     <menuitem name="Reviews"
         id="website_slides_menu_report_reviews"
         parent="website_slides_menu_report"
-        sequence="6"
-        action="rating_rating_action_slide_channel_report"/>
+        sequence="10"
+        action="rating_rating_action_slide_channel"/>
     <menuitem name="Quizzes"
         id="website_slides_menu_report_quizzes"
         parent="website_slides_menu_report"
-        sequence="7"
+        sequence="15"
         action="slide_question_action_report"/>
 
     <!-- Settings sub-menu -->
@@ -66,8 +68,8 @@
         sequence="1"
         action="website_slides_action_settings"
         groups="base.group_system"/>
-    <menuitem name="Course Tags"
-        id="website_slides_menu_config_course_tags"
+    <menuitem name="Course Groups"
+        id="website_slides_menu_config_course_groups"
         parent="website_slides_menu_configuration"
         sequence="2"
         action="slide_channel_tag_group_action"/>

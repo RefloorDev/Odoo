@@ -1,22 +1,18 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# * contacts
+# 	* contacts
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Bole <bole@dajmi5.com>, 2019
-# Vladimir Olujić <olujic.vladimir@storm.hr>, 2019
-# Đurđica Žarković <durdica.zarkovic@storm.hr>, 2019
-# Karolina Tonković <karolina.tonkovic@storm.hr>, 2019
+# Bole <bole@dajmi5.com>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~11.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-18 09:49+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: Karolina Tonković <karolina.tonkovic@storm.hr>, 2019\n"
-"Language-Team: Croatian (https://www.transifex.com/odoo/teams/41243/hr/)\n"
+"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Bole <bole@dajmi5.com>, 2024\n"
+"Language-Team: Croatian (https://app.transifex.com/odoo/teams/41243/hr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -37,7 +33,12 @@ msgstr "Banke"
 #. module: contacts
 #: model:ir.ui.menu,name:contacts.res_partner_menu_config
 msgid "Configuration"
-msgstr "Postava"
+msgstr "Postavke"
+
+#. module: contacts
+#: model:ir.model,name:contacts.model_res_partner
+msgid "Contact"
+msgstr "Kontakt"
 
 #. module: contacts
 #: model:ir.ui.menu,name:contacts.menu_partner_category_form
@@ -47,11 +48,10 @@ msgstr "Oznake kontakata"
 #. module: contacts
 #: model:ir.ui.menu,name:contacts.menu_partner_title_contact
 msgid "Contact Titles"
-msgstr "Titule kontakta"
+msgstr "Naslovi kontakata"
 
 #. module: contacts
 #: model:ir.actions.act_window,name:contacts.action_contacts
-#: model:ir.actions.act_window,name:contacts.action_contacts_summary
 #: model:ir.ui.menu,name:contacts.menu_contacts
 #: model:ir.ui.menu,name:contacts.res_partner_menu_contacts
 msgid "Contacts"
@@ -69,14 +69,18 @@ msgstr "Grupa država"
 
 #. module: contacts
 #: model_terms:ir.actions.act_window,help:contacts.action_contacts
-#: model_terms:ir.actions.act_window,help:contacts.action_contacts_summary
-msgid "Create a contact in your address book"
-msgstr "Kreiraj  kontakt u adresaru"
+msgid "Create a Contact in your address book"
+msgstr "Kreirajte kontakt u vašem adresaru"
 
 #. module: contacts
 #: model:ir.ui.menu,name:contacts.menu_country_state_partner
 msgid "Fed. States"
-msgstr "Država/Pokrajina/Županija"
+msgstr "Federativne države"
+
+#. module: contacts
+#: model:ir.ui.menu,name:contacts.res_partner_industry_menu
+msgid "Industries"
+msgstr "Industrije"
 
 #. module: contacts
 #: model:ir.ui.menu,name:contacts.menu_localisation
@@ -85,16 +89,10 @@ msgstr "Lokalizacija"
 
 #. module: contacts
 #: model_terms:ir.actions.act_window,help:contacts.action_contacts
-#: model_terms:ir.actions.act_window,help:contacts.action_contacts_summary
-msgid "Odoo helps you to easily track all activities related to a customer."
-msgstr ""
-
-#. module: contacts
-#: model:ir.ui.menu,name:contacts.res_partner_industry_menu
-msgid "Sectors of Activity"
-msgstr "Ppodručja aktivnosti"
+msgid "Odoo helps you track all activities related to your contacts."
+msgstr "Odoo pomaže pratiti sve aktivnosti povezane sa vašim kontaktima."
 
 #. module: contacts
 #: model:ir.model,name:contacts.model_res_users
-msgid "Users"
-msgstr "Korisnici"
+msgid "User"
+msgstr "Korisnik"

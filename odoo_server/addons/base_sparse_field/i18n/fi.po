@@ -3,19 +3,20 @@
 # 	* base_sparse_field
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2019
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2019
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2019
+# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
+# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
+# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
+# Martin Trigaux, 2024
+# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2019\n"
-"Language-Team: Finnish (https://www.transifex.com/odoo/teams/41243/fi/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025\n"
+"Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -23,13 +24,18 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: base_sparse_field
+#: model:ir.model,name:base_sparse_field.model_base
+msgid "Base"
+msgstr "Pohja"
+
+#. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__boolean
 msgid "Boolean"
 msgstr "Totuusarvo"
 
 #. module: base_sparse_field
+#. odoo-python
 #: code:addons/base_sparse_field/models/models.py:0
-#, python-format
 msgid "Changing the storing system for field \"%s\" is not allowed."
 msgstr "Kentän \"%s\" tallennustavan muuttaminen ei ole sallittu."
 
@@ -76,7 +82,7 @@ msgstr "Liukuluku"
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__id
 msgid "ID"
-msgstr "Tunniste (ID)"
+msgstr "ID"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,help:base_sparse_field.field_ir_model_fields__serialization_field_id
@@ -92,17 +98,12 @@ msgstr ""
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__integer
 msgid "Integer"
-msgstr "kokonaisluku"
-
-#. module: base_sparse_field
-#: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test____last_update
-msgid "Last Modified on"
-msgstr "Viimeksi muokattu"
+msgstr "Kokonaisluku"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__write_uid
 msgid "Last Updated by"
-msgstr "Viimeksi päivitetty"
+msgstr "Viimeksi päivittänyt"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__write_date
@@ -112,7 +113,7 @@ msgstr "Viimeksi päivitetty"
 #. module: base_sparse_field
 #: model:ir.model.fields.selection,name:base_sparse_field.selection__sparse_fields_test__selection__one
 msgid "One"
-msgstr ""
+msgstr "Yksi"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__partner
@@ -120,8 +121,8 @@ msgid "Partner"
 msgstr "Kumppani"
 
 #. module: base_sparse_field
+#. odoo-python
 #: code:addons/base_sparse_field/models/models.py:0
-#, python-format
 msgid "Renaming sparse field \"%s\" is not allowed"
 msgstr "Kentän \"%s\" uudelleen nimeäminen ei ole sallittu"
 
@@ -136,22 +137,26 @@ msgid "Serialization Field"
 msgstr "Serialisointi kenttä"
 
 #. module: base_sparse_field
+#. odoo-python
 #: code:addons/base_sparse_field/models/models.py:0
-#, python-format
-msgid "Serialization field `%s` not found for sparse field `%s`!"
+msgid ""
+"Serialization field \"%(serialization_field)s\" not found for sparse field "
+"%(sparse_field)s!"
 msgstr ""
+"Serialisointikenttää \"%(serialization_field)s\" ei löydy harvalle kentälle "
+"%(sparse_field)s!"
 
 #. module: base_sparse_field
 #: model:ir.model,name:base_sparse_field.model_sparse_fields_test
 msgid "Sparse fields Test"
-msgstr ""
+msgstr "Harvakenttien Testi"
 
 #. module: base_sparse_field
 #: model:ir.model.fields.selection,name:base_sparse_field.selection__sparse_fields_test__selection__two
 msgid "Two"
-msgstr ""
+msgstr "Kaksi"
 
 #. module: base_sparse_field
 #: model:ir.model.fields.selection,name:base_sparse_field.selection__ir_model_fields__ttype__serialized
 msgid "serialized"
-msgstr ""
+msgstr "serialisoitu"

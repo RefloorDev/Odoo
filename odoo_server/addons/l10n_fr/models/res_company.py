@@ -10,27 +10,36 @@ class ResCompany(models.Model):
     l10n_fr_closing_sequence_id = fields.Many2one('ir.sequence', 'Sequence to use to build sale closings', readonly=True)
     siret = fields.Char(related='partner_id.siret', string='SIRET', size=14, readonly=False)
     ape = fields.Char(string='APE')
+    is_france_country = fields.Boolean(
+        compute="_compute_is_france_country",
+        string="Is Part of DOM-TOM",
+    )
+
+    @api.depends('country_code')
+    def _compute_is_france_country(self):
+        for company in self:
+            company.is_france_country = company.country_code in self._get_france_country_codes()
 
     @api.model
-    def _get_unalterable_country(self):
-        return ['FR', 'MF', 'MQ', 'NC', 'PF', 'RE', 'GF', 'GP', 'TF'] # These codes correspond to France and DOM-TOM.
-
-    def _is_vat_french(self):
-        return self.vat and self.vat.startswith('FR') and len(self.vat) == 13
+    def _get_france_country_codes(self):
+        """Returns every country code that can be used to represent France
+        """
+        return ['FR', 'MF', 'MQ', 'NC', 'PF', 'RE', 'GF', 'GP', 'TF', 'BL', 'PM', 'YT', 'WF']  # These codes correspond to France and DOM-TOM.
 
     def _is_accounting_unalterable(self):
         if not self.vat and not self.country_id:
             return False
-        return self.country_id and self.country_id.code in self._get_unalterable_country()
+        return self.country_id and self.country_id.code in self._get_france_country_codes()
 
-    @api.model
-    def create(self, vals):
-        company = super(ResCompany, self).create(vals)
-        #when creating a new french company, create the securisation sequence as well
-        if company._is_accounting_unalterable():
-            sequence_fields = ['l10n_fr_closing_sequence_id']
-            company._create_secure_sequence(sequence_fields)
-        return company
+    @api.model_create_multi
+    def create(self, vals_list):
+        companies = super().create(vals_list)
+        for company in companies:
+            #when creating a new french company, create the securisation sequence as well
+            if company._is_accounting_unalterable():
+                sequence_fields = ['l10n_fr_closing_sequence_id']
+                company._create_secure_sequence(sequence_fields)
+        return companies
 
     def write(self, vals):
         res = super(ResCompany, self).write(vals)
@@ -51,7 +60,7 @@ class ResCompany(models.Model):
             for seq_field in sequence_fields:
                 if not company[seq_field]:
                     vals = {
-                        'name': _('Securisation of %s - %s') % (seq_field, company.name),
+                        'name': _('Securisation of %(field)s - %(company)s', field=seq_field, company=company.name),
                         'code': 'FRSECURE%s-%s' % (company.id, seq_field),
                         'implementation': 'no_gap',
                         'prefix': '',

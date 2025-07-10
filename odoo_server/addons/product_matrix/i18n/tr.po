@@ -3,21 +3,21 @@
 # 	* product_matrix
 # 
 # Translators:
-# Levent Karakaş <levent@mektup.at>, 2019
-# Murat Kaplan <muratk@projetgrup.com>, 2019
-# Umur Akın <umura@projetgrup.com>, 2019
-# Martin Trigaux, 2019
-# dhkabayel <dhkabayel@gmail.com>, 2019
-# Ediz Duman <neps1192@gmail.com>, 2019
+# emre oktem, 2024
+# Tiffany Chang, 2024
+# Umur Akın <umura@projetgrup.com>, 2024
+# Ediz Duman <neps1192@gmail.com>, 2024
+# Sinem Cil, 2024
+# Tugay Hatıl <tugayh@projetgrup.com>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:13+0000\n"
-"PO-Revision-Date: 2019-08-26 09:13+0000\n"
-"Last-Translator: Ediz Duman <neps1192@gmail.com>, 2019\n"
-"Language-Team: Turkish (https://www.transifex.com/odoo/teams/41243/tr/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Tugay Hatıl <tugayh@projetgrup.com>, 2024\n"
+"Language-Team: Turkish (https://app.transifex.com/odoo/teams/41243/tr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -25,30 +25,49 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #. module: product_matrix
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid ""
+"<small>Switch to the \"else\" condition of this block to view or edit the "
+"table.</small>"
+msgstr ""
+
+#. module: product_matrix
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid "<strong>Product matrix block</strong>"
+msgstr ""
+
+#. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_color_1
 msgid "Blue"
 msgstr "Mavi"
 
 #. module: product_matrix
-#. openerp-web
-#: code:addons/product_matrix/static/src/js/section_and_note_widget.js:0
-#, python-format
-msgid "Choose Product Variants"
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid "Cell name"
 msgstr ""
 
 #. module: product_matrix
-#. openerp-web
-#: code:addons/product_matrix/static/src/js/section_and_note_widget.js:0
-#, python-format
-msgid "Close"
-msgstr "Kapat"
+#. odoo-javascript
+#: code:addons/product_matrix/static/src/xml/product_matrix_dialog.xml:0
+msgid "Choose Product Variants"
+msgstr "Ürün Varyantlarını Seçin"
 
 #. module: product_matrix
-#. openerp-web
-#: code:addons/product_matrix/static/src/js/section_and_note_widget.js:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid "Column name"
+msgstr ""
+
+#. module: product_matrix
+#. odoo-javascript
+#: code:addons/product_matrix/static/src/xml/product_matrix_dialog.xml:0
 msgid "Confirm"
-msgstr "Doğrula"
+msgstr "Onayla"
+
+#. module: product_matrix
+#. odoo-javascript
+#: code:addons/product_matrix/static/src/xml/product_matrix_dialog.xml:0
+msgid "Discard"
+msgstr "Sil"
 
 #. module: product_matrix
 #: model:product.attribute,name:product_matrix.product_attribute_gender
@@ -58,44 +77,43 @@ msgstr "Cinsiyeti"
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_m
 msgid "Men"
-msgstr ""
+msgstr "Erkek"
 
 #. module: product_matrix
 #: model:product.template,name:product_matrix.matrix_product_template_shirt
 msgid "My Company Tshirt (GRID)"
-msgstr ""
+msgstr "My Company Tshirt (GRID)"
 
 #. module: product_matrix
-#. openerp-web
+#. odoo-javascript
 #: code:addons/product_matrix/static/src/xml/product_matrix.xml:0
-#, python-format
 msgid "Not available"
 msgstr "Mevcut değil"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_color_2
 msgid "Pink"
-msgstr ""
+msgstr "Pembe"
 
 #. module: product_matrix
 #: model:ir.model,name:product_matrix.model_product_template
-msgid "Product Template"
-msgstr "Ürün Şablonu"
+msgid "Product"
+msgstr "Ürün"
 
 #. module: product_matrix
 #: model:ir.model,name:product_matrix.model_product_template_attribute_value
 msgid "Product Template Attribute Value"
-msgstr "Ürün Şablonu Özellik Değeri"
+msgstr "Ürün Şablon Nitelik Değeri"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_color_4
 msgid "Rainbow"
-msgstr ""
+msgstr "Gökkuşağı"
 
 #. module: product_matrix
 #: model:product.template,description_sale:product_matrix.matrix_product_template_shirt
 msgid "Show your company love around you =)."
-msgstr ""
+msgstr "Şirketinizin etrafınızdaki sevgisini gösterin =)."
 
 #. module: product_matrix
 #: model:product.attribute,name:product_matrix.product_attribute_size
@@ -103,24 +121,31 @@ msgid "Size"
 msgstr "Boyut"
 
 #. module: product_matrix
-#: model:product.template,uom_name:product_matrix.matrix_product_template_shirt
-msgid "Units"
-msgstr "Adet"
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid ""
+"The matrix of product variants of this order will be displayed here, if "
+"there are any."
+msgstr ""
+
+#. module: product_matrix
+#: model_terms:ir.ui.view,arch_db:product_matrix.extra_price
+msgid "Variant price"
+msgstr "Varyant fiyatı"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_w
 msgid "Women"
-msgstr ""
+msgstr "Kadın"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_size_xl
 msgid "XL"
-msgstr ""
+msgstr "XL"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_size_xs
 msgid "XS"
-msgstr ""
+msgstr "XS"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_color_3

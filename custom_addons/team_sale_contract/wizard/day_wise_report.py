@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 from dateutil.relativedelta import relativedelta
 from datetime import date, datetime, time
 import io
@@ -503,5 +503,3 @@ class DayWiseSyncReport(models.TransientModel):
                 template_id.send_mail(daily_report.id, force_send=True, raise_exception=False)
                 template_id.attachment_ids = [(6,0, [])]
         return True
-
-

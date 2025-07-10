@@ -8,7 +8,7 @@ failures = env['ir.demo_failure'].search([
     ('wizard_id', '=', False),
 ])
 record = model.create({
-    'failure_ids': [(6, 0, failures.ids)],
+    'failure_ids': [Command.set(failures.ids)],
 })
 action = {
     'type': 'ir.actions.act_window',
@@ -30,14 +30,34 @@ action = {
                     module(s) failed to install and were disabled
                 </h3>
                 <field name="failure_ids">
-                    <tree>
+                    <list>
                         <field name="module_id"/>
                         <field name="error"/>
-                    </tree>
+                    </list>
                 </field>
                 <footer>
-                    <button string="Ok" class="oe_highlight" type="object" name="done"/>
+                    <button string="Ok" class="oe_highlight" type="object" name="done" data-hotkey="q"/>
                 </footer>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="demo_wizard_form_view">
+        <field name="name">Demo Failure Form</field>
+        <field name="model">ir.demo_failure</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="module_id"/>
+                            <field name="wizard_id"/>
+                        </group>
+                        <group>
+                            <field name="error"/>
+                        </group>
+                    </group>
+                </sheet>
             </form>
         </field>
     </record>

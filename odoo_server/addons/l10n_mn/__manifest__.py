@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-
 {
-    "name" : "Mongolia - Accounting",
-    "version" : "1.0",
-    'category': 'Localization',
-    "author" : "BumanIT LLC, Odoo S.A",
-    "description": """
+    'name': 'Mongolia - Accounting',
+    'website': 'https://www.odoo.com/documentation/master/applications/finance/fiscal_localizations.html',
+    'version': '1.1',
+    'icon': '/account/static/description/l10n.png',
+    'countries': ['mn'],
+    'category': 'Accounting/Localizations/Account Charts',
+    'author': 'BumanIT LLC, Odoo S.A.',
+    'description': """
 This is the module to manage the accounting chart for Mongolia.
 ===============================================================
 
@@ -16,15 +17,16 @@ This is the module to manage the accounting chart for Mongolia.
 
 Financial requirement contributor: Baskhuu Lodoikhuu. BumanIT LLC
 """,
-    "depends": ['account'],
-    'data': [
-        'data/account_chart_template_data.xml',
-        'data/account.account.tag.csv',
-        'data/account.account.template.csv',
-        'data/account.tax.group.csv',
-        'data/account_tax_template_data.xml',
-        'data/account_fiscal_position_template_data.xml',
-        'data/account.chart.template.csv',
-        'data/account_chart_template_configuration_data.xml',
+    'depends': [
+        'account',
     ],
+    'auto_install': ['account'],
+    'data': [
+        'data/account.account.tag.csv',
+        'data/vat_report.xml',
+    ],
+    'demo': [
+        'demo/demo_company.xml',
+    ],
+    'license': 'LGPL-3',
 }

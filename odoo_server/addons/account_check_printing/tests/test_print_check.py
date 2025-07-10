@@ -1,80 +1,214 @@
-# Make sure / performs a floating point division even if environment is python 2
-from __future__ import division
-
-from odoo.addons.account.tests.account_test_classes import AccountingTestCase
+# -*- coding: utf-8 -*-
+from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 from odoo.addons.account_check_printing.models.account_payment import INV_LINES_PER_STUB
 from odoo.tests import tagged
-from odoo.tests.common import Form
-import time
+from odoo.tools.misc import NON_BREAKING_SPACE
+from odoo import Command
+
 import math
 
 
-
 @tagged('post_install', '-at_install')
-class TestPrintCheck(AccountingTestCase):
+class TestPrintCheck(AccountTestInvoicingCommon):
 
-    def setUp(self):
-        super(TestPrintCheck, self).setUp()
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.other_currency = cls.setup_other_currency('EUR')
 
-        self.invoice_model = self.env['account.move']
-        self.invoice_line_model = self.env['account.move.line']
-        self.payment_model = self.env['account.payment']
+        bank_journal = cls.company_data['default_journal_bank']
 
-        self.partner_axelor = self.env.ref("base.res_partner_2")
-        self.product = self.env.ref("product.product_product_4")
-        self.payment_method_check = self.env.ref("account_check_printing.account_payment_method_check")
+        cls.payment_method_line_check = bank_journal.outbound_payment_method_line_ids\
+            .filtered(lambda l: l.code == 'check_printing')
+        cls.payment_method_line_check.payment_account_id = cls.inbound_payment_method_line.payment_account_id
 
-        self.account_payable = self.env['account.account'].search([('user_type_id', '=', self.env.ref('account.data_account_type_payable').id)], limit=1)
-        self.account_expenses = self.env['account.account'].search([('user_type_id', '=', self.env.ref('account.data_account_type_expenses').id)], limit=1)
+    def test_in_invoice_check_manual_sequencing(self):
+        ''' Test the check generation for vendor bills. '''
+        nb_invoices_to_test = INV_LINES_PER_STUB + 1
 
-        self.bank_journal = self.env['account.journal'].create({'name': 'Bank', 'type': 'bank', 'code': 'BNK67'})
-        self.bank_journal.check_manual_sequencing = True
-
-    def create_invoice(self, amount=100, is_refund=False):
-        invoice = self.env['account.move'].with_context(default_type=is_refund and 'out_refund' or 'in_invoice').create({
-            'partner_id': self.partner_axelor.id,
-            'invoice_date': time.strftime('%Y') + '-06-26',
-            'date': time.strftime('%Y') + '-06-26',
-            'invoice_line_ids': [
-                (0, 0, {
-                    'product_id': self.product.id,
-                    'quantity': 1,
-                    'price_unit': is_refund and amount / 4 or amount,
-                })
-            ]
+        self.company_data['default_journal_bank'].write({
+            'check_manual_sequencing': True,
+            'check_next_number': '00042',
         })
-        invoice.post()
-        return invoice
 
-    def create_payment(self, invoices):
-        payment_register = Form(self.env['account.payment'].with_context(active_model='account.move', active_ids=invoices.ids))
-        payment_register.payment_date = time.strftime('%Y') + '-07-15'
-        payment_register.journal_id = self.bank_journal
-        payment_register.payment_method_id = self.payment_method_check
-        payment = payment_register.save()
-        payment.post()
-        return payment
+        # Create 10 customer invoices.
+        in_invoices = self.env['account.move'].create([{
+            'move_type': 'in_invoice',
+            'partner_id': self.partner_a.id,
+            'date': '2017-01-01',
+            'invoice_date': '2017-01-01',
+            'invoice_line_ids': [Command.create({
+                'product_id': self.product_a.id,
+                'price_unit': 100.0,
+                'tax_ids': []
+            })]
+        } for i in range(nb_invoices_to_test)])
+        in_invoices.action_post()
 
-    def test_print_check(self):
-        # Make a payment for 10 invoices and 5 credit notes
-        invoices = self.env['account.move']
-        for i in range(0, 15):
-            invoices |= self.create_invoice(is_refund=(i % 3 == 0))
-        payment = self.create_payment(invoices)
-        self.assertEqual(all(payment.mapped('check_amount_in_words')), True, 'The amount in words is not set on all the payments')
-        self.assertEqual(all(payment.mapped('check_number')), True, 'The check number is not set on all the payments')
+        # Create a single payment.
+        payment = self.env['account.payment.register'].with_context(active_model='account.move', active_ids=in_invoices.ids).create({
+            'group_payment': True,
+            'payment_method_line_id': self.payment_method_line_check.id,
+        })._create_payments()
 
-        # Check the data generated for the report
-        self.env.ref('base.main_company').write({'account_check_printing_multi_stub': True})
+        # Check created payment.
+        self.assertRecordValues(payment, [{
+            'payment_method_line_id': self.payment_method_line_check.id,
+            'check_amount_in_words': payment.currency_id.amount_to_text(100.0 * nb_invoices_to_test),
+            'check_number': '00042',
+        }])
+
+        # Check pages.
+        self.company_data['company'].account_check_printing_multi_stub = True
         report_pages = payment._check_get_pages()
-        self.assertEqual(len(report_pages), int(math.ceil(len(payment.reconciled_invoice_ids) / INV_LINES_PER_STUB)))
-        self.env.ref('base.main_company').write({'account_check_printing_multi_stub': False})
+        self.assertEqual(len(report_pages), int(math.ceil(len(in_invoices) / INV_LINES_PER_STUB)))
+
+        self.company_data['company'].account_check_printing_multi_stub = False
         report_pages = payment._check_get_pages()
         self.assertEqual(len(report_pages), 1)
 
-    def test_from_register(self):
-        invoices = self.env['account.move']
-        for i in range(0, 3):
-            invoices |= self.create_invoice(is_refund=(i % 3 == 0))
-        payment = self.create_payment(invoices)
-        self.assertEqual(all(payment.mapped('check_amount_in_words')), True, 'The amount in words is not set on all the payments')
+    def test_out_refund_check_manual_sequencing(self):
+        ''' Test the check generation for refunds. '''
+        nb_invoices_to_test = INV_LINES_PER_STUB + 1
+
+        self.company_data['default_journal_bank'].write({
+            'check_manual_sequencing': True,
+            'check_next_number': '00042',
+        })
+
+        # Create 10 refunds.
+        out_refunds = self.env['account.move'].create([{
+            'move_type': 'out_refund',
+            'partner_id': self.partner_a.id,
+            'date': '2017-01-01',
+            'invoice_date': '2017-01-01',
+            'invoice_line_ids': [Command.create({
+                'product_id': self.product_a.id,
+                'price_unit': 100.0,
+                'tax_ids': []
+            })]
+        } for i in range(nb_invoices_to_test)])
+        out_refunds.action_post()
+
+        # Create a single payment.
+        payment = self.env['account.payment.register'].with_context(active_model='account.move', active_ids=out_refunds.ids).create({
+            'group_payment': True,
+            'payment_method_line_id': self.payment_method_line_check.id,
+        })._create_payments()
+
+        # Check created payment.
+        self.assertRecordValues(payment, [{
+            'payment_method_line_id': self.payment_method_line_check.id,
+            'check_amount_in_words': payment.currency_id.amount_to_text(100.0 * nb_invoices_to_test),
+            'check_number': '00042',
+        }])
+
+        # Check pages.
+        self.company_data['company'].account_check_printing_multi_stub = True
+        report_pages = payment._check_get_pages()
+        self.assertEqual(len(report_pages), int(math.ceil(len(out_refunds) / INV_LINES_PER_STUB)))
+
+        self.company_data['company'].account_check_printing_multi_stub = False
+        report_pages = payment._check_get_pages()
+        self.assertEqual(len(report_pages), 1)
+
+    def test_multi_currency_stub_lines(self):
+        # Invoice in company's currency: 100$
+        invoice = self.env['account.move'].create({
+            'move_type': 'in_invoice',
+            'partner_id': self.partner_a.id,
+            'date': '2016-01-01',
+            'invoice_date': '2016-01-01',
+            'invoice_line_ids': [Command.create({
+                'product_id': self.product_a.id,
+                'price_unit': 150.0,
+                'tax_ids': []
+            })]
+        })
+        invoice.action_post()
+
+        # Partial payment in foreign currency.
+        payment = self.env['account.payment.register'].with_context(active_model='account.move', active_ids=invoice.ids).create({
+            'payment_method_line_id': self.payment_method_line_check.id,
+            'currency_id': self.other_currency.id,
+            'amount': 150.0,
+            'payment_date': '2017-01-01',
+        })._create_payments()
+
+        stub_pages = payment._check_make_stub_pages()
+
+        self.assertEqual(stub_pages, [[{
+            'due_date': '01/01/2016',
+            'number': invoice.name,
+            'amount_total': f'${NON_BREAKING_SPACE}150.00',
+            'amount_residual': f'${NON_BREAKING_SPACE}75.00',
+            'amount_paid': f'150.00{NON_BREAKING_SPACE}€',
+            'currency': invoice.currency_id,
+        }]])
+
+    def test_in_invoice_check_manual_sequencing_with_multiple_payments(self):
+        """
+           Test the check generation for vendor bills with multiple payments.
+        """
+        nb_invoices_to_test = INV_LINES_PER_STUB + 1
+
+        self.company_data['default_journal_bank'].write({
+            'check_manual_sequencing': True,
+            'check_next_number': '11111',
+        })
+
+        in_invoices = self.env['account.move'].create([{
+            'move_type': 'in_invoice',
+            'partner_id': self.partner_a.id,
+            'date': '2017-01-01',
+            'invoice_date': '2017-01-01',
+            'invoice_line_ids': [Command.create({
+                'product_id': self.product_a.id,
+                'price_unit': 100.0,
+                'tax_ids': []
+            })]
+        } for i in range(nb_invoices_to_test)])
+        in_invoices.action_post()
+
+        payments = self.env['account.payment.register'].with_context(active_model='account.move', active_ids=in_invoices.ids).create({
+            'group_payment': False,
+            'payment_method_line_id': self.payment_method_line_check.id,
+        })._create_payments()
+
+        self.assertEqual(set(payments.mapped('check_number')), {str(x) for x in range(11111, 11111 + nb_invoices_to_test)})
+
+    def test_check_label(self):
+        payment = self.env['account.payment'].create({
+            'check_number': '2147483647',
+            'payment_type': 'outbound',
+            'partner_type': 'supplier',
+            'amount': 100.0,
+            'journal_id': self.company_data['default_journal_bank'].id,
+            'payment_method_line_id': self.payment_method_line_check.id,
+        })
+        payment.action_post()
+
+        for move in payment.move_id:
+            self.assertRecordValues(move.line_ids, [{'name': "Checks - 2147483647"}] * len(move.line_ids))
+
+    def test_print_great_pre_number_check(self):
+        """
+        Make sure we can use integer of more than 2147483647 in check sequence
+         limit of `integer` type in psql: https://www.postgresql.org/docs/current/datatype-numeric.html
+        """
+        vals = {
+            'payment_type': 'outbound',
+            'partner_type': 'supplier',
+            'amount': 100.0,
+            'journal_id': self.company_data['default_journal_bank'].id,
+            'payment_method_line_id': self.payment_method_line_check.id,
+        }
+        payment = self.env['account.payment'].create(vals)
+        payment.action_post()
+        self.assertTrue(payment.write({'check_number': '2147483647'}))
+        self.assertTrue(payment.write({'check_number': '2147483648'}))
+
+        payment_2 = self.env['account.payment'].create(vals)
+        payment_2.action_post()
+        action_window = payment_2.print_checks()
+        self.assertEqual(action_window['context']['default_next_check_number'], '2147483649', "Check number should have been incremented without error.")

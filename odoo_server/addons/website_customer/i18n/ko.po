@@ -3,19 +3,17 @@
 # 	* website_customer
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Link Up링크업 <linkup.way@gmail.com>, 2019
-# Linkup <link-up@naver.com>, 2019
-# JH CHOI <hwangtog@gmail.com>, 2020
+# Wil Odoo, 2024
+# Daye Jeong, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:17+0000\n"
-"PO-Revision-Date: 2019-08-26 09:15+0000\n"
-"Last-Translator: JH CHOI <hwangtog@gmail.com>, 2020\n"
-"Language-Team: Korean (https://www.transifex.com/odoo/teams/41243/ko/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Daye Jeong, 2024\n"
+"Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -23,40 +21,63 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.details
+msgid "<i class=\"fa fa-chevron-left me-2\"/>Back to references"
+msgstr "<i class=\"fa fa-chevron-left me-2\"/>참조로 돌아가기"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.index
+msgid ""
+"<i class=\"fa fa-info-circle me-2\"/>\n"
+"                        There are no matching customers found for the selected country. Displaying results across all countries instead."
+msgstr ""
+"<i class=\"fa fa-info-circle me-2\"/>\n"
+"                        선택한 국가에 일치하는 고객을 찾을 수 없습니다. 대신 모든 국가의 결과를 표시합니다."
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.opt_country
+msgid ""
+"<i class=\"fa fa-map-marker\" role=\"img\" aria-label=\"Open map\" "
+"title=\"Open map\"/>"
+msgstr "<i class=\"fa fa-map-marker\" role=\"img\" aria-label=\"지도 열기\" title=\"지도 열기\"/>"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.index
 #: model_terms:ir.ui.view,arch_db:website_customer.opt_tag_list
 msgid "<span class=\"fa fa-1x fa-tags\"/> All"
 msgstr "<span class=\"fa fa-1x fa-tags\"/>전체"
 
 #. module: website_customer
-#: model_terms:ir.ui.view,arch_db:website_customer.opt_country
-msgid ""
-"<span class=\"fa fa-external-link\" role=\"img\" aria-label=\"External "
-"link\" title=\"External link\"/>"
-msgstr ""
-"<span class=\"fa fa-external-link\" role=\"img\" aria-label=\"External "
-"link\" title=\"External link\"/>"
+#: model_terms:ir.ui.view,arch_db:website_customer.implemented_by_block
+msgid "<span class=\"small text-muted\">Implemented by</span>"
+msgstr "<span class=\"small text-muted\">구현 담당자</span>"
 
 #. module: website_customer
 #: model:ir.model.fields,field_description:website_customer.field_res_partner_tag__active
 msgid "Active"
-msgstr "활성"
+msgstr "활성화"
 
 #. module: website_customer
+#. odoo-python
 #: code:addons/website_customer/controllers/main.py:0
-#, python-format
 msgid "All Countries"
 msgstr "모든 국가"
 
 #. module: website_customer
+#. odoo-python
 #: code:addons/website_customer/controllers/main.py:0
-#, python-format
-msgid "All Sectors of Activity"
-msgstr "모든 활동 분야"
+msgid "All Industries"
+msgstr "모든 산업 분야"
 
 #. module: website_customer
 #: model_terms:ir.ui.view,arch_db:website_customer.res_partner_tag_view_search
 msgid "Archived"
-msgstr "보존"
+msgstr "보관됨"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.details
+msgid "Back to references list"
+msgstr "참조 목록으로 돌아가기"
 
 #. module: website_customer
 #: model:ir.model.fields,help:website_customer.field_res_partner_tag__classname
@@ -66,7 +87,7 @@ msgstr "색상을 사용자 정의하기 위한 부트스트랩 클래스"
 #. module: website_customer
 #: model:ir.model.fields,field_description:website_customer.field_res_partner_tag__can_publish
 msgid "Can Publish"
-msgstr "공개 가능"
+msgstr "게시 가능"
 
 #. module: website_customer
 #: model:ir.model.fields,field_description:website_customer.field_res_partner_tag__name
@@ -79,6 +100,7 @@ msgid "Class"
 msgstr "클래스"
 
 #. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.index
 #: model_terms:ir.ui.view,arch_db:website_customer.opt_country
 msgid "Close"
 msgstr "닫기"
@@ -89,6 +111,11 @@ msgid "Contact"
 msgstr "연락처"
 
 #. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.snippet_options
+msgid "Countries Filter"
+msgstr "국가 필터"
+
+#. module: website_customer
 #: model_terms:ir.actions.act_window,help:website_customer.action_partner_tag_form
 msgid "Create a new contact tag"
 msgstr "새 연락처 태그 만들기"
@@ -96,17 +123,58 @@ msgstr "새 연락처 태그 만들기"
 #. module: website_customer
 #: model:ir.model.fields,field_description:website_customer.field_res_partner_tag__create_uid
 msgid "Created by"
-msgstr "작성인"
+msgstr "작성자"
 
 #. module: website_customer
 #: model:ir.model.fields,field_description:website_customer.field_res_partner_tag__create_date
 msgid "Created on"
-msgstr "작성일"
+msgstr "작성일자"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.details
+msgid "DROP BUILDING BLOCKS HERE TO MAKE THEM AVAILABLE ACROSS ALL CUSTOMERS"
+msgstr "모든 고객이 사용할 수 있도록 여기에 빌딩 블록을 배치합니다."
 
 #. module: website_customer
 #: model:ir.model.fields,field_description:website_customer.field_res_partner_tag__display_name
 msgid "Display Name"
-msgstr "표시 이름"
+msgstr "표시명"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.index
+msgid "Enter a short description"
+msgstr "간단한 설명을 입력하세요."
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.index
+msgid "Filter by Country"
+msgstr "국가별 필터"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.index
+msgid "Filter by Industry"
+msgstr "산업별 필터"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.index
+msgid "Filter by Tags"
+msgstr "태그별 필터"
+
+#. module: website_customer
+#: model:ir.model.fields,help:website_customer.field_res_partner__website_tag_ids
+#: model:ir.model.fields,help:website_customer.field_res_users__website_tag_ids
+msgid "Filter published customers on the .../customers website page"
+msgstr ".../customers 웹사이트 페이지에서 게시된 고객 필터링하기"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.index
+msgid "Filters"
+msgstr "필터"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.index
+msgid "Go to customer"
+msgstr "고객으로 이동"
 
 #. module: website_customer
 #: model:ir.model.fields,field_description:website_customer.field_res_partner_tag__id
@@ -114,19 +182,14 @@ msgid "ID"
 msgstr "ID"
 
 #. module: website_customer
-#: model_terms:ir.ui.view,arch_db:website_customer.implemented_by_block
-msgid "Implemented By"
-msgstr "구현자"
+#: model_terms:ir.ui.view,arch_db:website_customer.snippet_options
+msgid "Industry Filter"
+msgstr "산업별 필터"
 
 #. module: website_customer
 #: model:ir.model.fields,field_description:website_customer.field_res_partner_tag__is_published
 msgid "Is Published"
 msgstr "게시 여부"
-
-#. module: website_customer
-#: model:ir.model.fields,field_description:website_customer.field_res_partner_tag____last_update
-msgid "Last Modified on"
-msgstr "최근 수정일"
 
 #. module: website_customer
 #: model:ir.model.fields,field_description:website_customer.field_res_partner_tag__write_uid
@@ -136,7 +199,7 @@ msgstr "최근 갱신한 사람"
 #. module: website_customer
 #: model:ir.model.fields,field_description:website_customer.field_res_partner_tag__write_date
 msgid "Last Updated on"
-msgstr "최근 갱신일"
+msgstr "최근 갱신 일자"
 
 #. module: website_customer
 #: model_terms:ir.actions.act_window,help:website_customer.action_partner_tag_form
@@ -147,14 +210,23 @@ msgstr "연락처 태그를 추적 및 분석 목적으로 더 잘 분류하도�
 
 #. module: website_customer
 #: model_terms:ir.ui.view,arch_db:website_customer.index
-msgid "No result found"
-msgstr "결과가 없습니다."
+msgid "No results found for \""
+msgstr "다음에 대한 결과가 없습니다 \""
 
 #. module: website_customer
-#: model_terms:ir.ui.view,arch_db:website_customer.details
+#: model_terms:ir.ui.view,arch_db:website_customer.opt_country_list
+msgid "Open countries dropdown"
+msgstr "국가 드롭다운 열기"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.opt_industry_list
+msgid "Open industries dropdown"
+msgstr "산업 드롭다운 열기"
+
+#. module: website_customer
 #: model_terms:ir.ui.view,arch_db:website_customer.index
-msgid "Our References"
-msgstr "우리의 참고 문헌"
+msgid "Our references"
+msgstr "참조"
 
 #. module: website_customer
 #: model_terms:ir.ui.view,arch_db:website_customer.view_partner_tag_form
@@ -174,25 +246,16 @@ msgid "Partners"
 msgstr "협력사"
 
 #. module: website_customer
+#. odoo-python
+#: code:addons/website_customer/models/website.py:0
 #: model_terms:ir.ui.view,arch_db:website_customer.references_block
-#: model:website.menu,name:website_customer.menu_customers
 msgid "References"
 msgstr "참조"
 
 #. module: website_customer
-#: model_terms:ir.ui.view,arch_db:website_customer.opt_country_list
-msgid "References by Country"
-msgstr "국가별 참조"
-
-#. module: website_customer
-#: model_terms:ir.ui.view,arch_db:website_customer.opt_industry_list
-msgid "References by Sectors of Activity"
-msgstr "활동 분야별 참고"
-
-#. module: website_customer
-#: model_terms:ir.ui.view,arch_db:website_customer.opt_tag_list
-msgid "References by Tag"
-msgstr "태그별 참조"
+#: model_terms:ir.ui.view,arch_db:website_customer.snippet_options
+msgid "References Page"
+msgstr "참조 페이지"
 
 #. module: website_customer
 #: model_terms:ir.ui.view,arch_db:website_customer.index
@@ -205,19 +268,44 @@ msgid "Search Partner Tag"
 msgstr "협력사 태그 검색"
 
 #. module: website_customer
-#: model:ir.model.fields,help:website_customer.field_res_partner_tag__website_url
-msgid "The full URL to access the document through the website."
-msgstr "웹사이트를 통해 문서에 접근하는 전체 URL입니다."
+#: model_terms:ir.ui.view,arch_db:website_customer.index
+msgid "See all customers"
+msgstr "모든 고객 보기"
 
 #. module: website_customer
 #: model_terms:ir.ui.view,arch_db:website_customer.index
-msgid "Trusted by millions worldwide"
-msgstr "전 세계적으로 수백만에 의해 신뢰할 수 있는"
+msgid "See countries filters"
+msgstr "국가 필터 보기"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.index
+msgid "See industries filters"
+msgstr "산업별 필터 보기"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.snippet_options
+msgid "Show Map"
+msgstr "지도 보기"
+
+#. module: website_customer
+#: model_terms:ir.ui.view,arch_db:website_customer.snippet_options
+msgid "Tags Filter"
+msgstr "태그 필터"
+
+#. module: website_customer
+#: model:ir.model.fields,help:website_customer.field_res_partner_tag__website_url
+msgid "The full URL to access the document through the website."
+msgstr "웹사이트를 통해 문서에 접근 하는 전체 URL입니다."
 
 #. module: website_customer
 #: model:ir.model.fields,field_description:website_customer.field_res_partner_tag__website_published
 msgid "Visible on current website"
 msgstr "현재 웹 사이트에 공개"
+
+#. module: website_customer
+#: model:ir.model,name:website_customer.model_website
+msgid "Website"
+msgstr "웹사이트"
 
 #. module: website_customer
 #: model:ir.actions.act_window,name:website_customer.action_partner_tag_form
@@ -242,8 +330,3 @@ msgstr "웹사이트 태그"
 #: model_terms:ir.ui.view,arch_db:website_customer.opt_country
 msgid "World Map"
 msgstr "세계 지도"
-
-#. module: website_customer
-#: model_terms:ir.ui.view,arch_db:website_customer.implemented_by_block
-msgid "reference(s))"
-msgstr "참조"

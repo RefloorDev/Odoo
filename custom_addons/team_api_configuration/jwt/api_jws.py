@@ -2,7 +2,7 @@ import binascii
 import json
 import warnings
 
-from collections import Mapping
+from collections.abc import Mapping
 
 from .algorithms import Algorithm, get_default_algorithms  # NOQA
 from .compat import text_type

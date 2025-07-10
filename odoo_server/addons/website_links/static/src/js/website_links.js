@@ -1,126 +1,139 @@
-odoo.define('website_links.website_links', function (require) {
-'use strict';
+/** @odoo-module **/
 
-var core = require('web.core');
-var publicWidget = require('web.public.widget');
+import { _t } from "@web/core/l10n/translation";
+import { Component, onWillStart, useState } from "@odoo/owl";
+import publicWidget from "@web/legacy/js/public/public_widget";
+import { addLoadingEffect } from '@web/core/utils/ui';
+import { browser } from "@web/core/browser/browser";
+import { rpc } from "@web/core/network/rpc";
+import { KeepLast } from "@web/core/utils/concurrency";
+import { attachComponent } from "@web_editor/js/core/owl_utils";
+import { SelectMenu } from "@web/core/select_menu/select_menu";
+import { useService } from "@web/core/utils/hooks";
+import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 
-var _t = core._t;
+class WebsiteLinksTagsWrapper extends Component {
+    static template = "website_links.WebsiteLinksTagsWrapper";
+    static components = { SelectMenu, DropdownItem };
+    static props = {
+        placeholder: { optional: true, type: String },
+        model: { optional: true, type: String },
+    };
 
-var SelectBox = publicWidget.Widget.extend({
-    events: {
-        'change': '_onChange',
-    },
-
-    /**
-     * @constructor
-     * @param {Object} parent
-     * @param {Object} obj
-     * @param {String} placeholder
-     */
-    init: function (parent, obj, placeholder) {
-        this._super.apply(this, arguments);
-        this.obj = obj;
-        this.placeholder = placeholder;
-    },
-    /**
-     * @override
-     */
-    willStart: function () {
-        var self = this;
-        var defs = [this._super.apply(this, arguments)];
-        defs.push(this._rpc({
-            model: this.obj,
-            method: 'search_read',
-            params: {
-                fields: ['id', 'name'],
-            },
-        }).then(function (result) {
-            self.objects = _.map(result, function (val) {
-                return {id: val.id, text: val.name};
-            });
-        }));
-        return Promise.all(defs);
-    },
-    /**
-     * @override
-     */
-    start: function () {
-        var self = this;
-        this.$el.select2({
-            placeholder: self.placeholder,
-            allowClear: true,
-            createSearchChoice: function (term) {
-                if (self._objectExists(term)) {
-                    return null;
-                }
-                return {id: term, text: _.str.sprintf("Create '%s'", term)};
-            },
-            createSearchChoicePosition: 'bottom',
-            multiple: false,
-            data: self.objects,
+    setup() {
+        this.orm = useService("orm");
+        this.keepLast = new KeepLast();
+        this.state = useState({
+            placeholder: this.props.placeholder,
+            choices: [],
+            value: undefined,
         });
-    },
+        onWillStart(async () => {
+            this.canCreateLinkTracker = await this.orm.call(this.props.model, "has_access", [[], "create"]);
+            await this.loadChoice();
+        });
+    }
 
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
+    get showCreateOption() {
+        return this.select.data.searchValue && !this.state.choices.some(c => c.label === this.select.data.searchValue) && this.canCreateLinkTracker;
+    }
 
-    /**
-     * @private
-     * @param {String} query
-     */
-    _objectExists: function (query) {
-        return _.find(this.objects, function (val) {
-            return val.text.toLowerCase() === query.toLowerCase();
-        }) !== undefined;
-    },
-    /**
-     * @private
-     * @param {String} name
-     */
-    _createObject: function (name) {
-        var self = this;
-        var args = {
-            name: name
+    onSelect(value) {
+        this.state.value = value;
+    }
+
+    async onCreateOption(string, closeFn) {
+        const record = await this.orm.call("utm.mixin", "find_or_create_record", [
+            this.props.model,
+            string,
+        ]);
+        const choice = {
+            label: record.name,
+            value: record.id,
         };
-        if (this.obj === "utm.campaign"){
-            args.is_website = true;
-        }
-        return this._rpc({
-            model: this.obj,
-            method: 'create',
-            args: [args],
-        }).then(function (record) {
-            self.$el.attr('value', record);
-            self.objects.push({'id': record, 'text': name});
+        this.state.choices.push(choice);
+        this.onSelect(choice.value);
+    }
+
+    loadChoice(searchString = "") {
+        return new Promise((resolve, reject) => {
+            // We want to search with a limit and not care about any
+            // pagination implementation. To make this work, we
+            // display the exact match first though, which requires
+            // an extra RPC (could be refactored into a new
+            // controller in master but... see TODO).
+            // TODO at some point this whole app will be moved as a
+            // backend screen, with real m2o fields etc... in which
+            // case the "exact match" feature should be handled by
+            // the ORM somehow ?
+            const limit = 100;
+            const searchReadParams = [
+                ["id", "name"],
+                {
+                    limit: limit,
+                    order: "name, id desc", // Allows to have exact match first
+                },
+            ];
+            const proms = [];
+            proms.push(
+                this.orm.searchRead(
+                    this.props.model,
+                    // Exact match + results that start with the search
+                    [["name", "=ilike", `${searchString}%`]],
+                    ...searchReadParams
+                )
+            );
+            proms.push(
+                this.orm.searchRead(
+                    this.props.model,
+                    // Results that contain the search but do not start
+                    // with it
+                    [["name", "=ilike", `%_${searchString}%`]],
+                    ...searchReadParams
+                )
+            );
+            // Keep last is there in case a RPC takes longer than
+            // the debounce delay + next rpc delay for some reason.
+            this.keepLast
+                .add(Promise.all(proms))
+                .then(([startingMatches, endingMatches]) => {
+                    const formatChoice = (choice) => {
+                        choice.value = choice.id;
+                        choice.label = choice.name;
+                        return choice;
+                    };
+                    startingMatches.map(formatChoice);
+
+                    // We loaded max a 2 * limit amount of records but
+                    // ensure that we do not display "ending matches" if
+                    // we may not have loaded all "starting matches".
+                    if (startingMatches.length < limit) {
+                        const startingMatchesId = startingMatches.map((value) => value.id);
+                        const extraEndingMatches = endingMatches.filter(
+                            (value) => !startingMatchesId.includes(value.id)
+                        );
+                        extraEndingMatches.map(formatChoice);
+                        return startingMatches.concat(extraEndingMatches);
+                    }
+                    // In that case, we made one RPC too much but this
+                    // was chosen over not making them go in parallel.
+                    // We don't want to display "ending matches" if not
+                    // all "starting matches" have been loaded.
+                    return startingMatches;
+                })
+                .then((result) => {
+                    this.state.choices = result;
+                    resolve();
+                })
+                .catch(reject);
         });
-    },
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    //--------------------------------------------------------------------------
-
-    /**
-     * @private
-     * @param {Object} ev
-     */
-    _onChange: function (ev) {
-        if (!ev.added || !_.isString(ev.added.id)) {
-            return;
-        }
-        this._createObject(ev.added.id);
-    },
-});
+    }
+}
 
 var RecentLinkBox = publicWidget.Widget.extend({
     template: 'website_links.RecentLink',
-    xmlDependencies: ['/website_links/static/src/xml/recent_link.xml'],
     events: {
-        'click .btn_shorten_url_clipboard': '_toggleCopyButton',
-        'click .o_website_links_edit_code': '_editCode',
-        'click .o_website_links_ok_edit': '_onLinksOkClick',
-        'click .o_website_links_cancel_edit': '_onLinksCancelClick',
-        'submit #o_website_links_edit_code_form': '_onSubmitCode',
+        'click .btn_shorten_url_clipboard': '_onCopyShortenUrl',
     },
 
     /**
@@ -131,14 +144,6 @@ var RecentLinkBox = publicWidget.Widget.extend({
     init: function (parent, obj) {
         this._super.apply(this, arguments);
         this.link_obj = obj;
-        this.animating_copy = false;
-    },
-    /**
-     * @override
-     */
-    start: function () {
-        new ClipboardJS(this.$('.btn_shorten_url_clipboard').get(0));
-        return this._super.apply(this, arguments);
     },
 
     //--------------------------------------------------------------------------
@@ -148,146 +153,23 @@ var RecentLinkBox = publicWidget.Widget.extend({
     /**
      * @private
      */
-    _toggleCopyButton: function () {
-        if (this.animating_copy) {
-            return;
-        }
-
-        var self = this;
-        this.animating_copy = true;
-        var top = this.$('.o_website_links_short_url').position().top;
-        this.$('.o_website_links_short_url').clone()
-            .css('position', 'absolute')
-            .css('left', 15)
-            .css('top', top - 2)
-            .css('z-index', 2)
-            .removeClass('o_website_links_short_url')
-            .addClass('animated-link')
-            .insertAfter(this.$('.o_website_links_short_url'))
-            .animate({
-                opacity: 0,
-                top: '-=20',
-            }, 500, function () {
-                self.$('.animated-link').remove();
-                self.animating_copy = false;
-            });
-    },
-    /**
-     * @private
-     * @param {String} message
-     */
-    _notification: function (message) {
-        this.$('.notification').append('<strong>' + message + '</strong>');
-    },
-    /**
-     * @private
-     */
-    _editCode: function () {
-        var initCode = this.$('#o_website_links_code').html();
-        this.$('#o_website_links_code').html('<form style="display:inline;" id="o_website_links_edit_code_form"><input type="hidden" id="init_code" value="' + initCode + '"/><input type="text" id="new_code" value="' + initCode + '"/></form>');
-        this.$('.o_website_links_edit_code').hide();
-        this.$('.copy-to-clipboard').hide();
-        this.$('.o_website_links_edit_tools').show();
-    },
-    /**
-     * @private
-     */
-    _cancelEdit: function () {
-        this.$('.o_website_links_edit_code').show();
-        this.$('.copy-to-clipboard').show();
-        this.$('.o_website_links_edit_tools').hide();
-        this.$('.o_website_links_code_error').hide();
-
-        var oldCode = this.$('#o_website_links_edit_code_form #init_code').val();
-        this.$('#o_website_links_code').html(oldCode);
-
-        this.$('#code-error').remove();
-        this.$('#o_website_links_code form').remove();
-    },
-    /**
-     * @private
-     */
-    _submitCode: function () {
-        var self = this;
-
-        var initCode = this.$('#o_website_links_edit_code_form #init_code').val();
-        var newCode = this.$('#o_website_links_edit_code_form #new_code').val();
-
-        if (newCode === '') {
-            self.$('.o_website_links_code_error').html(_t("The code cannot be left empty"));
-            self.$('.o_website_links_code_error').show();
-            return;
-        }
-
-        function showNewCode(newCode) {
-            self.$('.o_website_links_code_error').html('');
-            self.$('.o_website_links_code_error').hide();
-
-            self.$('#o_website_links_code form').remove();
-
-            // Show new code
-            var host = self.$('#o_website_links_host').html();
-            self.$('#o_website_links_code').html(newCode);
-
-            // Update button copy to clipboard
-            self.$('.btn_shorten_url_clipboard').attr('data-clipboard-text', host + newCode);
-
-            // Show action again
-            self.$('.o_website_links_edit_code').show();
-            self.$('.copy-to-clipboard').show();
-            self.$('.o_website_links_edit_tools').hide();
-        }
-
-        if (initCode === newCode) {
-            showNewCode(newCode);
-        } else {
-            this._rpc({
-                route: '/website_links/add_code',
-                params: {
-                    init_code: initCode,
-                    new_code: newCode,
-                },
-            }).then(function (result) {
-                showNewCode(result[0].code);
-            }, function () {
-                self.$('.o_website_links_code_error').show();
-                self.$('.o_website_links_code_error').html(_t("This code is already taken"));
-            });
-        }
-    },
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    //--------------------------------------------------------------------------
-
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onLinksOkClick: function (ev) {
+    _onCopyShortenUrl: async function (ev) {
         ev.preventDefault();
-        this._submitCode();
-    },
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onLinksCancelClick: function (ev) {
-        ev.preventDefault();
-        this._cancelEdit();
-    },
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onSubmitCode: function (ev) {
-        ev.preventDefault();
-        this._submitCode();
+        const copyBtn = ev.currentTarget;
+        const tooltip = Tooltip.getOrCreateInstance(copyBtn, {
+            title: _t("Link Copied!"),
+            trigger: "manual",
+            placement: "top",
+        });
+        setTimeout(
+            async () => await browser.navigator.clipboard.writeText(copyBtn.dataset.url)
+        );
+        tooltip.show();
+        setTimeout(() => tooltip.hide(), 1200);
     },
 });
 
 var RecentLinks = publicWidget.Widget.extend({
-
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
@@ -297,17 +179,15 @@ var RecentLinks = publicWidget.Widget.extend({
      */
     getRecentLinks: function (filter) {
         var self = this;
-        return this._rpc({
-            route: '/website_links/recent_links',
-            params: {
-                filter: filter,
-                limit: 20,
-            },
+        return rpc('/website_links/recent_links', {
+            filter: filter,
+            limit: 20,
         }).then(function (result) {
-            _.each(result.reverse(), function (link) {
+            result.reverse().forEach((link) => {
                 self._addLink(link);
             });
             self._updateNotification();
+            self._updateFilters(filter);
         }, function () {
             var message = _t("Unable to get recent links");
             self.$el.append('<div class="alert alert-danger">' + message + '</div>');
@@ -330,7 +210,24 @@ var RecentLinks = publicWidget.Widget.extend({
      * @private
      */
     removeLinks: function () {
-        _.invoke(this.getChildren(), 'destroy');
+        this.getChildren().forEach((child) => {
+            child.destroy();
+        });
+    },
+    /**
+     * @private
+     * Updates the dropdown with the selected filter
+     */
+    _updateFilters: function(filter) {
+        const dropdownBtns = document.querySelectorAll('#recent_links_sort_by a');
+        dropdownBtns.forEach((button) => {
+            if (button.dataset.filter === filter) {
+                document.querySelector('.o_website_links_sort_by').textContent = button.textContent;
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
     },
     /**
      * @private
@@ -348,42 +245,50 @@ var RecentLinks = publicWidget.Widget.extend({
 publicWidget.registry.websiteLinks = publicWidget.Widget.extend({
     selector: '.o_website_links_create_tracked_url',
     events: {
-        'click #filter-newest-links': '_onFilterNewestLinksClick',
-        'click #filter-most-clicked-links': '_onFilterMostClickedLinksClick',
-        'click #filter-recently-used-links': '_onFilterRecentlyUsedLinksClick',
-        'click #generated_tracked_link a': '_onGeneratedTrackedLinkClick',
-        'keyup #url': '_onUrlKeyUp',
-        'click #btn_shorten_url': '_onShortenUrlButtonClick',
+        'click #recent_links_sort_by a': '_onRecentLinksFilterChange',
+        'click .o_website_links_new_link_tracker': '_onCreateNewLinkTrackerClick',
         'submit #o_website_links_link_tracker_form': '_onFormSubmit',
     },
 
     /**
      * @override
      */
-    start: function () {
+    start: async function () {
         var defs = [this._super.apply(this, arguments)];
 
-        // UTMS selects widgets
-        var campaignSelect = new SelectBox(this, 'utm.campaign', _t("e.g. Promotion of June, Winter Newsletter, .."));
-        defs.push(campaignSelect.attachTo($('#campaign-select')));
+        async function attachSelectComponent(model, placeholderText, el) {
+            const props = {
+                placeholder: placeholderText,
+                model: model,
+            };
+            await attachComponent(this, el, WebsiteLinksTagsWrapper, props);
+        }
 
-        var mediumSelect = new SelectBox(this, 'utm.medium', _t("e.g. Newsletter, Social Network, .."));
-        defs.push(mediumSelect.attachTo($('#channel-select')));
-
-        var sourceSelect = new SelectBox(this, 'utm.source', _t("e.g. Search Engine, Website page, .."));
-        defs.push(sourceSelect.attachTo($('#source-select')));
+        attachSelectComponent.call(
+            this,
+            "utm.campaign",
+            _t("e.g. June Sale, Paris Roadshow, ..."),
+            this.el.querySelector("#campaign-select-wrapper"),
+        );
+        attachSelectComponent.call(
+            this,
+            "utm.medium",
+            _t("e.g. InMails, Ads, Social, ..."),
+            this.el.querySelector("#channel-select-wrapper"),
+        );
+        attachSelectComponent.call(
+            this,
+            "utm.source",
+            _t("e.g. LinkedIn, Facebook, Leads, ..."),
+            this.el.querySelector("#source-select-wrapper"),
+        );
 
         // Recent Links Widgets
         this.recentLinks = new RecentLinks(this);
         defs.push(this.recentLinks.appendTo($('#o_website_links_recent_links')));
         this.recentLinks.getRecentLinks('newest');
 
-        // Clipboard Library
-        new ClipboardJS($('#btn_shorten_url').get(0));
-
-        this.url_copy_animating = false;
-
-        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-bs-toggle="tooltip"]').tooltip();
 
         return Promise.all(defs);
     },
@@ -395,71 +300,24 @@ publicWidget.registry.websiteLinks = publicWidget.Widget.extend({
     /**
      * @private
      */
-    _onFilterNewestLinksClick: function () {
+    _onRecentLinksFilterChange(ev) {
         this.recentLinks.removeLinks();
-        this.recentLinks.getRecentLinks('newest');
-    },
-    /**
-     * @private
-     */
-    _onFilterMostClickedLinksClick: function () {
-        this.recentLinks.removeLinks();
-        this.recentLinks.getRecentLinks('most-clicked');
-    },
-    /**
-     * @private
-     */
-    _onFilterRecentlyUsedLinksClick: function () {
-        this.recentLinks.removeLinks();
-        this.recentLinks.getRecentLinks('recently-used');
-    },
-    /**
-     * @private
-     */
-    _onGeneratedTrackedLinkClick: function () {
-        $('#generated_tracked_link a').text(_t("Copied")).removeClass('btn-primary').addClass('btn-success');
-        setTimeout(function () {
-            $('#generated_tracked_link a').text(_t("Copy")).removeClass('btn-success').addClass('btn-primary');
-        }, 5000);
+        this.recentLinks.getRecentLinks(ev.currentTarget.dataset.filter);
     },
     /**
      * @private
      * @param {Event} ev
+     * Show the link tracker form back
      */
-    _onUrlKeyUp: function (ev) {
-        if (!$('#btn_shorten_url').hasClass('btn-copy') || ev.which === 13) {
+    _onCreateNewLinkTrackerClick: function (ev) {
+        const utmForm = document.querySelector(".o_website_links_utm_forms");
+        if (!utmForm.classList.contains("d-none")) {
             return;
         }
-
-        $('#btn_shorten_url').removeClass('btn-success btn-copy').addClass('btn-primary').html('Get tracked link');
-        $('#generated_tracked_link').css('display', 'none');
-        $('.o_website_links_utm_forms').show();
-    },
-    /**
-     * @private
-     */
-    _onShortenUrlButtonClick: function () {
-        if (!$('#btn_shorten_url').hasClass('btn-copy') || this.url_copy_animating) {
-            return;
-        }
-
-        var self = this;
-        this.url_copy_animating = true;
-        $('#generated_tracked_link').clone()
-            .css('position', 'absolute')
-            .css('left', '78px')
-            .css('bottom', '8px')
-            .css('z-index', 2)
-            .removeClass('#generated_tracked_link')
-            .addClass('url-animated-link')
-            .appendTo($('#generated_tracked_link'))
-            .animate({
-                opacity: 0,
-                bottom: '+=20',
-            }, 500, function () {
-                $('.url-animated-link').remove();
-                self.url_copy_animating = false;
-            });
+        utmForm.classList.remove("d-none");
+        document.querySelector("#generated_tracked_link").classList.add("d-none");
+        document.querySelector("#btn_shorten_url").classList.remove("d-none");
+        document.querySelector("input#url").value = '';
     },
     /**
      * Add the RecentLinkBox widget and send the form when the user generate the link
@@ -470,36 +328,34 @@ publicWidget.registry.websiteLinks = publicWidget.Widget.extend({
     _onFormSubmit: function (ev) {
         var self = this;
         ev.preventDefault();
-
-        if ($('#btn_shorten_url').hasClass('btn-copy')) {
+        const generateLinkTrackerBtn = document.querySelector("#btn_shorten_url");
+        if (generateLinkTrackerBtn.classList.contains("d-none")) {
             return;
         }
+        const restoreLoadingBtn = addLoadingEffect(generateLinkTrackerBtn);
 
         ev.stopPropagation();
 
         // Get URL and UTMs
-        var campaignID = $('#campaign-select').attr('value');
-        var mediumID = $('#channel-select').attr('value');
-        var sourceID = $('#source-select').attr('value');
+        const campaignInputEl = document.querySelector("input[name='campaign-select']");
+        const mediumInputEl = document.querySelector("input[name='medium-select']");
+        const sourceInputEl = document.querySelector("input[name='source-select']");
 
-        var params = {};
+        const label = document.querySelector('#label');
+        const params = { label: label.value || undefined };
         params.url = $('#url').val();
-        if (campaignID !== '') {
-            params.campaign_id = parseInt(campaignID);
+        if (campaignInputEl.value !== "") {
+            params.campaign_id = parseInt(campaignInputEl.value);
         }
-        if (mediumID !== '') {
-            params.medium_id = parseInt(mediumID);
+        if (mediumInputEl.value !== "") {
+            params.medium_id = parseInt(mediumInputEl.value);
         }
-        if (sourceID !== '') {
-            params.source_id = parseInt(sourceID);
+        if (sourceInputEl.value !== "") {
+            params.source_id = parseInt(sourceInputEl.value);
         }
 
-        $('#btn_shorten_url').text(_t("Generating link..."));
-
-        this._rpc({
-            route: '/website_links/new',
-            params: params,
-        }).then(function (result) {
+        rpc('/website_links/new', params).then(function (result) {
+            restoreLoadingBtn();
             if ('error' in result) {
                 // Handle errors
                 if (result.error === 'empty_url') {
@@ -513,29 +369,28 @@ publicWidget.registry.websiteLinks = publicWidget.Widget.extend({
                 // Link generated, clean the form and show the link
                 var link = result[0];
 
-                $('#btn_shorten_url').removeClass('btn-primary').addClass('btn-success btn-copy').html('Copy');
-                $('#btn_shorten_url').attr('data-clipboard-text', link.short_url);
+                document.querySelector("#generated_tracked_link").classList.remove("d-none");
+                document.querySelector("#btn_shorten_url").classList.add("d-none");
 
-                $('.notification').html('');
-                $('#generated_tracked_link').html(link.short_url);
-                $('#generated_tracked_link').css('display', 'inline');
+                document.querySelector(".copy-to-clipboard").dataset.clipboardText = link.short_url;
+                document.querySelector("#short-url-host").textContent = link.short_url_host;
+                document.querySelector("#o_website_links_code").textContent = link.code;
 
                 self.recentLinks._addLink(link);
 
-                // Clean URL and UTM selects
-                $('#campaign-select').select2('val', '');
-                $('#channel-select').select2('val', '');
-                $('#source-select').select2('val', '');
-
-                $('.o_website_links_utm_forms').hide();
+                // Clean notifications, URL and UTM selects
+                $('.notification').html('');
+                campaignInputEl.value = "";
+                mediumInputEl.value = "";
+                sourceInputEl.value = "";
+                label.value = '';
+                document.querySelector(".o_website_links_utm_forms").classList.add("d-none");
             }
         });
     },
 });
 
-return {
-    SelectBox: SelectBox,
+export default {
     RecentLinkBox: RecentLinkBox,
     RecentLinks: RecentLinks,
 };
-});

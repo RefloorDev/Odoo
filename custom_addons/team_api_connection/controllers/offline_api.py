@@ -4,6 +4,7 @@ from odoo.http import content_disposition, dispatch_rpc, request, \
 from odoo.exceptions import AccessError, UserError
 import json
 from json import loads
+from odoo.tools import format_date, str2bool
 import requests
 from odoo.tools import ustr, consteq, frozendict, pycompat, unique, date_utils
 from odoo.http import route
@@ -36,8 +37,12 @@ from odoo.addons.team_api_configuration.controllers.configurations import URL, D
 from odoo.addons.team_api_connection.controllers.main import API_Homes
 
 
-common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(URL))
-models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+# common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(URL))
+# models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+
+# At top of file where ServerProxy is first created:
+models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL), allow_none=True)
+common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(URL), allow_none=True)
 
 import logging
 
@@ -1317,6 +1322,21 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         if status:
             result = models.execute_kw(DB, int(uid), password, 'res.users', 'get_master_data_contents', [{'app_version': app_version}])
+            stair_width_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_width_id', [{}])
+            get_stair_cover_risers_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_cover_risers', [{}])
+            questionnaires = result.get('questionnaires', [])
+            stair_width_id = stair_width_data.get('stair_width_id')
+            stair_cover_risers_id = get_stair_cover_risers_data.get('stair_cover_risers')
+            if questionnaires:
+                for questionnaire in questionnaires:
+                    if stair_width_id and questionnaire.get("id") == stair_width_id:
+                        questionnaire["id"] = 9
+                    elif stair_cover_risers_id and questionnaire.get("id") == stair_cover_risers_id:
+                        questionnaire["id"] = 8
+                        for quote_label in questionnaire.get("quote_label", []):
+                            if quote_label.get("question_id") == stair_cover_risers_id:
+                                quote_label["question_id"] = 8
+            result['questionnaires'] = questionnaires
         else:
             result = message
         return json.dumps(result)
@@ -1337,8 +1357,8 @@ class APIHomes(API_Homes):
             _logger.info("------------password missing in main get_appointments api-------------------")
             return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(
-            str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             if enable_api_queue_system:
                 _logger.info('appointment_sync_api_queue Data - Starting--:%s - User ID: %s' % (
@@ -1381,7 +1401,8 @@ class APIHomes(API_Homes):
     @route('/api/update_customer_and_room_information', type='json', auth="none", methods=['POST'], csrf=False)
     def update_customer_and_room_information(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', False)
         data = params.get('data', False)
         _logger.info("------------update_customer_and_room_information params: %s------------------" % (params))
@@ -1407,10 +1428,12 @@ class APIHomes(API_Homes):
         result.update({'override_json_result': 1})
         return json.dumps(result)
 
-    @route('/api/update_contract_information', type='json', auth="none", methods=['POST'], csrf=False)
+    @route('/api/update_contract_information', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True)
     def update_contract_information(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL), allow_none=True)
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', False)
         data = params.get('data', False)
         _logger.info("------------update_contract_information params: %s------------------" % (params))
@@ -1469,7 +1492,8 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             if enable_api_queue_system:
                 _logger.info('image_sync_api_queue Data - Starting--:%s - Appointment ID: %s, Image: %s' % (
@@ -1501,12 +1525,12 @@ class APIHomes(API_Homes):
                 image_binary = (file.read())
                 file_data.update({
                     'uid': int(uid),
-                    'image': base64.encodestring(image_binary),
+                    'image': base64.b64encode(image_binary).decode('utf-8'),
                     'file_name': image_name or file.filename,
                     'appointment_id': appointment_id,
                     'image_type': image_type,
                 })
-                data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment', 'action_upload_images',
+                data = models.execute_kw(DB, uid, password, 'ir.attachment', 'action_upload_images',
                                          [file_data])
             if data:
                 image_id = data[0].get('attachment_id', False)
@@ -1551,6 +1575,7 @@ class APIHomes(API_Homes):
         contract_plumbing_option_2 = params.get('contract_plumbing_option_2', 0) and int(params.get('contract_plumbing_option_2', 0)) or 0
         send_physical_document = params.get('send_physical_document', 0) and int(params.get('send_physical_document', 0)) or 0
         flexible_installation = params.get('flexible_installation', 0) and int(params.get('flexible_installation', 0)) or 0
+        destination_selection_id = params.get('destination_selection_id', 0) and int(params.get('destination_selection_id', 0)) or 0
         recision_date = params.get('recision_date', False)
         additional_comments = params.get('additional_comments', '')
         network_strength = params.get('network_strength', '')
@@ -1578,7 +1603,9 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        data = {}
         if status:
             data = {
                 'appointment_id': int(appointment_id),
@@ -1586,6 +1613,7 @@ class APIHomes(API_Homes):
                 'contract_plumbing_option_2': contract_plumbing_option_2,
                 'send_physical_document': send_physical_document,
                 'flexible_installation': flexible_installation,
+                'destination_selection_id': destination_selection_id,
                 'additional_comments': additional_comments,
                 'recision_date': recision_date
             }
@@ -1615,7 +1643,8 @@ class APIHomes(API_Homes):
                                        [data])
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/generate_contract_document', data, uid,
+        if data:
+            request.env['otl.api.sync.log'].sudo().create_api_log('/api/generate_contract_document', data, uid,
                                                               result, network_strength)
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
@@ -1646,6 +1675,7 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
+        data = {}
         if status:
             data = {
                 'appointment_id': appointment_id,
@@ -1656,7 +1686,9 @@ class APIHomes(API_Homes):
                                        [data])
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/initiate_sync_to_i360', data, uid,
+            
+        if data:
+            request.env['otl.api.sync.log'].sudo().create_api_log('/api/initiate_sync_to_i360', data, uid,
                                                               result, network_strength)
         result.update({'override_json_result': 1})
         return json.dumps(result)
@@ -1664,7 +1696,8 @@ class APIHomes(API_Homes):
     @route('/api/initiate_sync_to_i360_json', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def initiate_sync_to_i360_json(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', '')
         data = params.get('data', [])
         appointment_id = False
@@ -1683,7 +1716,8 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             if enable_api_queue_system:
                 if data.get('appointment_id', 0):
@@ -1730,7 +1764,8 @@ class APIHomes(API_Homes):
     @route('/api/update_sync_log', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def update_sync_log(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', '')
         data = params.get('data', [])
         if not token:
@@ -1758,7 +1793,8 @@ class APIHomes(API_Homes):
     @route('/api/create_order_and_update_measurements', type='json', auth="none", methods=['POST'], csrf=False)
     def create_order_and_update_measurements(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', False)
         data = params.get('data', False)
         _logger.info("------------create_order_and_update_measurements params: %s------------------" % (params))
@@ -1805,7 +1841,8 @@ class APIHomes(API_Homes):
     @route('/api/create_order_and_update_measurements_encoded', type='json', auth="none", methods=['POST'], csrf=False)
     def create_order_and_update_measurements_encoded(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', False)
         data = params.get('data', False)
         network_strength = params.get('network_strength', '')
@@ -1815,7 +1852,6 @@ class APIHomes(API_Homes):
             data = data.get('data', {})
         _logger.info("------------create_order_and_update_measurements_encoded params- 2nd: %s------------------" % (params))
         decode_options = ast.literal_eval(str(params.get('decode_options', {'verify_signature': True})))
-        decoded_data = data
         if not token:
             _logger.info("------------Token Missing in main create_order_and_update_measurements_encoded api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
@@ -1827,7 +1863,28 @@ class APIHomes(API_Homes):
             _logger.info("------------password missing in main create_order_and_update_measurements_encoded api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        if status:
+            stair_width_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_width_id', [{}])
+            get_stair_cover_risers_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_cover_risers', [{}])
+            # Handle application issue with static room id 9 
+            # Fix question_id 9 to 42 in answer list if present
+            if data and "answer" in data and isinstance(data["answer"], list) and (
+                (stair_width_data and stair_width_data.get('stair_width_id', False)) or 
+                (get_stair_cover_risers_data and get_stair_cover_risers_data.get('stair_cover_risers', False))):
+                update_answer = []
+                for ans in data["answer"]:
+                    updated_question_id = False
+                    if isinstance(ans, dict) and ans.get("question_id") == 9:
+                        updated_question_id = stair_width_data.get('stair_width_id', False)
+                    elif isinstance(ans, dict) and ans.get("question_id") == 8:
+                        updated_question_id = get_stair_cover_risers_data.get('stair_cover_risers', False)
+                    if updated_question_id:
+                        ans["question_id"] = updated_question_id
+                    update_answer.append(ans)
+                data["answer"] = update_answer
+        decoded_data = data
+        # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             if enable_api_queue_system:
                 if data.get('appointment_id', 0):
@@ -1891,6 +1948,15 @@ class APIHomes(API_Homes):
                     self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
                 return json.dumps(result)
             if decoded_data:
+                def remove_none_values(data):
+                    """Recursively remove None values from dictionaries and lists."""
+                    if isinstance(data, dict):
+                        return {k: remove_none_values(v) for k, v in data.items() if v is not None}
+                    elif isinstance(data, list):
+                        return [remove_none_values(v) for v in data if v is not None]
+                    else:
+                        return data
+                decoded_data = remove_none_values(decoded_data)
                 payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
                                                      'action_create_order_and_update_measurements', [decoded_data])
             else:
@@ -1912,7 +1978,8 @@ class APIHomes(API_Homes):
     @route('/api/create_order_and_update_measurements_encoded_v2', type='json', auth="none", methods=['POST'], csrf=False)
     def create_order_and_update_measurements_encoded_v2(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', False)
         data = params.get('data', False)
         native_data = params.get('native_data', False)
@@ -1938,7 +2005,8 @@ class APIHomes(API_Homes):
                 except:
                     return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Something went wrong while decoding the data token'})
             else:
-                decoded_data = json.loads(native_data)
+                # decoded_data = json.loads(native_data)
+                decoded_data = native_data
             if decoded_data:
                 payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
                                                      'action_create_order_and_update_measurements', [decoded_data])
@@ -1957,7 +2025,8 @@ class APIHomes(API_Homes):
     @route('/api/fetch_database_raw_data', type='json', auth="none", methods=['POST'], csrf=False)
     def action_fetch_database_raw_data(self, **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = params.get('token', False)
         data = params.get('data', False)
         appointment_id = int(params.get('appointment_id', 0))
@@ -2035,7 +2104,8 @@ class APIHomes(API_Homes):
             _logger.info("------------password missing in main action_get_available_installation_date api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             if enable_api_queue_system:
                 _logger.info('available_installation_date_api_queue Data - Starting--:%s - Appointment ID: %s' % (
@@ -2107,8 +2177,8 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(
-            str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             if enable_api_queue_system:
                 _logger.info('selected_installation_date_api_queue Data - Starting--:%s - Appointment ID: %s' % (
@@ -2152,7 +2222,8 @@ class APIHomes(API_Homes):
            allow_none=True, )
     def action_create_versatile_credit_application(self, version='v1', **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL), allow_none=True)
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = ''
         access_token = request.httprequest.headers.get('Authorization')
         if not access_token:
@@ -2204,6 +2275,7 @@ class APIHomes(API_Homes):
         appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
         recision_date = params.get('recision_date', False)
         network_strength = params.get('network_strength', '')
+        destination_selection_id = params.get('destination_selection_id', 0) and str(params.get('destination_selection_id', 0)) or '0'
 
         _logger.info("------------update_additional_appointment_data params: %s------------------" % (params))
         result = {}
@@ -2220,7 +2292,8 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             if version == 'v1':
                 data = {
@@ -2228,7 +2301,8 @@ class APIHomes(API_Homes):
                     'send_physical_document': send_physical_document,
                     'flexible_installation': flexible_installation,
                     'additional_comments': additional_comments,
-                    'recision_date': recision_date
+                    'recision_date': recision_date,
+                    'destination_selection_id': int(destination_selection_id),
                 }
                 if enable_api_queue_system:
                     _logger.info('update_additional_appointment_data_api_queue Data - Starting--:%s - Appointment ID: %s' % (
@@ -2271,7 +2345,8 @@ class APIHomes(API_Homes):
            allow_none=True, )
     def action_get_credit_application_status(self, version='v1', **kwargs):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL), allow_none=True)
-        params = request.jsonrequest.copy()
+        # params = request.jsonrequest.copy()
+        params = request.httprequest.get_json()
         token = ''
         access_token = request.httprequest.headers.get('Authorization')
         if not access_token:
@@ -2300,8 +2375,8 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(
-            str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             if version == 'v1':
                 if enable_api_queue_system:
@@ -2353,7 +2428,7 @@ class APIHomes(API_Homes):
         timezone = params.get('timezone', False)
         network_strength = params.get('network_strength', '')
 
-        _logger.info("------------update_arrival_departure_time params: %s------------------" % params)
+        _logger.info("------------update_arrival_departure_time params: %s------------------" % (params))
         result = {}
         if not token:
             _logger.info("------------Token Missing in update_arrival_departure_time------------------")
@@ -2368,7 +2443,8 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             if version == 'v1':
                 data = {
@@ -2485,10 +2561,9 @@ class APIHomes(API_Homes):
             if type(file) == werkzeug.datastructures.FileStorage:
                 image_binary = (file.read())
                 file_data.update({
-                    'image': base64.encodestring(image_binary),
+                    'image': base64.b64encode(image_binary).decode('utf-8'),
                     'file_name': file.filename,
                     'appointment_id': appointment_id
-
                 })
                 data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment', 'upload_compressed_files',
                                          [file_data])
@@ -2532,8 +2607,9 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(
-            str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        # enable_api_queue_system = eval(
+        #     str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             if version == 'v1':
                 data = {
@@ -2612,8 +2688,9 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(
-            str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        # enable_api_queue_system = eval(
+        #     str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             if version == 'v1':
                 data = {
@@ -2690,8 +2767,9 @@ class APIHomes(API_Homes):
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
-        enable_api_queue_system = eval(
-            str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        # enable_api_queue_system = eval(
+        #     str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             if version == 'v1':
                 data = {

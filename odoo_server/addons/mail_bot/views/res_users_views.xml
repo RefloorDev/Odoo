@@ -8,7 +8,9 @@
         <field name="arch" type="xml">
             <data>
                 <field name="notification_type" position="after">
-                    <field name="odoobot_state" readonly="0" groups="base.group_no_one"/>
+                    <field name="odoobot_state" groups="base.group_no_one"
+                        readonly="0"
+                        invisible="share"/>
                 </field>
             </data>
         </field>
@@ -21,23 +23,12 @@
         <field name="inherit_id" ref="mail.view_users_form_mail"/>
         <field name="arch" type="xml">
             <data>
-                <field name="alias_contact" position="after">
-                    <field name="odoobot_state" readonly="0" groups="base.group_no_one"/>
+                <field name="signature" position="before">
+                    <field name="odoobot_state" groups="base.group_no_one"
+                        readonly="0"
+                        invisible="share"/>
                 </field>
             </data>
         </field>
     </record>
-
-    <!-- Blocked notification alert -->
-    <record id="view_users_form_inherit_mail_notification_alert" model="ir.ui.view">
-        <field name="name">res.users.preferences.form.notification.alert</field>
-        <field name="model">res.users</field>
-        <field name="inherit_id" ref="base.view_users_form_simple_modif"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='image_1920']" position="before">
-                <widget name="notification_alert"/>
-            </xpath>
-        </field>
-    </record>
-
 </data></odoo>

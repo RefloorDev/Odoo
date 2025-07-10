@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
 # import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import fromstring, ElementTree
 from odoo import models, fields, api, _
 import json
 import ast
 from odoo.exceptions import UserError
-
+from odoo.tools import format_date, str2bool
 from odoo.addons.team_api_configuration.controllers.configurations import URL, DB, API_USER_ID, API_USER_PASSWORD
 from odoo.http import request
-from odoo.addons.payment.controllers.portal import PaymentProcessing
 from odoo.addons.payment_authorize.models.authorize_request import AuthorizeAPI
 from datetime import datetime, timedelta
 import requests
@@ -21,7 +19,7 @@ from datetime import datetime, date
 
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT
 from odoo.addons.team_api_connection.models.model import AuthorizeAPICustom
-from odoo.addons.resource.models.resource import float_to_time
+from odoo.addons.resource.models.utils import float_to_time
 import threading
 import time
 
@@ -204,7 +202,7 @@ class ResUsers(models.Model):
         reasons = self.env['otl.appointment.result.reason'].search([])
         reason_list = [{
             'reason':  reason.name or "",
-            'reason_id': reason.id or 0,
+            'reason_id' : reason.id or 0,
             'applicable_result_ids': reason.appointment_result_ids and reason.appointment_result_ids.ids or []
         }
             for reason in reasons]
@@ -308,6 +306,35 @@ class ResUsers(models.Model):
             })
         return finance_checklist
 
+    def get_auto_answer_logic(self):
+        logic_list = []
+        logics = self.env['otl.questionnaire.calc.logic'].search([])
+        for logic in logics:
+            logic_line = []
+            for line in logic.logic_line:
+                logic_line.append({
+                    'question_id': line.question_id.id  or 0,
+                    'excluded_question_ids': line.excluded_question_ids and line.excluded_question_ids.ids or [],
+                    'code': line.code,
+                })
+            logic_list.append({
+                'logic_type': logic.type,
+                'question_lines': logic_line
+            })
+        return logic_list
+
+    def get_destination_selection(self):
+        destination_list = []
+        destinations = self.env['otl.destination.selection'].search([])
+        for destination in destinations:
+            destination_list.append({
+                'destination_id': destination.id,
+                'name': destination.name or '',
+                'terms_and_conditions': destination.terms_and_conditions or '',
+            })
+        return destination_list
+
+
 
     @api.model
     def get_master_data_contents(self, data={}):
@@ -335,6 +362,8 @@ class ResUsers(models.Model):
         rules = self.get_restriction_rules_api()
         reasons_list = self.get_appointment_result_reasons_api()
         finance_checklist = self.get_finance_checklist_items()
+        auto_answer_logic_list = self.get_auto_answer_logic()
+        destination_list = self.get_destination_selection()
         templates = self.sudo().get_dynamic_contract_vals_api(app_version)
         credential_list = self.sudo().get_external_application_credentials()
         auto_logout_time = ''
@@ -365,22 +394,25 @@ class ResUsers(models.Model):
             'special_prices': special_price_list,
             'promotion_codes': promotion_code_list,
             'transition_heights': transition_height_list,
-            'min_sale_price': float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0,
-            'max_no_transitions': int(self.env['ir.config_parameter'].sudo().get_param('max_no_transitions')) or 0,
+            'min_sale_price': float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.min_sale_price')) or 0.0,
+            'max_no_transitions': int(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.max_no_transitions')) or 0,
             'recision_date': company.recision_date and company.recision_date.strftime(DEFAULT_SERVER_DATE_FORMAT) or '',
             'auto_logout_time': auto_logout_time  or '',
             'payment_restriction_rules': rules,
             'appointment_result_reasons': reasons_list,
             'contract_document_templates': templates,
             'finance_checklist': finance_checklist,
+            'auto_answer_logic_list': auto_answer_logic_list,
+            'destination_selection_list': destination_list,
             'versatile_url': company.versatile_url or '',
             'versatile_api_key': company.versatile_api_key or '',
             'versatile_entity_key': company.versatile_entity_key or '',
-            'enable_geolocation': eval(str(self.env['ir.config_parameter'].sudo().get_param('enable_geolocation'))) or False,
-            'geolocation_radius_limit': int(self.env['ir.config_parameter'].sudo().get_param('geolocation_radius_limit')) or 0,
+            'enable_geolocation': eval(str(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_geolocation'))) or False,
+            'geolocation_radius_limit': int(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.geolocation_radius_limit')) or 0,
             'external_credentials': credential_list,
-            'max_stair_width': float(self.env['ir.config_parameter'].sudo().get_param('max_stair_width')) or 0,
-            'min_down_payment_amount': float(self.env['ir.config_parameter'].sudo().get_param('min_down_payment_amount')) or 0.0,
+            'max_stair_width': float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.max_stair_width')) or 0,
+            'min_down_payment_amount': float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.min_down_payment_amount')) or 0.0,
+            'destination_selection_consent_message': str(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.destination_selection_consent_message')) or '',
         })
         # except:
         #     result = {
@@ -388,6 +420,41 @@ class ResUsers(models.Model):
         #         'message': 'Something went wrong while fetching master data.'
         #     }
         return result
+
+    def get_stair_width_id(self, data={}):
+        result = {
+            'result': 'Success',
+            'message': 'Master Data retrieved successfully.'
+        }
+        team_quote_question_id = self.env['team.quote.question'].search([('code', '=', 'StairWidth')], limit=1)
+        if team_quote_question_id:
+            result.update({
+                'stair_width_id': team_quote_question_id.id,
+            })
+            return result
+        else:
+            result = {
+            'result': 'False',
+            'message': 'Stair Width ID is not found.'
+        }
+            
+    def get_stair_cover_risers(self, data={}):
+        result = {
+            'result': 'Success',
+            'message': 'Master Data retrieved successfully.'
+        }
+        team_quote_question_id = self.env['team.quote.question'].search([('code', '=', 'CurrentCoveringType')], limit=1)
+        if team_quote_question_id:
+            result.update({
+                'stair_cover_risers': team_quote_question_id.id,
+            })
+            return result
+        else:
+            result = {
+            'result': 'False',
+            'message': 'Stair Width ID is not found.'
+        }
+
 
     def get_sales_appointment_api_offline(self,user_id):
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')])
@@ -705,6 +772,7 @@ class ProductProduct(models.Model):
                         'material_image_url': floor_color_url,
                         'color_up_charge_price': product.color_up_charge_price or 0,
                         'in_stock': product.in_stock and 1 or 0,
+                        'glue_down': product.glue_down and 1 or 0,
                         'special_order': product.special_order and 1 or 0,
                         'office_location_ids': product.office_location_ids and product.office_location_ids.ids or []
                     }
@@ -802,12 +870,12 @@ class ProductTemplate(models.Model):
     def get_all_products(self):
         product_list = []
         products = self.search(
-            [('type', '=', 'product'), ('product_variant_ids', '!=', False), ('categ_id.name', 'not ilike', 'Stairs')],
+            [('type', '=', 'consu'), ('product_variant_ids', '!=', False), ('categ_id.name', 'not ilike', 'Stairs')],
             order='sequence asc')
-        min_sale_price = float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0
+        min_sale_price = float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.min_sale_price')) or 0.0
         for product in products:
             stair_product = self.search([
-                ('type', '=', 'product'),
+                ('type', '=', 'consu'),
                 ('product_variant_ids', '!=', False),
                 ('categ_id.name', 'ilike', 'Stairs'),
                 ('grade', '=', product.grade)
@@ -883,6 +951,8 @@ class TeamCustomerAppointment(models.Model):
                 # ('appointment_date', '<', first_end_date_utc),
             ], order='appointment_date asc')
         improveit_appointment_ids = []
+        enable_destination_selection = eval(str(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_destination_selection'))) or False
+
         if appointment_data:
             for data in appointment_data:
                 if data.improveit_appointment_id:
@@ -936,6 +1006,7 @@ class TeamCustomerAppointment(models.Model):
                     'city': data.city or '',
                     'state_id': data.state_id.id or 0,
                     'office_location_id': data.office_location_id and data.office_location_id.id or 0,
+                    'enable_destination_selection': enable_destination_selection and data.office_location_id and data.office_location_id.enable_destination_selection and 1 or 0,
                     'state_code': data.state_id.code or '',
                     'state': data.state_id.name or '',
                     'country_id': data.country_id.id or 0,
@@ -986,7 +1057,7 @@ class TeamCustomerAppointment(models.Model):
         for appointment in self:
             partner_vals = {}
             completed_date = data.get('completed_date', '')
-            timezone = data.get('timezone', '')
+            timezone = data.get('timezone', 'US/Eastern')
             completed_date_utc = False
             if completed_date and timezone:
                 completed_date_utc = self.get_timezone_based_time(completed_date, timezone)
@@ -1008,6 +1079,12 @@ class TeamCustomerAppointment(models.Model):
                 resulting_reason= self.env['otl.appointment.result.reason'].browse(resulting_reason_id)
                 if not resulting_reason or not resulting_reason.exists():
                     return {'message': 'Wrong value for Appointment Resulting Reason', 'result': 'Failed'}
+            destination_selection_id = False
+            if data.get('destination_selection_id', False):
+                destination_selection_id = int(data.get('destination_selection_id', 0))
+                destination_selection= self.env['otl.appointment.result.reason'].browse(destination_selection_id)
+                if not destination_selection or not destination_selection.exists():
+                    return {'message': 'Wrong value for Destination Selection', 'result': 'Failed'}
             vals = {
                 'what_happened_notes': data.get('what_happened_notes', ''),
                 'whats_next_notes': data.get('whats_next_notes', ''),
@@ -1020,8 +1097,16 @@ class TeamCustomerAppointment(models.Model):
                 'app_version_id':  app_version_id,
                 'last_price_quoted_value': data.get('last_price_quoted_value') if 'last_price_quoted_value' in data else 0,
             }
+            if destination_selection_id:
+                vals.update({'destination_selection_id':  destination_selection_id})
             if completed_date_utc:
                 vals.update({'completed_date': completed_date_utc})
+            manual_arrival_date = data.get('manual_arrival_date', False)
+            manual_arrival_date_utc = manual_arrival_date
+            if manual_arrival_date and timezone:
+                manual_arrival_date_utc = self.get_timezone_based_time(manual_arrival_date, timezone)
+            if manual_arrival_date_utc:
+                vals.update({'manual_arrival_date': manual_arrival_date_utc})
             applicant_first_name = ''
             applicant_last_name = ''
             partner = appointment.partner_id or False
@@ -1404,7 +1489,7 @@ class TeamCustomerAppointment(models.Model):
             calc_based_on = data.get('calc_based_on', 'list_price')
             stair_calc_based_on = data.get('stair_calc_based_on', 'list_price')
             if not min_sale_price:
-                min_sale_price = float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0
+                min_sale_price = float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.min_sale_price')) or 0.0
             if calc_based_on not in ['list_price', 'msrp']:
                 _logger.info("------ Wrong value for Calculation Based On-------------")
                 status = {'message': 'Wrong value for Calculation Based On', 'result': 'Failed'}
@@ -1894,7 +1979,7 @@ class TeamCustomerAppointment(models.Model):
                     lambda x: x.exclude_from_calculation)
                 if (included_room_measurement_lines and not sale_order.quote_id) or (excluded_room_measurement_lines  and not sale_order.excluded_quote_id):
                     if sale_order.appointment_result == 'Sold':
-                        if sale_order.payment_method in ['credit_card',
+                        if sale_order.state != 'sale' and sale_order.payment_method in ['credit_card',
                                                          'debit_card'] and sale_order.down_payment_amount and not sale_order.card_transaction_log_line.filtered(
                                 lambda x: x.state == 'success'):
                             sale_order.action_confirm()
@@ -1926,7 +2011,7 @@ class TeamCustomerAppointment(models.Model):
                                     'result': 'Failed'
                                 }
                     else:
-
+                        
                         if (included_room_measurement_lines and not sale_order.quote_id) or (excluded_room_measurement_lines  and not sale_order.excluded_quote_id):
                             response_result = sale_order.add_quote_sales_app(sale_order.appointment_result)
                             _logger.info('-------i360 AddQuote Response: %s' % (response_result))
@@ -2010,7 +2095,11 @@ class TeamCustomerAppointment(models.Model):
 
     def action_start_sync_to_i360(self, appointment_id, sale_order_id):
         time.sleep(3)
-        with api.Environment.manage():
+        # Create new cursor
+        # new_cr = self.pool.cursor()
+        try:
+            # Switch to environment with new cursor 
+            # self = self.with_env(self.env(cr=new_cr))
             # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
@@ -2098,7 +2187,7 @@ class TeamCustomerAppointment(models.Model):
 
                         contract_doc_attachment = sale_order.contract_doc_attachment_id or False
                         if not contract_doc_attachment:
-                            model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+                            model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
                             sign_request = self.env['otl_document_sign.request'].sudo().search(
                                 [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)],
                                 order='create_date desc',
@@ -2169,8 +2258,9 @@ class TeamCustomerAppointment(models.Model):
                                 })
                         if result.get('success', '') == 'true':
                             sale_order_vals.update({'other_files_uploaded': True})
-                    enable_additional_comment_api = eval(
-                        str(self.env['ir.config_parameter'].sudo().get_param('enable_additional_comment_api')))
+                    # enable_additional_comment_api = eval(
+                    #     str(self.env['ir.config_parameter'].sudo().get_param('enable_additional_comment_api')))
+                    enable_additional_comment_api = str2bool(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_additional_comment_api'))
                     if sale_order.appointment_result == 'Sold' and enable_additional_comment_api and not sale_order.additional_comment_synced:
                         result = sale_order.create_additional_comments_in_i360()
                         if result.get('success', '') == 'true':
@@ -2186,6 +2276,21 @@ class TeamCustomerAppointment(models.Model):
                                 'state': 'failed',
                                 'name': 'AddSaleComments',
                             })
+                    if appointment.destination_selection_id and not sale_order.update_destination_selection_synced:
+                        result = sale_order.update_destination_selection_in_i360()
+                        if result.get('success', '') == 'true':
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'UpdateDestinationSelection',
+                            })
+                        else:
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'UpdateDestinationSelection',
+                            })
                     if sale_order.check_document_upload_completed():
                         sale_order_vals.update({'is_data_upload_completed': True})
                     if sale_order_vals:
@@ -2197,6 +2302,9 @@ class TeamCustomerAppointment(models.Model):
                     self.env.cr.commit()
             new_cr.close()
             _logger.info('------End of action_start_sync_to_i360------: %s' % (sale_order_id))
+        except Exception as e:
+            _logger.info('------Exception in action_start_sync_to_i360------: %s' % (e))
+            new_cr.rollback()
         return True
 
     @api.model
@@ -2483,6 +2591,9 @@ class TeamCustomerAppointment(models.Model):
                         if payment_transaction_info_dict:
                             existing_auth_transaction_id = payment_transaction_info_dict.get('authorize_transaction_id', 0)
                             card_type = payment_transaction_info_dict.get('card_type', '')
+                        invoice_created = False
+                        if order.order_line.filtered(lambda x: x.invoice_lines):
+                            invoice_created = True
                         retry_order_creation = False
                         if payment_method_dict and paymentdetails_dict and not existing_auth_transaction_id:
                             payment_method = payment_method_dict.get('payment_method', '')
@@ -2491,12 +2602,12 @@ class TeamCustomerAppointment(models.Model):
                                 retry_order_creation = True
                             elif order.payment_method in ['credit_card', 'debit_card'] and down_payment_amount and order.card_transaction_log_line.filtered(lambda x: x.state == 'success') and order.payment_method != payment_method:
                                 retry_order_creation = True
-                        if (operation_mode == 'online' or retry_order_creation) and not existing_auth_transaction_id:
+                        if (operation_mode == 'online' or invoice_created or retry_order_creation) and not existing_auth_transaction_id:
                             valid_transactions_lines = appointment.card_transaction_log_line.filtered(lambda x:x.state == 'success' and not x.void_transaction)
                             for line in valid_transactions_lines:
                                 authorize_transaction_id = line.name or ''
                                 if authorize_transaction_id:
-                                    acquirer = self.env.ref('payment.payment_acquirer_authorize')
+                                    acquirer = self.env.ref('payment.payment_provider_authorize').sudo()
                                     transaction = AuthorizeAPICustom(acquirer)
                                     response = transaction.void(authorize_transaction_id or '')
                                     if response.get('x_trans_id', ''):
@@ -2801,116 +2912,116 @@ class TeamCustomerAppointment(models.Model):
                 'result': 'Failed'
             }
         api_response = {}
-        if api_configuration.mode == 'test':
-            crews = [
-                {
-                    "id": "a0j74000000PTY4",
-                    "name": "Justin Kennedy - Pikes Peak Flooring",
-                    "totalCompletedInstalls": 40,
-                    "starRating": 4.5,
-                    "grade": "H",
-                    "slot": {
-                        "start_date": datetime.strptime("2023-10-09 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
-                        "end_date": datetime.strptime("2023-10-10 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
-                    }
-                },
-                {
-                    "id": "a0j74000000PTWr",
-                    "name": "Idris (Alex) Hunn - Hunn Homes Inc",
-                    "totalCompletedInstalls": 15,
-                    "starRating": 4.5,
-                    "grade": "M",
-                    "slot": {
-                        "start_date": datetime.strptime("2023-09-18 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
-                        "end_date": datetime.strptime("2023-09-20 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
-                    }
-                },
-                {
-                    "id": "a0j74000000PTWq3",
-                    "name": "John Escamilla - J Mack Flooring",
-                    "totalCompletedInstalls": 25,
-                    "starRating": 4.0,
-                    "grade": "H",
-                    "slot": {
-                        "start_date": datetime.strptime("2023-10-09 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
-                        "end_date": datetime.strptime("2023-10-11 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
-                    }
-                },
-                {
-                    "id": "a0j74000000PTWq",
-                    "name": "Michael Miller - Flooring Family",
-                    "totalCompletedInstalls": 26,
-                    "starRating": 4.0,
-                    "grade": "H",
-                    "slot": {
-                        "start_date": datetime.strptime("2023-10-02 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
-                        "end_date": datetime.strptime("2023-10-04 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
-                    }
-                },
-                {
-                    "id": "a0j74000000PTWp4",
-                    "name": "Nick Mastruserio - Nick Squared Contracting",
-                    "totalCompletedInstalls": 36,
-                    "starRating": 3.0,
-                    "grade": "M",
-                    "slot": {
-                        "start_date": datetime.strptime("2023-10-09 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
-                        "end_date": datetime.strptime("2023-10-12 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
-                    }
-                },
-                {
-                    "id": "a0j74000000PTWp5",
-                    "name": "John Kidd Jr. - Kidd Flooring",
-                    "totalCompletedInstalls": 29,
-                    "starRating": 3.0,
-                    "grade": "H",
-                    "slot": {
-                        "start_date": datetime.strptime("2023-10-02 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
-                        "end_date": datetime.strptime("2023-10-03 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
-                    }
-                },
-                {
-                    "id": "a0j74000000PTWp6",
-                    "name": "Spencer Nunnelly - Carpenter Bee Contracting",
-                    "totalCompletedInstalls": 18,
-                    "starRating": 3.0,
-                    "grade": "H"
-                },
-                {
-                    "id": "a0j74000000PTWp12",
-                    "name": "Santy Castro - D'castro Carpeting and Flooring",
-                    "totalCompletedInstalls": 39,
-                    "starRating": 3.0,
-                    "grade": "M",
-                    "slot": {
-                        "start_date": datetime.strptime("2023-10-02 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
-                        "end_date": datetime.strptime("2023-10-04 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
-                    }
-                },
-                {
-                    "id": "a0j4V00000CCOncQAH",
-                    "name": "Cody Harris - Mojo's Flooring",
-                    "totalCompletedInstalls": 23,
-                    "starRating": 2.5,
-                    "grade": "M",
-                    "slot": {
-                        "start_date": datetime.strptime("2023-10-09 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
-                        "end_date": datetime.strptime("2023-10-12 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
-                    }
-                },
-                {
-                    "id": "a0j74000000PTWp",
-                    "name": "Anthony Waters - Anthony's Renovation & Remodeling",
-                    "slot": {
-                        "start_date": datetime.strptime("2023-09-14 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
-                        "end_date": datetime.strptime("2023-09-14 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
-                    }
-                }
-            ]
-            result.update({
-                'data': crews
-            })
-            return result
+        # if api_configuration.mode == 'test':
+        #     crews = [
+        #         {
+        #             "id": "a0j74000000PTY4",
+        #             "name": "Justin Kennedy - Pikes Peak Flooring",
+        #             "totalCompletedInstalls": 40,
+        #             "starRating": 4.5,
+        #             "grade": "H",
+        #             "slot": {
+        #                 "start_date": datetime.strptime("2023-10-09 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+        #                 "end_date": datetime.strptime("2023-10-10 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+        #             }
+        #         },
+        #         {
+        #             "id": "a0j74000000PTWr",
+        #             "name": "Idris (Alex) Hunn - Hunn Homes Inc",
+        #             "totalCompletedInstalls": 15,
+        #             "starRating": 4.5,
+        #             "grade": "M",
+        #             "slot": {
+        #                 "start_date": datetime.strptime("2023-09-18 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+        #                 "end_date": datetime.strptime("2023-09-20 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+        #             }
+        #         },
+        #         {
+        #             "id": "a0j74000000PTWq3",
+        #             "name": "John Escamilla - J Mack Flooring",
+        #             "totalCompletedInstalls": 25,
+        #             "starRating": 4.0,
+        #             "grade": "H",
+        #             "slot": {
+        #                 "start_date": datetime.strptime("2023-10-09 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+        #                 "end_date": datetime.strptime("2023-10-11 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+        #             }
+        #         },
+        #         {
+        #             "id": "a0j74000000PTWq",
+        #             "name": "Michael Miller - Flooring Family",
+        #             "totalCompletedInstalls": 26,
+        #             "starRating": 4.0,
+        #             "grade": "H",
+        #             "slot": {
+        #                 "start_date": datetime.strptime("2023-10-02 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+        #                 "end_date": datetime.strptime("2023-10-04 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+        #             }
+        #         },
+        #         {
+        #             "id": "a0j74000000PTWp4",
+        #             "name": "Nick Mastruserio - Nick Squared Contracting",
+        #             "totalCompletedInstalls": 36,
+        #             "starRating": 3.0,
+        #             "grade": "M",
+        #             "slot": {
+        #                 "start_date": datetime.strptime("2023-10-09 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+        #                 "end_date": datetime.strptime("2023-10-12 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+        #             }
+        #         },
+        #         {
+        #             "id": "a0j74000000PTWp5",
+        #             "name": "John Kidd Jr. - Kidd Flooring",
+        #             "totalCompletedInstalls": 29,
+        #             "starRating": 3.0,
+        #             "grade": "H",
+        #             "slot": {
+        #                 "start_date": datetime.strptime("2023-10-02 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+        #                 "end_date": datetime.strptime("2023-10-03 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+        #             }
+        #         },
+        #         {
+        #             "id": "a0j74000000PTWp6",
+        #             "name": "Spencer Nunnelly - Carpenter Bee Contracting",
+        #             "totalCompletedInstalls": 18,
+        #             "starRating": 3.0,
+        #             "grade": "H"
+        #         },
+        #         {
+        #             "id": "a0j74000000PTWp12",
+        #             "name": "Santy Castro - D'castro Carpeting and Flooring",
+        #             "totalCompletedInstalls": 39,
+        #             "starRating": 3.0,
+        #             "grade": "M",
+        #             "slot": {
+        #                 "start_date": datetime.strptime("2023-10-02 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+        #                 "end_date": datetime.strptime("2023-10-04 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+        #             }
+        #         },
+        #         {
+        #             "id": "a0j4V00000CCOncQAH",
+        #             "name": "Cody Harris - Mojo's Flooring",
+        #             "totalCompletedInstalls": 23,
+        #             "starRating": 2.5,
+        #             "grade": "M",
+        #             "slot": {
+        #                 "start_date": datetime.strptime("2023-10-09 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+        #                 "end_date": datetime.strptime("2023-10-12 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+        #             }
+        #         },
+        #         {
+        #             "id": "a0j74000000PTWp",
+        #             "name": "Anthony Waters - Anthony's Renovation & Remodeling",
+        #             "slot": {
+        #                 "start_date": datetime.strptime("2023-09-14 09:00:00", DEFAULT_SERVER_DATETIME_FORMAT),
+        #                 "end_date": datetime.strptime("2023-09-14 17:00:00", DEFAULT_SERVER_DATETIME_FORMAT)
+        #             }
+        #         }
+        #     ]
+        #     result.update({
+        #         'data': crews
+        #     })
+        #     return result
         if not api_configuration.auth_url:
             return {
                 'message': 'Authentication URL is missing',
@@ -2943,12 +3054,11 @@ class TeamCustomerAppointment(models.Model):
             environment = "production"
             if api_configuration.mode == "test":
                 environment = "development"
-
-
+            
             try:
                 # Request schedule using a new sales order
                 appointment_date = sale_order.appointment_id and sale_order.appointment_id.appointment_date.date() or date.today()
-                installer_date_range_limit = int(self.env['ir.config_parameter'].sudo().get_param('installer_date_range_limit')) or 30
+                installer_date_range_limit = int(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.installer_date_range_limit')) or 30
                 start_date = appointment_date + relativedelta(days=1)
                 end_date = start_date + relativedelta(days=installer_date_range_limit)
 
@@ -2956,10 +3066,11 @@ class TeamCustomerAppointment(models.Model):
                 model.proposed_start_date = start_date
                 model.proposed_end_date = end_date
 
-                api_response = api_instance.schedule_existing_order(sale_order.quote_id, x_refloor_environment= environment, schedule_request=model)
+                api_response = api_instance.schedule_existing_order(sale_order.quote_id, x_refloor_environment=environment, schedule_request=model)
                 _logger.info(api_response)
                 if not isinstance(api_response, dict):
-                    api_response = api_response.dict()
+                    # api_response = api_response.dict()
+                    api_response = api_response.model_dump()
                 result.update({
                     'data': api_response.get('crews', [])
                 })
@@ -3250,14 +3361,23 @@ class TeamCustomerAppointment(models.Model):
             flexible_installation = False
             if data.get('flexible_installation', 0) == 1:
                 flexible_installation = True
+            destination_selection_id = False
+            if data.get('destination_selection_id', False):
+                destination_selection_id = int(data.get('destination_selection_id', 0))
+                destination_selection = self.env['otl.appointment.result.reason'].browse(destination_selection_id)
+                if not destination_selection or not destination_selection.exists():
+                    return {'message': 'Wrong value for Destination Selection', 'result': 'Failed'}
             if appointment_id:
                 appointment = self.env['team.customer.appointment'].browse(appointment_id)
                 if appointment.exists():
-                    appointment.write({
+                    appointment_vals = {
                         'additional_comments': data.get('additional_comments', ''),
                         'send_physical_document': send_physical_document,
                         'flexible_installation': flexible_installation,
-                    })
+                    }
+                    if destination_selection_id:
+                        appointment_vals.update({'destination_selection_id': destination_selection_id})
+                    appointment.write(appointment_vals)
                     order = self.env['sale.order'].search([('appointment_id', '=', appointment_id)], limit=1)
                     if not order:
                         return {
@@ -3357,7 +3477,7 @@ class TeamCustomerAppointment(models.Model):
 
     def action_start_sync_arrival_departure_time_to_i360(self, appointment_id):
         time.sleep(3)
-        with api.Environment.manage():
+        try:
             # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
@@ -3386,7 +3506,9 @@ class TeamCustomerAppointment(models.Model):
             self.env.cr.commit()
             new_cr.close()
             _logger.info('------End of action_start_sync_arrival_departure_time_to_i360------: %s' % (appointment_id))
-
+        except Exception as e:
+            _logger.info('------Exception in action_start_sync_to_i360------: %s' % (e))
+            new_cr.rollback()
         return True
 
     @api.model
@@ -3450,7 +3572,7 @@ class TeamCustomerAppointment(models.Model):
 
     def action_start_sync_manual_arrival_date_to_i360(self, appointment_id):
         time.sleep(3)
-        with api.Environment.manage():
+        try:
             # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
@@ -3479,7 +3601,9 @@ class TeamCustomerAppointment(models.Model):
             self.env.cr.commit()
             new_cr.close()
             _logger.info('------End of action_start_sync_manual_arrival_date_to_i360------: %s' % (appointment_id))
-
+        except Exception as e:
+            _logger.info('------Exception in action_start_sync_manual_arrival_date_to_i360------: %s' % (e))
+            new_cr.rollback()
         return True
 
     @api.model
@@ -3589,10 +3713,16 @@ class TeamCustomerAppointment(models.Model):
                 appointment = self.sudo().search([('id', '=', appointment_id)], limit=1)
                 if appointment:
                     if appointment.appointment_result:
-                        result = {
-                            'message': 'The appointment has already been completed.',
-                            'result': 'Failed'
-                        }
+                        initiate_sync_log = self.env['otl.api.sync.log'].search([
+                            ('appointment_id', '=', appointment_id),
+                            ('name', '=', '/api/initiate_sync_to_i360_json'),
+                            ('state', '=', 'success')
+                        ], limit=1)
+                        if initiate_sync_log:
+                            result = {
+                                'message': 'The appointment has already been completed.',
+                                'result': 'Failed'
+                            }
                     elif appointment.user_id.id != user_id:
                         result = {
                             'message': 'You are not the assigned salesperson for this appointment',
@@ -3625,8 +3755,7 @@ class TeamCustomerAppointment(models.Model):
             }
         _logger.info("------action_get_appointment_current_status result: %s-------------" % (result))
         return result
-
-
+    
 
 class SaleOrder(models.Model):
     _inherit='sale.order'
@@ -3701,7 +3830,7 @@ class SaleOrder(models.Model):
             }
         :return:
         """
-        acquirer = self.env.ref('payment.payment_acquirer_authorize')
+        acquirer = self.env.ref('payment.payment_provider_authorize').sudo()
         card_type = ''
         for order in self:
             transaction = AuthorizeAPICustom(acquirer)
@@ -3727,19 +3856,23 @@ class SaleOrder(models.Model):
             card_type = response.get('transactionResponse', {}).get('accountType', '')
             # [FIX] order update restricting to avoid concurrent error
             #order.write({'authorize_transaction_id': transaction_ref, 'card_type': card_type})
-            currency = order.pricelist_id.currency_id
+            currency = order.currency_id
             partner = order.partner_id
+            transc_ref = response.get('transactionResponse', {}) and response.get('transactionResponse', {}).get('transId', '') + ' ' + response.get('transactionResponse', {}).get('transId', '') + ' ' + fields.Datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT) or ''
             vals = {
                 'amount': data.get('amount', 0),
                 'currency_id': currency.id,
                 'partner_id': partner.id,
+                'provider_id': acquirer.id,
+                'reference': transc_ref,
                 'sale_order_ids': [(6, 0, self.ids)],
-                'acquirer_id': acquirer.id,
-                'acquirer_reference': response.get('transactionResponse', {}).get('transId', ''),
-                'date': fields.Datetime.now(),
+                'payment_method_id': self.env.ref('payment.payment_method_card').id,
+                # 'acquirer_id': acquirer.id,
+                # 'acquirer_reference': response.get('transactionResponse', {}).get('transId', ''),
+                # 'date': fields.Datetime.now(),
             }
-            transaction = self.env['payment.transaction'].create(vals)
-            transaction._set_transaction_done()
+            transaction = self.env['payment.transaction'].create([vals])
+            transaction._set_done()
             self.env['otl.card.transaction.log'].create({
                 'sale_order_id': order.id,
                 'name': transaction_ref,
@@ -4611,14 +4744,23 @@ class SaleOrder(models.Model):
             flexible_installation = False
             if data.get('flexible_installation', 0) == 1:
                 flexible_installation = True
+            destination_selection_id = False
+            if data.get('destination_selection_id', False):
+                destination_selection_id = int(data.get('destination_selection_id', 0))
+                destination_selection = self.env['otl.appointment.result.reason'].browse(destination_selection_id)
+                if not destination_selection or not destination_selection.exists():
+                    return {'message': 'Wrong value for Destination Selection', 'result': 'Failed'}
             if appointment_id:
                 appointment = self.env['team.customer.appointment'].browse(appointment_id)
                 if appointment.exists():
-                    appointment.write({
+                    appointment_vals = {
                         'additional_comments': data.get('additional_comments', ''),
                         'send_physical_document':  send_physical_document,
                         'flexible_installation':  flexible_installation,
-                    })
+                    }
+                    if destination_selection_id:
+                        appointment_vals.update({'destination_selection_id': destination_selection_id})
+                    appointment.write(appointment_vals)
                     order = self.search([('appointment_id', '=', appointment_id)], limit=1)
                     if not order:
                         return {
@@ -4640,7 +4782,7 @@ class SaleOrder(models.Model):
                             [('appointment_id', '=', appointment_id)])
                         if room_transition_obj:
                             room_transition_obj.write({'order_id': order.id})
-                    model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+                    model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
                     sign_requests = self.env['otl_document_sign.request'].sudo().search(
                         [('model_id', '=', model_id.id), ('res_id', '=', order.id)], order='create_date desc')
                     if sign_requests:
@@ -4664,19 +4806,19 @@ class SaleOrder(models.Model):
                     else:
                         if order.coapplicant_skip or not order.appointment_id.co_applicant:
                             document_template_id = self.env['ir.config_parameter'].sudo().get_param(
-                                'sale_contract_tmpl_id_ncp') or False
+                                'team_sale_contract.sale_contract_tmpl_id_ncp') or False
                         else:
                             document_template_id = self.env['ir.config_parameter'].sudo().get_param(
-                                'sale_contract_tmpl_id') or False
+                                'team_sale_contract.sale_contract_tmpl_id') or False
                     if document_template_id:
                         template = self.env['otl_document_sign.template'].sudo().browse(int(document_template_id))
-                        if template.sign_item_ids.filtered(lambda x: x.type_id.option_field):
-                            if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
-                                    (not contract_plumbing_option_1 and not contract_plumbing_option_2):
-                                return {
-                                    'result': 'Failed',
-                                    'message': 'Plumbing option should select either one option'
-                                }
+                        # if template.sign_item_ids.filtered(lambda x: x.type_id.option_field):
+                        #     if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
+                        #             (not contract_plumbing_option_1 and not contract_plumbing_option_2):
+                        #         return {
+                        #             'result': 'Failed',
+                        #             'message': 'Plumbing option should select either one option'
+                        #         }
                         vals = {
                             'template_id': template.id,
                             'reference': template.name,
@@ -4851,7 +4993,7 @@ class IRAttachment(models.Model):
                                 attachment.access_token)}
 
         return False
-
+    
 
 class VersatileCreditApplication(models.Model):
     _inherit = 'otl.versatile.credit.application'

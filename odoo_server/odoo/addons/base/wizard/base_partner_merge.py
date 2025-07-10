@@ -2,18 +2,18 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from ast import literal_eval
-import functools
+from collections import defaultdict
 import itertools
 import logging
 import psycopg2
 import datetime
 
-from odoo import api, fields, models
-from odoo import SUPERUSER_ID, _
+from odoo import api, fields, models, Command
+from odoo import _
 from odoo.exceptions import ValidationError, UserError
-from odoo.tools import mute_logger
+from odoo.tools import mute_logger, SQL
 
-_logger = logging.getLogger('base.partner.merge')
+_logger = logging.getLogger('odoo.addons.base.partner.merge')
 
 class MergePartnerLine(models.TransientModel):
 
@@ -41,9 +41,12 @@ class MergePartnerAutomatic(models.TransientModel):
         res = super(MergePartnerAutomatic, self).default_get(fields)
         active_ids = self.env.context.get('active_ids')
         if self.env.context.get('active_model') == 'res.partner' and active_ids:
-            res['state'] = 'selection'
-            res['partner_ids'] = [(6, 0, active_ids)]
-            res['dst_partner_id'] = self._get_ordered_partner(active_ids)[-1].id
+            if 'state' in fields:
+                res['state'] = 'selection'
+            if 'partner_ids' in fields:
+                res['partner_ids'] = [Command.set(active_ids)]
+            if 'dst_partner_id' in fields:
+                res['dst_partner_id'] = self._get_ordered_partner(active_ids)[-1].id
         return res
 
     # Group by
@@ -62,7 +65,7 @@ class MergePartnerAutomatic(models.TransientModel):
     number_group = fields.Integer('Group of Contacts', readonly=True)
     current_line_id = fields.Many2one('base.partner.merge.line', string='Current Line')
     line_ids = fields.One2many('base.partner.merge.line', 'wizard_id', string='Lines')
-    partner_ids = fields.Many2many('res.partner', string='Contacts')
+    partner_ids = fields.Many2many('res.partner', string='Contacts', context={'active_test': False})
     dst_partner_id = fields.Many2one('res.partner', string='Destination Contact')
 
     exclude_contact = fields.Boolean('A user associated to the contact')
@@ -97,18 +100,18 @@ class MergePartnerAutomatic(models.TransientModel):
         return self._cr.fetchall()
 
     @api.model
-    def _update_foreign_keys(self, src_partners, dst_partner):
-        """ Update all foreign key from the src_partner to dst_partner. All many2one fields will be updated.
-            :param src_partners : merge source res.partner recordset (does not include destination one)
-            :param dst_partner : record of destination res.partner
+    def _update_foreign_keys_generic(self, model, src_records, dst_record):
+        """ Update all foreign key from the src_records to dst_record for any model.
+            :param model: model name as a string
+            :param src_records: merge source recordset (does not include destination one)
+            :param dst_record: record of destination
         """
-        _logger.debug('_update_foreign_keys for dst_partner: %s for src_partners: %s', dst_partner.id, str(src_partners.ids))
+        _logger.debug('_update_foreign_keys_generic for dst_record: %s for src_records: %s', dst_record.id, str(src_records.ids))
 
-        # find the many2one relation to a partner
-        Partner = self.env['res.partner']
-        relations = self._get_fk_on('res_partner')
+        relations = self._get_fk_on(self.env[model]._table)
 
-        self.flush()
+        # this guarantees cache consistency
+        self.env.invalidate_all()
 
         for table, column in relations:
             if 'base_partner_merge_' in table:  # ignore two tables
@@ -142,70 +145,56 @@ class MergePartnerAutomatic(models.TransientModel):
                                 "%(column)s" = %%s AND
                                 ___tu.%(value)s = ___tw.%(value)s
                         )""" % query_dic
-                for partner in src_partners:
-                    self._cr.execute(query, (dst_partner.id, partner.id, dst_partner.id))
+                for record in src_records:
+                    self._cr.execute(query, (dst_record.id, record.id, dst_record.id))
             else:
                 try:
                     with mute_logger('odoo.sql_db'), self._cr.savepoint():
                         query = 'UPDATE "%(table)s" SET "%(column)s" = %%s WHERE "%(column)s" IN %%s' % query_dic
-                        self._cr.execute(query, (dst_partner.id, tuple(src_partners.ids),))
-
-                        # handle the recursivity with parent relation
-                        if column == Partner._parent_name and table == 'res_partner':
-                            query = """
-                                WITH RECURSIVE cycle(id, parent_id) AS (
-                                        SELECT id, parent_id FROM res_partner
-                                    UNION
-                                        SELECT  cycle.id, res_partner.parent_id
-                                        FROM    res_partner, cycle
-                                        WHERE   res_partner.id = cycle.parent_id AND
-                                                cycle.id != cycle.parent_id
-                                )
-                                SELECT id FROM cycle WHERE id = parent_id AND id = %s
-                            """
-                            self._cr.execute(query, (dst_partner.id,))
-                            # NOTE JEM : shouldn't we fetch the data ?
+                        self._cr.execute(query, (dst_record.id, tuple(src_records.ids)))
                 except psycopg2.Error:
                     # updating fails, most likely due to a violated unique constraint
                     # keeping record with nonexistent partner_id is useless, better delete it
                     query = 'DELETE FROM "%(table)s" WHERE "%(column)s" IN %%s' % query_dic
-                    self._cr.execute(query, (tuple(src_partners.ids),))
-
-        self.invalidate_cache()
+                    self._cr.execute(query, (tuple(src_records.ids),))
 
     @api.model
-    def _update_reference_fields(self, src_partners, dst_partner):
-        """ Update all reference fields from the src_partner to dst_partner.
-            :param src_partners : merge source res.partner recordset (does not include destination one)
-            :param dst_partner : record of destination res.partner
+    def _update_reference_fields_generic(self, referenced_model, src_records, dst_record, additional_update_records=None):
+        """ Update all reference fields from the src_records to dst_record for any model.
+            :param referenced_model: model name as a string
+            :param src_records: merge source recordset (does not include destination one)
+            :param dst_record: record of destination
+            :param additional_update_records: list of tuples (model, field_model, field_id)
         """
-        _logger.debug('_update_reference_fields for dst_partner: %s for src_partners: %r', dst_partner.id, src_partners.ids)
+        _logger.debug('_update_reference_fields_generic for dst_record: %s for src_records: %r', dst_record.id, src_records.ids)
 
         def update_records(model, src, field_model='model', field_id='res_id'):
             Model = self.env[model] if model in self.env else None
             if Model is None:
                 return
-            records = Model.sudo().search([(field_model, '=', 'res.partner'), (field_id, '=', src.id)])
+            records = Model.sudo().search([(field_model, '=', referenced_model), (field_id, '=', src.id)])
             try:
-                with mute_logger('odoo.sql_db'), self._cr.savepoint(), self.env.clear_upon_failure():
-                    records.sudo().write({field_id: dst_partner.id})
-                    records.flush()
+                with mute_logger('odoo.sql_db'), self._cr.savepoint():
+                    records.sudo().write({field_id: dst_record.id})
+                    records.env.flush_all()
             except psycopg2.Error:
                 # updating fails, most likely due to a violated unique constraint
                 # keeping record with nonexistent partner_id is useless, better delete it
                 records.sudo().unlink()
 
-        update_records = functools.partial(update_records)
+        for record in src_records:
+            update_records('ir.attachment', src=record, field_model='res_model')
+            update_records('mail.followers', src=record, field_model='res_model')
+            update_records('mail.activity', src=record, field_model='res_model')
+            update_records('mail.message', src=record)
+            update_records('ir.model.data', src=record)
 
-        for partner in src_partners:
-            update_records('calendar', src=partner, field_model='model_id.model')
-            update_records('ir.attachment', src=partner, field_model='res_model')
-            update_records('mail.followers', src=partner, field_model='res_model')
-            update_records('mail.message', src=partner)
-            update_records('ir.model.data', src=partner)
+        additional_update_records = additional_update_records or []
+        for update_record in additional_update_records:
+            update_records(update_record['model'], src=record, field_model=update_record['field_model'])
 
-        records = self.env['ir.model.fields'].search([('ttype', '=', 'reference')])
-        for record in records.sudo():
+        records = self.env['ir.model.fields'].sudo().search([('ttype', '=', 'reference'), ('store', '=', True)])
+        for record in records:
             try:
                 Model = self.env[record.model]
                 field = Model._fields[record.name]
@@ -213,17 +202,108 @@ class MergePartnerAutomatic(models.TransientModel):
                 # unknown model or field => skip
                 continue
 
-            if field.compute is not None:
+            if Model._abstract or field.compute is not None:
                 continue
 
-            for partner in src_partners:
-                records_ref = Model.sudo().search([(record.name, '=', 'res.partner,%d' % partner.id)])
+            for src_record in src_records:
+                records_ref = Model.sudo().search([(record.name, '=', '%s,%d' % (referenced_model, src_record.id))])
                 values = {
-                    record.name: 'res.partner,%d' % dst_partner.id,
+                    record.name: '%s,%d' % (referenced_model, dst_record.id),
                 }
                 records_ref.sudo().write(values)
+        # company_dependent fields referring the merged records
+        for field in self.env.registry.many2one_company_dependents[dst_record._name]:
+            self.env.cr.execute(SQL(
+                """
+                UPDATE %(table)s
+                SET %(field)s = (
+                    SELECT jsonb_object_agg(key,
+                        CASE
+                            WHEN value::int IN %(src_record_ids)s
+                            THEN %(dest_record_id)s
+                            ELSE value::int
+                        END
+                    )
+                    FROM jsonb_each_text(%(field)s)
+                )
+                WHERE %(field)s IS NOT NULL
+                """,
+                table=SQL.identifier(self.env[field.model_name]._table),
+                field=SQL.identifier(field.name),
+                src_record_ids=tuple(src_records.ids),
+                dest_record_id=dst_record.id,
+            ))
 
-        self.flush()
+        # merge the fallback values for company dependent many2one fields
+        self.env.cr.execute(SQL(
+            """
+            UPDATE ir_default
+            SET json_value =
+                CASE
+                    WHEN json_value::int IN %(src_record_ids)s
+                    THEN %(dest_record_id)s
+                    ELSE json_value
+                END
+            FROM ir_model_fields f
+            WHERE f.id = ir_default.field_id
+            AND f.company_dependent
+            AND f.relation = %(model_name)s
+            AND f.ttype = 'many2one'
+            AND json_value ~ '^[0-9]+$';
+            """,
+            src_record_ids=tuple(src_records.ids),
+            dest_record_id=str(dst_record.id),
+            model_name=dst_record._name,
+        ))
+
+        self.env.flush_all()
+
+        # company_dependent fields of merged records
+        with self._cr.savepoint():
+            for fname, field in dst_record._fields.items():
+                if field.company_dependent:
+                    self.env.execute_query(SQL(
+                        # use the specific company dependent value of sources
+                        # to fill the non-specific value of destination. Source
+                        # values for rows with larger id have higher priority
+                        # when aggregated
+                        """
+                        WITH source AS (
+                            SELECT %(field)s
+                            FROM  %(table)s
+                            WHERE id IN %(source_ids)s
+                            ORDER BY id
+                        ), source_agg AS (
+                            SELECT jsonb_object_agg(key, value) AS value
+                            FROM  source, jsonb_each(%(field)s)
+                        )
+                        UPDATE %(table)s
+                        SET %(field)s = source_agg.value || COALESCE(%(table)s.%(field)s, '{}'::jsonb)
+                        FROM source_agg
+                        WHERE id = %(destination_id)s AND source_agg.value IS NOT NULL
+                        """,
+                        table=SQL.identifier(dst_record._table),
+                        field=SQL.identifier(fname),
+                        destination_id=dst_record.id,
+                        source_ids=tuple(src_records.ids),
+                    ))
+
+    @api.model
+    def _update_foreign_keys(self, src_partners, dst_partner):
+        """ Update all foreign key from the src_partner to dst_partner. All many2one fields will be updated.
+            :param src_partners : merge source res.partner recordset (does not include destination one)
+            :param dst_partner : record of destination res.partner
+        """
+        self._update_foreign_keys_generic('res.partner', src_partners, dst_partner)
+
+    @api.model
+    def _update_reference_fields(self, src_partners, dst_partner):
+        """ Update all reference fields from the src_partner to dst_partner.
+            :param src_partners : merge source res.partner recordset (does not include destination one)
+            :param dst_partner : record of destination res.partner
+        """
+        additional_update_records = [{'model': 'calendar', 'field_model': 'model_id.model'}]
+        self._update_reference_fields_generic('res.partner', src_partners, dst_partner, additional_update_records)
 
     def _get_summable_fields(self):
         """ Returns the list of fields that should be summed when merging partners
@@ -246,27 +326,59 @@ class MergePartnerAutomatic(models.TransientModel):
                 return item.id
             else:
                 return item
+
         # get all fields that are not computed or x2many
         values = dict()
+        values_by_company = defaultdict(dict)   # {company: vals}
         for column in model_fields:
             field = dst_partner._fields[column]
             if field.type not in ('many2many', 'one2many') and field.compute is None:
                 for item in itertools.chain(src_partners, [dst_partner]):
                     if item[column]:
-                        if column in summable_fields and values.get(column):
+                        if field.type == 'reference':
+                            values[column] = item[column]
+                        elif column in summable_fields and values.get(column):
                             values[column] += write_serializer(item[column])
                         else:
                             values[column] = write_serializer(item[column])
+            elif field.company_dependent and column in summable_fields:
+                # sum the values of partners for each company; use sudo() to
+                # compute the sum on all companies, including forbidden ones
+                partners = (src_partners + dst_partner).sudo()
+                for company in self.env['res.company'].sudo().search([]):
+                    values_by_company[company][column] = sum(
+                        partners.with_company(company).mapped(column)
+                    )
+
         # remove fields that can not be updated (id and parent_id)
         values.pop('id', None)
         parent_id = values.pop('parent_id', None)
         dst_partner.write(values)
+        for company, vals in values_by_company.items():
+            dst_partner.with_company(company).sudo().write(vals)
         # try to update the parent_id
         if parent_id and parent_id != dst_partner.id:
             try:
                 dst_partner.write({'parent_id': parent_id})
             except ValidationError:
                 _logger.info('Skip recursive partner hierarchies for parent_id %s of partner: %s', parent_id, dst_partner.id)
+
+    @api.model
+    def _merge_bank_accounts(self, src_partners, dst_partner):
+        """ Merge bank accounts of src_partners into dst_partner.
+            :param src_partners: merge source res.partner recordset (does not include destination one)
+            :param dst_partner: record of destination res.partner
+        """
+        all_src_accounts = src_partners.bank_ids
+
+        for src_account in all_src_accounts:
+            duplicate_account = dst_partner.bank_ids.filtered(lambda a: a.sanitized_acc_number == src_account.sanitized_acc_number)
+            if duplicate_account:
+                self._update_foreign_keys_generic('res.partner.bank', src_account, duplicate_account)
+                self._update_reference_fields_generic('res.partner.bank', src_account, duplicate_account)
+                src_account.unlink()
+            else:
+                src_account.write({'partner_id': dst_partner.id})
 
     def _merge(self, partner_ids, dst_partner=None, extra_checks=True):
         """ private implementation of merge partner
@@ -293,6 +405,10 @@ class MergePartnerAutomatic(models.TransientModel):
         if partner_ids & child_ids:
             raise UserError(_("You cannot merge a contact with one of his parent."))
 
+        # check if the list of partners to merge are linked to more than one user
+        if len(partner_ids.with_context(active_test=False).user_ids) > 1:
+            raise UserError(_("You cannot merge contacts linked to more than one user even if only one is active."))
+
         if extra_checks and len(set(partner.email for partner in partner_ids)) > 1:
             raise UserError(_("All contacts must have the same email. Only the Administrator can merge contacts with different emails."))
 
@@ -305,20 +421,22 @@ class MergePartnerAutomatic(models.TransientModel):
             src_partners = ordered_partners[:-1]
         _logger.info("dst_partner: %s", dst_partner.id)
 
-        # FIXME: is it still required to make and exception for account.move.line since accounting v9.0 ?
-        if extra_checks and 'account.move.line' in self.env and self.env['account.move.line'].sudo().search([('partner_id', 'in', [partner.id for partner in src_partners])]):
-            raise UserError(_("Only the destination contact may be linked to existing Journal Items. Please ask the Administrator if you need to merge several contacts linked to existing Journal Items."))
-
         # Make the company of all related users consistent with destination partner company
         if dst_partner.company_id:
-            for user in partner_ids.mapped('user_ids'):
-                user.sudo().write({'company_ids': [(6, 0, [dst_partner.company_id.id])],
-                            'company_id': dst_partner.company_id.id})
+            partner_ids.mapped('user_ids').sudo().write({
+                'company_ids': [Command.link(dst_partner.company_id.id)],
+                'company_id': dst_partner.company_id.id
+            })
+
+        # Merge bank accounts before merging partners
+        self._merge_bank_accounts(src_partners, dst_partner)
 
         # call sub methods to do the merge
         self._update_foreign_keys(src_partners, dst_partner)
         self._update_reference_fields(src_partners, dst_partner)
         self._update_values(src_partners, dst_partner)
+
+        self.env.add_to_compute(dst_partner._fields['partner_share'], dst_partner)
 
         self._log_merge_operation(src_partners, dst_partner)
 
@@ -386,7 +504,7 @@ class MergePartnerAutomatic(models.TransientModel):
 
         for field_name in self._fields:
             if field_name.startswith(group_by_prefix):
-                if getattr(self, field_name, False):
+                if field_name in self and self[field_name]:
                     groups.append(field_name[len(group_by_prefix):])
 
         if not groups:
@@ -411,7 +529,7 @@ class MergePartnerAutomatic(models.TransientModel):
             :param partner_ids : list of partner ids to sort
         """
         return self.env['res.partner'].browse(partner_ids).sorted(
-            key=lambda p: (p.active, (p.create_date or datetime.datetime(1970, 1, 1))),
+            key=lambda p: (not p.active, (p.create_date or datetime.datetime(1970, 1, 1))),
             reverse=True,
         )
 
@@ -439,7 +557,7 @@ class MergePartnerAutomatic(models.TransientModel):
             next wizard line. Each line is a subset of partner that can be merged together.
             If no line left, the end screen will be displayed (but an action is still returned).
         """
-        self.invalidate_cache() # FIXME: is this still necessary?
+        self.env.invalidate_all() # FIXME: is this still necessary?
         values = {}
         if self.line_ids:
             # in this case, we try to find the next record.
@@ -447,7 +565,7 @@ class MergePartnerAutomatic(models.TransientModel):
             current_partner_ids = literal_eval(current_line.aggr_ids)
             values.update({
                 'current_line_id': current_line.id,
-                'partner_ids': [(6, 0, current_partner_ids)],
+                'partner_ids': [Command.set(current_partner_ids)],
                 'dst_partner_id': self._get_ordered_partner(current_partner_ids)[-1].id,
                 'state': 'selection',
             })
@@ -476,7 +594,7 @@ class MergePartnerAutomatic(models.TransientModel):
         model_mapping = self._compute_models()
 
         # group partner query
-        self._cr.execute(query)
+        self._cr.execute(query) # pylint: disable=sql-injection
 
         counter = 0
         for min_id, aggr_ids in self._cr.fetchall():
@@ -523,7 +641,7 @@ class MergePartnerAutomatic(models.TransientModel):
         """
         self.ensure_one()
         self.action_start_manual_process()  # here we don't redirect to the next screen, since it is automatic process
-        self.invalidate_cache() # FIXME: is this still necessary?
+        self.env.invalidate_all() # FIXME: is this still necessary?
 
         for line in self.line_ids:
             partner_ids = literal_eval(line.aggr_ids)

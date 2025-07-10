@@ -3,24 +3,28 @@
 # 	* base_sparse_field
 # 
 # Translators:
-# Pedro Filipe <pedro2.10@hotmail.com>, 2019
-# Martin Trigaux, 2019
-# Ricardo Martins <ricardo.nbs.martins@gmail.com>, 2019
-# Pedro Castro Silva <pedrocs@exo.pt>, 2019
+# Peter Lawrence Romão <peterromao@yahoo.co.uk>, 2025
+# NumerSpiral HBG, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: Pedro Castro Silva <pedrocs@exo.pt>, 2019\n"
-"Language-Team: Portuguese (https://www.transifex.com/odoo/teams/41243/pt/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
+"Language-Team: Portuguese (https://app.transifex.com/odoo/teams/41243/pt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: pt\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
+
+#. module: base_sparse_field
+#: model:ir.model,name:base_sparse_field.model_base
+msgid "Base"
+msgstr "Base"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__boolean
@@ -28,8 +32,8 @@ msgid "Boolean"
 msgstr "Booleano"
 
 #. module: base_sparse_field
+#. odoo-python
 #: code:addons/base_sparse_field/models/models.py:0
-#, python-format
 msgid "Changing the storing system for field \"%s\" is not allowed."
 msgstr "Modificar o sistema de armazenamento do campo \"%s\" não é permitido."
 
@@ -76,7 +80,7 @@ msgstr "Fracionário"
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__id
 msgid "ID"
-msgstr "ID"
+msgstr "Id."
 
 #. module: base_sparse_field
 #: model:ir.model.fields,help:base_sparse_field.field_ir_model_fields__serialization_field_id
@@ -90,11 +94,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__integer
 msgid "Integer"
 msgstr "Inteiro"
-
-#. module: base_sparse_field
-#: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test____last_update
-msgid "Last Modified on"
-msgstr "Última Modificação em"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__write_uid
@@ -117,8 +116,8 @@ msgid "Partner"
 msgstr "Parceiro"
 
 #. module: base_sparse_field
+#. odoo-python
 #: code:addons/base_sparse_field/models/models.py:0
-#, python-format
 msgid "Renaming sparse field \"%s\" is not allowed"
 msgstr "Não é permitido mudar o nome de sparse field \"%s\""
 
@@ -133,9 +132,11 @@ msgid "Serialization Field"
 msgstr "Campo de serialização"
 
 #. module: base_sparse_field
+#. odoo-python
 #: code:addons/base_sparse_field/models/models.py:0
-#, python-format
-msgid "Serialization field `%s` not found for sparse field `%s`!"
+msgid ""
+"Serialization field \"%(serialization_field)s\" not found for sparse field "
+"%(sparse_field)s!"
 msgstr ""
 
 #. module: base_sparse_field

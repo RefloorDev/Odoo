@@ -28,12 +28,12 @@
         <field name="name">app.version.tree</field>
         <field name="model">app.version</field>
         <field name="arch" type="xml">
-            <tree string="App Version">
+            <list string="App Version">
                 <field name="date"/>
     			<field name="name" />
                 <field name="version_type"/>
                 <field name="version"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -42,15 +42,13 @@
     <record id="action_app_version" model="ir.actions.act_window">
         <field name="name">App Versions</field>
         <field name="res_model">app.version</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="oe_view_nocontent_create">
                 Click to create a new App Version.
             </p>
         </field>
     </record>
-
-
 
     <menuitem id="menu_app_versions"
               name="App Versions"

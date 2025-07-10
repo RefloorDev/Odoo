@@ -2,14 +2,27 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import io
 import logging
-import PyPDF2
 import xml.dom.minidom
 import zipfile
 
 from odoo import api, models
+from odoo.tools.lru import LRU
 
 _logger = logging.getLogger(__name__)
-FTYPES = ['docx', 'pptx', 'xlsx', 'opendoc']
+
+try:
+    from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
+    from pdfminer.converter import TextConverter
+    from pdfminer.pdfpage import PDFPage
+except ImportError:
+    PDFResourceManager = PDFPageInterpreter = TextConverter = PDFPage = None
+    _logger.warning("Attachment indexation of PDF documents is unavailable because the 'pdfminer' Python library cannot be found on the system. "
+                    "You may install it from https://pypi.org/project/pdfminer.six/ (e.g. `pip3 install pdfminer.six`)")
+
+FTYPES = ['docx', 'pptx', 'xlsx', 'opendoc', 'pdf']
+
+
+index_content_cache = LRU(1)
 
 def textToString(element):
     buff = u""
@@ -91,26 +104,44 @@ class IrAttachment(models.Model):
 
     def _index_pdf(self, bin_data):
         '''Index PDF documents'''
-
-        # extractText gives very bad results for indexing, hence we don't index PDF anymore. A
-        # better alternative is probably PDFMiner.six, but not for stable.
-        # See POC at https://github.com/odoo/odoo/pull/27568.
+        if PDFResourceManager is None:
+            return
         buf = u""
         if bin_data.startswith(b'%PDF-'):
             f = io.BytesIO(bin_data)
             try:
-                pdf = PyPDF2.PdfFileReader(f, overwriteWarnings=False)
-                for page in pdf.pages:
-                    buf += page.extractText()
+                resource_manager = PDFResourceManager()
+                with io.StringIO() as content, TextConverter(resource_manager, content) as device:
+                    logging.getLogger("pdfminer").setLevel(logging.CRITICAL)
+                    interpreter = PDFPageInterpreter(resource_manager, device)
+
+                    for page in PDFPage.get_pages(f):
+                        interpreter.process_page(page)
+
+                    buf = content.getvalue()
             except Exception:
                 pass
         return buf
 
     @api.model
-    def _index(self, bin_data, mimetype):
+    def _index(self, bin_data, mimetype, checksum=None):
+        if checksum:
+            cached_content = index_content_cache.get(checksum)
+            if cached_content:
+                return cached_content
+        res = False
         for ftype in FTYPES:
             buf = getattr(self, '_index_%s' % ftype)(bin_data)
             if buf:
-                return buf
+                res = buf.replace('\x00', '')
+                break
 
-        return super(IrAttachment, self)._index(bin_data, mimetype)
+        res = res or super(IrAttachment, self)._index(bin_data, mimetype, checksum=checksum)
+        if checksum:
+            index_content_cache[checksum] = res
+        return res
+
+    def copy(self, default=None):
+        for attachment in self:
+            index_content_cache[attachment.checksum] = attachment.index_content
+        return super().copy(default=default)

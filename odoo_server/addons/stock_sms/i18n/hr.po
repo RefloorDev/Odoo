@@ -3,19 +3,17 @@
 # 	* stock_sms
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Bole <bole@dajmi5.com>, 2019
-# Đurđica Žarković <durdica.zarkovic@storm.hr>, 2019
-# Marko Carević <marko.carevic@live.com>, 2019
+# Luka Carević <luka@uvid.hr>, 2024
+# Bole <bole@dajmi5.com>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:13+0000\n"
-"PO-Revision-Date: 2019-08-26 09:14+0000\n"
-"Last-Translator: Marko Carević <marko.carevic@live.com>, 2019\n"
-"Language-Team: Croatian (https://www.transifex.com/odoo/teams/41243/hr/)\n"
+"POT-Creation-Date: 2023-10-26 21:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Bole <bole@dajmi5.com>, 2024\n"
+"Language-Team: Croatian (https://app.transifex.com/odoo/teams/41243/hr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -26,21 +24,14 @@ msgstr ""
 #: model:sms.template,body:stock_sms.sms_template_data_stock_delivery
 msgid ""
 "\n"
-"                %if object.origin:\n"
-"                    ${object.company_id.name}: We are glad to inform you that your order n° ${object.origin} has been shipped.\n"
-"                %else:\n"
-"                    ${object.company_id.name}: We are glad to inform you that your order has been shipped.\n"
-"                %endif\n"
-"                %if object.carrier_tracking_ref:\n"
-"                    Your tracking reference is ${object.carrier_tracking_ref}.\n"
-"                %endif\n"
+"                {{ (object.company_id.name + ': We are glad to inform you that your order n° ' + object.origin + ' has been shipped.' if object.origin else object.company_id.name + ': We are glad to inform you that your order has been shipped.') + (' Your tracking reference is ' + (object.carrier_tracking_ref) + '.' if hasattr(object, 'carrier_tracking_ref') and object.carrier_tracking_ref else '') }}\n"
 "            "
 msgstr ""
 
 #. module: stock_sms
 #: model_terms:ir.ui.view,arch_db:stock_sms.view_confirm_stock_sms
 msgid "Cancel"
-msgstr "Odustani"
+msgstr "Otkaži"
 
 #. module: stock_sms
 #: model:ir.model,name:stock_sms.model_res_company
@@ -48,19 +39,14 @@ msgid "Companies"
 msgstr "Tvrtke"
 
 #. module: stock_sms
-#: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__company_id
-msgid "Company"
-msgstr "Tvrtka"
-
-#. module: stock_sms
 #: model:ir.model,name:stock_sms.model_res_config_settings
 msgid "Config Settings"
-msgstr "Postavke"
+msgstr "Konfiguracijske postavke"
 
 #. module: stock_sms
 #: model_terms:ir.ui.view,arch_db:stock_sms.view_confirm_stock_sms
 msgid "Confirm"
-msgstr "Potvrdi"
+msgstr "Potrvdi"
 
 #. module: stock_sms
 #: model:ir.model,name:stock_sms.model_confirm_stock_sms
@@ -85,12 +71,12 @@ msgstr ""
 #. module: stock_sms
 #: model_terms:ir.ui.view,arch_db:stock_sms.view_confirm_stock_sms
 msgid "Disable SMS"
-msgstr ""
+msgstr "Onemogući SMS"
 
 #. module: stock_sms
 #: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__display_name
 msgid "Display Name"
-msgstr "Naziv"
+msgstr "Naziv za prikaz"
 
 #. module: stock_sms
 #: model:ir.model.fields,field_description:stock_sms.field_res_company__has_received_warning_stock_sms
@@ -103,11 +89,6 @@ msgid "ID"
 msgstr "ID"
 
 #. module: stock_sms
-#: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms____last_update
-msgid "Last Modified on"
-msgstr "Zadnja promjena"
-
-#. module: stock_sms
 #: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__write_uid
 msgid "Last Updated by"
 msgstr "Promijenio"
@@ -115,22 +96,23 @@ msgstr "Promijenio"
 #. module: stock_sms
 #: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__write_date
 msgid "Last Updated on"
-msgstr "Vrijeme promjene"
+msgstr "Promijenjeno"
 
 #. module: stock_sms
-#: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__picking_id
-msgid "Picking"
-msgstr "Skladišnice"
+#: model:ir.model.fields,field_description:stock_sms.field_confirm_stock_sms__pick_ids
+msgid "Pick"
+msgstr "Prikupi"
 
 #. module: stock_sms
+#. odoo-python
 #: code:addons/stock_sms/models/stock_picking.py:0
 #: model_terms:ir.ui.view,arch_db:stock_sms.view_confirm_stock_sms
-#, python-format
 msgid "SMS"
-msgstr ""
+msgstr "SMS"
 
 #. module: stock_sms
 #: model:ir.model.fields,field_description:stock_sms.field_res_company__stock_move_sms_validation
+#: model_terms:ir.ui.view,arch_db:stock_sms.res_config_settings_view_form_stock
 msgid "SMS Confirmation"
 msgstr ""
 
@@ -149,7 +131,7 @@ msgstr ""
 #. module: stock_sms
 #: model:ir.model.fields,help:stock_sms.field_res_company__stock_sms_confirmation_template_id
 #: model:ir.model.fields,help:stock_sms.field_res_config_settings__stock_sms_confirmation_template_id
-msgid "SMS sent to the customer once the order is done."
+msgid "SMS sent to the customer once the order is delivered."
 msgstr ""
 
 #. module: stock_sms

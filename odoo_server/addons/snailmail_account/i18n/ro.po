@@ -3,17 +3,16 @@
 # 	* snailmail_account
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Dorin Hongu <dhongu@gmail.com>, 2019
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:32+0000\n"
-"PO-Revision-Date: 2019-08-26 09:14+0000\n"
-"Last-Translator: Dorin Hongu <dhongu@gmail.com>, 2019\n"
-"Language-Team: Romanian (https://www.transifex.com/odoo/teams/41243/ro/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Romanian (https://app.transifex.com/odoo/teams/41243/ro/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -21,16 +20,9 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?2:1));\n"
 
 #. module: snailmail_account
-#: code:addons/snailmail_account/wizard/account_invoice_send.py:76
-#, python-format
-msgid "%s of the selected invoice(s) had an invalid address and were not sent"
-msgstr ""
-
-#. module: snailmail_account
-#: model_terms:ir.ui.view,arch_db:snailmail_account.account_invoice_send_inherit_account_wizard_form
-msgid ""
-"<i class=\"fa fa-info-circle\" role=\"img\" aria-label=\"Warning\" title=\"Make sure you have enough Stamps on your account.\"/>\n"
-"                                )"
+#. odoo-python
+#: code:addons/snailmail_account/wizard/account_move_send_batch_wizard.py:0
+msgid "(Stamps: %s)"
 msgstr ""
 
 #. module: snailmail_account
@@ -39,81 +31,58 @@ msgid ""
 "<span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-"
 "specific.\"/>"
 msgstr ""
+"<span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-"
+"specific.\"/>"
 
 #. module: snailmail_account
-#: model_terms:ir.ui.view,arch_db:snailmail_account.account_invoice_send_inherit_account_wizard_form
+#: model:ir.model,name:snailmail_account.model_account_move_send
+msgid "Account Move Send"
+msgstr "Cont Mutare Trimitere"
+
+#. module: snailmail_account
+#: model:ir.model,name:snailmail_account.model_account_move_send_batch_wizard
+msgid "Account Move Send Batch Wizard"
+msgstr ""
+
+#. module: snailmail_account
+#. odoo-python
+#: code:addons/snailmail_account/models/account_move_send.py:0
+msgid "Check Invoice(s)"
+msgstr ""
+
+#. module: snailmail_account
+#: model:ir.model,name:snailmail_account.model_res_partner
+msgid "Contact"
+msgstr "Contactați"
+
+#. module: snailmail_account
+#: model:ir.model.fields,field_description:snailmail_account.field_res_partner__invoice_sending_method
+#: model:ir.model.fields,field_description:snailmail_account.field_res_users__invoice_sending_method
+msgid "Invoice sending"
+msgstr ""
+
+#. module: snailmail_account
+#: model:ir.model.fields,field_description:snailmail_account.field_account_move_send_batch_wizard__send_by_post_stamps
+msgid "Send By Post Stamps"
+msgstr ""
+
+#. module: snailmail_account
+#. odoo-python
+#: code:addons/snailmail_account/models/account_move_send.py:0
 msgid ""
-"<span class=\"text-danger\">\n"
-"                                            The customer address is not complete.\n"
-"                                        </span>"
+"The partners on the following invoices have no valid address, so those "
+"invoices will not be sent: %s"
 msgstr ""
 
 #. module: snailmail_account
-#: model_terms:ir.ui.view,arch_db:snailmail_account.account_invoice_send_inherit_account_wizard_form
-msgid ""
-"<span class=\"text-danger\">\n"
-"                                        Some customer addresses are not complete.\n"
-"                                    </span>"
+#. odoo-python
+#: code:addons/snailmail_account/models/account_move_send.py:0
+msgid "View Invoice(s)"
 msgstr ""
 
 #. module: snailmail_account
-#: model_terms:ir.ui.view,arch_db:snailmail_account.account_invoice_send_inherit_account_wizard_form
-msgid "<span> to: </span>"
+#. odoo-python
+#: code:addons/snailmail_account/controllers/portal.py:0
+#: model:ir.model.fields.selection,name:snailmail_account.selection__res_partner__invoice_sending_method__snailmail
+msgid "by Post"
 msgstr ""
-
-#. module: snailmail_account
-#: model:ir.model,name:snailmail_account.model_account_invoice_send
-msgid "Account Invoice Send"
-msgstr ""
-
-#. module: snailmail_account
-#: model:ir.model.fields,help:snailmail_account.field_account_invoice_send__snailmail_is_letter
-msgid ""
-"Allows to send the document by Snailmail (coventional posting delivery "
-"service)"
-msgstr ""
-
-#. module: snailmail_account
-#: model:ir.model,name:snailmail_account.model_res_company
-msgid "Companies"
-msgstr "Companii"
-
-#. module: snailmail_account
-#: model:ir.model,name:snailmail_account.model_res_config_settings
-msgid "Config Settings"
-msgstr "Setări de configurare"
-
-#. module: snailmail_account
-#: code:addons/snailmail_account/wizard/account_invoice_send.py:75
-#: code:addons/snailmail_account/wizard/account_invoice_send.py:82
-#: model:ir.model.fields,field_description:snailmail_account.field_account_invoice_send__invalid_invoice_ids
-#, python-format
-msgid "Invalid Addresses"
-msgstr ""
-
-#. module: snailmail_account
-#: model:ir.model.fields,field_description:snailmail_account.field_account_invoice_send__invalid_addresses
-msgid "Invalid Addresses Count"
-msgstr ""
-
-#. module: snailmail_account
-#: model:ir.model.fields,field_description:snailmail_account.field_account_invoice_send__partner_id
-msgid "Partner"
-msgstr "Partener"
-
-#. module: snailmail_account
-#: model:ir.model.fields,field_description:snailmail_account.field_account_invoice_send__snailmail_is_letter
-#: model:ir.model.fields,field_description:snailmail_account.field_res_company__invoice_is_snailmail
-#: model:ir.model.fields,field_description:snailmail_account.field_res_config_settings__invoice_is_snailmail
-msgid "Send by Post"
-msgstr ""
-
-#. module: snailmail_account
-#: model:ir.model.fields,field_description:snailmail_account.field_account_invoice_send__snailmail_cost
-msgid "Stamp(s)"
-msgstr ""
-
-#. module: snailmail_account
-#: model_terms:ir.ui.view,arch_db:snailmail_account.account_invoice_send_inherit_account_wizard_form
-msgid "invoices"
-msgstr "facturi"

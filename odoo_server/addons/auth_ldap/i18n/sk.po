@@ -3,24 +3,39 @@
 # 	* auth_ldap
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Jaroslav Bosansky <jaro.bosansky@ekoenergo.sk>, 2019
-# gebri <gebri@inmail.sk>, 2019
-# Jan Prokop, 2019
+# Martin Trigaux, 2024
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:32+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: Jan Prokop, 2019\n"
-"Language-Team: Slovak (https://www.transifex.com/odoo/teams/41243/sk/)\n"
+"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Slovak (https://app.transifex.com/odoo/teams/41243/sk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: sk\n"
 "Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
+
+#. module: auth_ldap
+#: model:ir.model.fields,help:auth_ldap.field_res_company_ldap__ldap_filter
+msgid ""
+"    Filter used to look up user accounts in the LDAP database. It is an    arbitrary LDAP filter in string representation. Any `%s` placeholder    will be replaced by the login (identifier) provided by the user, the filter    should contain at least one such placeholder.\n"
+"\n"
+"    The filter must result in exactly one (1) result, otherwise the login will    be considered invalid.\n"
+"\n"
+"    Example (actual attributes depend on LDAP server and setup):\n"
+"\n"
+"        (&(objectCategory=person)(objectClass=user)(sAMAccountName=%s))\n"
+"\n"
+"    or\n"
+"\n"
+"        (|(mail=%s)(uid=%s))\n"
+"    "
+msgstr ""
 
 #. module: auth_ldap
 #: model:ir.model.fields,help:auth_ldap.field_res_company_ldap__create_user
@@ -39,7 +54,7 @@ msgstr "Spoločnosti"
 #. module: auth_ldap
 #: model:ir.model.fields,field_description:auth_ldap.field_res_company_ldap__company
 msgid "Company"
-msgstr "Spoločnosť"
+msgstr "Spoločnost"
 
 #. module: auth_ldap
 #: model:ir.model,name:auth_ldap.model_res_company_ldap
@@ -49,7 +64,7 @@ msgstr "Konfigurácia firemnej LDAP"
 #. module: auth_ldap
 #: model:ir.model,name:auth_ldap.model_res_config_settings
 msgid "Config Settings"
-msgstr "Nastavenie konfigurácie"
+msgstr "Nastavenia konfigurácie"
 
 #. module: auth_ldap
 #: model:ir.model.fields,field_description:auth_ldap.field_res_company_ldap__create_user
@@ -65,6 +80,13 @@ msgstr "Vytvoril"
 #: model:ir.model.fields,field_description:auth_ldap.field_res_company_ldap__create_date
 msgid "Created on"
 msgstr "Vytvorené"
+
+#. module: auth_ldap
+#: model:ir.model.fields,help:auth_ldap.field_res_company_ldap__ldap_base
+msgid ""
+"DN of the user search scope: all descendants of this base will be searched "
+"for users."
+msgstr ""
 
 #. module: auth_ldap
 #: model:ir.model.fields,field_description:auth_ldap.field_res_company_ldap__display_name
@@ -124,11 +146,6 @@ msgid "LDAP password"
 msgstr "LDAP heslo"
 
 #. module: auth_ldap
-#: model:ir.model.fields,field_description:auth_ldap.field_res_company_ldap____last_update
-msgid "Last Modified on"
-msgstr "Posledná modifikácia"
-
-#. module: auth_ldap
 #: model:ir.model.fields,field_description:auth_ldap.field_res_company_ldap__write_uid
 msgid "Last Updated by"
 msgstr "Naposledy upravoval"
@@ -144,8 +161,8 @@ msgid "Login Information"
 msgstr "Prihlasovacie údaje"
 
 #. module: auth_ldap
-#: code:addons/auth_ldap/models/res_company_ldap.py:202
-#, python-format
+#. odoo-python
+#: code:addons/auth_ldap/models/res_company_ldap.py:0
 msgid "No local user found for LDAP login and not configured to create one"
 msgstr "Nenašiel sa lokálny užívateľ pre LDAP login, nedá sa vytvoriť nový"
 
@@ -208,6 +225,11 @@ msgid "Use TLS"
 msgstr "Použiť TLS"
 
 #. module: auth_ldap
+#: model:ir.model,name:auth_ldap.model_res_users
+msgid "User"
+msgstr "Užívateľ"
+
+#. module: auth_ldap
 #: model_terms:ir.ui.view,arch_db:auth_ldap.view_ldap_installer_form
 msgid "User Information"
 msgstr "Informácia používateľa"
@@ -216,8 +238,3 @@ msgstr "Informácia používateľa"
 #: model:ir.model.fields,help:auth_ldap.field_res_company_ldap__user
 msgid "User to copy when creating new users"
 msgstr "Pouźívateľna skopírovanie pri vytváraní nových používateľov"
-
-#. module: auth_ldap
-#: model:ir.model,name:auth_ldap.model_res_users
-msgid "Users"
-msgstr "Používatelia"

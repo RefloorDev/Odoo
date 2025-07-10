@@ -3,20 +3,16 @@
 # 	* base_sparse_field
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Matus Krnac <matus.krnac@gmail.com>, 2019
-# Jaroslav Bosansky <jaro.bosansky@ekoenergo.sk>, 2019
-# gebri <gebri@inmail.sk>, 2019
-# Jan Prokop, 2019
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: Jan Prokop, 2019\n"
-"Language-Team: Slovak (https://www.transifex.com/odoo/teams/41243/sk/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Slovak (https://app.transifex.com/odoo/teams/41243/sk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -24,15 +20,20 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
 
 #. module: base_sparse_field
+#: model:ir.model,name:base_sparse_field.model_base
+msgid "Base"
+msgstr "Základ"
+
+#. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__boolean
 msgid "Boolean"
 msgstr "Boolean"
 
 #. module: base_sparse_field
+#. odoo-python
 #: code:addons/base_sparse_field/models/models.py:0
-#, python-format
 msgid "Changing the storing system for field \"%s\" is not allowed."
-msgstr "Zmena systému ukladania pre pole \"%s\" nie je povolená."
+msgstr "Zmena systému ukladania pre políčko \"%s\" nie je povolená."
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__char
@@ -52,17 +53,17 @@ msgstr "Vytvorené"
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__data
 msgid "Data"
-msgstr "Údaje"
+msgstr "Dáta"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__display_name
 msgid "Display Name"
-msgstr "Zobrazovaný Názov"
+msgstr "Zobrazovaný názov"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_ir_model_fields__ttype
 msgid "Field Type"
-msgstr "Typ Poľa"
+msgstr "Typ poľa"
 
 #. module: base_sparse_field
 #: model:ir.model,name:base_sparse_field.model_ir_model_fields
@@ -72,7 +73,7 @@ msgstr "Polia"
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__float
 msgid "Float"
-msgstr "Float"
+msgstr "Bankový sklz"
 
 #. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__id
@@ -96,11 +97,6 @@ msgid "Integer"
 msgstr "Celočíselné"
 
 #. module: base_sparse_field
-#: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test____last_update
-msgid "Last Modified on"
-msgstr "Posledná modifikácia"
-
-#. module: base_sparse_field
 #: model:ir.model.fields,field_description:base_sparse_field.field_sparse_fields_test__write_uid
 msgid "Last Updated by"
 msgstr "Naposledy upravoval"
@@ -121,8 +117,8 @@ msgid "Partner"
 msgstr "Partner"
 
 #. module: base_sparse_field
+#. odoo-python
 #: code:addons/base_sparse_field/models/models.py:0
-#, python-format
 msgid "Renaming sparse field \"%s\" is not allowed"
 msgstr "Premenovanie rozptýleného poľa \"%s\" nie je povolené"
 
@@ -137,15 +133,17 @@ msgid "Serialization Field"
 msgstr "Serializačné pole"
 
 #. module: base_sparse_field
+#. odoo-python
 #: code:addons/base_sparse_field/models/models.py:0
-#, python-format
-msgid "Serialization field `%s` not found for sparse field `%s`!"
-msgstr "Serializačné pole `%s` nenájdené pre roztrúsené pole `%s`!"
+msgid ""
+"Serialization field \"%(serialization_field)s\" not found for sparse field "
+"%(sparse_field)s!"
+msgstr ""
 
 #. module: base_sparse_field
 #: model:ir.model,name:base_sparse_field.model_sparse_fields_test
 msgid "Sparse fields Test"
-msgstr ""
+msgstr "Test riedkych polí"
 
 #. module: base_sparse_field
 #: model:ir.model.fields.selection,name:base_sparse_field.selection__sparse_fields_test__selection__two

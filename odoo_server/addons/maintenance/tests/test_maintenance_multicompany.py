@@ -78,28 +78,28 @@ class TestEquipmentMulticompany(TransactionCase):
 
         # create equipment category for equipment manager
         category_1 = Category.with_user(equipment_manager).with_context(allowed_company_ids=cids).create({
-            'name': 'Monitors',
+            'name': 'Monitors - Test',
             'company_id': company_b.id,
             'technician_user_id': equipment_manager.id,
         })
 
         # create equipment category for equipment manager
         Category.with_user(equipment_manager).with_context(allowed_company_ids=cids).create({
-            'name': 'Computers',
+            'name': 'Computers - Test',
             'company_id': company_b.id,
             'technician_user_id': equipment_manager.id,
         })
 
         # create equipment category for equipment user
         Category.with_user(equipment_manager).create({
-            'name': 'Phones',
+            'name': 'Phones - Test',
             'company_id': company_a.id,
             'technician_user_id': equipment_manager.id,
         })
 
         # Check category for user equipment_manager and user
-        self.assertEquals(Category.with_user(equipment_manager).with_context(allowed_company_ids=cids).search_count([]), 3)
-        self.assertEquals(Category.with_user(user).search_count([]), 2)
+        self.assertEqual(Category.with_user(equipment_manager).with_context(allowed_company_ids=cids).search_count([]), 3)
+        self.assertEqual(Category.with_user(user).search_count([]), 2)
 
         # User should not able to create equipment.
         with self.assertRaises(AccessError):
@@ -127,11 +127,11 @@ class TestEquipmentMulticompany(TransactionCase):
             'company_id': company_b.id,
             'owner_user_id': equipment_manager.id,
         })
-        # Now there are total 2 equipments created and can view by equipment_manager user
-        self.assertEquals(Equipment.with_user(equipment_manager).with_context(allowed_company_ids=cids).search_count([]), 2)
+        # Now there are total 2 equipment created and can view by equipment_manager user
+        self.assertEqual(Equipment.with_user(equipment_manager).with_context(allowed_company_ids=cids).search_count([]), 2)
 
         # And there is total 1 equipment can be view by Normal User ( Which user is followers)
-        self.assertEquals(Equipment.with_user(user).search_count([]), 1)
+        self.assertEqual(Equipment.with_user(user).search_count([]), 1)
 
         # create an equipment team BY user
         with self.assertRaises(AccessError):
@@ -171,5 +171,5 @@ class TestEquipmentMulticompany(TransactionCase):
         })
 
         # Now here is total 1 maintenance request can be view by Normal User
-        self.assertEquals(MaintenanceRequest.with_user(equipment_manager).with_context(allowed_company_ids=cids).search_count([]), 2)
-        self.assertEquals(MaintenanceRequest.with_user(user).search_count([]), 1)
+        self.assertEqual(MaintenanceRequest.with_user(equipment_manager).with_context(allowed_company_ids=cids).search_count([]), 2)
+        self.assertEqual(MaintenanceRequest.with_user(user).search_count([]), 1)

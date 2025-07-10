@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from markupsafe import Markup
 
 
 class PosOrder(models.Model):
     _inherit = "pos.order"
 
-    employee_id = fields.Many2one('hr.employee', help="Person who uses the cash register. It can be a reliever, a student or an interim employee.", states={'done': [('readonly', True)], 'invoiced': [('readonly', True)]})
-    cashier = fields.Char(string="Cashier", compute="_compute_cashier", store=True)
-
-    @api.model
-    def _order_fields(self, ui_order):
-        order_fields = super(PosOrder, self)._order_fields(ui_order)
-        order_fields['employee_id'] = ui_order.get('employee_id')
-        return order_fields
+    employee_id = fields.Many2one('hr.employee', string="Cashier", help="The employee who uses the cash register.")
+    cashier = fields.Char(string="Cashier name", compute="_compute_cashier", store=True)
 
     @api.depends('employee_id', 'user_id')
     def _compute_cashier(self):
@@ -21,3 +16,8 @@ class PosOrder(models.Model):
                 order.cashier = order.employee_id.name
             else:
                 order.cashier = order.user_id.name
+
+    def _post_chatter_message(self, body):
+        body += Markup("<br/>")
+        body += _("Cashier %s", self.cashier)
+        self.message_post(body=body)

@@ -6,9 +6,9 @@
             <field name="name">paper_format_view_tree</field>
             <field name="model">report.paperformat</field>
             <field name="arch" type="xml">
-                <tree string="Paper format configuration">
+                <list string="Paper format configuration">
                     <field name="name" />
-                </tree>
+                </list>
             </field>
         </record>
         <record id="paperformat_view_form" model="ir.ui.view">
@@ -20,8 +20,8 @@
                     <group>
                         <field name="name" />
                         <field name="format" />
-                        <field name="page_height" attrs="{'invisible': [('format','!=','custom')]}" />
-                        <field name="page_width" attrs="{'invisible': [('format','!=','custom')]}" />
+                        <field name="page_height" invisible="format != 'custom'" />
+                        <field name="page_width" invisible="format != 'custom'" />
                         <field name="orientation" />
                         <field name="margin_top" />
                         <field name="margin_bottom" />
@@ -29,6 +29,7 @@
                         <field name="margin_right" />
                         <field name="header_line" />
                         <field name="header_spacing" />
+                        <field name="disable_shrinking" />
                         <field name="dpi" />
                         <field name="report_ids" widget="many2many_tags" options="{'not_delete': True}"/>
                     </group>
@@ -39,12 +40,12 @@
         <record id="paper_format_action" model="ir.actions.act_window">
             <field name="name">Paper Format General Configuration</field>
             <field name="res_model">report.paperformat</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
         </record>
         <record id='reports_action' model='ir.actions.act_window'>
             <field name="name">Reports</field>
             <field name="res_model">ir.actions.report</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
         </record>
         <menuitem
             id="reporting_menuitem"

@@ -3,17 +3,16 @@
 # 	* website_slides_forum
 # 
 # Translators:
-# Martin Trigaux, 2019
-# trendspotter <j.podhorecky@volny.cz>, 2019
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:13+0000\n"
-"PO-Revision-Date: 2019-08-26 09:16+0000\n"
-"Last-Translator: trendspotter <j.podhorecky@volny.cz>, 2019\n"
-"Language-Team: Czech (https://www.transifex.com/odoo/teams/41243/cs/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Czech (https://app.transifex.com/odoo/teams/41243/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -40,7 +39,7 @@ msgstr ""
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid ""
-"<b>Answers should not add or expand questions</b>. Insteadeither edit the "
+"<b>Answers should not add or expand questions</b>. Instead, either edit the "
 "question or add a comment."
 msgstr ""
 "<b>Odpovědi by neměly přidávat ani rozšiřovat otázky</b>. Místo toho buď "
@@ -135,46 +134,44 @@ msgstr ""
 "subjektivní a argumentační</b> nebo nejsou relevantní."
 
 #. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What kinds of questions can I ask here?</b> <i class=\"fa fa-caret-down "
-"float-right\"></i>"
-msgstr ""
-"<b>Jaké otázky zde mohu položit?</b> <i class=\"fa fa-caret-down float-"
-"right\"></i>"
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What should I avoid in my answers?</b> <i class=\"fa fa-caret-down float-"
-"right\"></i>"
-msgstr ""
-"<b>Čemu bych se měl ve svých odpovědích vyhnout?</b> <i class=\"fa fa-caret-"
-"down float-right\"></i>"
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"<b>What should I avoid in my questions?</b> <i class=\"fa fa-caret-down "
-"float-right\"></i>"
-msgstr ""
-"<b>Čemu bych se měl ve svých otázkách vyhnout?</b> <i class=\"fa fa-caret-"
-"down float-right\"></i>"
-
-#. module: website_slides_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.slide_fullscreen
 msgid ""
-"<i class=\"fa fa-comments\"/><span class=\"ml-1 d-none d-md-inline-"
-"block\">Ask a question</span>"
+"<i class=\"fa fa-comments\"/><span class=\"ms-1 d-none d-md-inline-"
+"block\">Forum</span>"
+msgstr ""
+"<i class=\"fa fa-comments\"/><span class=\"ms-1 d-none d-md-inline-"
+"block\">Fórum</span>"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What kind of questions can I ask here?</span>"
 msgstr ""
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
-msgid "<i class=\"fa fa-home\"/> Course"
-msgstr "<i class=\"fa fa-home\"/> Kurz"
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What should I avoid in my answers?</span>"
+msgstr ""
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "<span class=\"flex-grow-1\">What should I avoid in my questions?</span>"
+msgstr ""
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"<span class=\"flex-grow-1\">Why can other people edit my "
+"questions/answers?</span>"
+msgstr ""
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_breadcrumb
+msgid "<strong>Forum</strong>"
+msgstr ""
 
 #. module: website_slides_forum
 #: model:forum.forum,name:website_slides_forum.forum_forum_demo_channel_0
@@ -182,26 +179,27 @@ msgid "Basics of Gardening"
 msgstr "Základy zahradnictví"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Check our Courses <i class=\"fa fa-chevron-right\"/>"
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_all_all_entries
+msgid "Check out our courses <i class=\"fa fa-long-arrow-right\"/>"
 msgstr ""
 
 #. module: website_slides_forum
-#. openerp-web
-#: code:addons/website_slides_forum/static/src/xml/website_slides_forum_channel.xml:0
-#, python-format
-msgid "Communication"
-msgstr "Komunikace"
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
+msgid "Come back later to monitor and moderate what is posted on your Forums."
+msgstr ""
+"Vraťte se později a sledujte a moderujte, co je zveřejněno na vašich fórech."
 
 #. module: website_slides_forum
+#: model:ir.model,name:website_slides_forum.model_slide_channel
 #: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__slide_channel_id
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_all_all_entries
 msgid "Course"
-msgstr "Kurs"
+msgstr "Kurz"
 
 #. module: website_slides_forum
 #: model:ir.model.fields,field_description:website_slides_forum.field_slide_channel__forum_id
 msgid "Course Forum"
-msgstr ""
+msgstr "Fórum kurzu"
 
 #. module: website_slides_forum
 #: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__slide_channel_ids
@@ -209,26 +207,26 @@ msgid "Courses"
 msgstr "Kurzy"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Courses Discussions"
-msgstr ""
-
-#. module: website_slides_forum
-#. openerp-web
-#: code:addons/website_slides_forum/static/src/xml/website_slides_forum_channel.xml:0
-#, python-format
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_forum_action_channel
 msgid "Create a Forum"
+msgstr "Vytvořit fórum"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Dismiss"
+msgstr "Zrušit"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Dismiss message"
 msgstr ""
 
 #. module: website_slides_forum
-#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
-msgid "Create a new forum post"
-msgstr "Vytvořit nový příspěvek na fóru"
-
-#. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "Description"
-msgstr "Popis"
+#: model:ir.model.fields,help:website_slides_forum.field_forum_forum__slide_channel_ids
+msgid "Edit the course linked to this forum on the course form."
+msgstr "Upravte kurz propojený s tímto fórem ve formuláři kurzu."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -237,42 +235,67 @@ msgid ""
 "For example, if you ask an interesting question or give a helpful answer, "
 "your input will be upvoted. On the other hand if the answer is misleading - "
 "it will be downvoted. Each vote in favor will generate 10 points, each vote "
-"against will subtract 10 points. There is a limit of 200 points that can be "
+"against will subtract 2 points. There is a limit of 200 points that can be "
 "accumulated for a question or answer per day. The table given at the end "
 "explains reputation point requirements for each type of moderation task."
 msgstr ""
 "Pokud například položíte zajímavou otázku nebo poskytnete užitečnou odpověď,"
 " váš příspěvek bude hlasováním posunut nahoru. Na druhou stranu, pokud je "
-"odpověď zavádějící - bude hlasováním posunut dolu. Každým kladným hlasem "
-"získá 10 bodů, každý hlas proti odečte 10 bodů. Limit je 200 bodů denně, "
+"odpověď zavádějící - bude hlasováním posunut dolů. Každým kladným hlasem "
+"získá 10 bodů, každý hlas proti odečte 2 body. Limit je 200 bodů denně, "
 "které lze nashromáždit za otázku nebo odpověď. Tabulka uvedená na konci "
 "vysvětluje požadavky na reputaci bodů pro každý typ úkolu moderování."
 
 #. module: website_slides_forum
 #: model:ir.model,name:website_slides_forum.model_forum_forum
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum
-#: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_report_forum
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.course_main
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.slide_fullscreen
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_breadcrumb
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
 msgid "Forum"
 msgstr "Fórum"
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
-msgid "Forum Posts"
-msgstr "příspěvky fóra"
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.snippet_options
+msgid "Forum Page"
+msgstr "Stránka fóra"
 
 #. module: website_slides_forum
+#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_channel
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_channel_inherit_view_form
+msgid "Forum Posts"
+msgstr "Příspěvky fóra"
+
+#. module: website_slides_forum
+#: model:ir.model.fields,help:website_slides_forum.field_forum_forum__visibility
+msgid ""
+"Forum linked to a Course, the visibility is the one applied on the course."
+msgstr ""
+"Fórum propojené s kurzem, viditelnost je ta, která se aplikuje na kurz."
+
+#. module: website_slides_forum
+#: model:ir.actions.act_window,name:website_slides_forum.forum_forum_action_channel
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum_forum
 msgid "Forums"
 msgstr "Fóra"
 
 #. module: website_slides_forum
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid "Hide Intro"
-msgstr "Skrýt intro"
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_forum_action_channel
+msgid "Forums allow your attendees to ask questions to your community."
+msgstr "Fóra umožňují vašim účastníkům klást otázky vaší komunitě."
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "Here a table with the privileges and the karma level"
+msgstr "Zde tabulka s výsadami a úrovní karmy"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid "If this approach is not for you, please respect the community."
+msgstr "Pokud tento přístup není pro vás, respektujte prosím komunitu."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -284,6 +307,21 @@ msgid ""
 "motivation is “I would like others to explain ______ to me”, then you are "
 "probably OK."
 msgstr ""
+"Pokud zapadáte do některého z těchto příkladů nebo pokud máte motivaci k "
+"položení otázky „Chtěl bych se zúčastnit diskuse o ______“, neměli byste se "
+"ptát zde, ale na našich seznamech adresátů. Pokud je však vaše motivace "
+"„Chtěl bych, aby mi ostatní vysvětlili ______“, pak jste pravděpodobně v "
+"pořádku."
+
+#. module: website_slides_forum
+#: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__image_1920
+msgid "Image"
+msgstr "Obrázek"
+
+#. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.res_config_settings_view_form
+msgid "Manage Forums"
+msgstr "Spravovat fóra"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -292,14 +330,19 @@ msgid "More over:"
 msgstr "Navíc:"
 
 #. module: website_slides_forum
+#: model_terms:ir.actions.act_window,help:website_slides_forum.forum_post_action_channel
+msgid "No Forum Post yet!"
+msgstr "Zatím žádný příspěvek na fóru!"
+
+#. module: website_slides_forum
 #: model:ir.model.fields,field_description:website_slides_forum.field_slide_channel__forum_total_posts
 msgid "Number of active forum posts"
-msgstr ""
+msgstr "Počet aktivních příspěvků na fóru"
 
 #. module: website_slides_forum
 #: model:ir.model.constraint,message:website_slides_forum.constraint_slide_channel_forum_uniq
-msgid "Only one forum per slide channel!"
-msgstr ""
+msgid "Only one course per forum!"
+msgstr "Pouze jeden kurz na fórum!"
 
 #. module: website_slides_forum
 #: model:ir.ui.menu,name:website_slides_forum.website_slides_menu_forum_post
@@ -307,25 +350,52 @@ msgid "Posts"
 msgstr "Příspěvky"
 
 #. module: website_slides_forum
+#: model_terms:ir.ui.view,arch_db:website_slides_forum.snippet_options
+msgid "Separate Courses"
+msgstr "Samostatné kurzy"
+
+#. module: website_slides_forum
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid "Register"
-msgstr "Registrovat"
-
-#. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_header
-msgid "Review"
+msgid ""
+"Share and discuss the best content and new marketing ideas, build your "
+"professional profile and become a better marketer together."
 msgstr ""
 
 #. module: website_slides_forum
-#: model_terms:ir.ui.view,arch_db:website_slides_forum.website_slides_forum_index
-msgid "See all Courses"
+#: model:ir.model.fields,field_description:website_slides_forum.field_forum_forum__visibility
+msgid "Show Course To"
 msgstr ""
 
 #. module: website_slides_forum
-#: model:ir.model,name:website_slides_forum.model_slide_channel
-msgid "Slide Channel"
-msgstr "Kanál prezentace"
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
+msgid "Sign up"
+msgstr "Přihlásit se"
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"The goal of this site is create a relevant knowledge base that would answer "
+"questions related to Odoo."
+msgstr ""
+"Cílem tohoto webu je vytvořit relevantní znalostní základnu, která by "
+"odpovídala na otázky týkající se Odoo."
+
+#. module: website_slides_forum
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
+#: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
+msgid ""
+"Therefore questions and answers can be edited like wiki pages by experienced"
+" users of this site in order to improve the overall quality of the knowledge"
+" base content. Such privileges are granted based on user karma level: you "
+"will be able to do the same once your karma gets high enough."
+msgstr ""
+"Zkušení uživatelé tohoto webu mohou proto upravovat otázky a odpovědi jako "
+"wiki stránky, aby se zvýšila celková kvalita obsahu znalostní báze. Taková "
+"oprávnění jsou udělována na základě uživatelské karmy: budete mít možnost "
+"udělat totéž, jakmile bude vaše karma dostatečně vysoká."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -334,14 +404,8 @@ msgid ""
 "This community is for professional and enthusiast users, partners and "
 "programmers. You can ask questions about:"
 msgstr ""
-
-#. module: website_slides_forum
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
-#: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_2
-msgid ""
-"This community is for professionals and enthusiasts of our products and services.\n"
-"                                        <br>Share and discuss the best content and new marketing ideas, build your professional profile and become a better marketer together."
-msgstr ""
+"Tato komunita je pro profesionální a nadšené uživatele, partnery a "
+"programátory. Můžete klást otázky týkající se:"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -350,11 +414,13 @@ msgid ""
 "To prevent your question from being flagged and possibly removed, avoid "
 "asking subjective questions where …"
 msgstr ""
+"Chcete-li zabránit tomu, aby byla vaše otázka označena a případně "
+"odstraněna, vyhýbejte se subjektivním otázkám, kde ..."
 
 #. module: website_slides_forum
 #: model:forum.forum,name:website_slides_forum.forum_forum_demo_channel_2
 msgid "Trees, Wood and Gardens"
-msgstr ""
+msgstr "Stromy, dřevo a zahrady"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,welcome_message:website_slides_forum.forum_forum_demo_channel_0
@@ -371,6 +437,10 @@ msgid ""
 "rough measure of the community trust to him/her. Various moderation tasks "
 "are gradually assigned to the users based on those points."
 msgstr ""
+"Když je otázka nebo odpověď kladně hlasována, uživatel, který ji zveřejnil, "
+"získá nějaké body, které se nazývají „body karmy“. Tyto body slouží jako "
+"hrubé měřítko důvěry komunity k němu/ní. Na základě těchto bodů jsou "
+"uživatelům postupně přidělovány různé moderátorské úkoly."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -390,16 +460,9 @@ msgid "eLearning"
 msgstr "eLearning"
 
 #. module: website_slides_forum
-#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_channel
-#: model:ir.actions.act_window,name:website_slides_forum.forum_post_action_report
 #: model_terms:ir.ui.view,arch_db:website_slides_forum.forum_post_view_graph_slides
 msgid "eLearning Forum Posts"
-msgstr ""
-
-#. module: website_slides_forum
-#: model:ir.actions.act_window,name:website_slides_forum.forum_forum_action_channel
-msgid "eLearning Forums"
-msgstr ""
+msgstr " eLearningové příspěvky na fóru"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -437,7 +500,7 @@ msgstr ""
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_2
 msgid "specific questions about Odoo service offers, etc."
-msgstr ""
+msgstr "konkrétní otázky týkající se nabídky služeb Odoo atd."
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -455,7 +518,7 @@ msgstr ""
 msgid ""
 "we are being asked an open-ended, hypothetical question: “What if ______ "
 "happened?”"
-msgstr ""
+msgstr "dostáváme otevřenou hypotetickou otázku: „Co kdyby se ______ stalo?“"
 
 #. module: website_slides_forum
 #: model_terms:forum.forum,faq:website_slides_forum.forum_forum_demo_channel_0
@@ -470,3 +533,5 @@ msgid ""
 "your answer is provided along with the question, and you expect more "
 "answers: “I use ______ for ______, what do you use?”"
 msgstr ""
+"vaše odpověď je poskytnuta spolu s otázkou, a vy očekáváte víc odpovědí: "
+"\"Používám ______ pro ______, co používáte vy?\""

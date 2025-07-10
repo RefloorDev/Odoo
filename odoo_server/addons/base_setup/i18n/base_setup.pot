@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-13 11:27+0000\n"
-"PO-Revision-Date: 2019-09-13 11:27+0000\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-26 08:55+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -16,62 +16,42 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
-msgid "(Community Edition)"
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "<span class=\"fa fa-lg fa-users\" aria-label=\"Number of active users\"/>"
 msgstr ""
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
-"<span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-"
-"specific.\" aria-label=\"Values set here are company-specific.\" "
-"groups=\"base.group_multi_company\" role=\"img\"/>"
+"<span class=\"o_form_label\" invisible=\"active_user_count &gt; 1\">\n"
+"                                        Active User\n"
+"                                    </span>\n"
+"                                    <span class=\"o_form_label\" invisible=\"active_user_count &lt;= 1\">\n"
+"                                        Active Users\n"
+"                                    </span>"
 msgstr ""
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
-"<span class=\"o_form_label\" attrs=\"{'invisible':[('active_user_count', '&gt;', '1')]}\">\n"
-"                                            Active User\n"
+"<span class=\"o_form_label\" invisible=\"company_count &gt; 1\">\n"
+"                                        Company\n"
+"                                    </span>\n"
+"                                    <span class=\"o_form_label\" invisible=\"company_count &lt;= 1\">\n"
+"                                        Companies\n"
+"                                    </span>\n"
+"                                    <br/>"
+msgstr ""
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid ""
+"<span class=\"o_form_label\" invisible=\"language_count &gt; 1\">\n"
+"                                            Language\n"
 "                                        </span>\n"
-"                                        <span class=\"o_form_label\" attrs=\"{'invisible':[('active_user_count', '&lt;=', '1')]}\">\n"
-"                                            Active Users\n"
-"                                        </span>\n"
-"\n"
-"                                        <br/>"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"<span class=\"o_form_label\">\n"
-"                                                Languages\n"
-"                                            </span>"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"<span class=\"o_form_label\">\n"
-"                                            Companies\n"
-"                                        </span>\n"
-"                                        <br/>"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"<span class=\"o_form_label\">Document Layout</span>\n"
-"                                        <span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-specific.\" aria-label=\"Values set here are company-specific.\" groups=\"base.group_multi_company\" role=\"img\"/>"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"<span class=\"o_form_label\">Format</span>\n"
-"                                        <span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-specific.\" aria-label=\"Values set here are company-specific.\" groups=\"base.group_multi_company\" role=\"img\"/>"
+"                                        <span class=\"o_form_label\" invisible=\"language_count &lt;= 1\">\n"
+"                                            Languages\n"
+"                                        </span>"
 msgstr ""
 
 #. module: base_setup
@@ -84,7 +64,32 @@ msgstr ""
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
+"<strong>Save</strong> this page and come back here to set up Cloudflare "
+"turnstile."
+msgstr ""
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid ""
+"<strong>Save</strong> this page and come back here to set up reCaptcha."
+msgstr ""
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid ""
 "<strong>Save</strong> this page and come back here to set up the feature."
+msgstr ""
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "API Keys"
+msgstr ""
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid ""
+"API Keys allow your users to access Odoo with external tools when multi-"
+"factor authentication is enabled."
 msgstr ""
 
 #. module: base_setup
@@ -93,30 +98,14 @@ msgid "About"
 msgstr ""
 
 #. module: base_setup
+#. odoo-python
 #: code:addons/base_setup/controllers/main.py:0
-#, python-format
 msgid "Access Denied"
 msgstr ""
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Activate the developer mode"
-msgstr ""
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Activate the developer mode (with assets)"
-msgstr ""
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Activate the developer mode (with tests assets)"
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Add Languages"
 msgstr ""
 
 #. module: base_setup
@@ -125,8 +114,18 @@ msgid "Add fun feedback and motivate your employees"
 msgstr ""
 
 #. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_mail_plugin
+msgid "Allow integration with the mail plugins"
+msgstr ""
+
+#. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_calendar
 msgid "Allow the users to synchronize their calendar  with Google Calendar"
+msgstr ""
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_microsoft_calendar
+msgid "Allow the users to synchronize their calendar with Outlook Calendar"
 msgstr ""
 
 #. module: base_setup
@@ -141,36 +140,20 @@ msgid "Allows to work in a multi currency environment"
 msgstr ""
 
 #. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_voip
-msgid "Asterisk (VoIP)"
-msgstr ""
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_drive
-msgid "Attach Google documents to any record"
-msgstr ""
-
-#. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Automatically enrich your contact base with company data"
 msgstr ""
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"Automatically generate counterpart documents for orders/invoices between "
-"companies"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Business Documents"
+msgid "Automatically generate counterpart documents in recipient companies"
 msgstr ""
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
-"By default, new users get highest access rights for all installed apps."
+"By default, new users get highest access rights for all installed apps. If "
+"unchecked, new users will only have basic employee access."
 msgstr ""
 
 #. module: base_setup
@@ -179,8 +162,8 @@ msgid "Choose the layout of your documents"
 msgstr ""
 
 #. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_pad
-msgid "Collaborative Pads"
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_website_cf_turnstile
+msgid "Cloudflare Turnstile"
 msgstr ""
 
 #. module: base_setup
@@ -191,6 +174,11 @@ msgstr ""
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__company_id
 msgid "Company"
+msgstr ""
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__company_country_code
+msgid "Company Country Code"
 msgstr ""
 
 #. module: base_setup
@@ -226,27 +214,8 @@ msgid "Contacts"
 msgstr ""
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
-msgid "Copyright © 2004"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Create and attach Google Drive documents to any record"
-msgstr ""
-
-#. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__report_footer
 msgid "Custom Report Footer"
-msgstr ""
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Deactivate the developer mode"
 msgstr ""
 
 #. module: base_setup
@@ -256,10 +225,14 @@ msgid "Default Access Rights"
 msgstr ""
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Developer Tools"
+#. odoo-python
+#: code:addons/base_setup/models/res_config_settings.py:0
+msgid "Default User Template not found."
+msgstr ""
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Document Layout"
 msgstr ""
 
 #. module: base_setup
@@ -273,20 +246,10 @@ msgid "Edit Layout"
 msgstr ""
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "Enter e-mail address"
-msgstr ""
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__external_email_server_default
-msgid "External Email Servers"
-msgstr ""
-
-#. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Extract and analyze Odoo data from Google Spreadsheet"
+msgid ""
+"Enable the profiling tool. Profiling may impact performance while being "
+"active."
 msgstr ""
 
 #. module: base_setup
@@ -300,31 +263,9 @@ msgid "Footer text displayed at the bottom of all reports."
 msgstr ""
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Format"
-msgstr ""
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
-msgid "GNU LGPL Licensed"
-msgstr ""
-
-#. module: base_setup
 #: model:ir.ui.menu,name:base_setup.menu_config
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "General Settings"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Gengo Translations"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Geo Localization"
 msgstr ""
 
 #. module: base_setup
@@ -334,22 +275,17 @@ msgstr ""
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "GeoLocalize your partners"
+msgid "Geolocate your partners"
 msgstr ""
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Google Calendar"
+msgid "Geolocation"
 msgstr ""
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Google Drive"
-msgstr ""
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_spreadsheet
-msgid "Google Spreadsheet"
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_product_images
+msgid "Get product pictures using barcode"
 msgstr ""
 
 #. module: base_setup
@@ -364,6 +300,11 @@ msgstr ""
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Integrate with mail client plugins"
+msgstr ""
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Integrations"
 msgstr ""
 
@@ -373,17 +314,8 @@ msgid "Inter-Company Transactions"
 msgstr ""
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "Invite"
-msgstr ""
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "Invite New Users"
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__is_root_company
+msgid "Is Root Company"
 msgstr ""
 
 #. module: base_setup
@@ -403,10 +335,13 @@ msgid "Layout"
 msgstr ""
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Load demo data"
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Mail Plugin"
+msgstr ""
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Manage API Keys"
 msgstr ""
 
 #. module: base_setup
@@ -415,7 +350,7 @@ msgid "Manage Companies"
 msgstr ""
 
 #. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_inter_company_rules
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_account_inter_company_rules
 msgid "Manage Inter Company"
 msgstr ""
 
@@ -427,11 +362,6 @@ msgstr ""
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Manage Users"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Multi-Company"
 msgstr ""
 
 #. module: base_setup
@@ -460,32 +390,8 @@ msgid "OAuth Authentication"
 msgstr ""
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Odoo"
-msgstr ""
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
-msgid "Odoo S.A."
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "On Apple Store"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "On Google Play"
-msgstr ""
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__paperformat_id
-msgid "Paper format"
 msgstr ""
 
 #. module: base_setup
@@ -494,15 +400,43 @@ msgid "Partner Autocomplete"
 msgstr ""
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "Pending Invitations:"
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Performance"
+msgstr ""
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Permissions"
 msgstr ""
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Preview Document"
+msgstr ""
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__profiling_enabled_until
+msgid "Profiling enabled until"
+msgstr ""
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Progressive Web App"
+msgstr ""
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Protect your forms from spam and abuse."
+msgstr ""
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Protect your forms with CF Turnstile."
+msgstr ""
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_sms
+msgid "SMS"
 msgstr ""
 
 #. module: base_setup
@@ -521,11 +455,6 @@ msgid "Set custom access rights for new users"
 msgstr ""
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Set the paper format of printed documents"
-msgstr ""
-
-#. module: base_setup
 #: model:ir.actions.act_window,name:base_setup.action_general_configuration
 msgid "Settings"
 msgstr ""
@@ -536,37 +465,17 @@ msgid "Show Effect"
 msgstr ""
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Statistics"
+#: model:ir.model.fields,help:base_setup.field_res_config_settings__company_country_code
+msgid ""
+"The ISO country code in two chars. \n"
+"You can use this field for quick search."
 msgstr ""
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Synchronize your calendar with Google Calendar"
-msgstr ""
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/js/res_config_invite_users.js:0
-#, python-format
-msgid "The following email addresses already exist: %s."
-msgstr ""
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/js/res_config_invite_users.js:0
-#, python-format
-msgid "The following email addresses are invalid: %s."
-msgstr ""
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_base_gengo
-msgid "Translate Your Website with Gengo"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Translate your website with Gengo"
+msgid ""
+"This name will be used for the application when Odoo is installed through "
+"the browser."
 msgstr ""
 
 #. module: base_setup
@@ -595,17 +504,24 @@ msgid "Use external authentication providers (OAuth)"
 msgstr ""
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Use external pads in Odoo Notes"
+#: model:ir.model,name:base_setup.model_res_users
+msgid "User"
 msgstr ""
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/js/res_config_invite_users.js:0
-#: model:ir.model,name:base_setup.model_res_users
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-#, python-format
 msgid "Users"
+msgstr ""
+
+#. module: base_setup
+#. odoo-python
+#: code:addons/base_setup/models/res_config_settings.py:0
+msgid "VAT"
+msgstr ""
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_voip
+msgid "VoIP"
 msgstr ""
 
 #. module: base_setup
@@ -617,8 +533,6 @@ msgid ""
 msgstr ""
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "more"
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_recaptcha
+msgid "reCAPTCHA"
 msgstr ""

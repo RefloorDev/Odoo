@@ -14,6 +14,12 @@ class TestWebsiteSequence(odoo.tests.TransactionCase):
         # if stock is installed we can't archive since there is orderpoints
         if hasattr(self.env['product.product'], 'orderpoint_ids'):
             product_templates.mapped('product_variant_ids.orderpoint_ids').write({'active': False})
+        # if pos loyalty is installed we can't archive since there are loyalty rules and rewards
+        if 'loyalty.program' in self.env:
+            programs = self.env['loyalty.program'].search([])
+            programs.active = False
+            programs.coupon_ids.unlink()
+            programs.unlink()
         product_templates.write({'active': False})
         self.p1, self.p2, self.p3, self.p4 = ProductTemplate.create([{
             'name': 'First Product',

@@ -3,19 +3,21 @@
 # 	* website_membership
 # 
 # Translators:
-# Kristoffer Grundström <hamnisdude@gmail.com>, 2019
-# Martin Trigaux, 2019
-# Anders Wallenquist <anders.wallenquist@vertel.se>, 2019
-# Kim Asplund <kim.asplund@gmail.com>, 2019
+# Kristoffer Grundström <lovaren@gmail.com>, 2024
+# Martin Trigaux, 2024
+# Chrille Hedberg <hedberg.chrille@gmail.com>, 2024
+# Kim Asplund <kim.asplund@gmail.com>, 2024
+# Anders Wallenquist <anders.wallenquist@vertel.se>, 2024
+# Jakob Krabbe <jakob.krabbe@vertel.se>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:33+0000\n"
-"PO-Revision-Date: 2019-08-26 09:16+0000\n"
-"Last-Translator: Kim Asplund <kim.asplund@gmail.com>, 2019\n"
-"Language-Team: Swedish (https://www.transifex.com/odoo/teams/41243/sv/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Jakob Krabbe <jakob.krabbe@vertel.se>, 2024\n"
+"Language-Team: Swedish (https://app.transifex.com/odoo/teams/41243/sv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -37,8 +39,8 @@ msgid "All"
 msgstr "Alla"
 
 #. module: website_membership
-#: code:addons/website_membership/controllers/main.py:83
-#, python-format
+#. odoo-python
+#: code:addons/website_membership/controllers/main.py:0
 msgid "All Countries"
 msgstr "Alla länder"
 
@@ -53,31 +55,43 @@ msgid "Close"
 msgstr "Stäng"
 
 #. module: website_membership
-#: model_terms:ir.ui.view,arch_db:website_membership.index
-msgid "Find a business partner"
-msgstr "Hitta Partner"
+#: model_terms:ir.ui.view,arch_db:website_membership.partner
+msgid "DROP BUILDING BLOCKS HERE TO MAKE THEM AVAILABLE ACROSS ALL MEMBERS"
+msgstr "LÄMNA BYGGBLOCK HÄR FÖR ATT GÖRA DEM TILLGÄNGLIGA FÖR ALLA MEDLEMMAR"
 
 #. module: website_membership
-#: code:addons/website_membership/controllers/main.py:126
-#, python-format
+#: model_terms:ir.ui.view,arch_db:website_membership.index
+msgid "Find a business partner"
+msgstr "Hitta kontakt"
+
+#. module: website_membership
+#. odoo-python
+#: code:addons/website_membership/controllers/main.py:0
 msgid "Free Members"
 msgstr "Gratis Medlemmar"
 
 #. module: website_membership
 #: model_terms:ir.ui.view,arch_db:website_membership.opt_index_country
+#: model_terms:ir.ui.view,arch_db:website_membership.snippet_options
 msgid "Location"
 msgstr "Plats"
 
 #. module: website_membership
+#. odoo-python
+#: code:addons/website_membership/models/website.py:0
 #: model_terms:ir.ui.view,arch_db:website_membership.index
-#: model:website.menu,name:website_membership.menu_members
 msgid "Members"
 msgstr "Medlemmar"
 
 #. module: website_membership
+#: model_terms:ir.ui.view,arch_db:website_membership.snippet_options
+msgid "Members Page"
+msgstr "Medlemssida"
+
+#. module: website_membership
 #: model:ir.model,name:website_membership.model_membership_membership_line
 msgid "Membership Line"
-msgstr "Medlemskap Linje"
+msgstr "Medlemskapslinje"
 
 #. module: website_membership
 #: model_terms:ir.ui.view,arch_db:website_membership.index
@@ -90,11 +104,12 @@ msgid "Our Members Directory"
 msgstr "Vår Medlems Katalog"
 
 #. module: website_membership
-#: model_terms:ir.ui.view,arch_db:website_membership.opt_index_google_map
-msgid "World Map"
-msgstr "Världskarta"
+#: model:ir.model,name:website_membership.model_website
+msgid "Website"
+msgstr "Webbplats"
 
 #. module: website_membership
-#: model_terms:ir.ui.view,arch_db:website_membership.index
-msgid "float-left"
-msgstr "float-left"
+#: model_terms:ir.ui.view,arch_db:website_membership.opt_index_google_map
+#: model_terms:ir.ui.view,arch_db:website_membership.snippet_options
+msgid "World Map"
+msgstr "Världskarta"

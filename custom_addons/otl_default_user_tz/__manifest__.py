@@ -1,13 +1,11 @@
-# Copyright (C) 2020 One Team US LLC
-# <https://www.oneteam.us>
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+# -*- coding: utf-8 -*-
 {
     'name': "Default Timezone",
     'summary': "Set Default Timezone for Users and Partners",
     'version': '0.0.1',
-    'category': 'Extra Tools',
-    'website': 'https://oneteam.us/',
-    'author': 'One Team US LLC',
+    'category': 'Other',
+    'website': 'https://xeonglobal.com/',
+    'author': 'Sagar Mokariya',
     'application': False,
     'installable': True,
     'depends': [
@@ -16,4 +14,5 @@
     'data': [
         'views/res_config_settings_view.xml',
     ],
+    'license': 'OPL-1',
 }

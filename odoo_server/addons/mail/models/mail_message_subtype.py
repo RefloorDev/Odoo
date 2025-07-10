@@ -20,7 +20,7 @@ class MailMessageSubtype(models.Model):
              'change in a process (Stage change). Message subtypes allow to '
              'precisely tune the notifications the user want to receive on its wall.')
     description = fields.Text(
-        'Description', translate=True,
+        'Description', translate=True, prefetch=True,
         help='Description that will be added in the message posted for this '
              'subtype. If void, the name will be added instead.')
     internal = fields.Boolean(
@@ -40,23 +40,28 @@ class MailMessageSubtype(models.Model):
     default = fields.Boolean('Default', default=True, help="Activated by default when subscribing.")
     sequence = fields.Integer('Sequence', default=1, help="Used to order subtypes.")
     hidden = fields.Boolean('Hidden', help="Hide the subtype in the follower options")
+    track_recipients = fields.Boolean('Track Recipients',
+                                      help="Whether to display all the recipients or only the important ones.")
 
-    @api.model
-    def create(self, vals):
-        self.clear_caches()
-        return super(MailMessageSubtype, self).create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        self.env.registry.clear_cache()  # _get_auto_subscription_subtypes
+        return super(MailMessageSubtype, self).create(vals_list)
 
     def write(self, vals):
-        self.clear_caches()
+        self.env.registry.clear_cache()  # _get_auto_subscription_subtypes
         return super(MailMessageSubtype, self).write(vals)
 
     def unlink(self):
-        self.clear_caches()
+        self.env.registry.clear_cache()  # _get_auto_subscription_subtypes
         return super(MailMessageSubtype, self).unlink()
 
     @tools.ormcache('model_name')
     def _get_auto_subscription_subtypes(self, model_name):
         """ Return data related to auto subscription based on subtype matching.
+        Here model_name indicates child model (like a task) on which we want to
+        make subtype matching based on its parents (like a project).
+
         Example with tasks and project :
 
          * generic: discussion, res_model = False
@@ -65,13 +70,15 @@ class MailMessageSubtype(models.Model):
 
         Returned data
 
-          * all_ids: all subtypes that are generic or related to task and project
-          * def_ids: for task, default subtypes ids
-          * int_ids: for task, internal-only default subtypes ids
+          * child_ids: all subtypes that are generic or related to task (res_model = False or model_name)
+          * def_ids: default subtypes ids (either generic or task specific)
+          * all_int_ids: all internal-only subtypes ids (generic or task or project)
           * parent: dict(parent subtype id, child subtype id), i.e. {task_new.id: new.id}
           * relation: dict(parent_model, relation_fields), i.e. {'project.project': ['project_id']}
         """
-        all_ids, def_ids, int_ids, parent, relation = list(), list(), list(), dict(), dict()
+        child_ids, def_ids = list(), list()
+        all_int_ids = list()
+        parent, relation = dict(), dict()
         subtypes = self.sudo().search([
             '|', '|', ('res_model', '=', False),
             ('res_model', '=', model_name),
@@ -79,15 +86,16 @@ class MailMessageSubtype(models.Model):
         ])
         for subtype in subtypes:
             if not subtype.res_model or subtype.res_model == model_name:
-                all_ids += subtype.ids
+                child_ids += subtype.ids
                 if subtype.default:
                     def_ids += subtype.ids
             elif subtype.relation_field:
                 parent[subtype.id] = subtype.parent_id.id
                 relation.setdefault(subtype.res_model, set()).add(subtype.relation_field)
+            # required for backward compatibility
             if subtype.internal:
-                int_ids += subtype.ids
-        return all_ids, def_ids, int_ids, parent, relation
+                all_int_ids += subtype.ids
+        return child_ids, def_ids, all_int_ids, parent, relation
 
     @api.model
     def default_subtypes(self, model_name):

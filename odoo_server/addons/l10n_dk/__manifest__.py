@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-
 {
     'name': 'Denmark - Accounting',
-    'version': '1.0',
-    'author': 'Odoo House ApS',
-    'website': 'https://odoohouse.dk',
-    'category': 'Localization',
+    'icon': '/account/static/description/l10n.png',
+    'countries': ['dk'],
+    'version': '1.3',
+    'author': 'Odoo House ApS, VK DATA ApS, FlexERP ApS',
+    'website': 'https://www.odoo.com/documentation/master/applications/finance/fiscal_localizations.html',
+    'category': 'Accounting/Localizations/Account Charts',
     'description': """
 
 Localization Module for Denmark
@@ -22,7 +22,7 @@ This is the module to manage the **accounting chart for Denmark**. Cover both on
         - 25% moms
         - Resturationsmoms 6,25%
         - Omvendt betalingspligt
-        
+
 - Konteringsgrupper
         - EU (Virksomhed)
         - EU (Privat)
@@ -87,19 +87,19 @@ Produkt setup:
 
 .
 
-Copyright 2018 Odoo House ApS
     """,
-    'depends': ['account', 'base_iban', 'base_vat'],
-    'data': [
-        'data/account_account_tags.xml',
-        'data/l10n_dk_chart_template_data.xml',
-        'data/account.account.template.csv',
-        'data/l10n_dk_chart_template_post_data.xml',
-        'data/account_tax_template_data.xml',
-        'data/account_fiscal_position_template.xml',
-        'data/account_fiscal_position_tax_template.xml',
-        'data/account_fiscal_position_account_template.xml',
-        'data/account_chart_template_configuration_data.xml',
-        'data/menuitem_data.xml'
+    'depends': [
+        'base_iban',
+        'base_vat',
+        'account',
     ],
+    'auto_install': ['account'],
+    'data': [
+        'data/account_tax_report_data.xml',
+        'data/account.account.tag.csv',
+    ],
+    'demo': [
+        'demo/demo_company.xml',
+    ],
+    'license': 'LGPL-3',
 }

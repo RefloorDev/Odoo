@@ -3,25 +3,21 @@
 # 	* http_routing
 # 
 # Translators:
-# Efrem Jimenez <efj@odoo.com>, 2019
-# Martin Trigaux, 2019
-# Rick Hunter <rick_hunter_ec@yahoo.com>, 2019
-# Nicolás Broggi <rnbroggi@gmail.com>, 2019
-# Jon Perez <jop@odoo.com>, 2019
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:14+0000\n"
-"PO-Revision-Date: 2019-08-26 09:11+0000\n"
-"Last-Translator: Jon Perez <jop@odoo.com>, 2019\n"
-"Language-Team: Spanish (https://www.transifex.com/odoo/teams/41243/es/)\n"
+"POT-Creation-Date: 2024-09-26 08:57+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Spanish (https://app.transifex.com/odoo/teams/41243/es/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: es\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.403
@@ -30,19 +26,22 @@ msgstr "403: Prohibido"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.404
-msgid "404: Page not found!"
-msgstr "404: ¡Página no encontrada!"
+msgid ""
+"<b>Don't panic.</b> If you think it's our mistake, please send us a message "
+"on"
+msgstr ""
+"<b>No se preocupe.</b> Si cree que esto es un error, envíenos un mensaje a"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.error_message
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
 msgid "<strong>Error message:</strong>"
-msgstr "<strong>Mensaje de Error:</strong>"
+msgstr "<strong>Mensaje de error:</strong>"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.500
 msgid "Back"
-msgstr "Atrás"
+msgstr "Volver"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
@@ -50,14 +49,30 @@ msgid "Error"
 msgstr "Error"
 
 #. module: http_routing
-#: model:ir.model,name:http_routing.model_ir_http
-msgid "HTTP Routing"
-msgstr "Ruta HTTP "
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "Error 404"
+msgstr "Error 404"
 
 #. module: http_routing
+#: model:ir.model,name:http_routing.model_ir_http
+msgid "HTTP Routing"
+msgstr "Enrutamiento HTTP "
+
+#. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
 #: model_terms:ir.ui.view,arch_db:http_routing.500
 msgid "Home"
 msgstr "Inicio"
+
+#. module: http_routing
+#: model:ir.model,name:http_routing.model_res_lang
+msgid "Languages"
+msgstr "Idiomas"
+
+#. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "Maybe you were looking for one of these <b>popular pages?</b>"
+msgstr "Tal vez buscaba alguna de estas <b>páginas populares</b>."
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.400
@@ -70,14 +85,19 @@ msgid "QWeb"
 msgstr "QWeb"
 
 #. module: http_routing
+#: model:ir.model,name:http_routing.model_ir_qweb
+msgid "Qweb"
+msgstr "Qweb"
+
+#. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.400
 msgid "Take a look at the error message below."
-msgstr "Revise al mensaje de error a continuación."
+msgstr "Revise el siguiente mensaje de error."
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
-msgid "The error occured while rendering the template"
-msgstr "Error ocurrido durante el dibujado de la plantilla"
+msgid "The error occurred while rendering the template"
+msgstr "El error ocurrió durante la visualización de la plantilla"
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.403
@@ -85,24 +105,21 @@ msgid "The page you were looking for could not be authorized."
 msgstr "No está autorizado a ver la página que está buscando."
 
 #. module: http_routing
-#: model_terms:ir.ui.view,arch_db:http_routing.404
-msgid ""
-"The page you were looking for could not be found; it is possible you have\n"
-"                            typed the address incorrectly, but it has most probably been removed due\n"
-"                            to the recent reorganisation."
-msgstr ""
-
-#. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
 msgid "Traceback"
-msgstr "Traza"
+msgstr "Rastreo"
 
 #. module: http_routing
-#: model:ir.model,name:http_routing.model_ir_ui_view
-msgid "View"
-msgstr "Ver"
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "We couldn't find the page you're looking for!"
+msgstr "No pudimos encontrar la página que busca "
 
 #. module: http_routing
 #: model_terms:ir.ui.view,arch_db:http_routing.http_error_debug
 msgid "and evaluating the following expression:"
-msgstr "y evaluando la siguiente expresión:"
+msgstr "y evalúe la siguiente expresión:"
+
+#. module: http_routing
+#: model_terms:ir.ui.view,arch_db:http_routing.404
+msgid "this page"
+msgstr "esta página"

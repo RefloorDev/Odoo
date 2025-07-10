@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import fields, models, _
+from odoo import _, fields, models
 from odoo.osv import expression
+from odoo.tools.misc import format_datetime
 
 
 class StockQuantityHistory(models.TransientModel):
@@ -16,7 +17,7 @@ class StockQuantityHistory(models.TransientModel):
     def open_at_date(self):
         tree_view_id = self.env.ref('stock.view_stock_product_tree').id
         form_view_id = self.env.ref('stock.product_form_view_procurement_button').id
-        domain = [('type', '=', 'product')]
+        domain = [('is_storable', '=', True)]
         product_id = self.env.context.get('product_id', False)
         product_tmpl_id = self.env.context.get('product_tmpl_id', False)
         if product_id:
@@ -27,11 +28,12 @@ class StockQuantityHistory(models.TransientModel):
         # moves until date.
         action = {
             'type': 'ir.actions.act_window',
-            'views': [(tree_view_id, 'tree'), (form_view_id, 'form')],
-            'view_mode': 'tree,form',
+            'views': [(tree_view_id, 'list'), (form_view_id, 'form')],
+            'view_mode': 'list,form',
             'name': _('Products'),
             'res_model': 'product.product',
             'domain': domain,
             'context': dict(self.env.context, to_date=self.inventory_datetime),
+            'display_name': format_datetime(self.env, self.inventory_datetime)
         }
         return action

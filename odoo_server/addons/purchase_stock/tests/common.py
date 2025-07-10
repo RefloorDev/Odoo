@@ -2,12 +2,11 @@
 from datetime import timedelta
 
 from odoo import fields
-from odoo.addons.stock.tests.common2 import TestStockCommon
+from odoo.addons.stock.tests.common import TestStockCommon
 from odoo import tools
-from odoo.modules.module import get_module_resource
 
 
-class TestPurchase(TestStockCommon):
+class PurchaseTestCommon(TestStockCommon):
 
     def _create_make_procurement(self, product, product_qty, date_planned=False):
         ProcurementGroup = self.env['procurement.group']
@@ -22,29 +21,32 @@ class TestPurchase(TestStockCommon):
             product.name, '/', self.env.company, order_values)
         ])
 
-    def _load(self, module, *args):
-        tools.convert_file(self.cr, 'purchase',
-                           get_module_resource(module, *args),
-                           {}, 'init', False, 'test', self.registry._assertion_report)
-
     @classmethod
     def setUpClass(cls):
-        super(TestPurchase, cls).setUpClass()
+        super(PurchaseTestCommon, cls).setUpClass()
+        cls.env.ref('stock.route_warehouse0_mto').active = True
 
         cls.route_buy = cls.warehouse_1.buy_pull_id.route_id.id
         cls.route_mto = cls.warehouse_1.mto_pull_id.route_id.id
 
         # Update product_1 with type, route and Delivery Lead Time
         cls.product_1.write({
-            'type': 'product',
+            'is_storable': True,
             'route_ids': [(6, 0, [cls.route_buy, cls.route_mto])],
-            'seller_ids': [(0, 0, {'name': cls.partner_1.id, 'delay': 5})]})
+            'seller_ids': [(0, 0, {'partner_id': cls.partner_1.id, 'delay': 5})]})
+
+        cls.t_shirt = cls.env['product.product'].create({
+            'name': 'T-shirt',
+            'description': 'Internal Notes',
+            'route_ids': [(6, 0, [cls.route_buy, cls.route_mto])],
+            'seller_ids': [(0, 0, {'partner_id': cls.partner_1.id, 'delay': 5})]
+        })
 
         # Update product_2 with type, route and Delivery Lead Time
         cls.product_2.write({
-            'type': 'product',
+            'is_storable': True,
             'route_ids': [(6, 0, [cls.route_buy, cls.route_mto])],
-            'seller_ids': [(0, 0, {'name': cls.partner_1.id, 'delay': 2})]})
+            'seller_ids': [(0, 0, {'partner_id': cls.partner_1.id, 'delay': 2})]})
 
         cls.res_users_purchase_user = cls.env['res.users'].create({
             'company_id': cls.env.ref('base.main_company').id,

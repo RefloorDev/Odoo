@@ -3,23 +3,21 @@
 # 	* sale_timesheet
 # 
 # Translators:
-# Tamás Dombos, 2019
-# Martin Trigaux, 2019
-# Ákos Nagy <akos.nagy@oregional.hu>, 2019
-# Tamás Belinszky <tamasbelinszky@gmail.com>, 2019
-# Istvan <leki69@gmail.com>, 2019
-# krnkris, 2019
-# Tamás Németh <ntomasz81@gmail.com>, 2019
-# gezza <geza.nagy@oregional.hu>, 2020
+# Martin Trigaux, 2024
+# krnkris, 2024
+# Ákos Nagy <akos.nagy@oregional.hu>, 2024
+# Tamás Dombos, 2024
+# Tamás Németh <ntomasz81@gmail.com>, 2024
+# gezza <geza.nagy@oregional.hu>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-25 15:03+0000\n"
-"PO-Revision-Date: 2019-08-26 09:14+0000\n"
-"Last-Translator: gezza <geza.nagy@oregional.hu>, 2020\n"
-"Language-Team: Hungarian (https://www.transifex.com/odoo/teams/41243/hu/)\n"
+"POT-Creation-Date: 2025-01-27 13:04+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: gezza <geza.nagy@oregional.hu>, 2024\n"
+"Language-Team: Hungarian (https://app.transifex.com/odoo/teams/41243/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -27,9 +25,22 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/sale_order.py:0
+msgid ""
+"\n"
+"                <p class=\"o_view_nocontent_smiling_face\">\n"
+"                    No activities found. Let's start a new one!\n"
+"                </p><p>\n"
+"                    Track your working hours by projects every day and invoice this time to your customers.\n"
+"                </p>\n"
+"            "
+msgstr ""
+
+#. module: sale_timesheet
+#. odoo-python
 #: code:addons/sale_timesheet/models/account_move.py:0
-#: code:addons/sale_timesheet/models/project.py:0
-#, python-format
+#: code:addons/sale_timesheet/models/project_project.py:0
 msgid ""
 "\n"
 "                <p class=\"o_view_nocontent_smiling_face\">\n"
@@ -43,70 +54,204 @@ msgid ""
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_project_create_sale_order__billable_type
+#. odoo-python
+#: code:addons/sale_timesheet/models/hr_timesheet.py:0
 msgid ""
-"* At Project Rate: All timesheets on the project will be billed at the same rate\n"
-"* At Employee Rate: Timesheets will be billed at a rate defined at employee level"
+"'%(missing_plan_names)s' analytic plan(s) required on the analytic "
+"distribution of the sale order item '%(so_line_name)s' linked to the "
+"timesheet."
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid "<b>Total</b>"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_sale_page
+msgid "- Timesheet product"
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
+#: model_terms:hr.job,job_details:sale_timesheet.job_engineer
+#: model_terms:hr.job,job_details:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,job_details:sale_timesheet.job_labour
+msgid "1 Onsite Interview"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:hr.job,job_details:sale_timesheet.job_engineer
+#: model_terms:hr.job,job_details:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,job_details:sale_timesheet.job_labour
+msgid "1 Phone Call"
+msgstr "1 telefonhívás"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "12 days / year, including <br>6 of your choice."
+msgstr "12 nap / év, amiből <br>6 nap választható."
+
+#. module: sale_timesheet
+#: model_terms:hr.job,job_details:sale_timesheet.job_engineer
+#: model_terms:hr.job,job_details:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,job_details:sale_timesheet.job_labour
+msgid "2 open days"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:hr.job,job_details:sale_timesheet.job_engineer
+#: model_terms:hr.job,job_details:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,job_details:sale_timesheet.job_labour
+msgid "4 Days after Interview"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_project_view_form
+msgid "<b>Daily Cost: </b>"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_project_view_form
+msgid "<b>Unit Price: </b>"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_project_view_form
 msgid ""
-"<span class=\"btn-link\" style=\"font-weight:normal;\" title=\"Includes the time logged into a task which is not linked to any Sales Order.\">\n"
-"                                                                Non Billable Tasks\n"
-"                                                            </span>"
+"<i class=\"fa fa-lightbulb-o\"/>\n"
+"                        <span>\n"
+"                            Define the rate at which an employee's time is billed based on their expertise, skills, or experience.\n"
+"                            To bill the same service at a different rate, create separate sales order items.\n"
+"                        </span>"
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.res_config_settings_view_form
-msgid "<span class=\"o_form_label\">Time Billing</span>"
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "<small><b>READ</b></small>"
+msgstr "<small><b>OLVAS</b></small>"
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.hr_timesheet_line_form_inherit
+msgid ""
+"<span class=\"fa fa-exclamation-triangle text-warning\" title=\"The sales "
+"order associated with this timesheet entry has been cancelled.\" "
+"invisible=\"sale_order_state != 'cancel'\"/>"
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_project_view_kanban_inherit_sale_timesheet
-msgid "<span class=\"o_label\">Overview</span>"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.hr_timesheet_line_form_inherit
+msgid "<span class=\"o_stat_text\">Invoice</span>"
 msgstr ""
 
 #. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.account_invoice_view_form_inherit_sale_timesheet
 #: model_terms:ir.ui.view,arch_db:sale_timesheet.view_order_form_inherit_sale_timesheet
 msgid "<span class=\"o_stat_text\">Recorded</span>"
+msgstr "<span class=\"o_stat_text\">Rögzített</span>"
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.hr_timesheet_line_form_inherit
+msgid "<span class=\"o_stat_text\">Sales Order</span>"
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project.py:0
-#, python-format
-msgid ""
-"A billable project should be linked to a Sales Order Item having a Service "
-"product."
+#: model_terms:hr.job,job_details:sale_timesheet.job_engineer
+#: model_terms:hr.job,job_details:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,job_details:sale_timesheet.job_labour
+msgid "<span class=\"text-muted small\">Days to get an Offer</span>"
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project.py:0
-#, python-format
-msgid ""
-"A billable project should be linked to a Sales Order Item that does not come"
-" from an expense or a vendor bill."
+#: model_terms:hr.job,job_details:sale_timesheet.job_engineer
+#: model_terms:hr.job,job_details:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,job_details:sale_timesheet.job_labour
+msgid "<span class=\"text-muted small\">Process</span>"
+msgstr "<span class=\"text-muted small\">Folyamat</span>"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,job_details:sale_timesheet.job_engineer
+#: model_terms:hr.job,job_details:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,job_details:sale_timesheet.job_labour
+msgid "<span class=\"text-muted small\">Time to Answer</span>"
+msgstr "<span class=\"text-muted small\">Válaszolási idő</span>"
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_task_inherit
+msgid "<strong>Amount Due:</strong>"
 msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_task_inherit
+msgid "<strong>Invoiced:</strong>"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_task_inherit
+msgid "<strong>Invoices:</strong>"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_task_inherit
+msgid "<strong>Sales Order:</strong>"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_timesheet_table_inherit
+msgid "<strong>Time Remaining on SO: </strong>"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_update_default_description
+msgid "<u>Profitability</u>"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "A full-time position <br>Attractive salary package."
+msgstr "Teljes munkaidős állás <br>Vonzó bércsomag"
 
 #. module: sale_timesheet
 #: model:ir.model.fields,help:sale_timesheet.field_sale_order_line__qty_delivered_method
 msgid ""
-"According to product configuration, the delivered quantity can be automatically computed by mechanism :\n"
+"According to product configuration, the delivered quantity can be automatically computed by mechanism:\n"
 "  - Manual: the quantity is set manually on the line\n"
 "  - Analytic From expenses: the quantity is the quantity sum from posted expenses\n"
 "  - Timesheet: the quantity is the sum of hours recorded on tasks linked to this sale line\n"
 "  - Stock Moves: the quantity comes from confirmed pickings\n"
 msgstr ""
-"A termék konfigurációjától függően a kiszállított mennyiség az alábbi módokon számítható:\n"
-"  - Manuális: a mennyiség kézi megadása a soron\n"
-"  - Analitikus kiadás: a mennyiség a könyvelésre küldött kiadások összesítéséből számítódik\n"
-"  - Időnyilvántartás: a mennyiség az értékesítési rendelés soraihoz kapcsolt feladatokra rögzített órák összege\n"
-"  - Készletmozgások: a mennyiség a jóváhagyott kigyűjtések mennyisége\n"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Achieve monthly sales objectives"
+msgstr "Megvalósítani a havi értékesítési célokat"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Additional languages"
+msgstr "További nyelvek"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Administrative Work"
+msgstr "Adminisztrációs munka"
+
+#. module: sale_timesheet
+#: model:account.analytic.account,name:sale_timesheet.account_analytic_account_project_support
+#: model:project.project,name:sale_timesheet.project_support
+msgid "After-Sales Services"
+msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_project__allocated_hours
+msgid "Allocated Time"
+msgstr ""
 
 #. module: sale_timesheet
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_create_invoice__amount_to_invoice
@@ -114,7 +259,6 @@ msgid "Amount to invoice"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.constraint,message:sale_timesheet.constraint_project_create_sale_order_line_unique_employee_per_wizard
 #: model:ir.model.constraint,message:sale_timesheet.constraint_project_sale_line_employee_map_uniqueness_employee
 msgid ""
 "An employee cannot be selected more than once in the mapping. Please remove "
@@ -122,14 +266,9 @@ msgid ""
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__analytic_account_id
-msgid "Analytic Account"
-msgstr "Analitikus számla"
-
-#. module: sale_timesheet
 #: model:ir.model,name:sale_timesheet.model_account_analytic_line
 msgid "Analytic Line"
-msgstr "Analitikus tétel"
+msgstr "Analitikus sor"
 
 #. module: sale_timesheet
 #: model:ir.model.fields,field_description:sale_timesheet.field_sale_order_line__analytic_line_ids
@@ -137,49 +276,67 @@ msgid "Analytic lines"
 msgstr "Analitikus sorok"
 
 #. module: sale_timesheet
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_create_sale_order__billable_type__employee_rate
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_project__billable_type__employee_rate
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_task__billable_type__employee_rate
-msgid "At Employee Rate"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_create_sale_order__billable_type__project_rate
-msgid "At Project Rate"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_project__billable_type__task_rate
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_task__billable_type__task_rate
-msgid "At Task Rate"
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/wizard/project_create_sale_order.py:0
-#, python-format
-msgid "At least one line should be filled."
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_project_project__billable_type
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
 msgid ""
-"At which rate timesheets will be billed:\n"
-" - At task rate: each time spend on a task is billed at task rate.\n"
-" - At employee rate: each employee log time billed at his rate.\n"
-" - No Billable: track time without invoicing it"
+"As an employee of our company, you will <b>collaborate with each department\n"
+"                        to create and deploy disruptive products.</b> Come work at a growing company\n"
+"                        that offers great benefits with opportunities to moving forward and learn\n"
+"                        alongside accomplished leaders. We're seeking an experienced and outstanding\n"
+"                        member of staff.\n"
+"                        <br><br>\n"
+"                        This position is both <b>creative and rigorous</b> by nature you need to think\n"
+"                        outside the box. We expect the candidate to be proactive and have a \"get it done\"\n"
+"                        spirit. To be successful, you will have solid solving problem skills."
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#, python-format
-msgid "Before"
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Autonomy"
+msgstr "Önállóság"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Bachelor Degree or Higher"
+msgstr "Alapképzés vagy magasabb"
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/product_template.py:0
+msgid "Based on Timesheets"
+msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_account_analytic_line__allow_billable
+msgid "Billable"
+msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_timesheets_analysis_report__billable_time
+msgid "Billable Time"
 msgstr ""
 
 #. module: sale_timesheet
 #: model:ir.model.fields,field_description:sale_timesheet.field_account_analytic_line__timesheet_invoice_type
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_project__billable_type
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_task__billable_type
+#: model:ir.model.fields,field_description:sale_timesheet.field_timesheets_analysis_report__timesheet_invoice_type
 msgid "Billable Type"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_update_default_description
+msgid "Billed"
+msgstr "Számlázva"
+
+#. module: sale_timesheet
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__account_analytic_line__timesheet_invoice_type__billable_manual
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__timesheets_analysis_report__timesheet_invoice_type__billable_manual
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_view_search
+msgid "Billed Manually"
 msgstr ""
 
 #. module: sale_timesheet
@@ -189,13 +346,20 @@ msgstr ""
 
 #. module: sale_timesheet
 #: model:ir.model.fields.selection,name:sale_timesheet.selection__account_analytic_line__timesheet_invoice_type__billable_fixed
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__timesheets_analysis_report__timesheet_invoice_type__billable_fixed
 msgid "Billed at a Fixed price"
 msgstr ""
 
 #. module: sale_timesheet
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__account_analytic_line__timesheet_invoice_type__billable_milestones
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__timesheets_analysis_report__timesheet_invoice_type__billable_milestones
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_view_search
+msgid "Billed on Milestones"
+msgstr ""
+
+#. module: sale_timesheet
 #: model:ir.model.fields.selection,name:sale_timesheet.selection__account_analytic_line__timesheet_invoice_type__billable_time
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__timesheets_analysis_report__timesheet_invoice_type__billable_time
 #: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_view_search
 msgid "Billed on Timesheets"
 msgstr ""
@@ -206,30 +370,15 @@ msgid "Billing"
 msgstr "Számlázás"
 
 #. module: sale_timesheet
-#: model:ir.filters,name:sale_timesheet.timesheet_filter_billing
-msgid "Billing Rate"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__billable_type
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_project__billing_type
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_view_search
 msgid "Billing Type"
 msgstr ""
 
 #. module: sale_timesheet
 #: model:ir.ui.menu,name:sale_timesheet.menu_timesheet_billing_analysis
-msgid "By Billing Rate"
+msgid "By Billing Type"
 msgstr ""
-
-#. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_create_invoice_view_form
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_create_sale_order_view_form
-msgid "Cancel"
-msgstr "Mégse"
-
-#. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid "Cancelled"
-msgstr "Visszavonva"
 
 #. module: sale_timesheet
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_create_invoice__sale_order_id
@@ -237,9 +386,14 @@ msgid "Choose the Sales Order to invoice"
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_profitability_report_view_search
-msgid "Company"
-msgstr "Vállalat"
+#: model:ir.model.fields,field_description:sale_timesheet.field_account_analytic_line__commercial_partner_id
+msgid "Commercial Partner"
+msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model,name:sale_timesheet.model_res_config_settings
+msgid "Config Settings"
+msgstr "Beállítások"
 
 #. module: sale_timesheet
 #: model_terms:ir.ui.view,arch_db:sale_timesheet.res_config_settings_view_form
@@ -247,40 +401,24 @@ msgid "Configure your services"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.filters,name:sale_timesheet.ir_filter_project_profitability_report_costs_and_revenues
-msgid "Costs and Revenues"
-msgstr ""
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__cost
+msgid "Cost"
+msgstr "Költség"
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#: code:addons/sale_timesheet/models/project_overview.py:0
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_update_default_description
+msgid "Costs"
+msgstr "Költségek"
+
+#. module: sale_timesheet
 #: model:ir.actions.act_window,name:sale_timesheet.project_project_action_multi_create_invoice
 #: model_terms:ir.ui.view,arch_db:sale_timesheet.project_create_invoice_view_form
-#, python-format
 msgid "Create Invoice"
-msgstr "Számla készítése"
+msgstr "Számla létrehozása"
 
 #. module: sale_timesheet
 #: model:ir.model,name:sale_timesheet.model_project_create_invoice
 msgid "Create Invoice from project"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model,name:sale_timesheet.model_project_create_sale_order_line
-msgid "Create SO Line from project"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model,name:sale_timesheet.model_project_create_sale_order
-msgid "Create SO from project"
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project.py:0
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_create_sale_order_view_form
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_project_view_form
-#, python-format
-msgid "Create Sales Order"
 msgstr ""
 
 #. module: sale_timesheet
@@ -289,118 +427,142 @@ msgid "Create Sales Order from Project"
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#: model:ir.actions.act_window,name:sale_timesheet.project_project_action_multi_create_sale_order
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_create_sale_order_view_form
-#, python-format
-msgid "Create a Sales Order"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__product_template__service_tracking__project_only
-msgid "Create a new project but no task"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__product_template__service_tracking__task_global_project
-msgid "Create a task in an existing project"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__product_template__service_tracking__task_in_project
-msgid "Create a task in sales order's project"
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Create content that will help our users on a daily basis"
 msgstr ""
 
 #. module: sale_timesheet
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_create_invoice__create_uid
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__create_uid
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order_line__create_uid
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__create_uid
 msgid "Created by"
 msgstr "Létrehozta"
 
 #. module: sale_timesheet
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_create_invoice__create_date
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__create_date
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order_line__create_date
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__create_date
 msgid "Created on"
 msgstr "Létrehozva"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_invoice__currency_id
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__currency_id
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order_line__currency_id
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__currency_id
 msgid "Currency"
 msgstr "Pénznem"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__partner_id
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__partner_id
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_profitability_report_view_search
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_project__partner_id
 msgid "Customer"
 msgstr "Ügyfél"
 
 #. module: sale_timesheet
-#: model:product.product,name:sale_timesheet.product_service_order_timesheet
 #: model:product.template,name:sale_timesheet.product_service_order_timesheet_product_template
 msgid "Customer Care (Prepaid Hours)"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_project_create_sale_order__partner_id
-msgid "Customer of the sales order"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_project_view_kanban_inherit_sale_timesheet
+msgid "Customer Ratings"
+msgstr "Ügyfél általi értékelések"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Customer Relationship"
+msgstr "Vevői kapcsolattartás"
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_timesheets_inherit
+msgid "Days Ordered,"
 msgstr ""
 
 #. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_timesheets_inherit
+msgid "Days Remaining)"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_create_invoice_view_form
+msgid "Discard"
+msgstr "Elvetés"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Discover our products."
+msgstr "Fedezze fel termékeinket!"
+
+#. module: sale_timesheet
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_create_invoice__display_name
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__display_name
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order_line__display_name
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__display_name
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__display_name
 msgid "Display Name"
 msgstr "Megjelenített név"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order__visible_project
-msgid "Display project"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_task_inherit
+msgid "Draft Invoice"
+msgstr "Számlatervezet"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid ""
+"Each employee has a chance to see the impact of his work.\n"
+"                    You can make a real contribution to the success of the company.\n"
+"                    <br>\n"
+"                    Several activities are often organized all over the year, such as weekly\n"
+"                    sports sessions, team building events, monthly drink, and much more"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__product_template__service_tracking__no
-msgid "Don't create task"
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Eat &amp; Drink"
+msgstr "Étel és ital"
+
+#. module: sale_timesheet
+#: model:product.template,name:sale_timesheet.product_product_elevator_installation_product_template
+msgid "Elevator Installation"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:project.task,legend_done:sale_timesheet.project_task_2
-#: model:project.task.type,legend_done:sale_timesheet.project_from_sale_order_1_done
-#: model:project.task.type,legend_done:sale_timesheet.project_stage_fixed
-#: model:project.task.type,name:sale_timesheet.project_from_sale_order_1_done
-msgid "Done"
-msgstr "Elvégezve"
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order_line__employee_id
+#: model:ir.model,name:sale_timesheet.model_hr_employee
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__employee_id
 msgid "Employee"
-msgstr "Alkalmazott"
+msgstr "Munkavállaló"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_project_create_sale_order_line__employee_id
-msgid "Employee that has timesheets on the project."
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_project__pricing_type__employee_rate
+msgid "Employee rate"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_project_project__sale_line_employee_ids
-msgid ""
-"Employee/Sale Order Item Mapping:\n"
-" Defines to which sales order item an employee's timesheet entry will be linked.By extension, it defines the rate at which an employee's time on the project is billed."
+#: model:ir.model.fields,field_description:sale_timesheet.field_sale_advance_payment_inv__date_end_invoice_timesheet
+msgid "End Date"
+msgstr "Befejező dátum"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Expand your knowledge of various business industries"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:project.task.type,name:sale_timesheet.project_stage_fixed
-msgid "Fixed"
-msgstr "Állandó"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_update_default_description
+msgid "Expected"
+msgstr "Várható"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Experience in writing online content"
+msgstr "Tapasztalat online tartalmak készítésében"
 
 #. module: sale_timesheet
 #: model_terms:ir.ui.view,arch_db:sale_timesheet.product_template_view_search_sale_timesheet
@@ -408,105 +570,118 @@ msgid "Fixed price services"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order_line__project_id
-msgid "Generated Project"
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Fruit, coffee and <br>snacks provided."
+msgstr "Gyümölcs, kávé és <br>ennivaló biztosítva."
+
+#. module: sale_timesheet
+#: model:product.template,name:sale_timesheet.product_service_deliver_manual_product_template
+msgid "Furniture Delivery (Manual)"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order_line__task_id
-msgid "Generated Task"
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Google Adwords experience"
+msgstr "Google Adwords tapasztalat"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Great team of smart people, in a friendly and open culture"
+msgstr ""
+"Zseniális emberekből álló nagyszerű csapat barátságos és nyitott "
+"környezetben"
+
+#. module: sale_timesheet
+#: model:hr.job,name:sale_timesheet.job_labour
+msgid "Handyman"
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_profitability_report_view_search
-msgid "Group By"
-msgstr "Csoportosítás"
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_task__has_multi_sol
+msgid "Has Multi Sol"
+msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-#: model:product.product,uom_name:sale_timesheet.product_service_deliver_timesheet_1
-#: model:product.product,uom_name:sale_timesheet.product_service_deliver_timesheet_2
-#: model:product.product,uom_name:sale_timesheet.product_service_order_timesheet
-#: model:product.template,uom_name:sale_timesheet.product_service_deliver_timesheet_1_product_template
-#: model:product.template,uom_name:sale_timesheet.product_service_deliver_timesheet_2_product_template
-#: model:product.template,uom_name:sale_timesheet.product_service_order_timesheet_product_template
-msgid "Hours"
-msgstr "Órák"
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Highly creative and autonomous"
+msgstr "Nagyon kreatív és önálló"
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid "Hours recorded and Profitability"
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__display_cost
+msgid "Hourly Cost"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_timesheets_inherit
+msgid "Hours Ordered,"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_timesheets_inherit
+msgid "Hours Remaining)"
 msgstr ""
 
 #. module: sale_timesheet
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_create_invoice__id
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__id
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order_line__id
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__id
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__id
 msgid "ID"
-msgstr "Azonosító"
+msgstr "ID"
 
 #. module: sale_timesheet
-#: model:project.task,legend_normal:sale_timesheet.project_task_1
-#: model:project.task,legend_normal:sale_timesheet.project_task_2
-#: model:project.task,legend_normal:sale_timesheet.project_task_3
-#: model:project.task,legend_normal:sale_timesheet.project_task_4
-#: model:project.task,legend_normal:sale_timesheet.project_task_internal
-#: model:project.task.type,legend_normal:sale_timesheet.project_from_sale_order_1_done
-#: model:project.task.type,legend_normal:sale_timesheet.project_from_sale_order_1_in_progress
-#: model:project.task.type,legend_normal:sale_timesheet.project_from_sale_order_1_to_do
-#: model:project.task.type,legend_normal:sale_timesheet.project_stage_fixed
-#: model:project.task.type,name:sale_timesheet.project_from_sale_order_1_in_progress
-msgid "In Progress"
-msgstr "Folyamatban"
-
-#. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid ""
-"Includes the time logged from the Timesheet module that is linked to a "
-"project, but not to a task."
+#: model:hr.job,name:sale_timesheet.job_interior_designer
+msgid "Interior Designer"
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid ""
-"Includes the time logged into a task which is linked to a cancelled Sales "
-"Order."
+#: model:product.template,name:sale_timesheet.product_product_interior_designing_product_template
+msgid "Interior Designing"
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid ""
-"Includes the time logged into tasks for which you invoice based on ordered "
-"quantities or on milestones."
-msgstr ""
-
-#. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid ""
-"Includes the time logged into tasks for which you invoice based on "
-"timesheets on tasks."
-msgstr ""
-
-#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/controllers/portal.py:0
+#: code:addons/sale_timesheet/models/hr_timesheet.py:0
 #: model:ir.model.fields,field_description:sale_timesheet.field_account_analytic_line__timesheet_invoice_id
+#: model:ir.model.fields,field_description:sale_timesheet.field_timesheets_analysis_report__timesheet_invoice_id
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_timesheets_inherit
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.report_timesheet_account_move
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_view_search
 msgid "Invoice"
 msgstr "Számla"
 
 #. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_res_config_settings__invoice_policy
+msgid "Invoice Policy"
+msgstr ""
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/product_template.py:0
+msgid "Invoice based on timesheets (delivered quantity)."
+msgstr ""
+
+#. module: sale_timesheet
 #: model:ir.model.fields,help:sale_timesheet.field_account_analytic_line__timesheet_invoice_id
+#: model:ir.model.fields,help:sale_timesheet.field_timesheets_analysis_report__timesheet_invoice_id
 msgid "Invoice created from the timesheet"
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_update_default_description
 msgid "Invoiced"
 msgstr "Számlázva"
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#, python-format
+#. odoo-python
+#: code:addons/sale_timesheet/controllers/portal.py:0
 msgid "Invoices"
 msgstr "Számlák"
 
@@ -521,61 +696,48 @@ msgid "Is Project map empty"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order_line__is_service
-msgid "Is a Service"
+#: model:ir.model.fields,field_description:sale_timesheet.field_account_analytic_line__is_so_line_edited
+msgid "Is Sales Order Item Manually Edited"
 msgstr ""
 
 #. module: sale_timesheet
 #: model:ir.model,name:sale_timesheet.model_account_move
-msgid "Journal Entries"
-msgstr "Könyvelési tételek"
+msgid "Journal Entry"
+msgstr "Könyvelési tétel"
 
 #. module: sale_timesheet
 #: model:ir.model,name:sale_timesheet.model_account_move_line
 msgid "Journal Item"
-msgstr "Könyvelési napló tételsor"
+msgstr "Könyvelési tétel"
 
 #. module: sale_timesheet
-#: model:product.product,name:sale_timesheet.product_service_deliver_timesheet_2
 #: model:product.template,name:sale_timesheet.product_service_deliver_timesheet_2_product_template
 msgid "Junior Architect (Invoice on Timesheets)"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:product.product,name:sale_timesheet.product_service_deliver_manual
-#: model:product.template,name:sale_timesheet.product_service_deliver_manual_product_template
+#: model:product.template,name:sale_timesheet.product_service_deliver_milestones_product_template
 msgid "Kitchen Assembly (Milestones)"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_invoice____last_update
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order____last_update
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order_line____last_update
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report____last_update
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map____last_update
-msgid "Last Modified on"
-msgstr "Legutóbb frissítve"
-
-#. module: sale_timesheet
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_create_invoice__write_uid
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__write_uid
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order_line__write_uid
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__write_uid
 msgid "Last Updated by"
 msgstr "Frissítette"
 
 #. module: sale_timesheet
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_create_invoice__write_date
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__write_date
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order_line__write_date
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__write_date
 msgid "Last Updated on"
-msgstr "Frissítve "
+msgstr "Frissítve"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__line_ids
-msgid "Lines"
-msgstr "Sorok"
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Lead the entire sales cycle"
+msgstr "Felügyelet a teljes értékesítési cikluson"
 
 #. module: sale_timesheet
 #: model:ir.model.fields,help:sale_timesheet.field_product_product__service_type
@@ -585,6 +747,25 @@ msgid ""
 "Timesheets on contract: Invoice based on the tracked hours on the related timesheet.\n"
 "Create a task and track hours: Create a task on the sales order validation and track the work hours."
 msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_timesheets_analysis_report__margin
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_update_default_description
+msgid "Margin"
+msgstr "Árrés"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Master demos of our software"
+msgstr ""
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/project_project.py:0
+msgid "Materials"
+msgstr "Anyagok"
 
 #. module: sale_timesheet
 #: model:ir.model.fields,field_description:sale_timesheet.field_sale_order_line__qty_delivered_method
@@ -597,213 +778,211 @@ msgid "Milestone services"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__product_template__service_policy__delivered_manual
-msgid "Milestones (manually set quantities on order)"
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Must Have"
+msgstr "kötelező"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Negotiate and contract"
+msgstr "Tárgyalás és szerződéskötés"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Nice to have"
+msgstr "Jó ha van"
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_timesheets_inherit
+msgid "No Invoice"
+msgstr "Nincs számla"
+
+#. module: sale_timesheet
+#: model_terms:ir.actions.act_window,help:sale_timesheet.action_timesheet_from_invoice
+msgid "No activities found"
+msgstr "Nincs tevékenység"
+
+#. module: sale_timesheet
+#: model_terms:ir.actions.act_window,help:sale_timesheet.timesheet_action_from_sales_order_item
+msgid "No activities found. Let's start a new one!"
+msgstr "Nincs tevékenység. Hozzon létre egyet!"
+
+#. module: sale_timesheet
+#: model_terms:ir.actions.act_window,help:sale_timesheet.timesheet_action_billing_report
+msgid "No data yet!"
+msgstr "Még nincs adat!"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "No dumb managers, no stupid tools to use, no rigid working hours"
 msgstr ""
+"Nincsenek: ostoba főnökök, használhatatlan eszközök és szigorú munkaidő"
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_profitability_report_view_search
-msgid "My Project"
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#, python-format
-msgid "Name"
-msgstr "Név"
-
-#. module: sale_timesheet
-#: model:project.task.type,legend_blocked:sale_timesheet.project_stage_fixed
-msgid "Need functional or technical help"
-msgstr "Működési vagy technikai segítség szükséges"
-
-#. module: sale_timesheet
-#: model:project.task,legend_blocked:sale_timesheet.project_task_1
-#: model:project.task,legend_blocked:sale_timesheet.project_task_3
-#: model:project.task.type,legend_blocked:sale_timesheet.project_from_sale_order_1_in_progress
-msgid "Need help"
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/models/sale_order.py:0
-#, python-format
-msgid "New"
-msgstr "Új"
-
-#. module: sale_timesheet
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_project__billable_type__no
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_task__billable_type__no
-msgid "No Billable"
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#, python-format
-msgid "No Sales Order"
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#, python-format
-msgid "No Sales Order Line"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__account_analytic_line__timesheet_invoice_type__non_billable_project
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid "No task found"
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid ""
+"No waste of time in enterprise processes, real responsibilities and autonomy"
 msgstr ""
 
 #. module: sale_timesheet
 #: model:ir.model.fields.selection,name:sale_timesheet.selection__account_analytic_line__timesheet_invoice_type__non_billable
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__timesheets_analysis_report__timesheet_invoice_type__non_billable
 #: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_view_search
-msgid "Non Billable Tasks"
+msgid "Non-Billable"
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid "Non billable tasks"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.hr_timesheet_line_form_inherit
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.hr_timesheet_line_tree_inherit
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_task_view_form_inherit_sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheete_analysis_report_form
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheets_analysis_report_list_inherited
+msgid "Non-billable"
+msgstr "Nem számlázható"
+
+#. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_timesheets_analysis_report__non_billable_time
+msgid "Non-billable Time"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:project.task,legend_blocked:sale_timesheet.project_task_2
-#: model:project.task.type,legend_blocked:sale_timesheet.project_from_sale_order_1_done
-msgid "Not done yet"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_timesheets_inherit
+msgid "Not Billed"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:project.task,legend_blocked:sale_timesheet.project_task_4
-#: model:project.task.type,legend_blocked:sale_timesheet.project_from_sale_order_1_to_do
-msgid "Not ready"
+#: model:ir.model.fields,help:sale_timesheet.field_timesheets_analysis_report__timesheet_revenues
+msgid "Number of hours spent multiplied by the unit price per hour/day."
 msgstr ""
 
 #. module: sale_timesheet
-#: model:project.task,legend_blocked:sale_timesheet.project_task_internal
-msgid "Not validated"
-msgstr "Nincs jóváhagyva"
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_account_move__timesheet_count
-msgid "Number of timesheets"
+#: model:ir.model.fields,help:sale_timesheet.field_timesheets_analysis_report__billable_time
+msgid "Number of hours/days linked to a SOL."
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_product_product__service_tracking
-#: model:ir.model.fields,help:sale_timesheet.field_product_template__service_tracking
+#: model:ir.model.fields,help:sale_timesheet.field_timesheets_analysis_report__non_billable_time
+msgid "Number of hours/days not linked to a SOL."
+msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model.fields,help:sale_timesheet.field_sale_advance_payment_inv__date_end_invoice_timesheet
+#: model:ir.model.fields,help:sale_timesheet.field_sale_advance_payment_inv__date_start_invoice_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.sale_advance_payment_inv_timesheet_view_form
 msgid ""
-"On Sales order confirmation, this product can generate a project and/or task.         From those, you can track the service you are selling.\n"
-"         'In sale order's project': Will use the sale order's configured project if defined or fallback to         creating a new project based on the selected template."
+"Only timesheets not yet invoiced (and validated, if applicable) from this "
+"period will be invoiced. If the period is not indicated, all timesheets not "
+"yet invoiced (and validated, if applicable) will be invoiced without "
+"distinction."
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__product_template__service_policy__ordered_timesheet
-msgid "Ordered quantities"
-msgstr "Megrendelt mennyiségek"
+#. odoo-python
+#: code:addons/sale_timesheet/models/project_project.py:0
+msgid "Operation not supported"
+msgstr "A művelet nem támogatott"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__expense_cost
-msgid "Other Cost"
-msgstr ""
+#: model:ir.model.fields,field_description:sale_timesheet.field_account_analytic_line__order_id
+msgid "Order Reference"
+msgstr "Rendelés hivatkozás"
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__account_analytic_line__timesheet_invoice_type__other_costs
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__timesheets_analysis_report__timesheet_invoice_type__other_costs
 msgid "Other costs"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.actions.act_window,name:sale_timesheet.project_timesheet_action_client_timesheet_plan
-msgid "Overview"
-msgstr "Áttekintés"
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__account_analytic_line__timesheet_invoice_type__other_revenues
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__timesheets_analysis_report__timesheet_invoice_type__other_revenues
+msgid "Other revenues"
+msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model,name:sale_timesheet.model_product_product
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__product_id
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Our Product"
+msgstr "Termékeink"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Passion for software products"
+msgstr "Elhivatottság szoftveres termékek iránt"
+
+#. module: sale_timesheet
+#: model:ir.model.fields,help:sale_timesheet.field_product_product__service_upsell_threshold
+#: model:ir.model.fields,help:sale_timesheet.field_product_template__service_upsell_threshold
+msgid ""
+"Percentage of time delivered compared to the prepaid amount that must be "
+"reached for the upselling opportunity activity to be triggered."
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Perfect written English"
+msgstr "Tökéletes angol tudás"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Perks"
+msgstr "Jutalmak"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Personal Evolution"
+msgstr "Személyes fejlődés"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Play any sport with colleagues, <br>the bill is covered."
+msgstr "Sportoljon a kollégáival, <br>a számlát cégünk fizeti."
+
+#. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_project__pricing_type
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_task__pricing_type
+msgid "Pricing"
+msgstr "Árazás"
+
+#. module: sale_timesheet
+#: model:ir.model,name:sale_timesheet.model_product_template
 msgid "Product"
 msgstr "Termék"
 
 #. module: sale_timesheet
-#: model:ir.model,name:sale_timesheet.model_product_template
-msgid "Product Template"
-msgstr "Terméksablon"
+#: model:ir.model,name:sale_timesheet.model_product_product
+msgid "Product Variant"
+msgstr "Termékváltozat"
 
 #. module: sale_timesheet
-#: model:ir.filters,name:sale_timesheet.ir_filter_project_profitability_report_manager_and_product
-msgid "Product by Customer"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_project_create_sale_order__product_id
-#: model:ir.model.fields,help:sale_timesheet.field_project_create_sale_order_line__product_id
-msgid ""
-"Product of the sales order item. Must be a service invoiced based on "
-"timesheets on tasks."
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.actions.act_window,name:sale_timesheet.product_template_action_default_services
-msgid "Products"
-msgstr "Termékek"
-
-#. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid "Profitability"
-msgstr ""
-
-#. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_profitability_report_view_graph
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_profitability_report_view_pivot
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_profitability_report_view_search
-msgid "Profitability Analysis"
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
 #: model:ir.model,name:sale_timesheet.model_project_project
 #: model:ir.model.fields,field_description:sale_timesheet.field_product_product__project_id
 #: model:ir.model.fields,field_description:sale_timesheet.field_product_template__project_id
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_create_invoice__project_id
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__project_id
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__project_id
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__project_id
-#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order__project_id
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_profitability_report_view_search
-#, python-format
 msgid "Project"
 msgstr "Projekt"
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__company_id
-msgid "Project Company"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.actions.act_window,name:sale_timesheet.project_profitability_report_action
-#: model:ir.ui.menu,name:sale_timesheet.menu_project_profitability_analysis
-msgid "Project Costs and Revenues"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__currency_id
-msgid "Project Currency"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__user_id
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_profitability_report_view_search
-msgid "Project Manager"
-msgstr "Projektmenedzser"
-
-#. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.view_order_form_inherit_sale_timesheet
-msgid "Project Overview"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model,name:sale_timesheet.model_project_profitability_report
-msgid "Project Profitability Report"
-msgstr ""
 
 #. module: sale_timesheet
 #: model:ir.model,name:sale_timesheet.model_project_sale_line_employee_map
@@ -817,13 +996,13 @@ msgid "Project Template"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_project_create_sale_order__project_id
-msgid "Project for which we are creating a sales order"
+#: model:ir.model,name:sale_timesheet.model_project_update
+msgid "Project Update"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_sale_order_line__project_id
-msgid "Project generated by the sales order item"
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_project__pricing_type__fixed_rate
+msgid "Project rate"
 msgstr ""
 
 #. module: sale_timesheet
@@ -832,120 +1011,113 @@ msgid "Project to make billable"
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/sale_order.py:0
-#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order__project_ids
-#, python-format
-msgid "Projects"
-msgstr "Projektek"
-
-#. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_sale_order__project_ids
-msgid "Projects used in this sales order."
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Qualify the customer needs"
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid "Re-invoiced costs"
+#. odoo-python
+#: code:addons/sale_timesheet/controllers/portal.py:0
+msgid "Quotation"
+msgstr "Ajánlat"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Real responsibilities and challenges in a fast evolving company"
+msgstr "Igazi felelősségek és kihívások egy gyorsan fejlődő vállalatnál"
+
+#. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_task__remaining_hours_available
+#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order_line__remaining_hours_available
+msgid "Remaining Hours Available"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:project.task,legend_done:sale_timesheet.project_task_internal
-msgid "Ready for Next Stage"
-msgstr "Készen áll a következő szakaszra"
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Responsibilities"
+msgstr "Felelősségek"
 
 #. module: sale_timesheet
-#: model:project.task,legend_done:sale_timesheet.project_task_4
-#: model:project.task.type,legend_done:sale_timesheet.project_from_sale_order_1_to_do
-msgid "Ready to be started"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_update_default_description
+msgid "Revenues"
+msgstr "Bevételek"
+
+#. module: sale_timesheet
+#: model_terms:ir.actions.act_window,help:sale_timesheet.timesheet_action_billing_report
+msgid ""
+"Review your timesheets by billing type and make sure your time is billable."
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#, python-format
-msgid "Remaining"
-msgstr "Hátralevő"
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__sale_order_id
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_task_view_search
-msgid "Sale Order"
-msgstr "Értékesítési megrendelés"
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__sale_line_id
-msgid "Sale Order Item"
+#: model:product.template,name:sale_timesheet.product_product_roofing_product_template
+msgid "Roofing"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__sale_line_id
-msgid "Sale Order Line"
-msgstr "Rendelési tétel"
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_project__sale_line_employee_ids
-msgid "Sale line/Employee map"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_sale_page
+msgid "S0001"
 msgstr ""
 
 #. module: sale_timesheet
+#: model:ir.model,name:sale_timesheet.model_sale_advance_payment_inv
+msgid "Sales Advance Payment Invoice"
+msgstr "Vevői előlegszámla"
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/controllers/portal.py:0
+#: code:addons/sale_timesheet/models/hr_timesheet.py:0
 #: model:ir.model,name:sale_timesheet.model_sale_order
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_project__sale_order_id
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_task__sale_order_id
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_task_view_form_sale_order
+#: model:ir.model.fields,field_description:sale_timesheet.field_timesheets_analysis_report__order_id
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.hr_timesheet_report_search_sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_view_search
 msgid "Sales Order"
-msgstr "Vásárlói megrendelés"
+msgstr "Vevői rendelés"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__order_confirmation_date
-msgid "Sales Order Confirmation Date"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_project__sale_line_id
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_task__sale_line_id
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.view_sale_service_inherit_form2
+#. odoo-python
+#: code:addons/sale_timesheet/controllers/portal.py:0
+#: model:ir.model.fields,field_description:sale_timesheet.field_account_analytic_line__so_line
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__sale_line_id
+#: model:ir.model.fields,field_description:sale_timesheet.field_timesheets_analysis_report__so_line
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_my_timesheets_inherit
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_timesheet_table_inherit
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.report_timesheet_sale_order
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_view_search
 msgid "Sales Order Item"
-msgstr "Vevői rendelés elem"
+msgstr "Vevői rendelés tétel"
 
 #. module: sale_timesheet
 #: model:ir.model,name:sale_timesheet.model_sale_order_line
 msgid "Sales Order Line"
-msgstr "Értékesítési megrendelés sor"
+msgstr "Vevői rendelés sor"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_sale_order_line__is_service
-msgid ""
-"Sales Order item should generate a task and/or a project, depending on the "
-"product settings."
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_project_view_kanban_inherit_sale_timesheet_so_button
 msgid "Sales Orders"
-msgstr "Vevői megrendelések"
+msgstr "Vevői rendelések"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_project_project__sale_line_id
+#: model:ir.model.fields,help:sale_timesheet.field_project_project__sale_line_employee_ids
 msgid ""
-"Sales order item to which the project is linked. If an employee timesheets "
-"on a task that does not have a sale order item defines, and if this employee"
-" is not in the 'Employee/Sales Order Item Mapping' of the project, the "
-"timesheet entry will be linked to the sales order item defined on the "
-"project."
+"Sales order item that will be selected by default on the timesheets of the corresponding employee. It bypasses the sales order item defined on the project and the task, and can be modified on each timesheet entry if necessary. In other words, it defines the rate at which an employee's time is billed based on their expertise, skills or experience, for instance.\n"
+"If you would like to bill the same service at a different rate, you need to create two separate sales order items as each sales order item can only have a single unit price at a time.\n"
+"You can also define the hourly company cost of your employees for their timesheets on this project specifically. It will bypass the timesheet cost set on the employee."
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_project_task__sale_line_id
+#: model:ir.model.fields,help:sale_timesheet.field_account_analytic_line__so_line
 msgid ""
-"Sales order item to which the task is linked. If an employee timesheets on a"
-" this task, and if this employee is not in the 'Employee/Sales Order Item "
-"Mapping' of the project, the timesheet entry will be linked to this sales "
-"order item."
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_project_project__sale_order_id
-msgid "Sales order to which the project is linked."
+"Sales order item to which the time spent will be added in order to be "
+"invoiced to your customer. Remove the sales order item for the timesheet "
+"entry to be non-billable."
 msgstr ""
 
 #. module: sale_timesheet
@@ -954,24 +1126,15 @@ msgid "Sales order to which the task is linked."
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_sale_order__project_id
-msgid "Select a non billable project on which tasks can be created."
+#. odoo-python
+#: code:addons/sale_timesheet/controllers/portal.py:0
+msgid "Search in Invoice"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_product_product__project_id
-#: model:ir.model.fields,help:sale_timesheet.field_product_template__project_id
-msgid ""
-"Select a non billable project on which tasks can be created. This setting "
-"must be set for each company."
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_product_product__project_template_id
-#: model:ir.model.fields,help:sale_timesheet.field_product_template__project_template_id
-msgid ""
-"Select a non billable project to be the skeleton of the new created project "
-"when selling the current product. Its stages and tasks will be duplicated."
+#. odoo-python
+#: code:addons/sale_timesheet/controllers/portal.py:0
+msgid "Search in Sales Order"
 msgstr ""
 
 #. module: sale_timesheet
@@ -980,39 +1143,69 @@ msgid "Sell services and invoice time spent"
 msgstr "Szolgáltatások értékesítése és a munkaidő kiszámlázása"
 
 #. module: sale_timesheet
-#: model:product.product,name:sale_timesheet.product_service_deliver_timesheet_1
 #: model:product.template,name:sale_timesheet.product_service_deliver_timesheet_1_product_template
 msgid "Senior Architect (Invoice on Timesheets)"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__product_id
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order_line__product_id
-msgid "Service"
-msgstr "Szolgáltatás"
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_product_product__service_policy
-#: model:ir.model.fields,field_description:sale_timesheet.field_product_template__service_policy
-msgid "Service Invoicing Policy"
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__account_analytic_line__timesheet_invoice_type__service_revenues
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__timesheets_analysis_report__timesheet_invoice_type__service_revenues
+msgid "Service Revenues"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_product_product__service_tracking
-#: model:ir.model.fields,field_description:sale_timesheet.field_product_template__service_tracking
-msgid "Service Tracking"
+#: model:product.template,name:sale_timesheet.time_product_product_template
+msgid "Service on Timesheets"
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#, python-format
-msgid "Sold"
-msgstr "Eladva"
+#: model:ir.model.fields,help:sale_timesheet.field_project_project__timesheet_product_id
+#: model:ir.model.fields,help:sale_timesheet.field_project_task__timesheet_product_id
+msgid ""
+"Service that will be used by default when invoicing the time spent on a "
+"task. It can be modified on each task individually by selecting a specific "
+"sales order item."
+msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid "Statistics"
-msgstr "Statisztika"
+#: model:ir.actions.act_window,name:sale_timesheet.product_template_action_default_services
+#: model:project.project,label_tasks:sale_timesheet.project_support
+msgid "Services"
+msgstr "Szolgáltatások"
+
+#. module: sale_timesheet
+#: model:hr.job,name:sale_timesheet.job_engineer
+msgid "Site Manager"
+msgstr ""
+
+#. module: sale_timesheet
+#: model:product.template,name:sale_timesheet.product_product_solar_installation_product_template
+msgid "Solar Panel Installation"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Sport Activity"
+msgstr "Sporttevékenység"
+
+#. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_sale_advance_payment_inv__date_start_invoice_timesheet
+msgid "Start Date"
+msgstr "Kezdődátum"
+
+#. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_account_analytic_line__sale_order_state
+msgid "Status"
+msgstr "Státusz"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Strong analytical skills"
+msgstr "Erős analitikus képességek"
 
 #. module: sale_timesheet
 #: model:ir.model,name:sale_timesheet.model_project_task
@@ -1020,146 +1213,88 @@ msgid "Task"
 msgstr "Feladat"
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/sale_order.py:0
-#, python-format
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_project__pricing_type__task_rate
+msgid "Task rate"
+msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model,name:sale_timesheet.model_report_project_task_user
+msgid "Tasks Analysis"
+msgstr "Feladatok elemzése"
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Technical Expertise"
+msgstr "Műszaki szakértő"
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/product_product.py:0
+#: code:addons/sale_timesheet/models/product_template.py:0
 msgid ""
-"Task Created (%s): <a href=# data-oe-model=project.task data-oe-id=%d>%s</a>"
-msgstr ""
-"Feladat létrehozva (%s): <a href=# data-oe-model=project.task data-oe-"
-"id=%d>%s</a>"
-
-#. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_sale_order_line__task_id
-msgid "Task generated by the sales order item"
+"The %s product is required by the Timesheets app and cannot be archived nor "
+"deleted."
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order__tasks_count
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.view_order_form_inherit_sale_timesheet
-#, python-format
-msgid "Tasks"
-msgstr "Feladatok"
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order__tasks_ids
-msgid "Tasks associated to this sale"
-msgstr "Ezzel az értékesítéssel összefüggő munka"
-
-#. module: sale_timesheet
-#: model:ir.model.constraint,message:sale_timesheet.constraint_project_project_sale_order_required_if_sale_line
+#. odoo-python
+#: code:addons/sale_timesheet/models/product_template.py:0
 msgid ""
-"The Project should be linked to a Sale Order to select an Sale Order Items."
+"The %s product is required by the Timesheets app and cannot be linked to a "
+"company."
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/wizard/project_create_sale_order.py:0
-#, python-format
-msgid ""
-"The Sales Order cannot be created because you did not enter some employees that entered timesheets on this project. Please list all the relevant employees before creating the Sales Order.\n"
-"Missing employee(s): %s"
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/models/product.py:0
-#, python-format
-msgid ""
-"The product %s should not have a global project since it will generate a "
-"project."
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/models/product.py:0
-#, python-format
-msgid ""
-"The product %s should not have a project nor a project template since it "
-"will not generate project."
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/models/product.py:0
-#, python-format
-msgid ""
-"The product %s should not have a project template since it will generate a "
-"task in a global project."
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/wizard/project_create_sale_order.py:0
-#, python-format
-msgid "The project is already billable."
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/wizard/project_create_sale_order.py:0
-#, python-format
-msgid "The project is already linked to a sales order item."
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/wizard/project_create_sale_order.py:0
-#, python-format
-msgid ""
-"The sales order cannot be created because some timesheets of this project "
-"are already linked to another sales order."
-msgstr ""
-
-#. module: sale_timesheet
+#. odoo-python
 #: code:addons/sale_timesheet/wizard/project_create_invoice.py:0
-#, python-format
 msgid "The selected Sales Order should contain something to invoice."
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid "There are no timesheets for now."
-msgstr ""
-
-#. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
+#: model:ir.model.fields,help:sale_timesheet.field_project_project__pricing_type
+#: model:ir.model.fields,help:sale_timesheet.field_project_task__pricing_type
 msgid ""
-"This cost is based on the \"Timesheet cost\" set in the HR Settings of your "
-"employees."
+"The task rate is perfect if you would like to bill different services to "
+"different customers at different rates. The fixed rate is perfect if you "
+"bill a service at a fixed rate per hour or day worked regardless of the "
+"employee who performed it. The employee rate is preferable if your employees"
+" deliver the same service at a different rate. For instance, junior and "
+"senior consultants would deliver the same service (= consultancy), but at a "
+"different rate because of their level of seniority."
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.actions.act_window,help:sale_timesheet.project_profitability_report_action
+#: model:ir.model.fields,help:sale_timesheet.field_project_sale_line_employee_map__cost
 msgid ""
-"This report allows you to analyse the profitability of your projects: "
-"compare the amount to invoice, the ones already invoiced and the project "
-"cost (via timesheet cost of your employees)."
+"This cost overrides the employee's default employee hourly wage in "
+"employee's HR Settings"
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/sale_order.py:0
-#, python-format
-msgid ""
-"This task has been created from: <a href=# data-oe-model=sale.order data-oe-"
-"id=%d>%s</a> (%s)"
-msgstr ""
-"Ezt a feladatot ebből hozta létre: <a href=# data-oe-model=sale.order data-"
-"oe-id=%d>%s</a> (%s)"
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/models/account.py:0
-#, python-format
-msgid ""
-"This timesheet line cannot be billed: there is no Sale Order Item defined on"
-" the task, nor on the project. Please define one to save your timesheet "
-"line."
+#: model:ir.model.fields,field_description:sale_timesheet.field_product_product__service_upsell_threshold
+#: model:ir.model.fields,field_description:sale_timesheet.field_product_template__service_upsell_threshold
+msgid "Threshold"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_sale_order__timesheet_encode_uom_id
-msgid ""
-"This will set the unit of measure used to encode timesheet. This will simply provide tools\n"
-"        and widgets to help the encoding. All reporting will still be expressed in hours (default value)."
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.res_config_settings_view_form
+msgid "Time Billing"
+msgstr "Időalapú számlázás"
+
+#. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_task__remaining_hours_so
+#: model:ir.model.fields,field_description:sale_timesheet.field_report_project_task_user__remaining_hours_so
+#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order_line__remaining_hours
+msgid "Time Remaining on SO"
 msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid "Time by people"
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.view_hr_timesheet_line_graph_employee_per_date
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.view_hr_timesheet_line_pivot_billing_rate
+msgid "Time Spent"
+msgstr "Eltöltött idő"
 
 #. module: sale_timesheet
 #: model_terms:ir.ui.view,arch_db:sale_timesheet.product_template_view_search_sale_timesheet
@@ -1167,69 +1302,121 @@ msgid "Time-based services"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.actions.act_window,name:sale_timesheet.action_timesheet_from_invoice
 #: model:ir.actions.act_window,name:sale_timesheet.timesheet_action_from_plan
 #: model:ir.actions.act_window,name:sale_timesheet.timesheet_action_plan_pivot
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_view_pivot_revenue
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.view_hr_timesheet_line_graph_employee_per_date
 msgid "Timesheet"
-msgstr "Munkaidő-kimutatás"
+msgstr "Munkaidő-nyilvántartás"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__timesheet_cost
-msgid "Timesheet Cost"
-msgstr "Költség Munkaidő-kiosztás"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_project_view_form
+msgid "Timesheet Activities"
+msgstr "Munkaidő-nyilvántartás tevékenységek"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order__timesheet_encode_uom_id
-msgid "Timesheet Encoding Unit"
-msgstr "Munkaidő-nyilvántartás időegysége"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheets_analysis_report_graph_invoice_type
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheets_analysis_report_pivot_invoice_type
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.view_hr_timesheet_line_graph_employee_per_date
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.view_hr_timesheet_line_pivot_billing_rate
+msgid "Timesheet Costs"
+msgstr "Munkaidő-nyilvántartás költségek"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order__timesheet_total_duration
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_project__timesheet_product_id
+#: model:ir.model.fields,field_description:sale_timesheet.field_project_task__timesheet_product_id
+msgid "Timesheet Product"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.hr_timesheet_report_search_sale_timesheet
+msgid "Timesheet Report"
+msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_timesheets_analysis_report__timesheet_revenues
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__account_analytic_line__timesheet_invoice_type__timesheet_revenues
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__timesheets_analysis_report__timesheet_invoice_type__timesheet_revenues
+msgid "Timesheet Revenues"
+msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model.fields,field_description:sale_timesheet.field_account_bank_statement_line__timesheet_total_duration
+#: model:ir.model.fields,field_description:sale_timesheet.field_account_move__timesheet_total_duration
 msgid "Timesheet Total Duration"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__timesheet_unit_amount
-msgid "Timesheet Unit Amount"
-msgstr ""
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order__timesheet_count
-msgid "Timesheet activities"
-msgstr "Időkimutatás tevékenységek"
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_sale_order__timesheet_ids
-msgid "Timesheet activities associated to this sale"
-msgstr "Ezzel az oldallal összefüggő munkaidő-kiosztás tevékenységek"
-
-#. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid "Timesheet costs"
-msgstr ""
-
-#. module: sale_timesheet
+#. odoo-python
 #: code:addons/sale_timesheet/models/account_move.py:0
-#: code:addons/sale_timesheet/models/project_overview.py:0
+#: model:ir.actions.act_window,name:sale_timesheet.action_timesheet_from_invoice
 #: model:ir.actions.act_window,name:sale_timesheet.timesheet_action_from_sales_order
-#: model:ir.model.fields,field_description:sale_timesheet.field_account_move__timesheet_ids
+#: model:ir.actions.act_window,name:sale_timesheet.timesheet_action_from_sales_order_item
+#: model:ir.actions.report,name:sale_timesheet.timesheet_report_account_move
+#: model:ir.actions.report,name:sale_timesheet.timesheet_report_sale_order
 #: model:ir.model.fields.selection,name:sale_timesheet.selection__sale_order_line__qty_delivered_method__timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.account_invoice_view_form_inherit_sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_invoice_page_inherit_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-#, python-format
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheets_analysis_report_graph_invoice_type
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.view_hr_timesheet_line_pivot_billing_rate
 msgid "Timesheets"
-msgstr "Munkaidő-kimutatás"
+msgstr "Időkimutatások"
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/project_project.py:0
+msgid "Timesheets (Billed Manually)"
+msgstr ""
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/project_project.py:0
+msgid "Timesheets (Billed on Milestones)"
+msgstr ""
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/project_project.py:0
+msgid "Timesheets (Billed on Timesheets)"
+msgstr ""
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/project_project.py:0
+msgid "Timesheets (Fixed Price)"
+msgstr ""
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/project_project.py:0
+msgid "Timesheets (Non-Billable)"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheets_analysis_report_pivot_invoice_type
+msgid "Timesheets Analysis"
+msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model,name:sale_timesheet.model_timesheets_analysis_report
+msgid "Timesheets Analysis Report"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.sale_advance_payment_inv_timesheet_view_form
+msgid "Timesheets Period"
+msgstr ""
 
 #. module: sale_timesheet
 #: model:ir.actions.act_window,name:sale_timesheet.timesheet_action_billing_report
-msgid "Timesheets By Billing Rate"
+msgid "Timesheets by Billing Type"
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project.py:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_sale_page
+msgid "Timesheets for the"
+msgstr ""
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/project_project.py:0
 msgid "Timesheets of %s"
 msgstr ""
 
@@ -1239,23 +1426,44 @@ msgid "Timesheets on project (one fare per SO/Project)"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields.selection,name:sale_timesheet.selection__product_template__service_policy__delivered_timesheet
-msgid "Timesheets on tasks"
+#. odoo-python
+#: code:addons/sale_timesheet/models/project_project.py:0
+msgid "Timesheets revenues"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:project.task.type,name:sale_timesheet.project_from_sale_order_1_to_do
-msgid "To Do"
-msgstr "Teendő"
+#: model:ir.model.fields,help:sale_timesheet.field_timesheets_analysis_report__margin
+msgid "Timesheets revenues minus the costs"
+msgstr ""
 
 #. module: sale_timesheet
-#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_plan
-msgid "To invoice"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.res_config_settings_view_form
+msgid "Timesheets taken into account when invoicing your time"
+msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model.fields,help:sale_timesheet.field_res_config_settings__invoice_policy
+msgid "Timesheets taken when invoicing time spent"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_project_view_form
+msgid "Timesheets without a sales order item are reported as"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_update_default_description
+msgid "To Bill"
 msgstr "Számlázandó"
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_update_default_description
+msgid "To Invoice"
+msgstr "Számlázandó"
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.project_update_default_description
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheets_analysis_report_list_inherited
 msgid "Total"
 msgstr "Összesen"
 
@@ -1267,8 +1475,12 @@ msgid ""
 msgstr ""
 
 #. module: sale_timesheet
+#: model:ir.model.fields,help:sale_timesheet.field_account_bank_statement_line__timesheet_total_duration
+#: model:ir.model.fields,help:sale_timesheet.field_account_move__timesheet_total_duration
 #: model:ir.model.fields,help:sale_timesheet.field_sale_order__timesheet_total_duration
-msgid "Total recorded duration, expressed in the encoding UoM"
+msgid ""
+"Total recorded duration, expressed in the encoding UoM, and rounded to the "
+"unit"
 msgstr ""
 
 #. module: sale_timesheet
@@ -1278,96 +1490,125 @@ msgid "Track Service"
 msgstr "Szolgáltatás nyomkövetése"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order__price_unit
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order_line__price_unit
+#: model_terms:ir.actions.act_window,help:sale_timesheet.action_timesheet_from_invoice
+#: model_terms:ir.actions.act_window,help:sale_timesheet.timesheet_action_from_sales_order_item
+msgid ""
+"Track your working hours by projects every day and invoice this time to your"
+" customers."
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Trainings"
+msgstr "Képzések"
+
+#. module: sale_timesheet
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_sale_line_employee_map__price_unit
 msgid "Unit Price"
 msgstr "Egységár"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,help:sale_timesheet.field_project_create_sale_order__price_unit
-#: model:ir.model.fields,help:sale_timesheet.field_project_create_sale_order_line__price_unit
-msgid "Unit price of the sales order item."
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "Valid work permit for Belgium"
+msgstr "Érvényes munkavállalási engedély Belgiumban"
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/project_project.py:0
+msgid "Value does not exist in the pricing type"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:product.product,uom_name:sale_timesheet.product_service_deliver_manual
-#: model:product.template,uom_name:sale_timesheet.product_service_deliver_manual_product_template
-msgid "Units"
-msgstr "Egység"
-
-#. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__amount_untaxed_invoiced
-msgid "Untaxed Amount Invoiced"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_invoice_page_inherit
+msgid "View Timesheet"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__amount_untaxed_to_invoice
-msgid "Untaxed Amount To Invoice"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.portal_invoice_page_inherit
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.sale_order_portal_content_inherit
+msgid "View Timesheets"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__expense_amount_untaxed_to_invoice
-msgid "Untaxed Amount to Re-invoice"
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.view_product_timesheet_form
+msgid "Warn the salesperson for an upsell when work done exceeds"
 msgstr ""
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_profitability_report__expense_amount_untaxed_invoiced
-msgid "Untaxed Re-invoiced Amount"
-msgstr ""
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "What We Offer"
+msgstr "Amit ajánlunk"
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project_overview.py:0
-#, python-format
-msgid ""
-"What is still to deliver based on sold hours and hours already done. Equals "
-"to sold hours - done hours."
-msgstr ""
+#: model_terms:hr.job,website_description:sale_timesheet.job_engineer
+#: model_terms:hr.job,website_description:sale_timesheet.job_interior_designer
+#: model_terms:hr.job,website_description:sale_timesheet.job_labour
+msgid "What's great in the job?"
+msgstr "Miért nagyszerű ez a munka?"
 
 #. module: sale_timesheet
-#: model:ir.model.fields,field_description:sale_timesheet.field_project_create_sale_order_line__wizard_id
-msgid "Wizard"
-msgstr "Varázsló"
-
-#. module: sale_timesheet
-#: model:project.task,legend_done:sale_timesheet.project_task_1
-#: model:project.task,legend_done:sale_timesheet.project_task_3
-#: model:project.task.type,legend_done:sale_timesheet.project_from_sale_order_1_in_progress
-msgid "Work done"
-msgstr ""
-
-#. module: sale_timesheet
-#: code:addons/sale_timesheet/models/account.py:0
-#, python-format
-msgid ""
-"You can not modify already invoiced timesheets (linked to a Sales order "
-"items invoiced on Time and material)."
-msgstr ""
-
-#. module: sale_timesheet
+#. odoo-python
 #: code:addons/sale_timesheet/wizard/project_create_invoice.py:0
-#: code:addons/sale_timesheet/wizard/project_create_sale_order.py:0
-#, python-format
 msgid "You can only apply this action from a project."
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/account.py:76
-#, python-format
-msgid "You can not modify timesheets from different employees"
+#. odoo-python
+#: code:addons/sale_timesheet/models/project_project.py:0
+msgid ""
+"You cannot link a billable project to a sales order item that comes from an "
+"expense or a vendor bill."
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project.py:0
-#, python-format
+#. odoo-python
+#: code:addons/sale_timesheet/models/project_project.py:0
 msgid ""
-"You cannot link the order item %s - %s to this task because it is a re-"
-"invoiced expense."
+"You cannot link a billable project to a sales order item that is not a "
+"service."
 msgstr ""
 
 #. module: sale_timesheet
-#: code:addons/sale_timesheet/models/project.py:0
-#, python-format
-msgid ""
-"You have to unlink the task from the sale order item in order to delete it."
+#. odoo-python
+#: code:addons/sale_timesheet/models/hr_timesheet.py:0
+msgid "You cannot modify timesheets that are already invoiced."
 msgstr ""
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/hr_timesheet.py:0
+msgid "You cannot remove a timesheet that has already been invoiced."
+msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_project__billing_type__manually
+msgid "billed manually"
+msgstr ""
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/sale_order_line.py:0
+msgid "days remaining"
+msgstr ""
+
+#. module: sale_timesheet
+#: model:ir.model.fields.selection,name:sale_timesheet.selection__project_project__billing_type__not_billable
+msgid "not billable"
+msgstr ""
+
+#. module: sale_timesheet
+#: model_terms:ir.ui.view,arch_db:sale_timesheet.view_product_timesheet_form
+msgid "of hours sold."
+msgstr ""
+
+#. module: sale_timesheet
+#. odoo-python
+#: code:addons/sale_timesheet/models/sale_order_line.py:0
+msgid "remaining"
+msgstr "hátravan"

@@ -3,17 +3,17 @@
 # 	* payment_authorize
 # 
 # Translators:
-# Link Up링크업 <linkup.way@gmail.com>, 2019
-# JH CHOI <hwangtog@gmail.com>, 2020
+# Wil Odoo, 2024
+# Daye Jeong, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:12+0000\n"
-"Last-Translator: JH CHOI <hwangtog@gmail.com>, 2020\n"
-"Language-Team: Korean (https://www.transifex.com/odoo/teams/41243/ko/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Daye Jeong, 2024\n"
+"Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -21,85 +21,156 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: payment_authorize
-#: code:addons/payment_authorize/controllers/main.py:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:payment_authorize.inline_form
 msgid ""
-" If you don't have any account, ask your salesperson to grant you a portal "
-"access. "
-msgstr "계정이 없는 경우 영업 담당자에게 포털 접근 권한을 부여하도록 요청하십시오."
+"<select id=\"o_authorize_account_type\" required=\"\" class=\"form-select\">\n"
+"                        <option value=\"checking\">Personal Checking</option>\n"
+"                        <option value=\"savings\">Personal Savings</option>\n"
+"                        <option value=\"businessChecking\">Business Checking</option>\n"
+"                    </select>"
+msgstr ""
+"<select id=\"o_authorize_account_type\" required=\"\" class=\"form-select\">\n"
+"                        <option value=\"checking\">개인 당좌예금</option>\n"
+"                        <option value=\"savings\">개인 예금</option>\n"
+"                        <option value=\"businessChecking\">기업 당좌예금</option>\n"
+"                    </select>"
 
 #. module: payment_authorize
-#: model:ir.model.fields,field_description:payment_authorize.field_payment_acquirer__authorize_client_key
+#: model_terms:ir.ui.view,arch_db:payment_authorize.inline_form
+msgid "ABA Routing Number"
+msgstr "ABA 라우팅 번호"
+
+#. module: payment_authorize
+#: model:ir.model.fields,field_description:payment_authorize.field_payment_provider__authorize_client_key
 msgid "API Client Key"
 msgstr "API 클라이언트 키"
 
 #. module: payment_authorize
-#: model:ir.model.fields,field_description:payment_authorize.field_payment_acquirer__authorize_login
-msgid "API Login Id"
-msgstr "API 로그인 Id"
+#: model:ir.model.fields,field_description:payment_authorize.field_payment_provider__authorize_login
+msgid "API Login ID"
+msgstr "API 로그인 ID"
 
 #. module: payment_authorize
-#: model:ir.model.fields,field_description:payment_authorize.field_payment_acquirer__authorize_signature_key
+#: model:ir.model.fields,field_description:payment_authorize.field_payment_provider__authorize_signature_key
 msgid "API Signature Key"
 msgstr "API 서명 키"
 
 #. module: payment_authorize
-#: model:ir.model.fields,field_description:payment_authorize.field_payment_acquirer__authorize_transaction_key
+#: model:ir.model.fields,field_description:payment_authorize.field_payment_provider__authorize_transaction_key
 msgid "API Transaction Key"
 msgstr "API Transaction Key"
 
 #. module: payment_authorize
-#: model:ir.model.fields.selection,name:payment_authorize.selection__payment_acquirer__provider__authorize
+#: model_terms:ir.ui.view,arch_db:payment_authorize.inline_form
+msgid "Account Number"
+msgstr "계정 과목"
+
+#. module: payment_authorize
+#: model:ir.model.fields.selection,name:payment_authorize.selection__payment_provider__code__authorize
 msgid "Authorize.Net"
 msgstr "Authorize.Net"
 
 #. module: payment_authorize
-#: code:addons/payment_authorize/models/authorize_request.py:0
-#, python-format
-msgid ""
-"Authorize.net Error:\n"
-"Code: %s\n"
-"Message: %s"
-msgstr ""
-"Authorize.net 오류 :\n"
-"코드 : %s\n"
-"메시지 : %s"
-
-#. module: payment_authorize
 #: model:ir.model.fields,field_description:payment_authorize.field_payment_token__authorize_profile
-msgid "Authorize.net Profile ID"
-msgstr "Authorize.net 프로필 ID"
+msgid "Authorize.Net Profile ID"
+msgstr "Authorize.Net 프로필 ID"
 
 #. module: payment_authorize
-#: code:addons/payment_authorize/models/payment.py:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:payment_authorize.inline_form
+msgid "Bank Account Type"
+msgstr "은행 계좌 유형"
+
+#. module: payment_authorize
+#: model_terms:ir.ui.view,arch_db:payment_authorize.inline_form
+msgid "Bank Name"
+msgstr "은행명"
+
+#. module: payment_authorize
+#: model_terms:ir.ui.view,arch_db:payment_authorize.inline_form
+msgid "Card Code"
+msgstr "카드 코드"
+
+#. module: payment_authorize
+#: model_terms:ir.ui.view,arch_db:payment_authorize.inline_form
+msgid "Card Number"
+msgstr "카드 번호"
+
+#. module: payment_authorize
+#: model:ir.model.fields,field_description:payment_authorize.field_payment_provider__code
+msgid "Code"
+msgstr "코드"
+
+#. module: payment_authorize
+#. odoo-python
+#: code:addons/payment_authorize/models/payment_provider.py:0
 msgid ""
-"Authorize: received data with missing reference (%s) or trans_id (%s) or "
-"fingerprint (%s)"
-msgstr "승인 : 누락된 참조(%s) 또는 trans_id(%s) 또는 fingerprint(%s)가 있는 수신 데이터"
+"Could not fetch merchant details:\n"
+"%s"
+msgstr ""
+"판매자 정보를 가져올 수 없습니다:\n"
+"%s"
 
 #. module: payment_authorize
-#: model_terms:ir.ui.view,arch_db:payment_authorize.acquirer_form_authorize
+#. odoo-python
+#: code:addons/payment_authorize/models/payment_transaction.py:0
+msgid ""
+"Could not retrieve the transaction details. (error code: %(error_code)s; "
+"error_details: %(error_message)s)"
+msgstr ""
+"거래 세부 정보를 검색할 수 없습니다. (error code: (%(error_code)s; error_details: "
+"(%(error_message)s)"
+
+#. module: payment_authorize
+#: model_terms:ir.ui.view,arch_db:payment_authorize.inline_form
+msgid "Expiration"
+msgstr "만료일"
+
+#. module: payment_authorize
+#. odoo-python
+#: code:addons/payment_authorize/models/payment_provider.py:0
+msgid ""
+"Failed to authenticate.\n"
+"%s"
+msgstr ""
+"인증하지 못했습니다.\n"
+"%s"
+
+#. module: payment_authorize
+#: model_terms:ir.ui.view,arch_db:payment_authorize.payment_provider_form
 msgid "Generate Client Key"
 msgstr "클라이언트 키 생성"
 
 #. module: payment_authorize
-#: model_terms:ir.ui.view,arch_db:payment_authorize.acquirer_form_authorize
+#: model_terms:ir.ui.view,arch_db:payment_authorize.payment_provider_form
 msgid "How to get paid with Authorize.Net"
 msgstr "Authorize.Net으로 지불받는 방법"
 
 #. module: payment_authorize
-#: code:addons/payment_authorize/models/payment.py:0
-#, python-format
-msgid ""
-"Invalid token found: the Authorize profile is missing.Please make sure the "
-"token has a valid acquirer reference."
-msgstr "잘못된 토큰을 찾았습니다 : 인증 프로파일이 없습니다. 토큰에 유효한 획득 참조가 있는지 확인하십시오."
+#: model_terms:ir.ui.view,arch_db:payment_authorize.inline_form
+msgid "MM"
+msgstr "월"
 
 #. module: payment_authorize
-#: model:ir.model,name:payment_authorize.model_payment_acquirer
-msgid "Payment Acquirer"
-msgstr "결제 매입사"
+#: model_terms:ir.ui.view,arch_db:payment_authorize.inline_form
+msgid "Name On Account"
+msgstr "계정 이름"
+
+#. module: payment_authorize
+#. odoo-python
+#: code:addons/payment_authorize/models/payment_transaction.py:0
+msgid "No transaction found matching reference %s."
+msgstr "%s 참조와 일치하는 거래 항목이 없습니다."
+
+#. module: payment_authorize
+#. odoo-python
+#: code:addons/payment_authorize/models/payment_provider.py:0
+msgid "Only one currency can be selected by Authorize.Net account."
+msgstr "Authorize.Net 계정당 하나의 통화만 선택할 수 있습니다."
+
+#. module: payment_authorize
+#: model:ir.model,name:payment_authorize.model_payment_provider
+msgid "Payment Provider"
+msgstr "결제대행업체"
 
 #. module: payment_authorize
 #: model:ir.model,name:payment_authorize.model_payment_token
@@ -109,88 +180,76 @@ msgstr "결제 토큰"
 #. module: payment_authorize
 #: model:ir.model,name:payment_authorize.model_payment_transaction
 msgid "Payment Transaction"
-msgstr "결제 거래"
+msgstr "지불 거래"
 
 #. module: payment_authorize
-#: code:addons/payment_authorize/controllers/main.py:0
-#, python-format
-msgid "Please complete your profile. "
-msgstr "프로필을 마저 작성하십시오."
-
-#. module: payment_authorize
-#: code:addons/payment_authorize/controllers/main.py:0
-#, python-format
-msgid "Please sign in to complete the payment."
-msgstr "결제를 완료하려면 사인하십시오."
-
-#. module: payment_authorize
-#: model:ir.model.fields,field_description:payment_authorize.field_payment_acquirer__provider
-#: model:ir.model.fields,field_description:payment_authorize.field_payment_token__provider
-msgid "Provider"
-msgstr "공급업체"
-
-#. module: payment_authorize
-#: model:ir.model.fields,field_description:payment_authorize.field_payment_token__save_token
-msgid "Save Cards"
-msgstr "카드 저장"
-
-#. module: payment_authorize
-#. openerp-web
+#. odoo-javascript
 #: code:addons/payment_authorize/static/src/js/payment_form.js:0
-#: code:addons/payment_authorize/static/src/js/payment_form.js:0
-#, python-format
-msgid "Server Error"
-msgstr "서버 오류"
+msgid "Payment processing failed"
+msgstr "결제 프로세스 실패"
 
 #. module: payment_authorize
-#: code:addons/payment_authorize/models/payment.py:0
-#, python-format
-msgid "The Customer Profile creation in Authorize.NET failed."
-msgstr "Authorize.NET에서 고객 프로필 생성에 실패했습니다."
+#. odoo-python
+#: code:addons/payment_authorize/models/payment_transaction.py:0
+msgid "Received data with status code \"%(status)s\" and error code \"%(error)s\""
+msgstr "상태 코드 \"%(status)s\" 및 오류 코드 \"%(error)s\" 데이터를 수신했습니다"
 
 #. module: payment_authorize
+#. odoo-python
 #: code:addons/payment_authorize/controllers/main.py:0
-#, python-format
+msgid "Received tampered payment request data."
+msgstr "변조된 결제 요청 데이터가 수신되었습니다."
+
+#. module: payment_authorize
+#: model_terms:ir.ui.view,arch_db:payment_authorize.payment_provider_form
+msgid "Set Account Currency"
+msgstr "계정 통화 설정"
+
+#. module: payment_authorize
+#: model:ir.model.fields,help:payment_authorize.field_payment_provider__authorize_login
+msgid "The ID solely used to identify the account with Authorize.Net"
+msgstr "Authorize.Net에서 계정을 식별하는 데 사용되는 ID입니다."
+
+#. module: payment_authorize
+#: model:ir.model.fields,help:payment_authorize.field_payment_provider__authorize_client_key
 msgid ""
-"The transaction cannot be processed because some contact details are missing"
-" or invalid: "
-msgstr "일부 연락처 세부 정보가 누락되었거나 유효하지 않기 때문에 거래를 처리할 수 없습니다."
+"The public client key. To generate directly from Odoo or from Authorize.Net "
+"backend."
+msgstr "공개 클라이언트 키입니다. Odoo 또는 Authorize.Net 백엔드에서 직접 생성할 수 있습니다."
+
+#. module: payment_authorize
+#: model:ir.model.fields,help:payment_authorize.field_payment_provider__code
+msgid "The technical code of this payment provider."
+msgstr "이 결제대행업체의 기술 코드입니다."
+
+#. module: payment_authorize
+#. odoo-python
+#: code:addons/payment_authorize/models/payment_transaction.py:0
+msgid ""
+"The transaction is not in a status to be refunded. (status: %(status)s, "
+"details: %(message)s)"
+msgstr "해당 거래는 환불할 수 없는 상태입니다. (상태: %(status)s, 세부 정보: %(message)s)"
+
+#. module: payment_authorize
+#. odoo-python
+#: code:addons/payment_authorize/models/payment_transaction.py:0
+msgid "The transaction is not linked to a token."
+msgstr "거래가 토큰에 연결되어 있지 않습니다."
 
 #. module: payment_authorize
 #: model:ir.model.fields,help:payment_authorize.field_payment_token__authorize_profile
 msgid ""
-"This contains the unique reference for this partner/payment token "
-"combination in the Authorize.net backend"
-msgstr "여기에는 Authorize.net 백엔드에 있는 이 파트너/결제 토큰 조합에 대한 고유한 참조가 포함되어 있습니다"
+"The unique reference for the partner/token combination in the Authorize.net "
+"backend."
+msgstr "Authorize.net 백엔드에 있는 협력사/토큰 조합에 대한 고유 참조입니다."
 
 #. module: payment_authorize
-#: model:ir.model.fields,help:payment_authorize.field_payment_token__save_token
-msgid ""
-"This option allows customers to save their credit card as a payment token "
-"and to reuse it for a later purchase. If you manage subscriptions (recurring"
-" invoicing), you need it to automatically charge the customer when you issue"
-" an invoice."
-msgstr ""
-"이 옵션을 사용하면 고객이 신용 카드를 결제 토큰으로 저장하고 나중에 구입할 때 재사용할 수 있습니다. 구독을 관리하는 경우(송장 청구)"
-" 송장을 발급할 때 고객에게 자동으로 요금을 청구해야 합니다."
+#. odoo-python
+#: code:addons/payment_authorize/models/payment_provider.py:0
+msgid "This action cannot be performed while the provider is disabled."
+msgstr "공급업체가 비활성화된 상태이므로 이 작업을 수행할 수 없습니다."
 
 #. module: payment_authorize
-#: code:addons/payment_authorize/models/payment.py:0
-#, python-format
-msgid ""
-"Unable to fetch Client Key, make sure the API Login and Transaction Key are "
-"correct."
-msgstr "클라이언트 키를 가져올 수 없습니다. API 로그인 및 트랜잭션 키가 올바른지 확인하십시오."
-
-#. module: payment_authorize
-#: code:addons/payment_authorize/models/payment.py:0
-#, python-format
-msgid "Warning"
-msgstr "경고"
-
-#. module: payment_authorize
-#. openerp-web
-#: code:addons/payment_authorize/static/src/js/payment_form.js:0
-#, python-format
-msgid "We are not able to add your payment method at the moment."
-msgstr "현재 결제 방법을 추가할 수 없습니다."
+#: model_terms:ir.ui.view,arch_db:payment_authorize.inline_form
+msgid "YY"
+msgstr "년"

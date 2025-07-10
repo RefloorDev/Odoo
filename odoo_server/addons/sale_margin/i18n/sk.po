@@ -3,19 +3,16 @@
 # 	* sale_margin
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Pavol Krnáč <pavol.krnac@ekoenergo.sk>, 2019
-# Jaroslav Bosansky <jaro.bosansky@ekoenergo.sk>, 2019
-# Jan Prokop, 2019
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:32+0000\n"
-"PO-Revision-Date: 2019-08-26 09:14+0000\n"
-"Last-Translator: Jan Prokop, 2019\n"
-"Language-Team: Slovak (https://www.transifex.com/odoo/teams/41243/sk/)\n"
+"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Slovak (https://app.transifex.com/odoo/teams/41243/sk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -28,19 +25,17 @@ msgid "Cost"
 msgstr "Náklady"
 
 #. module: sale_margin
-#: model:ir.model.fields,help:sale_margin.field_sale_order__margin
-msgid ""
-"It gives profitability by calculating the difference between the Unit Price "
-"and the cost."
-msgstr ""
-"Určuje ziskovosť výpočtom rozdielu medzi jednotkovou cenou a nákladmi."
-
-#. module: sale_margin
 #: model:ir.model.fields,field_description:sale_margin.field_sale_order__margin
 #: model:ir.model.fields,field_description:sale_margin.field_sale_order_line__margin
 #: model:ir.model.fields,field_description:sale_margin.field_sale_report__margin
 msgid "Margin"
 msgstr "Marža"
+
+#. module: sale_margin
+#: model:ir.model.fields,field_description:sale_margin.field_sale_order__margin_percent
+#: model:ir.model.fields,field_description:sale_margin.field_sale_order_line__margin_percent
+msgid "Margin (%)"
+msgstr ""
 
 #. module: sale_margin
 #: model:ir.model,name:sale_margin.model_sale_report
@@ -50,7 +45,7 @@ msgstr "Report analýzy predaja"
 #. module: sale_margin
 #: model:ir.model,name:sale_margin.model_sale_order
 msgid "Sales Order"
-msgstr "Objednávka predaja"
+msgstr "Objednávka "
 
 #. module: sale_margin
 #: model:ir.model,name:sale_margin.model_sale_order_line

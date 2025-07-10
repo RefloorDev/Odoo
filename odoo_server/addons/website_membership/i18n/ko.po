@@ -3,17 +3,17 @@
 # 	* website_membership
 # 
 # Translators:
-# JH CHOI <hwangtog@gmail.com>, 2019
-# Link Up링크업 <linkup.way@gmail.com>, 2019
+# Wil Odoo, 2024
+# Daye Jeong, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:33+0000\n"
-"PO-Revision-Date: 2019-08-26 09:16+0000\n"
-"Last-Translator: Link Up링크업 <linkup.way@gmail.com>, 2019\n"
-"Language-Team: Korean (https://www.transifex.com/odoo/teams/41243/ko/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Daye Jeong, 2024\n"
+"Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -35,8 +35,8 @@ msgid "All"
 msgstr "전체"
 
 #. module: website_membership
-#: code:addons/website_membership/controllers/main.py:83
-#, python-format
+#. odoo-python
+#: code:addons/website_membership/controllers/main.py:0
 msgid "All Countries"
 msgstr "모든 국가"
 
@@ -51,26 +51,38 @@ msgid "Close"
 msgstr "닫기"
 
 #. module: website_membership
+#: model_terms:ir.ui.view,arch_db:website_membership.partner
+msgid "DROP BUILDING BLOCKS HERE TO MAKE THEM AVAILABLE ACROSS ALL MEMBERS"
+msgstr "모든 구성원이 사용할 수 있도록 여기에 빌딩 블록을 배치합니다."
+
+#. module: website_membership
 #: model_terms:ir.ui.view,arch_db:website_membership.index
 msgid "Find a business partner"
 msgstr "협력사 찾기"
 
 #. module: website_membership
-#: code:addons/website_membership/controllers/main.py:126
-#, python-format
+#. odoo-python
+#: code:addons/website_membership/controllers/main.py:0
 msgid "Free Members"
 msgstr "무료 회원"
 
 #. module: website_membership
 #: model_terms:ir.ui.view,arch_db:website_membership.opt_index_country
+#: model_terms:ir.ui.view,arch_db:website_membership.snippet_options
 msgid "Location"
 msgstr "위치"
 
 #. module: website_membership
+#. odoo-python
+#: code:addons/website_membership/models/website.py:0
 #: model_terms:ir.ui.view,arch_db:website_membership.index
-#: model:website.menu,name:website_membership.menu_members
 msgid "Members"
-msgstr "회원 관리"
+msgstr "회원"
+
+#. module: website_membership
+#: model_terms:ir.ui.view,arch_db:website_membership.snippet_options
+msgid "Members Page"
+msgstr "회원 페이지"
 
 #. module: website_membership
 #: model:ir.model,name:website_membership.model_membership_membership_line
@@ -88,11 +100,12 @@ msgid "Our Members Directory"
 msgstr "구성원 디렉토리"
 
 #. module: website_membership
-#: model_terms:ir.ui.view,arch_db:website_membership.opt_index_google_map
-msgid "World Map"
-msgstr "세계 지도"
+#: model:ir.model,name:website_membership.model_website
+msgid "Website"
+msgstr "웹사이트"
 
 #. module: website_membership
-#: model_terms:ir.ui.view,arch_db:website_membership.index
-msgid "float-left"
-msgstr "왼쪽-떠오르게"
+#: model_terms:ir.ui.view,arch_db:website_membership.opt_index_google_map
+#: model_terms:ir.ui.view,arch_db:website_membership.snippet_options
+msgid "World Map"
+msgstr "세계 지도"

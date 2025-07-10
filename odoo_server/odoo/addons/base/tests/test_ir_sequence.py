@@ -4,20 +4,24 @@
 from contextlib import contextmanager
 
 import psycopg2
-import psycopg2.errorcodes
+import psycopg2.errors
 
 import odoo
+from odoo.exceptions import UserError
+from odoo.modules.registry import Registry
 from odoo.tests import common
 from odoo.tests.common import BaseCase
+from odoo.tools.misc import mute_logger
 
 ADMIN_USER_ID = common.ADMIN_USER_ID
+
 
 @contextmanager
 def environment():
     """ Return an environment with a new cursor for the current database; the
         cursor is committed and closed after the context block.
     """
-    registry = odoo.registry(common.get_db_name())
+    registry = Registry(common.get_db_name())
     with registry.cursor() as cr:
         yield odoo.api.Environment(cr, ADMIN_USER_ID, {})
 
@@ -85,18 +89,18 @@ class TestIrSequenceNoGap(BaseCase):
             n = env['ir.sequence'].next_by_code('test_sequence_type_2')
             self.assertTrue(n)
 
+    @mute_logger('odoo.sql_db')
     def test_ir_sequence_draw_twice_no_gap(self):
         """ Try to draw a number from two transactions.
         This is expected to not work.
         """
-        with environment() as env0:
-            with environment() as env1:
-                env1.cr._default_log_exceptions = False # Prevent logging a traceback
-                with self.assertRaises(psycopg2.OperationalError) as e:
-                    n0 = env0['ir.sequence'].next_by_code('test_sequence_type_2')
-                    self.assertTrue(n0)
-                    n1 = env1['ir.sequence'].next_by_code('test_sequence_type_2')
-                self.assertEqual(e.exception.pgcode, psycopg2.errorcodes.LOCK_NOT_AVAILABLE, msg="postgresql returned an incorrect errcode")
+        with environment() as env0, environment() as env1:
+            # NOTE: The error has to be an OperationalError
+            # s.t. the automatic request retry (service/model.py) works.
+            with self.assertRaises(psycopg2.errors.LockNotAvailable, msg="postgresql returned an incorrect errcode"):
+                n0 = env0['ir.sequence'].next_by_code('test_sequence_type_2')
+                self.assertTrue(n0)
+                env1['ir.sequence'].next_by_code('test_sequence_type_2')
 
     @classmethod
     def tearDownClass(cls):
@@ -171,6 +175,22 @@ class TestIrSequenceGenerate(BaseCase):
             for i in range(1, 10):
                 n = env['ir.sequence'].next_by_code('test_sequence_type_6')
                 self.assertEqual(n, str(i))
+
+    def test_ir_sequence_prefix(self):
+        """ test whether the raise a user error for an invalid sequence """
+
+        # try to create a sequence with invalid prefix
+        with environment() as env:
+            seq = env['ir.sequence'].create({
+                'code': 'test_sequence_type_7',
+                'name': 'Test sequence',
+                'prefix': '%u',
+                'suffix': '',
+            })
+            self.assertTrue(seq)
+
+            with self.assertRaises(UserError):
+                env['ir.sequence'].next_by_code('test_sequence_type_7')
 
     @classmethod
     def tearDownClass(cls):

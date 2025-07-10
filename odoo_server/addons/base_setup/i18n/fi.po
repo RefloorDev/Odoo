@@ -3,28 +3,28 @@
 # 	* base_setup
 # 
 # Translators:
-# Eino Mäkitalo <eino.makitalo@netitbe.fi>, 2019
-# Tommi Rintala <tommi.rintala@gmail.com>, 2019
-# Martin Trigaux, 2019
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2019
-# Miku Laitinen <miku.laitinen@gmail.com>, 2019
-# Svante Suominen <svante.suominen@web-veistamo.fi>, 2019
-# Veikko Väätäjä <veikko.vaataja@gmail.com>, 2019
-# santeri valjakka <santeri.valjakka@avoin.systems>, 2019
-# Teemu Ahonen <teemu.ahonen@web-veistamo.fi>, 2019
-# Tuomas Lyyra <tuomas.lyyra@legenda.fi>, 2019
-# Jussi Heikkilä <jussi.heikkila@panimo.com>, 2019
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2020
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2020
+# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
+# Teemu Ahonen <teemu.ahonen@web-veistamo.fi>, 2024
+# Martin Trigaux, 2024
+# Veikko Väätäjä <veikko.vaataja@gmail.com>, 2024
+# Santeri Valjakka <santeri.valjakka@avoin.systems>, 2024
+# Tuomas Lyyra <tuomas.lyyra@legenda.fi>, 2024
+# Svante Suominen <svante.suominen@web-veistamo.fi>, 2024
+# Pekka Ikonen, 2024
+# Tommi Rintala <tommi.rintala@gmail.com>, 2024
+# Miku Laitinen <miku.laitinen@gmail.com>, 2024
+# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
+# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
+# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-13 11:27+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2020\n"
-"Language-Team: Finnish (https://www.transifex.com/odoo/teams/41243/fi/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025\n"
+"Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -32,66 +32,64 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
-msgid "(Community Edition)"
-msgstr "(Yhteisöversio)"
-
-#. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"<span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-"
-"specific.\" aria-label=\"Values set here are company-specific.\" "
-"groups=\"base.group_multi_company\" role=\"img\"/>"
+msgid "<span class=\"fa fa-lg fa-users\" aria-label=\"Number of active users\"/>"
 msgstr ""
-"<span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-"
-"specific.\" aria-label=\"Values set here are company-specific.\" "
-"groups=\"base.group_multi_company\" role=\"img\"/>"
+"<span class=\"fa fa-lg fa-users\" aria-label=\"Aktiivisten käyttäjien "
+"määrä\"/>"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
-"<span class=\"o_form_label\" attrs=\"{'invisible':[('active_user_count', '&gt;', '1')]}\">\n"
-"                                            Active User\n"
+"<span class=\"o_form_label\" invisible=\"active_user_count &gt; 1\">\n"
+"                                        Active User\n"
+"                                    </span>\n"
+"                                    <span class=\"o_form_label\" invisible=\"active_user_count &lt;= 1\">\n"
+"                                        Active Users\n"
+"                                    </span>"
+msgstr ""
+"<span class=\"o_form_label\" invisible=\"active_user_count &gt; 1\">\n"
+"                                        Aktiivinen käyttäjä\n"
+"                                    </span>\n"
+"                                    <span class=\"o_form_label\" invisible=\"active_user_count &lt;= 1\">\n"
+"                                        Aktiiviset käyttäjät\n"
+"                                    </span>"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid ""
+"<span class=\"o_form_label\" invisible=\"company_count &gt; 1\">\n"
+"                                        Company\n"
+"                                    </span>\n"
+"                                    <span class=\"o_form_label\" invisible=\"company_count &lt;= 1\">\n"
+"                                        Companies\n"
+"                                    </span>\n"
+"                                    <br/>"
+msgstr ""
+"<span class=\"o_form_label\" invisible=\"company_count &gt; 1\">\n"
+"                                        Yritys\n"
+"                                    </span>\n"
+"                                    <span class=\"o_form_label\" invisible=\"company_count &lt;= 1\">\n"
+"                                        Yritykset\n"
+"                                    </span>\n"
+"                                    <br/>"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid ""
+"<span class=\"o_form_label\" invisible=\"language_count &gt; 1\">\n"
+"                                            Language\n"
 "                                        </span>\n"
-"                                        <span class=\"o_form_label\" attrs=\"{'invisible':[('active_user_count', '&lt;=', '1')]}\">\n"
-"                                            Active Users\n"
+"                                        <span class=\"o_form_label\" invisible=\"language_count &lt;= 1\">\n"
+"                                            Languages\n"
+"                                        </span>"
+msgstr ""
+"<span class=\"o_form_label\" invisible=\"language_count &gt; 1\">\n"
+"                                            Kieli\n"
 "                                        </span>\n"
-"\n"
-"                                        <br/>"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"<span class=\"o_form_label\">\n"
-"                                                Languages\n"
-"                                            </span>"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"<span class=\"o_form_label\">\n"
-"                                            Companies\n"
-"                                        </span>\n"
-"                                        <br/>"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"<span class=\"o_form_label\">Document Layout</span>\n"
-"                                        <span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-specific.\" aria-label=\"Values set here are company-specific.\" groups=\"base.group_multi_company\" role=\"img\"/>"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"<span class=\"o_form_label\">Format</span>\n"
-"                                        <span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-specific.\" aria-label=\"Values set here are company-specific.\" groups=\"base.group_multi_company\" role=\"img\"/>"
-msgstr ""
+"                                        <span class=\"o_form_label\" invisible=\"language_count &lt;= 1\">\n"
+"                                            Kielet\n"
+"                                        </span>"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -99,55 +97,85 @@ msgid ""
 "<strong>Save</strong> this page and come back here to choose your Geo "
 "Provider."
 msgstr ""
+"<strong>Tallenna</strong> sivu ja palaa takaisin, jotta voit valita "
+"paikannuspalvelun toimittajan."
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid ""
+"<strong>Save</strong> this page and come back here to set up Cloudflare "
+"turnstile."
+msgstr ""
+"<strong>Tallenna</strong> tämä sivu ja palaa tänne asettaaksesi Cloudflaren "
+"turnstile-robottitunnistuksen."
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid ""
+"<strong>Save</strong> this page and come back here to set up reCaptcha."
+msgstr ""
+"<strong>Tallenna</strong> sivu ja palaa takaisin, jotta voit määrittää "
+"Google reCaptchan."
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
 "<strong>Save</strong> this page and come back here to set up the feature."
 msgstr ""
+"<strong>Tallenna</strong> sivu ja palaa takaisin, jotta voit määrittää "
+"ominaisuuden."
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "API Keys"
+msgstr "API-avaimet"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid ""
+"API Keys allow your users to access Odoo with external tools when multi-"
+"factor authentication is enabled."
+msgstr ""
+"API-avaimien avulla käyttäjät voivat käyttää Odoota ulkoisilla työkaluilla, "
+"kun monitekijätodennus on käytössä."
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "About"
-msgstr ""
+msgstr "Tietoja"
 
 #. module: base_setup
+#. odoo-python
 #: code:addons/base_setup/controllers/main.py:0
-#, python-format
 msgid "Access Denied"
 msgstr "Käyttö estetty"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Activate the developer mode"
-msgstr "Käynnistä kehitystila"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Activate the developer mode (with assets)"
-msgstr "Aktivoi kehittäjän tila (resursseilla)"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Activate the developer mode (with tests assets)"
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Add Languages"
+msgstr "Lisää kieliä"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Add fun feedback and motivate your employees"
-msgstr ""
+msgstr "Lisää hilpeää palautetta ja motivoi työntekijöitäsi"
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_mail_plugin
+msgid "Allow integration with the mail plugins"
+msgstr "Salli integraatio sähköpostiliitännäisten kanssa"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_calendar
 msgid "Allow the users to synchronize their calendar  with Google Calendar"
 msgstr ""
 "Salli käyttäjien synkronoida omat kalenterinsa Google kalenterin kanssa"
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_microsoft_calendar
+msgid "Allow the users to synchronize their calendar with Outlook Calendar"
+msgstr ""
+"Anna käyttäjien synkronoida Odoo-kalenterinsa Outlookin kalenterin kanssa"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_base_import
@@ -161,47 +189,34 @@ msgid "Allows to work in a multi currency environment"
 msgstr "Salli monivaluutta"
 
 #. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_voip
-msgid "Asterisk (VoIP)"
-msgstr ""
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_drive
-msgid "Attach Google documents to any record"
-msgstr "Liitä Google dokumentteja mihin tahansa tietueeseen"
-
-#. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Automatically enrich your contact base with company data"
-msgstr ""
+msgstr "Rikasta automaattisesti yhteystietosi yritystiedolla"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Automatically generate counterpart documents in recipient companies"
+msgstr "Luo automaattisesti vastineasiakirjoja vastaanottajayrityksissä"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
-"Automatically generate counterpart documents for orders/invoices between "
-"companies"
+"By default, new users get highest access rights for all installed apps. If "
+"unchecked, new users will only have basic employee access."
 msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Business Documents"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"By default, new users get highest access rights for all installed apps."
-msgstr ""
+"Oletusarvoisesti uudet käyttäjät saavat korkeimmat käyttöoikeudet kaikkiin "
+"asennettuihin sovelluksiin. Jos valinta poistetaan, uusilla käyttäjillä on "
+"vain työntekijöiden perusoikeudet."
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Choose the layout of your documents"
-msgstr ""
+msgstr "Valitse dokumenttien asettelu"
 
 #. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_pad
-msgid "Collaborative Pads"
-msgstr "Yhteistyötaulu"
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_website_cf_turnstile
+msgid "Cloudflare Turnstile"
+msgstr "Cloudflare Turnstile"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -214,9 +229,14 @@ msgid "Company"
 msgstr "Yritys"
 
 #. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__company_country_code
+msgid "Company Country Code"
+msgstr "Yrityksen maakoodi"
+
+#. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__company_informations
 msgid "Company Informations"
-msgstr ""
+msgstr "Tietoja yrityksestä"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__company_name
@@ -226,12 +246,12 @@ msgstr "Yrityksen nimi"
 #. module: base_setup
 #: model:ir.model,name:base_setup.model_res_config_settings
 msgid "Config Settings"
-msgstr "Konfiguraatioasetukset"
+msgstr "Asetukset"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Configure Document Layout"
-msgstr ""
+msgstr "Määritä dokumentin asettelu"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -239,6 +259,9 @@ msgid ""
 "Configure company rules to automatically create SO/PO when one of your "
 "company sells/buys to another of your company."
 msgstr ""
+"Määritä yrityksen sääntö, joka luo automaattisesti myyntitilauksen tai "
+"ostotilauksen (SO/PO), kun tämän järjestelmän yritys myy toiselle tämän "
+"järjestelmän yritykselle."
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -246,28 +269,9 @@ msgid "Contacts"
 msgstr "Yhteystiedot"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
-msgid "Copyright © 2004"
-msgstr "Copyright © 2004"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Create and attach Google Drive documents to any record"
-msgstr ""
-
-#. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__report_footer
 msgid "Custom Report Footer"
-msgstr ""
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Deactivate the developer mode"
-msgstr "Poista kehittäjätila käytöstä"
+msgstr "Mukautettu raportin alaviite"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__user_default_rights
@@ -276,11 +280,15 @@ msgid "Default Access Rights"
 msgstr "Oletuskäyttöoikeudet"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Developer Tools"
-msgstr ""
+#. odoo-python
+#: code:addons/base_setup/models/res_config_settings.py:0
+msgid "Default User Template not found."
+msgstr "Käyttäjän oikeuksien oletusmallia ei löytynyt"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Document Layout"
+msgstr "Asiakirjan ulkoasu"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__external_report_layout_id
@@ -293,21 +301,13 @@ msgid "Edit Layout"
 msgstr "Muokkaa asettelua"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "Enter e-mail address"
-msgstr ""
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__external_email_server_default
-msgid "External Email Servers"
-msgstr ""
-
-#. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Extract and analyze Odoo data from Google Spreadsheet"
+msgid ""
+"Enable the profiling tool. Profiling may impact performance while being "
+"active."
 msgstr ""
+"Kytke profilointityökalu päälle. Profilointi vaikuttaa suorituskykyyn niin "
+"kauan kuin se on kytkettynä päälle."
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -320,57 +320,30 @@ msgid "Footer text displayed at the bottom of all reports."
 msgstr "Alatunnisteen teksti näytetään kaikkien raporttien alaosassa."
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Format"
-msgstr "Muotoilu"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
-msgid "GNU LGPL Licensed"
-msgstr "GNU LGPL lisensoitu"
-
-#. module: base_setup
 #: model:ir.ui.menu,name:base_setup.menu_config
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "General Settings"
 msgstr "Yleisasetukset"
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Gengo Translations"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Geo Localization"
-msgstr ""
-
-#. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_base_geolocalize
 msgid "GeoLocalize"
-msgstr ""
+msgstr "Paikanna"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "GeoLocalize your partners"
-msgstr ""
+msgid "Geolocate your partners"
+msgstr "Paikanna kumppanisi maantieteellisesti"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Google Calendar"
-msgstr "Google-kalenteri"
+msgid "Geolocation"
+msgstr "Geolokaatio"
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Google Drive"
-msgstr "Google Drive"
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_spreadsheet
-msgid "Google Spreadsheet"
-msgstr "Google-taulukkolaskentaohjelma"
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_product_images
+msgid "Get product pictures using barcode"
+msgstr "Hae tuotekuvia viivakoodeilla"
 
 #. module: base_setup
 #: model:ir.model,name:base_setup.model_ir_http
@@ -384,33 +357,29 @@ msgstr "Tuonti & vienti"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Integrate with mail client plugins"
+msgstr "Integroi sähköpostien liitännäisiin"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Integrations"
 msgstr "Integraatiot"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Inter-Company Transactions"
-msgstr ""
+msgstr "Yritysten välinen siirto"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "Invite"
-msgstr "Kutsu"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "Invite New Users"
-msgstr ""
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__is_root_company
+msgid "Is Root Company"
+msgstr "Onko emoyritys"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_auth_ldap
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "LDAP Authentication"
-msgstr ""
+msgstr "LDAP-autentikointi"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -423,36 +392,34 @@ msgid "Layout"
 msgstr "Ulkoasu"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Load demo data"
-msgstr "Lataa Demodata"
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Mail Plugin"
+msgstr "Sähköpostiliitännäinen"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Manage API Keys"
+msgstr "Hallitse API-avaimia"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Manage Companies"
-msgstr ""
+msgstr "Hallinnoi yrityksiä"
 
 #. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_inter_company_rules
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_account_inter_company_rules
 msgid "Manage Inter Company"
 msgstr "Hallitse sidosyritystä"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Manage Languages"
-msgstr ""
+msgstr "Hallitse kieliä"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Manage Users"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Multi-Company"
-msgstr ""
+msgstr "Hallinnoi käyttäjiä"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__group_multi_currency
@@ -462,88 +429,87 @@ msgstr "Monivaluutat"
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__active_user_count
 msgid "Number of Active Users"
-msgstr ""
+msgstr "Aktiivisten käyttäjien määrä"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__company_count
 msgid "Number of Companies"
-msgstr ""
+msgstr "Yritysten määrä"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__language_count
 msgid "Number of Languages"
-msgstr ""
+msgstr "Kielien määrä"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "OAuth Authentication"
-msgstr ""
+msgstr "OAuth-tunnistus"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Odoo"
 msgstr "Odoo"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
-msgid "Odoo S.A."
-msgstr "Odoo S.A."
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "On Apple Store"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "On Google Play"
-msgstr ""
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__paperformat_id
-msgid "Paper format"
-msgstr "Paperiformaatti"
-
-#. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_partner_autocomplete
 msgid "Partner Autocomplete"
-msgstr ""
+msgstr "Partnerien tietojen automaattinen täydentäminen"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "Pending Invitations:"
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Performance"
+msgstr "Suoriutuminen"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Permissions"
+msgstr "Oikeudet"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Preview Document"
-msgstr ""
+msgstr "Esikatsele dokumentti"
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__profiling_enabled_until
+msgid "Profiling enabled until"
+msgstr "Pfofilointi on käytössä ja loppuu"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Progressive Web App"
+msgstr "Progressiivinen verkkosovellus"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Protect your forms from spam and abuse."
+msgstr "Suojaa lomakkeesi roskapostilta ja väärinkäytöltä."
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Protect your forms with CF Turnstile."
+msgstr "Suojaa lomakkeesi CloudFlaren Turnstile-robottitunnistuksella."
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_sms
+msgid "SMS"
+msgstr "SMS"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Send SMS"
-msgstr ""
+msgstr "Lähetä tekstiviesti"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Send texts to your contacts"
-msgstr ""
+msgstr "Lähetä teksti kontakteillesi"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Set custom access rights for new users"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Set the paper format of printed documents"
-msgstr ""
+msgstr "Aseta mukautetut oikeudet uusille käyttäjille"
 
 #. module: base_setup
 #: model:ir.actions.act_window,name:base_setup.action_general_configuration
@@ -553,61 +519,44 @@ msgstr "Asetukset"
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__show_effect
 msgid "Show Effect"
+msgstr "Näytä efekti"
+
+#. module: base_setup
+#: model:ir.model.fields,help:base_setup.field_res_config_settings__company_country_code
+msgid ""
+"The ISO country code in two chars. \n"
+"You can use this field for quick search."
 msgstr ""
+"Kaksikirjaiminen ISO-maaatunnus. \n"
+"Voit hakea tämän kentän avulla nopeasti."
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Statistics"
-msgstr "Tilastot"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Synchronize your calendar with Google Calendar"
+msgid ""
+"This name will be used for the application when Odoo is installed through "
+"the browser."
 msgstr ""
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/js/res_config_invite_users.js:0
-#, python-format
-msgid "The following email addresses already exist: %s."
-msgstr "Seuraavat sähköpostiosoitteet ovat jo olemassa:"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/js/res_config_invite_users.js:0
-#, python-format
-msgid "The following email addresses are invalid: %s."
-msgstr "Seuraavat sähköpostiosoitteet ovat virheelliset"
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_base_gengo
-msgid "Translate Your Website with Gengo"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Translate your website with Gengo"
-msgstr ""
+"Tätä nimeä käytetään sovellukselle, kun Odoo asennetaan selaimen kautta."
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_web_unsplash
 msgid "Unsplash Image Library"
-msgstr ""
+msgstr "Unsplash-kuvakirjasto"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Update Info"
-msgstr ""
+msgstr "Päivitä tiedot"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Use LDAP credentials to log in"
-msgstr ""
+msgstr "Kirjaudu sisään LDAP-tunnuksilla"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Use external accounts to log in (Google, Facebook, etc.)"
-msgstr ""
+msgstr "Käytä ulkoista tiliä kirjautumiseen (Google, Facebook, jne.)"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_auth_oauth
@@ -615,18 +564,25 @@ msgid "Use external authentication providers (OAuth)"
 msgstr "Käytä ulkoista todentamista (OAuth)"
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Use external pads in Odoo Notes"
-msgstr ""
+#: model:ir.model,name:base_setup.model_res_users
+msgid "User"
+msgstr "Käyttäjä"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/js/res_config_invite_users.js:0
-#: model:ir.model,name:base_setup.model_res_users
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-#, python-format
 msgid "Users"
 msgstr "Käyttäjät"
+
+#. module: base_setup
+#. odoo-python
+#: code:addons/base_setup/models/res_config_settings.py:0
+msgid "VAT"
+msgstr "ALV"
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_voip
+msgid "VoIP"
+msgstr "VoIP"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -635,10 +591,10 @@ msgid ""
 "companies. When selecting one item, the company data and logo are auto-"
 "filled."
 msgstr ""
+"Kun osoitekirjaa täydennetään, Odoo esittää listan täsmäävistä yrityksistä. "
+"Kun valitset kohteen, yrityksen tiedot ja logo täydennetään automaattisesti."
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "more"
-msgstr "lisää"
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_recaptcha
+msgid "reCAPTCHA"
+msgstr "reCAPTCHA"

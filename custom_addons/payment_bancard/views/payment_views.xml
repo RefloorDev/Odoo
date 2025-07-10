@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-
-        <record id="acquirer_form_bancard" model="ir.ui.view">
-            <field name="name">acquirer.form.bancard</field>
-            <field name="model">payment.acquirer</field>
-            <field name="inherit_id" ref="payment.acquirer_form"/>
+        <record id="payment_provider_form_bancard" model="ir.ui.view">
+            <field name="name">payment.provider.form.bancard</field>
+            <field name="model">payment.provider</field>
+            <field name="inherit_id" ref="payment.payment_provider_form"/>
             <field name="arch" type="xml">
-                <xpath expr='//group[@name="acquirer"]' position='inside'>
-                    <group attrs="{'invisible': [('provider', '!=', 'bancard')]}">
-                        <field name="bancard_login_id" attrs="{'required':[ ('provider', '=', 'bancard'), ('state', '!=', 'disabled')]}"/>
-                        <field name="bancard_transaction_key" attrs="{'required':[ ('provider', '=', 'bancard'), ('state', '!=', 'disabled')]}"/>
-                        
+                <xpath expr='//group[@name="provider_credentials"]' position='inside'>
+                    <group invisible="code !=  'bancard'">
+                        <field name="bancard_login_id" required="code == 'bancard' and state !=  'disabled'"/>
+                        <field name="bancard_transaction_key" required="code == 'bancard' and state !=  'disabled'"/>
                     </group>
                 </xpath>
             </field>
         </record>
-
     </data>
 </odoo>

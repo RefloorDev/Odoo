@@ -3,14 +3,16 @@
 import json
 import logging
 import pprint
-import random
 import requests
-import string
+from urllib.parse import parse_qs
 
 from odoo import fields, models, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError, AccessDenied
+from odoo.tools import hmac
 
 _logger = logging.getLogger(__name__)
+
+UNPREDICTABLE_ADYEN_DATA = object() # sentinel
 
 class PosPaymentMethod(models.Model):
     _inherit = 'pos.payment.method'
@@ -18,94 +20,226 @@ class PosPaymentMethod(models.Model):
     def _get_payment_terminal_selection(self):
         return super(PosPaymentMethod, self)._get_payment_terminal_selection() + [('adyen', 'Adyen')]
 
-    adyen_api_key = fields.Char(string="Adyen API key", help='Used when connecting to Adyen: https://docs.adyen.com/user-management/how-to-get-the-api-key/#description', copy=False)
+    # Adyen
+    adyen_api_key = fields.Char(string="Adyen API key", help='Used when connecting to Adyen: https://docs.adyen.com/user-management/how-to-get-the-api-key/#description', copy=False, groups='base.group_erp_manager')
     adyen_terminal_identifier = fields.Char(help='[Terminal model]-[Serial number], for example: P400Plus-123456789', copy=False)
-    adyen_test_mode = fields.Boolean(help='Run transactions in the test environment.')
-    adyen_latest_response = fields.Char(help='Technical field used to buffer the latest asynchronous notification from Adyen.', copy=False, groups='base.group_erp_manager')
-    adyen_latest_diagnosis = fields.Char(help='Technical field used to determine if the terminal is still connected.', copy=False, groups='base.group_erp_manager')
+    adyen_test_mode = fields.Boolean(help='Run transactions in the test environment.', groups='base.group_erp_manager')
+
+    adyen_latest_response = fields.Char(copy=False, groups='base.group_erp_manager') # used to buffer the latest asynchronous notification from Adyen.
+    adyen_event_url = fields.Char(
+        string="Event URL",
+        help="This URL needs to be pasted on Adyen's portal terminal settings.",
+        readonly=True,
+        store=False,
+        default=lambda self: f"{self.get_base_url()}/pos_adyen/notification",
+    )
+
+    @api.model
+    def _load_pos_data_fields(self, config_id):
+        params = super()._load_pos_data_fields(config_id)
+        params += ['adyen_terminal_identifier']
+        return params
 
     @api.constrains('adyen_terminal_identifier')
     def _check_adyen_terminal_identifier(self):
         for payment_method in self:
             if not payment_method.adyen_terminal_identifier:
                 continue
-            existing_payment_method = self.search([('id', '!=', payment_method.id),
+            # sudo() to search all companies
+            existing_payment_method = self.sudo().search([('id', '!=', payment_method.id),
                                                    ('adyen_terminal_identifier', '=', payment_method.adyen_terminal_identifier)],
                                                   limit=1)
             if existing_payment_method:
-                raise ValidationError(_('Terminal %s is already used on payment method %s.')
-                                      % (payment_method.adyen_terminal_identifier, existing_payment_method.display_name))
+                if existing_payment_method.company_id == payment_method.company_id:
+                    raise ValidationError(_('Terminal %(terminal)s is already used on payment method %(payment_method)s.',
+                                      terminal=payment_method.adyen_terminal_identifier, payment_method=existing_payment_method.display_name))
+                else:
+                    raise ValidationError(_('Terminal %(terminal)s is already used in company %(company)s on payment method %(payment_method)s.',
+                                             terminal=payment_method.adyen_terminal_identifier,
+                                             company=existing_payment_method.company_id.name,
+                                             payment_method=existing_payment_method.display_name))
+
+    def _get_adyen_endpoints(self):
+        return {
+            'terminal_request': 'https://terminal-api-%s.adyen.com/async',
+        }
 
     def _is_write_forbidden(self, fields):
-        whitelisted_fields = set(('adyen_latest_response', 'adyen_latest_diagnosis'))
-        return super(PosPaymentMethod, self)._is_write_forbidden(fields - whitelisted_fields)
+        return super(PosPaymentMethod, self)._is_write_forbidden(fields - {'adyen_latest_response'})
 
-    def _adyen_diagnosis_request_data(self, pos_config_name, terminal_identifier):
-        service_id = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-        return {
-            "SaleToPOIRequest": {
-                "MessageHeader": {
-                    "ProtocolVersion": "3.0",
-                    "MessageClass": "Service",
-                    "MessageCategory": "Diagnosis",
-                    "MessageType": "Request",
-                    "ServiceID": service_id,
-                    "SaleID": pos_config_name,
-                    "POIID": terminal_identifier,
-                },
-                "DiagnosisRequest": {
-                    "HostDiagnosisFlag": False
-                }
-            }
-        }
+    def get_latest_adyen_status(self):
+        self.ensure_one()
+        if not self.env.su and not self.env.user.has_group('point_of_sale.group_pos_user'):
+            raise AccessDenied()
 
-    @api.model
-    def get_latest_adyen_status(self, payment_method_id, pos_config_name, terminal_identifier, test_mode, api_key):
-        '''See the description of proxy_adyen_request as to why this is an
-        @api.model function.
-        '''
-
-        # Poll the status of the terminal if there's no new
-        # notification we received. This is done so we can quickly
-        # notify the user if the terminal is no longer reachable due
-        # to connectivity issues.
-        self.proxy_adyen_request(self._adyen_diagnosis_request_data(pos_config_name, terminal_identifier),
-                                 test_mode,
-                                 api_key)
-
-        payment_method = self.sudo().browse(payment_method_id)
-        latest_response = payment_method.adyen_latest_response
+        latest_response = self.sudo().adyen_latest_response
         latest_response = json.loads(latest_response) if latest_response else False
-        payment_method.adyen_latest_response = ''  # avoid handling old responses multiple times
+        return latest_response
 
+    def proxy_adyen_request(self, data, operation=False):
+        ''' Necessary because Adyen's endpoints don't have CORS enabled '''
+        self.ensure_one()
+        if not self.env.su and not self.env.user.has_group('point_of_sale.group_pos_user'):
+            raise AccessDenied()
+        if not data:
+            raise UserError(_('Invalid Adyen request'))
+
+        if 'SaleToPOIRequest' in data and data['SaleToPOIRequest']['MessageHeader']['MessageCategory'] == 'Payment' and 'PaymentRequest' in data['SaleToPOIRequest']:  # Clear only if it is a payment request
+            self.sudo().adyen_latest_response = ''  # avoid handling old responses multiple times
+
+        if not operation:
+            operation = 'terminal_request'
+
+        # These checks are not optimal. This RPC method should be changed.
+
+        is_capture_data = operation == 'capture' and hasattr(self, 'adyen_merchant_account') and self._is_valid_adyen_request_data(data, {
+            'originalReference': UNPREDICTABLE_ADYEN_DATA,
+            'modificationAmount': {
+                'value': UNPREDICTABLE_ADYEN_DATA,
+                'currency': UNPREDICTABLE_ADYEN_DATA,
+            },
+            'merchantAccount': self.adyen_merchant_account,
+        })
+
+        is_adjust_data = operation == 'adjust' and hasattr(self, 'adyen_merchant_account') and self._is_valid_adyen_request_data(data, {
+            'originalReference': UNPREDICTABLE_ADYEN_DATA,
+            'modificationAmount': {
+                'value': UNPREDICTABLE_ADYEN_DATA,
+                'currency': UNPREDICTABLE_ADYEN_DATA,
+            },
+            'merchantAccount': self.adyen_merchant_account,
+            'additionalData': {
+                'industryUsage': 'DelayedCharge',
+            },
+        })
+
+        is_cancel_data = operation == 'terminal_request' and self._is_valid_adyen_request_data(data, {
+            'SaleToPOIRequest': {
+                'MessageHeader': self._get_expected_message_header('Abort'),
+                'AbortRequest': {
+                    'AbortReason': 'MerchantAbort',
+                    'MessageReference': {
+                        'MessageCategory': 'Payment',
+                        'SaleID': UNPREDICTABLE_ADYEN_DATA,
+                        'ServiceID': UNPREDICTABLE_ADYEN_DATA,
+                    },
+                },
+            },
+        })
+
+        is_payment_request_with_acquirer_data = operation == 'terminal_request' and self._is_valid_adyen_request_data(data, self._get_expected_payment_request(True))
+
+        if is_payment_request_with_acquirer_data:
+            parsed_sale_to_acquirer_data = parse_qs(data['SaleToPOIRequest']['PaymentRequest']['SaleData']['SaleToAcquirerData'])
+            valid_acquirer_data = self._get_valid_acquirer_data()
+            is_payment_request_with_acquirer_data = len(parsed_sale_to_acquirer_data.keys()) <= len(valid_acquirer_data.keys())
+            if is_payment_request_with_acquirer_data:
+                for key, values in parsed_sale_to_acquirer_data.items():
+                    if len(values) != 1:
+                        is_payment_request_with_acquirer_data = False
+                        break
+                    value = values[0]
+                    valid_value = valid_acquirer_data.get(key)
+                    if valid_value == UNPREDICTABLE_ADYEN_DATA:
+                        continue
+                    if value != valid_value:
+                        is_payment_request_with_acquirer_data = False
+                        break
+
+        is_payment_request_without_acquirer_data = operation == 'terminal_request' and self._is_valid_adyen_request_data(data, self._get_expected_payment_request(False))
+
+        if not is_payment_request_without_acquirer_data and not is_payment_request_with_acquirer_data and not is_adjust_data and not is_cancel_data and not is_capture_data:
+            raise UserError(_('Invalid Adyen request'))
+
+        if is_payment_request_with_acquirer_data or is_payment_request_without_acquirer_data:
+            acquirer_data = data['SaleToPOIRequest']['PaymentRequest']['SaleData'].get('SaleToAcquirerData')
+            msg_header = data['SaleToPOIRequest']['MessageHeader']
+            metadata = 'metadata.pos_hmac=' + self._get_hmac(msg_header['SaleID'], msg_header['ServiceID'], msg_header['POIID'], data['SaleToPOIRequest']['PaymentRequest']['SaleData']['SaleTransactionID']['TransactionID'])
+
+            data['SaleToPOIRequest']['PaymentRequest']['SaleData']['SaleToAcquirerData'] = acquirer_data + '&' + metadata if acquirer_data else metadata
+
+        return self._proxy_adyen_request_direct(data, operation)
+
+    @api.model
+    def _is_valid_adyen_request_data(self, provided_data, expected_data):
+        if not isinstance(provided_data, dict) or set(provided_data.keys()) != set(expected_data.keys()):
+            return False
+
+        for provided_key, provided_value in provided_data.items():
+            expected_value = expected_data[provided_key]
+            if expected_value == UNPREDICTABLE_ADYEN_DATA:
+                continue
+            if isinstance(expected_value, dict):
+                if not self._is_valid_adyen_request_data(provided_value, expected_value):
+                    return False
+            else:
+                if provided_value != expected_value:
+                    return False
+        return True
+
+    def _get_expected_message_header(self, expected_message_category):
         return {
-            'latest_response': latest_response,
-            'last_received_diagnosis_id': payment_method.adyen_latest_diagnosis,
+            'ProtocolVersion': '3.0',
+            'MessageClass': 'Service',
+            'MessageType': 'Request',
+            'MessageCategory': expected_message_category,
+            'SaleID': UNPREDICTABLE_ADYEN_DATA,
+            'ServiceID': UNPREDICTABLE_ADYEN_DATA,
+            'POIID': self.adyen_terminal_identifier,
+        }
+
+    def _get_expected_payment_request(self, with_acquirer_data):
+        res = {
+            'SaleToPOIRequest': {
+                'MessageHeader': self._get_expected_message_header('Payment'),
+                'PaymentRequest': {
+                    'SaleData': {
+                        'SaleTransactionID': {
+                            'TransactionID': UNPREDICTABLE_ADYEN_DATA,
+                            'TimeStamp': UNPREDICTABLE_ADYEN_DATA,
+                        },
+                    },
+                    'PaymentTransaction': {
+                        'AmountsReq': {
+                            'Currency': UNPREDICTABLE_ADYEN_DATA,
+                            'RequestedAmount': UNPREDICTABLE_ADYEN_DATA,
+                        },
+                    },
+                },
+            },
+        }
+
+        if with_acquirer_data:
+            res['SaleToPOIRequest']['PaymentRequest']['SaleData']['SaleToAcquirerData'] = UNPREDICTABLE_ADYEN_DATA
+        return res
+
+    @api.model
+    def _get_valid_acquirer_data(self):
+        return {
+            'tenderOption': 'AskGratuity',
+            'authorisationType': 'PreAuth'
         }
 
     @api.model
-    def proxy_adyen_request(self, data, test_mode, api_key):
-        '''Necessary because Adyen's endpoints don't have CORS enabled. This is an
-        @api.model function to avoid concurrent update errors. Adyen's
-        async endpoint can still take well over a second to complete a
-        request. By using @api.model and passing in all data we need from
-        the POS we avoid locking the pos_payment_method table. This way we
-        avoid concurrent update errors when Adyen calls us back on
-        /pos_adyen/notification which will need to write on
-        pos.payment.method.
-        '''
-        TIMEOUT = 10
-        endpoint = 'https://terminal-api-live.adyen.com/async'
-        if test_mode:
-            endpoint = 'https://terminal-api-test.adyen.com/async'
+    def _get_hmac(self, sale_id, service_id, poi_id, sale_transaction_id):
+        return hmac(
+            env=self.env(su=True),
+            scope='pos_adyen_payment',
+            message=(sale_id, service_id, poi_id, sale_transaction_id)
+        )
 
-        _logger.info('request to adyen\n%s', pprint.pformat(data))
+    def _proxy_adyen_request_direct(self, data, operation):
+        self.ensure_one()
+        TIMEOUT = 10
+
+        _logger.info('Request to Adyen by user #%d:\n%s', self.env.uid, pprint.pformat(data))
+
+        environment = 'test' if self.sudo().adyen_test_mode else 'live'
+        endpoint = self._get_adyen_endpoints()[operation] % environment
         headers = {
-            'x-api-key': api_key,
-            'Content-Type': 'application/json'
+            'x-api-key': self.sudo().adyen_api_key,
         }
-        req = requests.post(endpoint, data=json.dumps(data), headers=headers, timeout=TIMEOUT)
-        _logger.info('response from adyen (HTTP status %s):\n%s', req.status_code, req.text)
+        req = requests.post(endpoint, json=data, headers=headers, timeout=TIMEOUT)
 
         # Authentication error doesn't return JSON
         if req.status_code == 401:
@@ -120,10 +254,3 @@ class PosPaymentMethod(models.Model):
             return True
 
         return req.json()
-
-    @api.onchange('use_payment_terminal')
-    def _onchange_use_payment_terminal(self):
-        super(PosPaymentMethod, self)._onchange_use_payment_terminal()
-        if self.use_payment_terminal != 'adyen':
-            self.adyen_api_key = False
-            self.adyen_terminal_identifier = False

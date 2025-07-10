@@ -1,15 +1,92 @@
-odoo.define('web_editor.test_utils', function (require) {
-"use strict";
+/** @odoo-module **/
 
-var ajax = require('web.ajax');
-var MockServer = require('web.MockServer');
-var testUtils = require('web.test_utils');
-var Widget = require('web.Widget');
-var Wysiwyg = require('web_editor.wysiwyg');
-var options = require('web_editor.snippets.options');
+import { MockServer } from "@web/../tests/helpers/mock_server";
+import testUtils from "@web/../tests/legacy_tests/helpers/test_utils";
+import { patch } from "@web/core/utils/patch";
+import * as OdooEditorLib from "@web_editor/js/editor/odoo-editor/src/OdooEditor";
+import { Wysiwyg } from '@web_editor/js/wysiwyg/wysiwyg';
+import options from "@web_editor/js/editor/snippets.options";
+import { TABLE_ATTRIBUTES, TABLE_STYLES } from '@web_editor/js/backend/convert_inline';
 
+export const COLOR_PICKER_TEMPLATE = `
+    <colorpicker>
+        <div class="o_colorpicker_section" data-name="theme" data-display="Theme Colors" data-icon-class="fa fa-flask">
+            <button data-color="o-color-1"/>
+            <button data-color="o-color-2"/>
+            <button data-color="o-color-3"/>
+            <button data-color="o-color-4"/>
+            <button data-color="o-color-5"/>
+        </div>
+        <div class="o_colorpicker_section" data-name="transparent_grayscale" data-display="Transparent Colors" data-icon-class="fa fa-eye-slash">
+            <button class="o_btn_transparent"/>
+            <button data-color="black-25"/>
+            <button data-color="black-50"/>
+            <button data-color="black-75"/>
+            <button data-color="white-25"/>
+            <button data-color="white-50"/>
+            <button data-color="white-75"/>
+        </div>
+        <div class="o_colorpicker_section" data-name="common" data-display="Common Colors" data-icon-class="fa fa-paint-brush">
+            <button data-color="black"></button>
+            <button data-color="900"></button>
+            <button data-color="800"></button>
+            <button data-color="700" class="d-none"></button>
+            <button data-color="600"></button>
+            <button data-color="500" class="d-none"></button>
+            <button data-color="400"></button>
+            <button data-color="300" class="d-none"></button>
+            <button data-color="200"></button>
+            <button data-color="100"></button>
+            <button data-color="white"></button>
+        </div>
+    </colorpicker>
+`;
+const SNIPPETS_TEMPLATE = `
+    <snippets id="snippet_structure">
+        <div name="Separator" data-oe-type="snippet" data-oe-thumbnail="/web_editor/static/src/img/snippets_thumbs/s_hr.svg">
+            <div class="s_hr pt32 pb32">
+                <hr class="s_hr_1px s_hr_solid w-100 mx-auto"/>
+            </div>
+        </div>
+        <div name="Content" data-oe-type="snippet" data-oe-thumbnail="/website/static/src/img/snippets_thumbs/s_text_block.png">
+            <section name="Content+Options" class="test_option_all pt32 pb32" data-oe-type="snippet" data-oe-thumbnail="/website/static/src/img/snippets_thumbs/s_text_block.png">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-10 offset-lg-1 pt32 pb32">
+                            <h2>Title</h2>
+                            <p class="lead o_default_snippet_text">Content</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </snippets>
+    <div id="snippet_options" class="d-none">
+        <div data-js="many2one" data-selector="[data-oe-many2one-model]:not([data-oe-readonly])" data-no-check="true"/>
+        <div data-js="content"
+            data-selector=".s_hr, .test_option_all"
+            data-drop-in=".note-editable"
+            data-drop-near="p, h1, h2, h3, blockquote, .s_hr"/>
+        <div data-js="sizing_y" data-selector=".s_hr, .test_option_all"/>
+        <div data-selector=".test_option_all">
+            <we-colorpicker string="Background Color" data-select-style="true" data-css-property="background-color" data-color-prefix="bg-"/>
+        </div>
+        <div data-js="BackgroundImage" data-selector=".test_option_all">
+            <we-button data-choose-image="true" data-no-preview="true">
+                <i class="fa fa-picture-o"/> Background Image
+            </we-button>
+        </div>
+        <div data-js="option_test" data-selector=".s_hr">
+            <we-select string="Alignment">
+                <we-button data-select-class="align-items-start">Top</we-button>
+                <we-button data-select-class="align-items-center">Middle</we-button>
+                <we-button data-select-class="align-items-end">Bottom</we-button>
+                <we-button data-select-class="align-items-stretch">Equal height</we-button>
+            </we-select>
+        </div>
+    </div>`;
 
-MockServer.include({
+patch(MockServer.prototype, {
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
@@ -19,90 +96,19 @@ MockServer.include({
      * @private
      * @returns {Promise}
      */
-    _performRpc: function (route, args) {
-        if (args.model === "ir.ui.view") {
-            if (args.method === 'read_template' && args.args[0] === "web_editor.colorpicker") {
-                var template = '<templates><t t-name="web_editor.colorpicker">' +
-                        '<colorpicker>' +
-                        '    <div class="o_colorpicker_section" data-name="theme" data-display="Theme Colors" data-icon-class="fa fa-flask">' +
-                        '        <button data-color="alpha"></button>' +
-                        '        <button data-color="beta"></button>' +
-                        '        <button data-color="gamma"></button>' +
-                        '        <button data-color="delta"></button>' +
-                        '        <button data-color="epsilon"></button>' +
-                        '    </div>' +
-                        '    <div class="o_colorpicker_section" data-name="transparent_grayscale" data-display="Transparent Colors" data-icon-class="fa fa-eye-slash">' +
-                        '        <button class="o_btn_transparent"></button>' +
-                        '        <button data-color="black-25"></button>' +
-                        '        <button data-color="black-50"></button>' +
-                        '        <button data-color="black-75"></button>' +
-                        '        <button data-color="white-25"></button>' +
-                        '        <button data-color="white-50"></button>' +
-                        '        <button data-color="white-75"></button>' +
-                        '    </div>' +
-                        '    <div class="o_colorpicker_section" data-name="common" data-display="Common Colors" data-icon-class="fa fa-paint-brush"></div>' +
-                        '</colorpicker>' +
-                        '</t></templates>';
-                return Promise.resolve(template);
+    async _performRPC(route, args) {
+        if (args.model === "ir.ui.view" && args.method === 'render_public_asset') {
+            if (args.args[0] === "web_editor.colorpicker") {
+                return COLOR_PICKER_TEMPLATE;
             }
-            if (args.method === 'render_template' && args.args[0] === "web_editor.snippets") {
-                var template = '<h2 id="snippets_menu">Add blocks</h2>' +
-                        '<div id="o_scroll">' +
-                        '    <div id="snippet_structure" class="o_panel">' +
-                        '        <div class="o_panel_header">' +
-                        '            <i class="fa fa-th-large"></i> First Panel' +
-                        '        </div>' +
-                        '        <div class="o_panel_body">' +
-                        '            <div name="Separator" data-oe-type="snippet" data-oe-thumbnail="/website/static/src/img/snippets_thumbs/s_separator.png">' +
-                        '                <div class="s_hr pt32 pb32">' +
-                        '                    <hr class="s_hr_1px s_hr_solid w-100 mx-auto"/>' +
-                        '                </div>' +
-                        '            </div>' +
-                        '            <div name="Content" data-oe-type="snippet" data-oe-thumbnail="/website/static/src/img/snippets_thumbs/s_text_block.png">' +
-                        '                <section name="Content+Options" class="test_option_all pt32 pb32" data-oe-type="snippet" data-oe-thumbnail="/website/static/src/img/snippets_thumbs/s_text_block.png">' +
-                        '                    <div class="container">' +
-                        '                        <div class="row">' +
-                        '                            <div class="col-lg-10 offset-lg-1 pt32 pb32">' +
-                        '                                <h2>Title</h2>' +
-                        '                                 <p class="lead o_default_snippet_text">Content</p>' +
-                        '                             </div>' +
-                        '                         </div>' +
-                        '                     </div>' +
-                        '                </section>' +
-                        '            </div>' +
-                        '        </div>' +
-                        '    </div>' +
-                        '</div>' +
-                        '<div id="snippet_options" class="d-none">' +
-                        '    <div data-js="many2one" data-selector="[data-oe-many2one-model]:not([data-oe-readonly])" data-no-check="true"></div>' +
-                        '    <div data-js="content" data-selector=".s_hr, .test_option_all" ' +
-                        'data-drop-in=".note-editable" data-drop-near="p, h1, h2, h3, blockquote, .s_hr"></div>' +
-                        '    <div data-js="sizing_y" data-selector=".s_hr, .test_option_all"></div>' +
-                        '    <div data-js="colorpicker" data-selector=".test_option_all">' +
-                        '       <we-collapse-area>' +
-                        '           <we-toggler><i class="fa fa-eyedropper"/> Background Color</we-toggler>' +
-                        '           <we-collapse/>' +
-                        '       </we-collapse-area>' +
-                        '    </div>' +
-                        '    <div data-js="background" data-selector=".test_option_all">' +
-                        '       <we-button data-choose-image="true" data-no-preview="true"><i class="fa fa-picture-o"/> Background Image</we-button>' +
-                        '    </div>' +
-                        '    <div data-js="option_test" data-selector=".s_hr">' +
-                        '        <we-collapse-area>' +
-                        '            <we-toggler><i class="fa fa-arrows-v"/> Alignment</we-toggler>' +
-                        '            <we-collapse>' +
-                        '                <we-button data-select-class="align-items-start">Top</we-button>' +
-                        '                <we-button data-select-class="align-items-center">Middle</we-button>' +
-                        '                <we-button data-select-class="align-items-end">Bottom</we-button>' +
-                        '                <we-button data-select-class="align-items-stretch">Equal height</we-button>' +
-                        '            </we-collapse>' +
-                        '        </we-collapse-area>' +
-                        '    </div>' +
-                        '</div>';
-                return Promise.resolve(template);
+            if (args.args[0] === "web_editor.snippets") {
+                return SNIPPETS_TEMPLATE;
             }
         }
-        return this._super.apply(this, arguments);
+        if (args.model === "res.lang" && args.method === "get_installed") {
+            return [["en_US", "English"]];
+        }
+        return super._performRPC(...arguments);
     },
 });
 
@@ -134,58 +140,12 @@ options.registry.option_test = options.Class.extend({
     },
 });
 
-
-/**
- * Constructor WysiwygTest why editable and unbreakable node used in test.
- */
-var WysiwygTest = Wysiwyg.extend({
-    _parentToDestroyForTest: null,
-    /**
-     * Override 'destroy' of discuss so that it calls 'destroy' on the parent.
-     *
-     * @override
-     */
-    destroy: function () {
-        unpatch();
-        this._super();
-        this.$target.remove();
-        this._parentToDestroyForTest.destroy();
-    },
-});
-
-
-function patch() {
-    testUtils.mock.patch(ajax, {
-        loadAsset: function (xmlId) {
-            if (xmlId === 'template.assets') {
-                return Promise.resolve({
-                    cssLibs: [],
-                    cssContents: ['body {background-color: red;}']
-                });
-            }
-            if (xmlId === 'template.assets_all_style') {
-                return Promise.resolve({
-                    cssLibs: $('link[href]:not([type="image/x-icon"])').map(function () {
-                        return $(this).attr('href');
-                    }).get(),
-                    cssContents: ['body {background-color: red;}']
-                });
-            }
-            throw 'Wrong template';
-        },
-    });
-}
-
-function unpatch() {
-    testUtils.mock.unpatch(ajax);
-}
-
 /**
  * @param {object} data
  * @returns {object}
  */
-function wysiwygData(data) {
-    return _.defaults({}, data, {
+export function wysiwygData(data) {
+    return Object.assign({
         'ir.ui.view': {
             fields: {
                 display_name: {
@@ -194,86 +154,12 @@ function wysiwygData(data) {
                 },
             },
             records: [],
-            read_template: function (args) {
+            render_template(args) {
                 if (args[0] === 'web_editor.colorpicker') {
-                    return '<templates><t t-name="web_editor.colorpicker">' +
-                        '<colorpicker>' +
-                        '    <div class="o_colorpicker_section" data-name="theme" data-display="Theme Colors" data-icon-class="fa fa-flask">' +
-                        '        <button data-color="alpha"></button>' +
-                        '        <button data-color="beta"></button>' +
-                        '        <button data-color="gamma"></button>' +
-                        '        <button data-color="delta"></button>' +
-                        '        <button data-color="epsilon"></button>' +
-                        '    </div>' +
-                        '    <div class="o_colorpicker_section" data-name="transparent_grayscale" data-display="Transparent Colors" data-icon-class="fa fa-eye-slash">' +
-                        '        <button class="o_btn_transparent"></button>' +
-                        '        <button data-color="black-25"></button>' +
-                        '        <button data-color="black-50"></button>' +
-                        '        <button data-color="black-75"></button>' +
-                        '        <button data-color="white-25"></button>' +
-                        '        <button data-color="white-50"></button>' +
-                        '        <button data-color="white-75"></button>' +
-                        '    </div>' +
-                        '    <div class="o_colorpicker_section" data-name="common" data-display="Common Colors" data-icon-class="fa fa-paint-brush"></div>' +
-                        '</colorpicker>' +
-                        '</t></templates>';
+                    return COLOR_PICKER_TEMPLATE;
                 }
-            },
-            render_template: function (args) {
                 if (args[0] === 'web_editor.snippets') {
-                    return '<h2 id="snippets_menu">Add blocks</h2>' +
-                        '<div id="o_scroll">' +
-                        '    <div id="snippet_structure" class="o_panel">' +
-                        '        <div class="o_panel_header">' +
-                        '            <i class="fa fa-th-large"></i> First Panel' +
-                        '        </div>' +
-                        '        <div class="o_panel_body">' +
-                        '            <div name="Separator" data-oe-type="snippet" data-oe-thumbnail="/website/static/src/img/snippets_thumbs/s_separator.png">' +
-                        '                <div class="s_hr pt32 pb32">' +
-                        '                    <hr class="s_hr_1px s_hr_solid w-100 mx-auto"/>' +
-                        '                </div>' +
-                        '            </div>' +
-                        '            <div name="Content" data-oe-type="snippet" data-oe-thumbnail="/website/static/src/img/snippets_thumbs/s_text_block.png">' +
-                        '                <section name="Content+Options" class="test_option_all pt32 pb32" data-oe-type="snippet" data-oe-thumbnail="/website/static/src/img/snippets_thumbs/s_text_block.png">' +
-                        '                    <div class="container">' +
-                        '                        <div class="row">' +
-                        '                            <div class="col-lg-10 offset-lg-1 pt32 pb32">' +
-                        '                                <h2>Title</h2>' +
-                        '                                 <p class="lead o_default_snippet_text">Content</p>' +
-                        '                             </div>' +
-                        '                         </div>' +
-                        '                     </div>' +
-                        '                </section>' +
-                        '            </div>' +
-                        '        </div>' +
-                        '    </div>' +
-                        '</div>' +
-                        '<div id="snippet_options" class="d-none">' +
-                        '    <div data-js="many2one" data-selector="[data-oe-many2one-model]:not([data-oe-readonly])" data-no-check="true"></div>' +
-                        '    <div data-js="content" data-selector=".s_hr, .test_option_all" ' +
-                        'data-drop-in=".note-editable" data-drop-near="p, h1, h2, h3, blockquote, .s_hr"></div>' +
-                        '    <div data-js="sizing_y" data-selector=".s_hr, .test_option_all"></div>' +
-                        '    <div data-js="colorpicker" data-selector=".test_option_all">' +
-                        '       <we-collapse-area>' +
-                        '           <we-toggler><i class="fa fa-eyedropper"/>Background Color</we-toggler>' +
-                        '           <we-collapse/>' +
-                        '       </we-collapse-area>' +
-                        '    </div>' +
-                        '    <div data-js="background" data-selector=".test_option_all">' +
-                        '       <we-button data-choose-image="true" data-no-preview="true"><i class="fa fa-picture-o"/> Background Image</we-button>' +
-                        '    </div>' +
-                        '    <div data-js="option_test" data-selector=".s_hr">' +
-                        '        <we-collapse-area>' +
-                        '            <we-toggler><i class="fa fa-arrows-v"/> Alignment</we-toggler>' +
-                        '            <we-collapse>' +
-                        '                <we-button data-select-class="align-items-start">Top</we-button>' +
-                        '                <we-button data-select-class="align-items-center">Middle</we-button>' +
-                        '                <we-button data-select-class="align-items-end">Bottom</we-button>' +
-                        '                <we-button data-select-class="align-items-stretch">Equal height</we-button>' +
-                        '            </we-collapse>' +
-                        '        </we-collapse-area>' +
-                        '    </div>' +
-                        '</div>';
+                    return SNIPPETS_TEMPLATE;
                 }
             },
         },
@@ -281,6 +167,10 @@ function wysiwygData(data) {
             fields: {
                 display_name: {
                     string: "display_name",
+                    type: 'char',
+                },
+                description: {
+                    string: "description",
                     type: 'char',
                 },
                 mimetype: {
@@ -327,19 +217,25 @@ function wysiwygData(data) {
                     string: "image_height",
                     type: 'integer',
                 },
+                original_id: {
+                    string: "original_id",
+                    type: 'many2one',
+                    relation: 'ir.attachment',
+                },
             },
             records: [{
                 id: 1,
                 name: 'image',
+                description: '',
                 mimetype: 'image/png',
                 checksum: false,
-                url: '/web_editor/static/src/img/transparent.png',
+                url: '/web/image/123/transparent.png',
                 type: 'url',
                 res_id: 0,
                 res_model: false,
                 public: true,
                 access_token: false,
-                image_src: '/web_editor/static/src/img/transparent.png',
+                image_src: '/web/image/123/transparent.png',
                 image_width: 256,
                 image_height: 256,
             }],
@@ -347,88 +243,8 @@ function wysiwygData(data) {
                 return;
             },
         },
-    });
+    }, data);
 }
-
-/**
- * Create the wysiwyg instance for test (contains patch, usefull ir.ui.view, snippets).
- *
- * @param {object} params
- */
-function createWysiwyg(params) {
-    patch();
-    params.data = wysiwygData(params.data);
-
-    var parent = new Widget();
-    testUtils.mock.addMockEnvironment(parent, params);
-
-    var wysiwygOptions = _.extend({}, params.wysiwygOptions, {
-        recordInfo: {
-            context: {},
-            res_model: 'module.test',
-            res_id: 1,
-        },
-        useOnlyTestUnbreakable: params.useOnlyTestUnbreakable,
-    });
-
-    var wysiwyg = new WysiwygTest(parent, wysiwygOptions);
-    wysiwyg._parentToDestroyForTest = parent;
-
-    var $textarea = $('<textarea/>');
-    if (wysiwygOptions.value) {
-        $textarea.val(wysiwygOptions.value);
-    }
-    var selector = params.debug ? 'body' : '#qunit-fixture';
-    $textarea.prependTo($(selector));
-    if (params.debug) {
-        $('body').addClass('debug');
-    }
-    return wysiwyg.attachTo($textarea).then(function () {
-        if (wysiwygOptions.snippets) {
-            var defSnippets = testUtils.makeTestPromise();
-            testUtils.mock.intercept(wysiwyg, "snippets_loaded", function () {
-                defSnippets.resolve(wysiwyg);
-            });
-            return defSnippets;
-        }
-        return wysiwyg;
-    });
-}
-
-
-/**
- * Char codes.
- */
-var dom = $.summernote.dom;
-var keyboardMap = {
-    "8": "BACKSPACE",
-    "9": "TAB",
-    "13": "ENTER",
-    "16": "SHIFT",
-    "17": "CONTROL",
-    "18": "ALT",
-    "19": "PAUSE",
-    "20": "CAPS_LOCK",
-    "27": "ESCAPE",
-    "32": "SPACE",
-    "33": "PAGE_UP",
-    "34": "PAGE_DOWN",
-    "35": "END",
-    "36": "HOME",
-    "37": "LEFT",
-    "38": "UP",
-    "39": "RIGHT",
-    "40": "DOWN",
-    "45": "INSERT",
-    "46": "DELETE",
-    "91": "OS_KEY", // 'left command': Windows Key (Windows) or Command Key (Mac)
-    "93": "CONTEXT_MENU", // 'right command'
-};
-_.each(_.range(40, 127), function (keyCode) {
-    if (!keyboardMap[keyCode]) {
-        keyboardMap[keyCode] = String.fromCharCode(keyCode);
-    }
-});
 
 /**
  * Perform a series of tests (`keyboardTests`) for using keyboard inputs.
@@ -453,27 +269,20 @@ _.each(_.range(40, 127), function (keyCode) {
  * @param {Number} addTests
  */
 var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
-    var tests = _.compact(_.pluck(keyboardTests, 'test'));
-    var testNumber = _.compact(_.pluck(tests, 'start')).length +
-        _.compact(_.pluck(tests, 'content')).length +
-        _.compact(_.pluck(tests, 'check')).length +
+    var tests = keyboardTests.map((k) => k.test).map((x) => !!x);
+    var testNumber =
+        tests.map((test) => test.start).map((x) => !!x).length +
+        tests.map((test) => test.content).map((x) => !!x).length +
+        tests.map((test) => test.check.map((x) => !!x)).length +
         (addTests | 0);
     assert.expect(testNumber);
 
     function keydown(target, keypress) {
         var $target = $(target.tagName ? target : target.parentNode);
-        if (!keypress.keyCode) {
-            keypress.keyCode = +_.findKey(keyboardMap, function (key) {
-                return key === keypress.key;
-            });
-        } else {
-            keypress.key = keyboardMap[keypress.keyCode] || String.fromCharCode(keypress.keyCode);
-        }
-        keypress.keyCode = keypress.keyCode;
         var event = $.Event("keydown", keypress);
         $target.trigger(event);
 
-        if (!event.isDefaultPrevented()) {
+        if (!event.defaultPrevented) {
             if (keypress.key.length === 1) {
                 textInput($target[0], keypress.key);
             } else {
@@ -513,6 +322,24 @@ var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
         $(target.tagName ? target : target.parentNode).trigger('mouseup');
     }
 
+    function nextPoint(point) {
+        var node, offset;
+        if (OdooEditorLib.nodeSize(point.node) === point.offset) {
+            node = point.node.parentNode;
+            offset = OdooEditorLib.childNodeIndex(point.node) + 1;
+        } else if (point.node.hasChildNodes()) {
+            node = point.node.childNodes[point.offset];
+            offset = 0;
+        } else {
+            node = point.node;
+            offset = point.offset + 1;
+        }
+        return {
+            node: node,
+            offset: offset
+        };
+    }
+
     function endOfAreaBetweenTwoNodes(point) {
         // move the position because some browser make the caret on the end of the previous area after normalize
         if (
@@ -520,9 +347,9 @@ var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
             point.offset === point.node.textContent.length &&
             !/\S|\u00A0/.test(point.node.textContent)
         ) {
-            point = dom.nextPoint(dom.nextPoint(point));
+            point = nextPoint(nextPoint(point));
             while (point.node.tagName && point.node.textContent.length) {
-                point = dom.nextPoint(point);
+                point = nextPoint(point);
             }
         }
         return point;
@@ -538,7 +365,7 @@ var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
             var def = testUtils.makeTestPromise();
             if (step.start) {
                 selectText(step.start, step.end);
-                if (!Wysiwyg.getRange($editable[0])) {
+                if (!Wysiwyg.getRange()) {
                     throw 'Wrong range! \n' +
                         'Test: ' + test.name + '\n' +
                         'Selection: ' + step.start + '" to "' + step.end + '"\n' +
@@ -546,12 +373,11 @@ var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
                 }
             }
             setTimeout(function () {
-                if (step.keyCode || step.key) {
-                    var target = Wysiwyg.getRange($editable[0]).ec;
+                if (step.key) {
+                    var target = Wysiwyg.getRange().ec;
                     if (window.location.search.indexOf('notrycatch') !== -1) {
                         keydown(target, {
                             key: step.key,
-                            keyCode: step.keyCode,
                             ctrlKey: !!step.ctrlKey,
                             shiftKey: !!step.shiftKey,
                             altKey: !!step.altKey,
@@ -561,7 +387,6 @@ var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
                         try {
                             keydown(target, {
                                 key: step.key,
-                                keyCode: step.keyCode,
                                 ctrlKey: !!step.ctrlKey,
                                 shiftKey: !!step.shiftKey,
                                 altKey: !!step.altKey,
@@ -573,11 +398,10 @@ var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
                     }
                 }
                 setTimeout(function () {
-                    if (step.keyCode || step.key) {
+                    if (step.key) {
                         var $target = $(target.tagName ? target : target.parentNode);
                         $target.trigger($.Event('keyup', {
                             key: step.key,
-                            keyCode: step.keyCode,
                             ctrlKey: !!step.ctrlKey,
                             shiftKey: !!step.shiftKey,
                             altKey: !!step.altKey,
@@ -623,14 +447,14 @@ var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
             // test carret position
             if (test.test.start) {
                 var start = _select(test.test.start);
-                var range = Wysiwyg.getRange($editable[0]);
+                var range = Wysiwyg.getRange();
                 if ((range.sc !== range.ec || range.so !== range.eo) && !test.test.end) {
                     assert.ok(false, test.name + ": the carret is not colapsed and the 'end' selector in test is missing");
                     return;
                 }
                 var end = test.test.end ? _select(test.test.end) : start;
                 if (start.node && end.node) {
-                    range = Wysiwyg.getRange($editable[0]);
+                    range = Wysiwyg.getRange();
                     var startPoint = endOfAreaBetweenTwoNodes({
                         node: range.sc,
                         offset: range.so,
@@ -715,16 +539,8 @@ var select = (function () {
  */
 var keydown = function (key, $editable, options) {
     var keyPress = {};
-    if (typeof key === 'string') {
-        keyPress.key = key;
-        keyPress.keyCode = +_.findKey(keyboardMap, function (k) {
-            return k === key;
-        });
-    } else {
-        keyPress.key = keyboardMap[key] || String.fromCharCode(key);
-        keyPress.keyCode = key;
-    }
-    var range = Wysiwyg.getRange($editable[0]);
+    keyPress.key = key;
+    var range = Wysiwyg.getRange();
     if (!range) {
         console.error("Editor have not any range");
         return;
@@ -739,7 +555,7 @@ var keydown = function (key, $editable, options) {
     var event = $.Event("keydown", keyPress);
     $target.trigger(event);
 
-    if (!event.isDefaultPrevented()) {
+    if (!event.defaultPrevented) {
         if (keyPress.key.length === 1) {
             textInput($target[0], keyPress.key);
         } else {
@@ -770,17 +586,161 @@ var textInput = function (target, char) {
     if (!ev.defaultPrevented) {
         document.execCommand("insertText", 0, ev.data);
     }
+};
+
+//--------------------------------------------------------------------------
+// Convert Inline
+//--------------------------------------------------------------------------
+
+const tableAttributesString = Object.keys(TABLE_ATTRIBUTES).map(key => `${key}="${TABLE_ATTRIBUTES[key]}"`).join(' ');
+const tableStylesString = Object.keys(TABLE_STYLES).map(key => `${key}: ${TABLE_STYLES[key]};`).join(' ');
+/**
+ * Take a matrix representing a grid and return an HTML string of the Bootstrap
+ * grid. The matrix is an array of rows, with each row being an array of cells.
+ * Each cell can be represented either by a 0 < number < 13 (col-#) or a falsy
+ * value (col). Each cell has its coordinates `(row index, column index)` as
+ * text content.
+ * Eg: [                        // <div class="container">
+ *      [                       //     <div class="row">
+ *          1,                  //         <div class="col-1">(0, 0)</div>
+ *          11,                 //         <div class="col-11">(0, 1)</div>
+ *      ],                      //     </div>
+ *      [                       //     <div class="row">
+ *          false,              //         <div class="col">(1, 0)</div>
+ *      ],                      //     </div>
+ * ]                            // </div>
+ *
+ * @param {Array<Array<Number|null>>} matrix
+ * @returns {string}
+ */
+export function getGridHtml(matrix) {
+    return (
+        `<div class="container">` +
+        matrix.map((row, iRow) => (
+            `<div class="row">` +
+            row.map((col, iCol) => (
+                `<div class="${col ? 'col-' + col : 'col'}">(${iRow}, ${iCol})</div>`
+            )).join('') +
+            `</div>`
+        )).join('') +
+        `</div>`
+    );
+}
+export function getTdHtml(colspan, text, containerWidth) {
+    return (
+        `<td colspan="${colspan}"${
+            containerWidth ? ' ' + `style="max-width: ${Math.round(containerWidth*colspan/12*100)/100}px;"`
+                           : ''}>` +
+            text +
+        `</td>`
+    );
+}
+/**
+ * Take a matrix representing a table and return an HTML string of the table.
+ * The matrix is an array of rows, with each row being an array of cells. Each
+ * cell is represented by a tuple of numbers [colspan, width (in percent)]. A
+ * cell can have a string as third value to represent its text content. The
+ * default text content of each cell is its coordinates `(row index, column
+ * index)`. If the cell has a number as third value, it will be used as the
+ * max-width of the cell (in pixels).
+ * Eg: [                        // <table> (note: extra attrs and styles apply)
+ *      [                       //   <tr>
+ *          [1, 8],             //     <td colspan="1" width="8%">(0, 0)</td>
+ *          [11, 92]            //     <td colspan="11" width="92%">(0, 1)</td>
+ *      ],                      //   </tr>
+ *      [                       //   <tr>
+ *          [2, 17, 'A'],       //     <td colspan="2" width="17%">A</td>
+ *          [10, 83],           //     <td colspan="10" width="83%">(1, 1)</td>
+ *      ],                      //   </tr>
+ * ]                            // </table>
+ *
+ * @param {Array<Array<Array<[Number, Number, string?, number?]>>>} matrix
+ * @param {Number} [containerWidth]
+ * @returns {string}
+ */
+export function getTableHtml(matrix, containerWidth) {
+    return (
+        `<table ${tableAttributesString} style="width: 100% !important; ${tableStylesString}">` +
+        matrix.map((row, iRow) => (
+            `<tr>` +
+            row.map((col, iCol) => (
+                getTdHtml(col[0], typeof col[2] === 'string' ? col[2] : `(${iRow}, ${iCol})`, containerWidth)
+            )).join('') +
+            `</tr>`
+        )).join('') +
+        `</table>`
+    );
+}
+/**
+ * Take a number of rows and a number of columns (or number of columns per
+ * individual row) and return an HTML string of the corresponding grid. Every
+ * column is a regular Bootstrap "col" (no col-#).
+ * Eg: [2, 3] <=> getGridHtml([[false, false, false], [false, false, false]])
+ * Eg: [2, [2, 1]] <=> getGridHtml([[false, false], [false]])
+ *
+ * @see getGridHtml
+ * @param {Number} nRows
+ * @param {Number|Number[]} nCols
+ * @returns {string}
+ */
+export function getRegularGridHtml(nRows, nCols) {
+    const matrix = new Array(nRows).fill().map((_, iRow) => (
+        new Array(Array.isArray(nCols) ? nCols[iRow] : nCols).fill()
+    ));
+    return getGridHtml(matrix);
+};
+/**
+ * Take a number of rows, a number of columns (or number of columns per
+ * individual row), a colspan (or colspan per individual row) and a width (or
+ * width per individual row, in percent), and return an HTML string of the
+ * corresponding table. Every cell in a row has the same colspan/width.
+ * Eg: [2, 2, 6, 50] <=> getTableHtml([[[6, 50], [6, 50]], [[6, 50], [6, 50]]])
+ * Eg: [2, [2, 1], [6, 12], [50, 100]] <=> getTableHtml([[[6, 50], [6, 50]], [[12, 100]]])
+ *
+ * @see getTableHtml
+ * @param {Number} nRows
+ * @param {Number|Number[]} nCols
+ * @param {Number|Number[]} colspan
+ * @param {Number|Number[]} width
+ * @param {Number} containerWidth
+ * @returns {string}
+ */
+export function getRegularTableHtml(nRows, nCols, colspan, width, containerWidth) {
+    const matrix = new Array(nRows).fill().map((_, iRow) => (
+        new Array(Array.isArray(nCols) ? nCols[iRow] : nCols).fill().map(() => ([
+            Array.isArray(colspan) ? colspan[iRow] : colspan,
+            Array.isArray(width) ? width[iRow] : width,
+        ])))
+    );
+    return getTableHtml(matrix, containerWidth);
+}
+/**
+ * Take an HTML string and returns that string stripped from any HTML comments.
+ * By default, also removes the mso-hide class which is only there for outlook
+ * to hide elements when we use mso conditional comments.
+ *
+ * @param {string} html
+ * @param {boolean} [removeMsoHide=true]
+ * @returns {string}
+ */
+export function removeComments(html, removeMsoHide=true) {
+    const cleanHtml = html.replace(/<!--(.*?)-->/g, '');
+    if (removeMsoHide) {
+        return cleanHtml.replaceAll(' class="mso-hide"', '').replace(/\s*mso-hide/g, '').replace(/mso-hide\s*/g, '');
+    } else {
+        return cleanHtml;
+    }
 }
 
-return {
+export default {
     wysiwygData: wysiwygData,
-    createWysiwyg: createWysiwyg,
     testKeyboard: testKeyboard,
     select: select,
     keydown: keydown,
-    patch: patch,
-    unpatch: unpatch,
+    getGridHtml: getGridHtml,
+    getTableHtml: getTableHtml,
+    getRegularGridHtml: getRegularGridHtml,
+    getRegularTableHtml: getRegularTableHtml,
+    getTdHtml: getTdHtml,
+    removeComments: removeComments,
 };
-
-
-});

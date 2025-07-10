@@ -4,7 +4,7 @@
     'name': 'Authentication via LDAP',
     'depends': ['base', 'base_setup'],
     #'description': < auto-loaded from README file
-    'category': 'Tools',
+    'category': 'Hidden/Tools',
     'data': [
         'views/ldap_installer_views.xml',
         'security/ir.model.access.csv',
@@ -12,5 +12,6 @@
     ],
     'external_dependencies': {
         'python': ['ldap'],
-    }
+    },
+    'license': 'LGPL-3',
 }

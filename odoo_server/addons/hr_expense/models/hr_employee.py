@@ -1,7 +1,33 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models, api
+
+
+class EmployeeBase(models.AbstractModel):
+    _inherit = 'hr.employee.base'
+
+    filter_for_expense = fields.Boolean(store=False, search='_search_filter_for_expense', groups="hr.group_hr_user")
+
+    def _search_filter_for_expense(self, operator, value):
+        assert operator == '=' and value, "Operation not supported"
+
+        res = [('id', '=', 0)]  # Nothing accepted by domain, by default
+        user = self.env.user
+        employee = user.employee_id
+        if user.has_groups('hr_expense.group_hr_expense_user') or user.has_groups('account.group_account_user'):
+            res = ['|', ('company_id', '=', False), ('company_id', 'child_of', self.env.company.root_id.id)]  # Then, domain accepts everything
+        elif user.has_groups('hr_expense.group_hr_expense_team_approver') and user.employee_ids:
+            res = [
+                '|', '|', '|',
+                ('department_id.manager_id', '=', employee.id),
+                ('parent_id', '=', employee.id),
+                ('id', '=', employee.id),
+                ('expense_manager_id', '=', user.id),
+                '|', ('company_id', '=', False), ('company_id', '=', employee.company_id.id),
+            ]
+        elif user.employee_id:
+            res = [('id', '=', employee.id), '|', ('company_id', '=', False), ('company_id', '=', employee.company_id.id)]
+        return res
 
 
 class Employee(models.Model):
@@ -10,7 +36,7 @@ class Employee(models.Model):
     def _group_hr_expense_user_domain(self):
         # We return the domain only if the group exists for the following reason:
         # When a group is created (at module installation), the `res.users` form view is
-        # automatically modifiedto add application accesses. When modifiying the view, it
+        # automatically modified to add application accesses. When modifying the view, it
         # reads the related field `expense_manager_id` of `res.users` and retrieve its domain.
         # This is a problem because the `group_hr_expense_user` record has already been created but
         # not its associated `ir.model.data` which makes `self.env.ref(...)` fail.
@@ -18,17 +44,27 @@ class Employee(models.Model):
         return [('groups_id', 'in', group.ids)] if group else []
 
     expense_manager_id = fields.Many2one(
-        'res.users', string='Expense',
+        comodel_name='res.users',
+        string='Expense',
+        compute='_compute_expense_manager', store=True, readonly=False,
         domain=_group_hr_expense_user_domain,
-        help="User responsible of expense approval. Should be Expense approver.")
+        help='Select the user responsible for approving "Expenses" of this employee.\n'
+             'If empty, the approval is done by an Administrator or Approver (determined in settings/users).',
+    )
 
-    @api.onchange('parent_id')
-    def _onchange_parent_id(self):
-        super(Employee, self)._onchange_parent_id()
-        previous_manager = self._origin.parent_id.user_id
-        manager = self.parent_id.user_id
-        if manager and manager.has_group('hr_expense.group_hr_expense_user') and (self.expense_manager_id == previous_manager or not self.expense_manager_id):
-            self.expense_manager_id = manager
+    @api.depends('parent_id')
+    def _compute_expense_manager(self):
+        for employee in self:
+            previous_manager = employee._origin.parent_id.user_id
+            manager = employee.parent_id.user_id
+            if manager and manager.has_group('hr_expense.group_hr_expense_user') \
+                    and (employee.expense_manager_id == previous_manager or not employee.expense_manager_id):
+                employee.expense_manager_id = manager
+            elif not employee.expense_manager_id:
+                employee.expense_manager_id = False
+
+    def _get_user_m2o_to_empty_on_archived_employees(self):
+        return super()._get_user_m2o_to_empty_on_archived_employees() + ['expense_manager_id']
 
 
 class EmployeePublic(models.Model):
@@ -40,14 +76,8 @@ class EmployeePublic(models.Model):
 class User(models.Model):
     _inherit = ['res.users']
 
-    expense_manager_id = fields.Many2one(related='employee_id.expense_manager_id')
+    expense_manager_id = fields.Many2one(related='employee_id.expense_manager_id', readonly=False)
 
-    def __init__(self, pool, cr):
-        """ Override of __init__ to add access rights.
-            Access rights are disabled by default, but allowed
-            on some specific fields defined in self.SELF_{READ/WRITE}ABLE_FIELDS.
-        """
-        init_res = super(User, self).__init__(pool, cr)
-        # duplicate list to avoid modifying the original reference
-        type(self).SELF_READABLE_FIELDS = type(self).SELF_READABLE_FIELDS + ['expense_manager_id']
-        return init_res
+    @property
+    def SELF_READABLE_FIELDS(self):
+        return super().SELF_READABLE_FIELDS + ['expense_manager_id']

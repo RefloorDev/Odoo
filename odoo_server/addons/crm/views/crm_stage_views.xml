@@ -14,16 +14,17 @@
         </field>
     </record>
 
+    <!-- STAGES LIST VIEW + MUTI_EDIT -->
     <record id="crm_stage_tree" model="ir.ui.view">
-        <field name="name">crm.stage.tree</field>
+        <field name="name">crm.stage.list</field>
         <field name="model">crm.stage</field>
         <field name="arch" type="xml">
-            <tree string="Stages">
+            <list string="Stages" multi_edit="1">
                 <field name="sequence" widget="handle"/>
-                <field name="name"/>
+                <field name="name" readonly="1"/>
                 <field name="is_won"/>
                 <field name="team_id"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -35,18 +36,16 @@
             <form string="Stage">
                 <sheet>
                     <div class="oe_title">
-                        <div class="oe_edit_only">
-                            <label for="name"/>
-                        </div>
+                        <label for="name"/>
                         <h1>
-                            <field name="name"/>
+                            <field name="name" placeholder="e.g. Negotiation"/>
                         </h1>
                     </div>
                     <group>
                         <group>
                             <field name="is_won"/>
                             <field name="fold"/>
-                            <field name="team_id" options='{"no_open": True, "no_create": True}' attrs="{'invisible': [('team_count', '&lt;=', 1)]}" kanban_view_ref="%(sales_team.crm_team_view_kanban)s"/>
+                            <field name="team_id" options='{"no_open": True, "no_create": True}' invisible="team_count &lt;= 1" context="{'kanban_view_ref': 'sales_team.crm_team_view_kanban'}"/>
                         </group>
                         <field name="team_count" invisible="1"/>
                     </group>
@@ -70,13 +69,5 @@
           </p>
         </field>
     </record>
-
-    <menuitem
-        id="menu_crm_lead_stage_act"
-        name="Stages"
-        sequence="0"
-        action="crm_stage_action"
-        parent="menu_crm_config_lead"
-        groups="base.group_no_one"/>
 
 </odoo>

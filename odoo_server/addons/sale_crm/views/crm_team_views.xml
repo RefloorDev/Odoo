@@ -7,14 +7,9 @@
         <field name="arch" type="xml">
             <data>
                 <xpath expr="//span[@name='opportunities']" position="attributes">
-                    <attribute name="invisible" value="0"/>
+                    <attribute name="invisible">0</attribute>
                 </xpath>
             </data>
         </field>
     </record>
-
-    <record id="sales_team.crm_team_salesteams_act" model="ir.actions.act_window">
-        <field name="context">{'in_sales_app': True}</field>
-    </record>
-
 </odoo>

@@ -7,7 +7,6 @@ from odoo import fields
 
 from odoo import http
 from odoo.http import request
-from odoo.addons.http_routing.models.ir_http import unslug
 from odoo.tools.translate import _
 
 
@@ -29,7 +28,7 @@ class WebsiteMembership(http.Controller):
         '/members/association/<membership_id>/country/<int:country_id>',
         '/members/association/<membership_id>/country/<country_name>-<int:country_id>/page/<int:page>',
         '/members/association/<membership_id>/country/<int:country_id>/page/<int:page>',
-    ], type='http', auth="public", website=True)
+    ], type='http', auth="public", website=True, sitemap=True)
     def members(self, membership_id=None, country_name=None, country_id=0, page=1, **post):
         Product = request.env['product.product']
         Country = request.env['res.country']
@@ -63,7 +62,7 @@ class WebsiteMembership(http.Controller):
         if post_name:
             country_domain += ['|', ('name', 'ilike', post_name), ('website_description', 'ilike', post_name)]
 
-        countries = Partner.sudo().read_group(country_domain + [("website_published", "=", True)], ["id", "country_id"], groupby="country_id", orderby="country_id")
+        countries = Partner.sudo().read_group(country_domain + [("website_published", "=", True)], ["__count"], groupby="country_id")
         countries_total = sum(country_dict['country_id_count'] for country_dict in countries)
 
         line_domain = list(base_line_domain)
@@ -103,8 +102,8 @@ class WebsiteMembership(http.Controller):
 
         # get google maps localization of partners
         google_map_partner_ids = []
-        if request.website.viewref('website_membership.opt_index_google_map').active:
-            google_map_partner_ids = MembershipLine.search(line_domain).get_published_companies(limit=2000)
+        if request.website.is_view_active('website_membership.opt_index_google_map'):
+            google_map_partner_ids = MembershipLine.search(line_domain)._get_published_companies(limit=2000)
 
         search_domain = [('membership_state', '=', 'free'), ('website_published', '=', True)]
         if post_name:
@@ -112,7 +111,6 @@ class WebsiteMembership(http.Controller):
         if country_id:
             search_domain += [('country_id', '=', country_id)]
         free_partners = Partner.sudo().search(search_domain)
-        free_partner_ids = []
 
         memberships_data = []
         for membership_record in memberships:
@@ -130,8 +128,8 @@ class WebsiteMembership(http.Controller):
                     free_end = max(offset + limit - count_members, 0)
                     memberships_partner_ids['free'] = free_partners.ids[free_start:free_end]
                     page_partner_ids |= set(memberships_partner_ids['free'])
-                google_map_partner_ids += free_partner_ids[:2000-len(google_map_partner_ids)]
-                count_members += len(free_partner_ids)
+                google_map_partner_ids += free_partners.ids[:2000-len(google_map_partner_ids)]
+                count_members += len(free_partners)
 
         google_map_partner_ids = ",".join(str(it) for it in google_map_partner_ids)
         google_maps_api_key = request.website.google_maps_api_key
@@ -155,7 +153,7 @@ class WebsiteMembership(http.Controller):
             'google_map_partner_ids': google_map_partner_ids,
             'pager': pager,
             'post': post,
-            'search': "?%s" % werkzeug.url_encode(post),
+            'search': "?%s" % werkzeug.urls.url_encode(post),
             'search_count': count_members,
             'google_maps_api_key': google_maps_api_key,
         }
@@ -164,11 +162,14 @@ class WebsiteMembership(http.Controller):
     # Do not use semantic controller due to SUPERUSER_ID
     @http.route(['/members/<partner_id>'], type='http', auth="public", website=True)
     def partners_detail(self, partner_id, **post):
-        _, partner_id = unslug(partner_id)
+        current_slug = partner_id
+        _, partner_id = request.env['ir.http']._unslug(partner_id)
         if partner_id:
             partner = request.env['res.partner'].sudo().browse(partner_id)
             if partner.exists() and partner.website_published:  # TODO should be done with access rules
+                if request.env['ir.http']._slug(partner) != current_slug:
+                    return request.redirect('/members/%s' % request.env['ir.http']._slug(partner))
                 values = {}
                 values['main_object'] = values['partner'] = partner
                 return request.render("website_membership.partner", values)
-        return self.members(**post)
+        raise request.not_found()

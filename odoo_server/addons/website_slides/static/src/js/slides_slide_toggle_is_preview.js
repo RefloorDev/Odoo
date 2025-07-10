@@ -1,28 +1,24 @@
-odoo.define('website_slides.slide.preview', function (require) {
-    'use strict';
+/** @odoo-module **/
 
-    var publicWidget = require('web.public.widget');
+    import publicWidget from '@web/legacy/js/public/public_widget';
+    import { rpc } from "@web/core/network/rpc";
 
     publicWidget.registry.websiteSlidesSlideToggleIsPreview = publicWidget.Widget.extend({
         selector: '.o_wslides_js_slide_toggle_is_preview',
-        xmlDependencies: ['/website_slides/static/src/xml/slide_management.xml'],
         events: {
             'click': '_onPreviewSlideClick',
         },
 
         _toggleSlidePreview: function($slideTarget) {
-            this._rpc({
-                route: '/slides/slide/toggle_is_preview',
-                params: {
-                    slide_id: $slideTarget.data('slideId')
-                },
+            rpc('/slides/slide/toggle_is_preview', {
+                slide_id: $slideTarget.data('slideId')
             }).then(function (isPreview) {
                 if (isPreview) {
-                    $slideTarget.removeClass('badge-light badge-hide border');
-                    $slideTarget.addClass('badge-success');
+                    $slideTarget.removeClass('text-bg-light badge-hide border');
+                    $slideTarget.addClass('text-bg-success');
                 } else {
-                    $slideTarget.removeClass('badge-success');
-                    $slideTarget.addClass('badge-light badge-hide border');
+                    $slideTarget.removeClass('text-bg-success');
+                    $slideTarget.addClass('text-bg-light badge-hide border');
                 }
             });
         },
@@ -33,8 +29,6 @@ odoo.define('website_slides.slide.preview', function (require) {
         },
     });
 
-    return {
+    export default {
         websiteSlidesSlideToggleIsPreview: publicWidget.registry.websiteSlidesSlideToggleIsPreview
     };
-
-});

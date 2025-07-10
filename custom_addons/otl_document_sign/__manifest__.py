@@ -1,37 +1,49 @@
 # -*- coding: utf-8 -*-
 
 {
-    'name': 'OTL Document Sign',
-    'version': '1.0',
+    'name': 'Document Sign',
+    'version': '1.0.2',
     'category': 'Sales',
-    'author': 'One Team US LLC',
+    'author': 'Sagar Mokariya',
     'summary': "Send Documents for Signing",
-    'description': """
-    """,
-    'website': '',
-    'depends': ['mail', 'attachment_indexation', 'portal', 'sms','base','sale'],
+    'description': """ This module allows you to send documents for signing. """,
+    'website': 'www.xeonglobal.com',
+    'depends': [
+        'mail', 'attachment_indexation', 'portal', 'sms', 'base', 'sale'
+    ],
     'data': [
-         'security/security.xml',
+        'security/security.xml',
         'security/ir.model.access.csv',
         'views/sign_template_views_mobile.xml',
         'wizard/sign_send_request_views.xml',
         'wizard/sign_template_share_views.xml',
         'wizard/sign_request_send_copy_views.xml',
-        'views/sign_request_templates.xml',
-        'views/sign_template_templates.xml',
+        # 'views/sign_request_templates.xml',
+        # 'views/sign_template_templates.xml',
         'views/sign_request_views.xml',
         'views/sign_template_views.xml',
         'views/sign_log_views.xml',
         'views/res_users_views.xml',
         'views/res_partner_views.xml',
+        'views/otl_document_sign_request_item_value_views.xml',
         'wizard/create_sign_template_view.xml',
         'report/sign_log_reports.xml',
         'data/sign_data.xml',
     ],
-    'qweb': ['static/src/xml/*.xml'],
-    'demo': [
-        'data/sign_demo.xml',
-    ],
+    # 'assets': {
+    #     'web.assets_backend': [
+    #         'otl_document_sign/static/src/xml/kanban_button_template.xml',
+    #         'otl_document_sign/static/src/js/kanban_button_components.js',
+    #     ],
+    # },
+    'assets': {
+        'web.assets_backend': [
+            'otl_document_sign/static/src/xml/dynamic_reference_field.xml',
+            'otl_document_sign/static/src/js/dynamic_reference_field.js',
+            'otl_document_sign/static/src/js/reference_field.js',
+        ],
+    },
     'application': True,
     'installable': True,
+    'license': 'OPL-1',
 }

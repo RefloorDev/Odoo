@@ -1,18 +1,18 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# * payment_paypal
+# 	* payment_paypal
 # 
 # Translators:
-# Martin Trigaux, 2018
-# Hamed Mohammadi <hamed@dehongi.com>, 2018
+# Tiffany Chang, 2025
+# 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~11.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-18 09:49+0000\n"
-"PO-Revision-Date: 2018-09-18 09:49+0000\n"
-"Last-Translator: Hamed Mohammadi <hamed@dehongi.com>, 2018\n"
-"Language-Team: Persian (https://www.transifex.com/odoo/teams/41243/fa/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Tiffany Chang, 2025\n"
+"Language-Team: Persian (https://app.transifex.com/odoo/teams/41243/fa/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -20,71 +20,104 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_api_access_token
-msgid "Access Token"
-msgstr "توکن دسترسی"
+#: model_terms:ir.ui.view,arch_db:payment_paypal.payment_provider_form
+msgid "Client ID"
+msgstr "شناسه مشتری"
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_api_access_token_validity
-msgid "Access Token Validity"
+#: model_terms:ir.ui.view,arch_db:payment_paypal.payment_provider_form
+msgid "Client Secret"
+msgstr "رمز کلاینت"
+
+#. module: payment_paypal
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__code
+msgid "Code"
+msgstr "کد"
+
+#. module: payment_paypal
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_provider.py:0
+msgid "Could not establish the connection to the API."
+msgstr "نتوانستیم اتصال به API را برقرار کنیم"
+
+#. module: payment_paypal
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_provider.py:0
+msgid "Could not generate a new access token."
 msgstr ""
 
 #. module: payment_paypal
-#: selection:payment.acquirer,provider:0
-msgid "Adyen"
-msgstr ""
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__paypal_email_account
+msgid "Email"
+msgstr "پست الکترونیک"
 
 #. module: payment_paypal
-#: selection:payment.acquirer,provider:0
-msgid "Authorize.Net"
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:payment_paypal.payment_provider_form
+msgid "Generate your webhook"
+msgstr "وب‌هوک خود را تولید کنید"
 
 #. module: payment_paypal
-#: selection:payment.acquirer,provider:0
-msgid "Buckaroo"
-msgstr ""
-
-#. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__fees_dom_fixed
-msgid "Fixed domestic fees"
-msgstr ""
-
-#. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__fees_int_fixed
-msgid "Fixed international fees"
-msgstr ""
-
-#. module: payment_paypal
-#: model_terms:ir.ui.view,arch_db:payment_paypal.acquirer_form_paypal
+#: model_terms:ir.ui.view,arch_db:payment_paypal.payment_provider_form
 msgid "How to configure your paypal account?"
 msgstr ""
 
 #. module: payment_paypal
-#: selection:payment.acquirer,provider:0
-msgid "Manual Configuration"
+#. odoo-python
+#: code:addons/payment_paypal/controllers/main.py:0
+msgid "Invalid response format, can't normalize."
 msgstr ""
 
 #. module: payment_paypal
-#: selection:payment.acquirer,provider:0
-msgid "Ogone"
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_transaction.py:0
+msgid "Missing value for txn_id (%(txn_id)s) or txn_type (%(txn_type)s)."
 msgstr ""
 
 #. module: payment_paypal
-#: selection:payment.acquirer,provider:0
-msgid "PayUmoney"
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_transaction.py:0
+msgid "No transaction found matching reference %s."
+msgstr "هیچ تراکنشی مرجع منطبق پیدا نشد%s"
+
+#. module: payment_paypal
+#: model:ir.model.fields.selection,name:payment_paypal.selection__payment_provider__code__paypal
+msgid "PayPal"
+msgstr "پی پال"
+
+#. module: payment_paypal
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__paypal_access_token
+msgid "PayPal Access Token"
 msgstr ""
 
 #. module: payment_paypal
-#: model:ir.model,name:payment_paypal.model_payment_acquirer
-msgid "Payment Acquirer"
-msgstr "دریافت کننده پرداخت"
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__paypal_access_token_expiry
+msgid "PayPal Access Token Expiry"
+msgstr ""
 
 #. module: payment_paypal
-#: model:ir.model.fields,help:payment_paypal.field_payment_acquirer__paypal_pdt_token
-msgid ""
-"Payment Data Transfer allows you to receive notification of successful "
-"payments as they are made."
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__paypal_client_id
+msgid "PayPal Client ID"
 msgstr ""
+
+#. module: payment_paypal
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__paypal_client_secret
+msgid "PayPal Client Secret"
+msgstr ""
+
+#. module: payment_paypal
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_transaction__paypal_type
+msgid "PayPal Transaction Type"
+msgstr ""
+
+#. module: payment_paypal
+#: model:ir.model.fields,field_description:payment_paypal.field_payment_provider__paypal_webhook_id
+msgid "PayPal Webhook ID"
+msgstr ""
+
+#. module: payment_paypal
+#: model:ir.model,name:payment_paypal.model_payment_provider
+msgid "Payment Provider"
+msgstr "سرویس دهنده پرداخت"
 
 #. module: payment_paypal
 #: model:ir.model,name:payment_paypal.model_payment_transaction
@@ -92,94 +125,57 @@ msgid "Payment Transaction"
 msgstr "تراکنش پرداخت"
 
 #. module: payment_paypal
-#: selection:payment.acquirer,provider:0
-msgid "Paypal"
+#. odoo-javascript
+#: code:addons/payment_paypal/static/src/js/payment_form.js:0
+msgid "Payment processing failed"
+msgstr "پردازش پرداخت انجام نشد"
+
+#. module: payment_paypal
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_transaction.py:0
+msgid "Received data with invalid payment status: %s"
 msgstr ""
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_email_account
-msgid "Paypal Email ID"
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_provider.py:0
+msgid "The communication with the API failed. Details: %s"
+msgstr "ارتباط با API با خطا مواجه شد. جزئیات: %s"
+
+#. module: payment_paypal
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_transaction.py:0
+msgid "The customer left the payment page."
+msgstr "مشتری صفحه پرداخت را ترک کرد"
+
+#. module: payment_paypal
+#: model:ir.model.fields,help:payment_paypal.field_payment_provider__paypal_access_token_expiry
+msgid "The moment at which the access token becomes invalid."
 msgstr ""
 
 #. module: payment_paypal
-#: model:ir.model.fields,help:payment_paypal.field_payment_acquirer__paypal_use_ipn
-msgid "Paypal Instant Payment Notification"
-msgstr ""
-
-#. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_seller_account
-msgid "Paypal Merchant ID"
-msgstr ""
-
-#. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_pdt_token
-msgid "Paypal PDT Token"
-msgstr ""
-
-#. module: payment_paypal
-#: code:addons/payment_paypal/models/payment.py:138
-#, python-format
-msgid "Paypal: received data with missing reference (%s) or txn_id (%s)"
-msgstr ""
-
-#. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__provider
-msgid "Provider"
-msgstr "فراهم‌کننده"
-
-#. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_api_password
-msgid "Rest API Password"
-msgstr ""
-
-#. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_api_username
-msgid "Rest API Username"
-msgstr ""
-
-#. module: payment_paypal
-#: selection:payment.acquirer,provider:0
-msgid "Sips"
-msgstr ""
-
-#. module: payment_paypal
-#: selection:payment.acquirer,provider:0
-msgid "Stripe"
-msgstr ""
-
-#. module: payment_paypal
-#: model:ir.model.fields,help:payment_paypal.field_payment_acquirer__paypal_seller_account
+#: model:ir.model.fields,help:payment_paypal.field_payment_provider__paypal_email_account
 msgid ""
-"The Merchant ID is used to ensure communications coming from Paypal are "
-"valid and secured."
+"The public business email solely used to identify the account with PayPal"
 msgstr ""
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_transaction__paypal_txn_type
-msgid "Transaction type"
+#: model:ir.model.fields,help:payment_paypal.field_payment_provider__paypal_access_token
+msgid "The short-lived token used to access Paypal APIs"
 msgstr ""
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_use_ipn
-msgid "Use IPN"
+#: model:ir.model.fields,help:payment_paypal.field_payment_provider__code
+msgid "The technical code of this payment provider."
+msgstr "کد فنی این ارائه دهنده پرداخت."
+
+#. module: payment_paypal
+#: model_terms:ir.ui.view,arch_db:payment_paypal.payment_provider_form
+msgid "Webhook ID"
 msgstr ""
 
 #. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__paypal_api_enabled
-msgid "Use Rest API"
-msgstr ""
-
-#. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__fees_dom_var
-msgid "Variable domestic fees (in percents)"
-msgstr ""
-
-#. module: payment_paypal
-#: model:ir.model.fields,field_description:payment_paypal.field_payment_acquirer__fees_int_var
-msgid "Variable international fees (in percents)"
-msgstr ""
-
-#. module: payment_paypal
-#: selection:payment.acquirer,provider:0
-msgid "Wire Transfer"
+#. odoo-python
+#: code:addons/payment_paypal/models/payment_provider.py:0
+msgid "You must have an HTTPS connection to generate a webhook."
 msgstr ""

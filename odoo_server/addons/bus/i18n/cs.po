@@ -3,20 +3,16 @@
 # 	* bus
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Jaroslav Helemik Nemec <nemec@helemik.cz>, 2019
-# Jan Horzinka <jan.horzinka@centrum.cz>, 2019
-# Michal Veselý <michal@veselyberanek.net>, 2019
-# trendspotter <j.podhorecky@volny.cz>, 2019
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: trendspotter <j.podhorecky@volny.cz>, 2019\n"
-"Language-Team: Czech (https://www.transifex.com/odoo/teams/41243/cs/)\n"
+"POT-Creation-Date: 2025-01-27 13:03+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: Czech (https://app.transifex.com/odoo/teams/41243/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -24,19 +20,24 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
 
 #. module: bus
-#: model:ir.model.constraint,message:bus.constraint_bus_presence_bus_user_presence_unique
-msgid "A user can only have one IM status."
-msgstr "Uživatel může mít pouze jeden IM status."
+#: model:ir.model,name:bus.model_res_groups
+msgid "Access Groups"
+msgstr "Přístupové skupiny"
 
 #. module: bus
-#: model:ir.model,name:bus.model_ir_autovacuum
-msgid "Automatic Vacuum"
-msgstr "Automatické vysávání"
+#: model:ir.model,name:bus.model_ir_attachment
+msgid "Attachment"
+msgstr "Příloha"
 
 #. module: bus
 #: model:ir.model.fields.selection,name:bus.selection__bus_presence__status__away
 msgid "Away"
 msgstr "Pryč"
+
+#. module: bus
+#: model:ir.model,name:bus.model_bus_listener_mixin
+msgid "Can send messages via bus.bus"
+msgstr ""
 
 #. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_bus__channel
@@ -56,18 +57,23 @@ msgstr "Kontakt"
 #. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_bus__create_uid
 msgid "Created by"
-msgstr "Vytvořeno od"
+msgstr "Vytvořeno uživatelem"
 
 #. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_bus__create_date
 msgid "Created on"
-msgstr "Vytvořeno"
+msgstr "Vytvořeno dne"
 
 #. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_bus__display_name
 #: model:ir.model.fields,field_description:bus.field_bus_presence__display_name
 msgid "Display Name"
-msgstr "Zobrazované jméno"
+msgstr "Zobrazovací název"
+
+#. module: bus
+#: model:ir.model,name:bus.model_ir_http
+msgid "HTTP Routing"
+msgstr "HTTP Routing"
 
 #. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_bus__id
@@ -83,12 +89,6 @@ msgid "IM Status"
 msgstr "IM Status"
 
 #. module: bus
-#: model:ir.model.fields,field_description:bus.field_bus_bus____last_update
-#: model:ir.model.fields,field_description:bus.field_bus_presence____last_update
-msgid "Last Modified on"
-msgstr "Naposled změněno"
-
-#. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_presence__last_poll
 msgid "Last Poll"
 msgstr "Poslední průzkum"
@@ -101,17 +101,22 @@ msgstr "Poslední přítomnost"
 #. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_bus__write_uid
 msgid "Last Updated by"
-msgstr "Naposledy upraveno od"
+msgstr "Naposledy upraveno uživatelem"
 
 #. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_bus__write_date
 msgid "Last Updated on"
-msgstr "Naposled upraveno"
+msgstr "Naposledy upraveno dne"
 
 #. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_bus__message
 msgid "Message"
 msgstr "Zpráva"
+
+#. module: bus
+#: model:ir.model,name:bus.model_ir_model
+msgid "Models"
+msgstr "Modely"
 
 #. module: bus
 #: model:ir.model.fields.selection,name:bus.selection__bus_presence__status__offline
@@ -124,18 +129,68 @@ msgid "Online"
 msgstr "Online"
 
 #. module: bus
+#. odoo-javascript
+#: code:addons/bus/static/src/outdated_page_watcher_service.js:0
+#: code:addons/bus/static/src/services/assets_watchdog_service.js:0
+#: code:addons/bus/static/src/services/bus_service.js:0
+msgid "Refresh"
+msgstr "Obnovit"
+
+#. module: bus
+#. odoo-javascript
+#: code:addons/bus/static/src/outdated_page_watcher_service.js:0
+#: code:addons/bus/static/src/services/bus_service.js:0
+msgid ""
+"Save your work and refresh to get the latest updates and avoid potential "
+"issues."
+msgstr ""
+
+#. module: bus
+#. odoo-javascript
+#: code:addons/bus/static/src/services/assets_watchdog_service.js:0
+msgid "The page appears to be out of date."
+msgstr "Stránka se zdá být zastaralá."
+
+#. module: bus
+#. odoo-javascript
+#: code:addons/bus/static/src/outdated_page_watcher_service.js:0
+#: code:addons/bus/static/src/services/bus_service.js:0
+msgid "The page is out of date"
+msgstr ""
+
+#. module: bus
+#: model:ir.model,name:bus.model_res_users
+msgid "User"
+msgstr "Uživatel"
+
+#. module: bus
 #: model:ir.model,name:bus.model_bus_presence
 msgid "User Presence"
 msgstr "Přítomnost uživatele"
 
 #. module: bus
-#: model:ir.model,name:bus.model_res_users
+#: model:ir.model,name:bus.model_res_users_settings
+msgid "User Settings"
+msgstr "Uživatelské nastavení"
+
+#. module: bus
 #: model:ir.model.fields,field_description:bus.field_bus_presence__user_id
 msgid "Users"
 msgstr "Uživatelé"
 
 #. module: bus
-#: code:addons/bus/controllers/main.py:0
-#, python-format
-msgid "bus.Bus not available in test mode"
-msgstr "bus.Bus není v testovacím režimu k dispozici"
+#. odoo-python
+#: code:addons/bus/controllers/home.py:0
+msgid ""
+"Your password is the default (admin)! If this system is exposed to untrusted"
+" users it is important to change it immediately for security reasons. I will"
+" keep nagging you about it!"
+msgstr ""
+"Vaše heslo je výchozí (admin)! Pokud je tento systém vystaven nedůvěryhodným"
+" uživatelům, je důležité jej z bezpečnostních důvodů okamžitě změnit. Budu "
+"vás o tom pořád otravovat!"
+
+#. module: bus
+#: model:ir.model,name:bus.model_ir_websocket
+msgid "websocket message handling"
+msgstr "zpráva zpracování websocketu"

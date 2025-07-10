@@ -1,18 +1,21 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# * snailmail_account
+# 	* snailmail_account
 # 
 # Translators:
-# Martin Trigaux, 2018
+# Iván Infantes Castarnado, 2024
+# Martin Trigaux, 2024
+# M Palau <mpalau@tda.ad>, 2024
+# Xavier, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 12.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-11-05 09:29+0000\n"
-"PO-Revision-Date: 2018-08-24 09:25+0000\n"
-"Last-Translator: Martin Trigaux, 2018\n"
-"Language-Team: Catalan (https://www.transifex.com/odoo/teams/41243/ca/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Xavier, 2024\n"
+"Language-Team: Catalan (https://app.transifex.com/odoo/teams/41243/ca/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -20,69 +23,69 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: snailmail_account
-#: model_terms:ir.ui.view,arch_db:snailmail_account.account_invoice_send_inherit_account_wizard_form
-msgid "<span> to: </span>"
+#. odoo-python
+#: code:addons/snailmail_account/wizard/account_move_send_batch_wizard.py:0
+msgid "(Stamps: %s)"
 msgstr ""
 
 #. module: snailmail_account
-#: model:ir.model,name:snailmail_account.model_account_invoice_send
-msgid "Account Invoice Send"
-msgstr ""
-
-#. module: snailmail_account
-#: model:ir.model.fields,help:snailmail_account.field_account_invoice_send__snailmail_is_letter
+#: model_terms:ir.ui.view,arch_db:snailmail_account.res_config_settings_view_form
 msgid ""
-"Allows to send the document by snail mail (coventional posting delivery "
-"service)"
+"<span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-"
+"specific.\"/>"
+msgstr ""
+"<span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-"
+"specific.\"/>"
+
+#. module: snailmail_account
+#: model:ir.model,name:snailmail_account.model_account_move_send
+msgid "Account Move Send"
+msgstr "Enviar moviment de compte"
+
+#. module: snailmail_account
+#: model:ir.model,name:snailmail_account.model_account_move_send_batch_wizard
+msgid "Account Move Send Batch Wizard"
+msgstr "Assistent d'enviament de lots i seients comptables"
+
+#. module: snailmail_account
+#. odoo-python
+#: code:addons/snailmail_account/models/account_move_send.py:0
+msgid "Check Invoice(s)"
 msgstr ""
 
 #. module: snailmail_account
-#: model:ir.model,name:snailmail_account.model_res_company
-msgid "Companies"
-msgstr "Empreses"
+#: model:ir.model,name:snailmail_account.model_res_partner
+msgid "Contact"
+msgstr "Contacte"
 
 #. module: snailmail_account
-#: model:ir.model,name:snailmail_account.model_res_config_settings
-msgid "Config Settings"
+#: model:ir.model.fields,field_description:snailmail_account.field_res_partner__invoice_sending_method
+#: model:ir.model.fields,field_description:snailmail_account.field_res_users__invoice_sending_method
+msgid "Invoice sending"
+msgstr "Enviament de factura"
+
+#. module: snailmail_account
+#: model:ir.model.fields,field_description:snailmail_account.field_account_move_send_batch_wizard__send_by_post_stamps
+msgid "Send By Post Stamps"
 msgstr ""
 
 #. module: snailmail_account
-#: model:ir.model.fields,field_description:snailmail_account.field_account_invoice_send__currency_id
-msgid "Currency"
-msgstr "Moneda"
-
-#. module: snailmail_account
-#: model:ir.model.fields,field_description:snailmail_account.field_account_invoice_send__letter_ids
-msgid "Letter"
+#. odoo-python
+#: code:addons/snailmail_account/models/account_move_send.py:0
+msgid ""
+"The partners on the following invoices have no valid address, so those "
+"invoices will not be sent: %s"
 msgstr ""
 
 #. module: snailmail_account
-#: model:ir.model.fields,field_description:snailmail_account.field_account_invoice_send__partner_id
-msgid "Partner"
-msgstr "Empresa"
-
-#. module: snailmail_account
-#: model_terms:ir.ui.view,arch_db:snailmail_account.res_config_settings_view_form
-msgid "Print In Color"
+#. odoo-python
+#: code:addons/snailmail_account/models/account_move_send.py:0
+msgid "View Invoice(s)"
 msgstr ""
 
 #. module: snailmail_account
-#: model_terms:ir.ui.view,arch_db:snailmail_account.res_config_settings_view_form
-msgid "Print on Both Sides"
-msgstr ""
-
-#. module: snailmail_account
-#: model:ir.model.fields,field_description:snailmail_account.field_res_company__invoice_is_snailmail
-msgid "Send by Letter by default"
-msgstr ""
-
-#. module: snailmail_account
-#: model:ir.model.fields,field_description:snailmail_account.field_account_invoice_send__snailmail_is_letter
-#: model:ir.model.fields,field_description:snailmail_account.field_res_config_settings__invoice_is_snailmail
-msgid "Send by Post"
-msgstr ""
-
-#. module: snailmail_account
-#: model:ir.model.fields,field_description:snailmail_account.field_account_invoice_send__snailmail_cost
-msgid "Stamp(s)"
+#. odoo-python
+#: code:addons/snailmail_account/controllers/portal.py:0
+#: model:ir.model.fields.selection,name:snailmail_account.selection__res_partner__invoice_sending_method__snailmail
+msgid "by Post"
 msgstr ""

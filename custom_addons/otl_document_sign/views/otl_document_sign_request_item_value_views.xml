@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="otl_document_sign_request_item_value_form_view" model="ir.ui.view">
+            <field name="name">otl_document_sign.request.item.value.form.view</field>
+            <field name="model">otl_document_sign.request.item.value</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="sign_request_item_id"/>
+                                <field name="type_id"/>
+                            </group>
+                            <group>
+                                <field name="sign_item_id"/>
+                                <field name="value"/>
+                                <field name="sign_request_id"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="otl_document_sign_request_item_value_list_view" model="ir.ui.view">
+            <field name="name">otl_document_sign.request.item.value.list.view</field>
+            <field name="model">otl_document_sign.request.item.value</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="sign_request_item_id"/>
+                    <field name="sign_item_id"/>
+                    <field name="sign_request_id"/>
+                    <field name="value"/>
+                    <field name="type_id"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="otl_document_sign_request_item_value_action_window" model="ir.actions.act_window">
+            <field name="name">Sign Item Values</field>
+            <field name="res_model">otl_document_sign.request.item.value</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem 
+            name="Sign Item Values" parent="otl_document_sign.menu_sign_configuration" 
+            id="menu_act_otl_document_sign_request_item_value" action="otl_document_sign_request_item_value_action_window"/>
+    </data>
+</odoo>

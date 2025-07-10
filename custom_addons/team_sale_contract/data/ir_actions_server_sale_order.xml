@@ -1,0 +1,5328 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Team Customer Appointment -->
+        <record id="model_action_add_missing_questionnaire" model="ir.actions.server">
+            <field name="name">Add Missing Questionnaire</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <!-- <field name="binding_model_id" ref="sale.model_sale_order"/> -->
+            <field name="state">code</field>
+            <field name="code">
+questionnaire_list = [
+    {
+        "room_id":25,
+        "answer":[
+            "Carpet"
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":18
+    },
+    {
+        "room_id":25,
+        "answer":[
+            "Yes"
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":14
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":11
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":1
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":15
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":2
+    },
+    {
+        "room_id":25,
+        "answer":[
+            "Yes"
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":13
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":9
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":8
+    },
+    {
+        "room_id":25,
+        "answer":[
+            "4"
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":6
+    },
+    {
+        "room_id":25,
+        "answer":[
+            ""
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":16
+    },
+    {
+        "room_id":25,
+        "answer":[
+            ""
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":19
+    },
+    {
+        "room_id":25,
+        "answer":[
+            ""
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":7
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":17
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":12
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":24
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":20
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":3
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":4
+    },
+    {
+        "room_id":25,
+        "answer":[
+            ""
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":5
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":26
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":28
+    },
+    {
+        "room_id":25,
+        "answer":[
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":25
+    },
+    {
+        "room_id":25,
+        "answer":[
+            "Porous"
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":0,
+        "question_id":27
+    },
+    {
+        "room_id":25,
+        "answer":[
+            "Yes"
+        ],
+        "room_name":"BASEMENT",
+        "calculate_order_wise":1,
+        "question_id":29
+    },
+    {
+        "answer":[
+            "Carpet"
+        ],
+        "question_id":18,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+            "Yes"
+        ],
+        "question_id":14,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":11,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":1,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":15,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":2,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+            "No"
+        ],
+        "question_id":13,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":9,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":8,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":6,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+            ""
+        ],
+        "question_id":16,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+            ""
+        ],
+        "question_id":19,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+            ""
+        ],
+        "question_id":7,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":17,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":12,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":24,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":20,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":3,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":4,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+            ""
+        ],
+        "question_id":5,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":26,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":28,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+        ],
+        "question_id":25,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+            "Porous"
+        ],
+        "question_id":27,
+        "calculate_order_wise":0,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "answer":[
+            "Yes"
+        ],
+        "question_id":29,
+        "calculate_order_wise":1,
+        "room_id":19,
+        "room_name":"HALLWAY 1"
+    },
+    {
+        "question_id":18,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+            "Carpet"
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":14,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+            "Yes"
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":11,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":1,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":15,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":2,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":13,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+            "No"
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":9,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":8,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+            ""
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":6,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":16,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":19,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":7,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":17,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":12,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":24,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":20,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":3,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":4,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":5,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":26,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":28,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":25,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":27,
+        "calculate_order_wise":0,
+        "room_id":0,
+        "answer":[
+            "Porous"
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "question_id":29,
+        "calculate_order_wise":1,
+        "room_id":0,
+        "answer":[
+            "Yes"
+        ],
+        "room_name":"CUBBYHOLE NEXT TO STAIRS"
+    },
+    {
+        "answer":[
+            "Carpet"
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":18,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+            "Yes"
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":14,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+            "11"
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":11,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":1,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":15,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":2,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":13,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+            "3"
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":9,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+            "Yes"
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":8,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":6,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":16,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":19,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":7,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":17,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":12,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":24,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":20,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":3,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":4,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":5,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":26,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":28,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":25,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":0,
+        "room_id":26,
+        "question_id":27,
+        "room_name":"STAIRS"
+    },
+    {
+        "answer":[
+        ],
+        "calculate_order_wise":1,
+        "room_id":26,
+        "question_id":29,
+        "room_name":"STAIRS"
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+            "Carpet"
+        ],
+        "room_name":"LANDING 1",
+        "question_id":18
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+            "Yes"
+        ],
+        "room_name":"LANDING 1",
+        "question_id":14
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":11
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":1
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":15
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":2
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+            "No"
+        ],
+        "room_name":"LANDING 1",
+        "question_id":13
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":9
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":8
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":6
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+            ""
+        ],
+        "room_name":"LANDING 1",
+        "question_id":16
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+            ""
+        ],
+        "room_name":"LANDING 1",
+        "question_id":19
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+            ""
+        ],
+        "room_name":"LANDING 1",
+        "question_id":7
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":17
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":12
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":24
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":20
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":3
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":4
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+            ""
+        ],
+        "room_name":"LANDING 1",
+        "question_id":5
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":26
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":28
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+        ],
+        "room_name":"LANDING 1",
+        "question_id":25
+    },
+    {
+        "calculate_order_wise":0,
+        "room_id":30,
+        "answer":[
+            ""
+        ],
+        "room_name":"LANDING 1",
+        "question_id":27
+    },
+    {
+        "calculate_order_wise":1,
+        "room_id":30,
+        "answer":[
+            ""
+        ],
+        "room_name":"LANDING 1",
+        "question_id":29
+    },
+    {
+        "answer":[
+            "Carpet"
+        ],
+        "room_id":3,
+        "question_id":18,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+            "Yes"
+        ],
+        "room_id":3,
+        "question_id":14,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+            "12"
+        ],
+        "room_id":3,
+        "question_id":11,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":1,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":15,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":2,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":13,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+            "3"
+        ],
+        "room_id":3,
+        "question_id":9,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+            "Yes"
+        ],
+        "room_id":3,
+        "question_id":8,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":6,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":16,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":19,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":7,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":17,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":12,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":24,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":20,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":3,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":4,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":5,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":26,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":28,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":25,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":27,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":0
+    },
+    {
+        "answer":[
+        ],
+        "room_id":3,
+        "question_id":29,
+        "room_name":"STAIRS 2",
+        "calculate_order_wise":1
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":18,
+        "room_id":5,
+        "answer":[
+            "Carpet"
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":14,
+        "room_id":5,
+        "answer":[
+            "Yes"
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":11,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":1,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":15,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":2,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":13,
+        "room_id":5,
+        "answer":[
+            "No"
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":9,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":8,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":6,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":16,
+        "room_id":5,
+        "answer":[
+            ""
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":19,
+        "room_id":5,
+        "answer":[
+            ""
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":7,
+        "room_id":5,
+        "answer":[
+            ""
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":17,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":12,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":24,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":20,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":3,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":4,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":5,
+        "room_id":5,
+        "answer":[
+            ""
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":26,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":28,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":25,
+        "room_id":5,
+        "answer":[
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":0,
+        "question_id":27,
+        "room_id":5,
+        "answer":[
+            ""
+        ],
+        "room_name":"LANDING 2"
+    },
+    {
+        "calculate_order_wise":1,
+        "question_id":29,
+        "room_id":5,
+        "answer":[
+            ""
+        ],
+        "room_name":"LANDING 2"
+    }
+
+]
+sale_order = record
+appointment = record.appointment_id
+room_measure_obj = model.env['team.contract.room.measurement.line']
+room_question_obj = model.env['team.contract.question.line']
+answer_obj = model.env['team.contract.answer.line']
+for data in questionnaire_list:
+    room_name = data.get('room_name', '')
+    calculate_order_wise = data.get('calculate_order_wise', 0)
+    if data.get('room_id', False) or room_name:
+        room_id = int(data.get('room_id', False)) or 0
+        if not room_id:
+            room = model.env['team.room.room'].search([('is_custom', '=', True)], limit=1)
+            room_id = room and room.id or 0
+        question_id = int(data.get('question_id', False)) or 0
+        answers = data.get('answer', [])
+        answer_exists = False
+        for answer in answers:
+            if answer:
+                answer_exists = True
+        if model.env['team.room.room'].browse(room_id).exists():
+            if not question_id:
+                _logger.info("------ Question ID Missing-------------")
+            if model.env['team.quote.question'].browse(question_id).exists():
+                if room_name:
+                    room_measure = room_measure_obj.search(
+                        [('appointment_id', '=', appointment.id), ('custom_room_name', '=', room_name)], limit=1)
+                else:
+                    room_measure = room_measure_obj.search(
+                        [('appointment_id', '=', appointment.id), ('room_id', '=', room_id)], limit=1)
+                room_question = room_question_obj.search(
+                    [('appointment_id', '=', appointment.id), ('question_id', '=', question_id), ('room_name', '=', room_name)], limit=1)
+                if answer_exists:
+                    if room_question:
+                        if not room_question.room_measurement_id:
+                            room_question.write({
+                            'room_measurement_id': room_measure and room_measure.id or False,
+                            })
+                    else:
+                        room_question = room_question_obj.create({
+                            'room_id': room_id,
+                            'question_id': question_id,
+                            'room_name': room_name,
+                            'room_measurement_id': room_measure and room_measure.id or False,
+                            'calculate_order_wise': calculate_order_wise and True or False,
+                            'appointment_id': appointment.id,
+                            'order_id': sale_order and sale_order.id or False
+                        })
+                    if not room_question.answers:
+                        for answer in answers:
+                            if answer:
+                                answer_record = answer_obj.create({
+                                    'question_id': room_question.id,
+                                    'answer': answer
+                                })
+                    result = {
+                        'message': 'Room questionnaire data updated successfully',
+                        'result': 'Success'
+                    }
+
+            else:
+                _logger.info("------ Question ID Wrong-------------")
+                result = {'message': 'Question ID Wrong', 'result': 'Failed'}
+
+        else:
+            _logger.info("------ Room_id Wrong-------------")
+            result = {'message': 'Wrong Room Value', 'result': 'Failed'}
+    else:
+        _logger.info("------ Room_id Empty-------------")
+        result = {'message': 'Room_id Empty', 'result': 'Failed'}
+            
+            </field>
+        </record>
+
+        <record id="model_action_add_missing_room_data" model="ir.actions.server">
+            <field name="name">Add missing Room Data</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <!-- <field name="binding_model_id" ref="sale.model_sale_order"/> -->
+            <field name="state">code</field>
+            <field name="code">
+room_list = [
+                {
+                    "room_name":"BASEMENT",
+                    "exclude_from_calculation":0,
+                    "room_perimeter":75,
+                    "room_area":"348.0",
+                    "moulding_type":"Vinyl White",
+                    "transitions":[
+                        {
+                            "width":6.099999904632568,
+                            "transition_height_id":1,
+                            "name":"No Transition",
+                            "height":"0"
+                        }
+                    ],
+                    "room_adjusted_area":"348.0",
+                    "room_area_image":"Attachment_2024_04_25_18:09:27.JPG",
+                    "material_id":932,
+                    "room_id":25,
+                    "room_comments":"",
+                    "room_image_names":[
+                        "AttachmentL12OnnuBGD.JPG",
+                        "Attachment0dq7CFtzEV.JPG",
+                        "Attachment5Q0VBGNs83.JPG"
+                    ]
+                },
+                {
+                    "room_adjusted_area":"70.0",
+                    "room_comments":"",
+                    "room_perimeter":33,
+                    "exclude_from_calculation":0,
+                    "room_id":19,
+                    "room_area":"70.0",
+                    "transitions":[
+                        {
+                            "name":"No Transition",
+                            "width":7.599999904632568,
+                            "transition_height_id":1,
+                            "height":"0"
+                        },
+                        {
+                            "name":"Metal T",
+                            "width":2.5999999046325684,
+                            "transition_height_id":1,
+                            "height":"0"
+                        },
+                        {
+                            "transition_height_id":1,
+                            "name":"No Transition",
+                            "width":5.110000133514404,
+                            "height":"0"
+                        }
+                    ],
+                    "room_name":"HALLWAY 1",
+                    "room_image_names":[
+                        "AttachmentzpZjh3Sfhf.JPG",
+                        "AttachmentJZF2HRnBTo.JPG",
+                        "AttachmentGYR3bdehO9.JPG"
+                    ],
+                    "moulding_type":"Vinyl White",
+                    "material_id":932,
+                    "room_area_image":"Attachment_2024_04_25_18:17:49.JPG"
+                },
+                {
+                    "room_name":"CUBBYHOLE NEXT TO STAIRS",
+                    "transitions":[
+                        {
+                            "width":3.4000000953674316,
+                            "name":"No Transition",
+                            "transition_height_id":1,
+                            "height":"0"
+                        }
+                    ],
+                    "room_image_names":[
+                        "AttachmentwYr4nyl7Zo.JPG",
+                        "Attachment4qqlYSuiVR.JPG"
+                    ],
+                    "material_id":829,
+                    "room_comments":"",
+                    "room_area":"18.0",
+                    "is_custom_room":1,
+                    "room_id":0,
+                    "moulding_type":"Vinyl White",
+                    "room_perimeter":18,
+                    "exclude_from_calculation":0,
+                    "room_adjusted_area":"18.0",
+                    "room_area_image":"Attachment_2024_04_25_18:21:01.JPG"
+                },
+                {
+                    "transitions":[
+                    ],
+                    "room_id":26,
+                    "room_name":"STAIRS",
+                    "room_perimeter":0,
+                    "material_id":829,
+                    "exclude_from_calculation":0,
+                    "room_adjusted_area":"0.0",
+                    "room_comments":"",
+                    "room_image_names":[
+                        "AttachmentvdMIoTnUpn.JPG",
+                        "Attachment5Y4nyORd4w.JPG",
+                        "AttachmentGWcrbezqU8.JPG"
+                    ]
+                },
+                {
+                    "room_name":"LANDING 1",
+                    "room_adjusted_area":"20.0",
+                    "transitions":[
+                        {
+                            "width":3,
+                            "name":"Stair Nose",
+                            "transition_height_id":1,
+                            "height":"0"
+                        },
+                        {
+                            "width":2.109999895095825,
+                            "transition_height_id":1,
+                            "height":"0",
+                            "name":"No Transition"
+                        }
+                    ],
+                    "room_comments":"",
+                    "room_image_names":[
+                        "AttachmentxYFTiyvbzH.JPG",
+                        "Attachment19zVL566id.JPG"
+                    ],
+                    "room_perimeter":18,
+                    "moulding_type":"Vinyl White",
+                    "material_id":932,
+                    "room_id":30,
+                    "exclude_from_calculation":0,
+                    "room_area_image":"Attachment_2024_04_25_18:27:11.JPG",
+                    "room_area":"20.0"
+                },
+                {
+                    "exclude_from_calculation":0,
+                    "room_perimeter":0,
+                    "room_comments":"",
+                    "room_id":3,
+                    "room_image_names":[
+                        "Attachmentj1IsJTU5U6.JPG",
+                        "AttachmentlGFJeGYpJO.JPG"
+                    ],
+                    "material_id":829,
+                    "transitions":[
+                    ],
+                    "room_adjusted_area":"0.0",
+                    "room_name":"STAIRS 2"
+                },
+                {
+                    "room_area_image":"Attachment_2024_04_25_18:32:23.JPG",
+                    "room_area":"19.0",
+                    "room_adjusted_area":"19.0",
+                    "moulding_type":"Vinyl White",
+                    "room_comments":"",
+                    "room_perimeter":18,
+                    "room_name":"LANDING 2",
+                    "room_image_names":[
+                        "AttachmentSXuHS0j8Bb.JPG",
+                        "AttachmenthHk7Rh0X1g.JPG"
+                    ],
+                    "material_id":932,
+                    "transitions":[
+                        {
+                            "transition_height_id":1,
+                            "width":3,
+                            "height":"0",
+                            "name":"Stair Nose"
+                        },
+                        {
+                            "name":"No Transition",
+                            "height":"0",
+                            "width":3,
+                            "transition_height_id":1
+                        }
+                    ],
+                    "exclude_from_calculation":0,
+                    "room_id":5
+                }
+            
+            ]
+room_measure_obj = model.env['team.contract.room.measurement.line']
+sale_order = record
+appointment = sale_order.appointment_id
+for data in room_list:
+    custom_room_measured = int(data.get('is_custom_room', 0)) or 0
+    if data.get('room_id', False) or custom_room_measured:
+        room_id = int(data.get('room_id', False)) or 0
+        if custom_room_measured:
+            room = model.env['team.room.room'].search([('is_custom', '=', True)], limit=1)
+            room_id = room and room.id or 0
+        exclude_from_calculation = int(data.get('exclude_from_calculation', 0)) or 0
+        room = model.env['team.room.room'].browse(room_id)
+        if room.exists():
+            room_domain = [('appointment_id', '=', appointment.id)]
+            if custom_room_measured and data.get('room_name', ''):
+                room_domain += [('custom_room_name', '=', data.get('room_name', ''))]
+            elif data.get('room_id', False):
+                room_domain += [('room_id', '=', room_id)]
+            room_measure = room_measure_obj.search(room_domain, limit=1)
+            if not room_measure:
+                material_id = int(data.get('material_id', 0))
+                vals = {
+                    'custom_room_name': data.get('room_name', ''),
+                    'comments': data.get('room_comments', ''),
+                    'room_area': float(data.get('room_area', 0)),
+                    'adjusted_area': float(data.get('room_adjusted_area', 0)),
+                    'room_perimeter': float(data.get('room_perimeter', 0)),
+                    'exclude_from_calculation': exclude_from_calculation and True or False,
+                    'custom_room_measured': custom_room_measured and True or False,
+                }
+                if material_id and model.env['product.product'].browse(material_id).exists():
+                    vals.update({
+                        'material_id': material_id,
+                        'color_up_charge_price': model.env['product.product'].browse(
+                            material_id).color_up_charge_price or 0,
+                    })
+                    if room.product_category_id.name.upper() != 'VINYL STAIRS':
+                        moulding = data.get('moulding_type', '')
+                        molding_type = model.env['team.floor.molding'].search([('name', '=', moulding)], limit=1)
+                        if appointment.appointment_result == 'Sold' and not molding_type and not exclude_from_calculation:
+                            _logger.info('--------------Molding is not existing------------')
+                        vals.update({
+                            'molding_type_id': molding_type.id,
+                            'molding_unit_price': molding_type.unit_price or 0,
+                        })
+    
+                else:
+                    _logger.info("------ Material ID Wrong-------------")
+                    if appointment.appointment_result == 'Sold' and not exclude_from_calculation:
+                        result = {'message': 'Wrong Material Value', 'result': 'Failed'}
+
+                vals.update({
+                    'appointment_id': appointment.id,
+                    'room_id': room_id,
+                    'order_id': sale_order and sale_order.id or False
+                    })
+                room_measure = room_measure_obj.create(vals)
+                if data.get('transitions', []):
+                    for transition_data in data.get('transitions', []):
+                        if transition_data.get('name', '') and transition_data.get('width', 0):
+                            model.env['team.contract.transition.line'].create({
+                                'name': transition_data.get('name', ''),
+                                'transition_width': float(transition_data.get('width', 0)),
+                                'transition_height': transition_data.get('height', ''),
+                                'transition_height_id': transition_data.get('transition_height_id', False),
+                                'room_measurement_id': room_measure.id,
+                                'room_id': room_id,
+                                'appointment_id': appointment.id,
+                                'order_id': sale_order and sale_order.id or False
+                            })
+            result = {
+                'message': 'Room data updated successfully',
+                'result': 'Success'
+            }
+        else:
+            _logger.info("------ Room_id Wrong-------------")
+            result = {'message': 'Wrong Room Value', 'result': 'Failed'}
+    else:
+        _logger.info("------ Room_id Empty-------------")
+        result = {'message': 'Room ID Empty', 'result': 'Failed'}
+        
+for data in room_list:
+    room_name = data.get('room_name', '')
+    room_measurement_line = record.room_measurement_line.filtered(lambda x: x.custom_room_name == room_name)
+    if room_measurement_line:
+        measurement_image = model.env['ir.attachment'].search([('appointment_id', '=', record.appointment_id.id), ('name', '=', data.get('room_area_image', ''))])
+        if measurement_image and not room_measurement_line.shape_image_id:
+            room_measurement_line.write({'shape_image_id': measurement_image.id})
+        room_images = model.env['ir.attachment'].search([('appointment_id', '=', record.appointment_id.id), ('name', 'in', data.get('room_image_names', []))])
+        if room_images and not room_measurement_line.attachment_ids:
+            room_measurement_line.write({'attachment_ids': [(6, 0, room_images.ids)]})
+            </field>
+        </record>
+
+        <record id="model_action_call_addquote_api" model="ir.actions.server">
+            <field name="name">Call AddQuote API</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+records.write({'quote_id': '', 'contract_document_uploaded': False, 'other_files_uploaded': False,  'is_data_upload_completed': False})
+room_measurements = records.room_measurement_line.filtered(lambda x: x.improveit_id)
+if room_measurements:
+    room_measurements.write({'improveit_id': ''})
+records.add_quote_sales_app(record.appointment_result)
+            </field>
+        </record>
+
+        <record id="model_action_call_addquoteitem_api" model="ir.actions.server">
+            <field name="name">Call AddQuoteItem API</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+records.write({'is_data_upload_completed': False})
+room_measurements = records.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation and x.improveit_id)
+if room_measurements:
+    room_measurements.write({'improveit_id': ''})
+records.add_quote_items_sales_app()
+records.write({'is_data_upload_completed': True})
+            </field>
+        </record>
+
+        <record id="model_action_call_addsale_api" model="ir.actions.server">
+            <field name="name">Call AddSale API</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+records.write({'quote_id': '', 'contract_document_uploaded': False, 'other_files_uploaded': False,  'is_data_upload_completed': False})
+room_measurements = records.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation and x.improveit_id)
+if room_measurements:
+    room_measurements.write({'improveit_id': ''})
+records.add_sale_api()
+            </field>
+        </record>
+
+        <record id="model_action_call_addsaleitem_api" model="ir.actions.server">
+            <field name="name">Call AddSaleItem API</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+records.write({'is_data_upload_completed': False})
+room_measurements = records.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation and x.improveit_id)
+if room_measurements:
+    room_measurements.write({'improveit_id': ''})
+records.add_sale_items_api()
+records.write({'is_data_upload_completed': True})
+            </field>
+        </record>
+
+        <record id="model_action_call_contract_document_upload" model="ir.actions.server">
+            <field name="name">Call Contract Document Upload</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+record.contract_doc_attachment_id.write({'improveit_id': ''})
+model_id = model.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+sale_order = record
+if sale_order.appointment_result == 'Sold':
+    contract_doc_attachment = sale_order.contract_doc_attachment_id or False
+    if not contract_doc_attachment:
+        sign_request = model.env['otl_document_sign.request'].sudo().search(
+            [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)], order='create_date desc',
+            limit=1)
+        if sign_request:
+            if sign_request.state == 'signed':
+                if not sign_request.completed_document:
+                    sign_request.generate_completed_document()
+                contract_doc_attachment = sign_request.document_image()
+                sale_order.write(
+                    {'contract_doc_attachment_id': contract_doc_attachment.id, 'document_signed': True})
+sale_order.add_contract_document_file()
+            </field>
+        </record>
+
+        <record id="model_action_call_credit_application_file_upload" model="ir.actions.server">
+            <field name="name">Call Credit Application File Upload</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <!-- <field name="binding_model_id" ref="sale.model_sale_order"/> -->
+            <field name="state">code</field>
+            <field name="code">records.action_upload_credit_application({})</field>
+        </record>
+
+        <record id="model_action_call_quote_file_upload" model="ir.actions.server">
+            <field name="name">Call Quote File Upload</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+record.add_quote_id_file(document=False)
+record.write({'other_files_uploaded': True})
+            </field>
+        </record>
+
+        <record id="model_action_call_room_image_upload" model="ir.actions.server">
+            <field name="name">Call Room Image Upload</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+records.write({'other_files_uploaded': False, 'is_data_upload_completed': False})
+credit_application = model.env['team.credit.application'].search([
+    ('order_id', '=', record.id)
+], limit=1, order='id desc')
+if credit_application and credit_application.attachment_id:
+    attachment = credit_application.attachment_id
+    attachment.sudo().write({'improveit_id': False})
+for room_lines in records.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation):
+    if room_lines.shape_image_id:
+        attachment = room_lines.shape_image_id
+        attachment.sudo().write({'improveit_id': False})
+    if room_lines.attachment_ids:
+        room_lines.attachment_ids.sudo().write({'improveit_id': False})
+records.add_sale_id_file()
+records.write({'other_files_uploaded': True, 'is_data_upload_completed': True})
+            </field>
+        </record>
+
+        <record id="model_action_call_set_appointment_result" model="ir.actions.server">
+            <field name="name">Call SetAppointmentResult</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+for order in records:
+    appointment = order.appointment_id
+    response_result = order.set_appointment_result_api(order.appointment_result, notes={"what_happened_notes": appointment.what_happened_notes or "", "whats_next_notes": appointment.whats_next_notes or ""})
+    log(str(response_result))
+            </field>
+        </record>
+
+        <record id="model_action_call_contract_document_upload_to_i360" model="ir.actions.server">
+            <field name="name">Contract Document Upload To i360</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">records.action_sync_contract_doc_on_i360()</field>
+        </record>
+
+        <record id="model_action_call_create_credit_application" model="ir.actions.server">
+            <field name="name">Create Credit Application</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <!-- <field name="binding_model_id" ref="sale.model_sale_order"/> -->
+            <field name="state">code</field>
+            <field name="code">
+record.action_create_credit_application({
+                "co_applicant_present_employers_state":"",
+                "address_relationship_city":"",
+                "co_applicant_date_of_birth":"",
+                "co_applicant_previous_employers_city":"",
+                "co_applicant_previous_street2":"",
+                "co_applicant_signature_date":"01/24/2023",
+                "date_aquired":"",
+                "hunterMessageStatus":"Yes",
+                "occupation_previous_employer":"",
+                "home_phone":"(636) 675-1783",
+                "co_applicant_previoust_employers_zip":"",
+                "previous_address_of_applicant_street":"",
+                "total_price":"8579",
+                "zip":"",
+                "type_of_credit_requested":"Individual Credit - relying on my income or assets as well as income or assets from other sources",
+                "present_value_of_home":0,
+                "co_applicant_city":"",
+                "co_applicant_earnings_from_employment":0,
+                "co_applicant_present_employers_street":"",
+                "co_applicant_supervisor_or_department":"",
+                "co_applicant_occupation":"",
+                "co_applicant_present_employers_address":"",
+                "co_applicant_drivers_license_issue_date":"12/11/2028",
+                "same_property_address":"SAME AS APPLICANT",
+                "social_security_number":"488-08-5698",
+                "checking_routing_no":"",
+                "applicant_mortgage_company":"",
+                "earnings_from_employment":6250,
+                "co_applicant_previous_employers_phone_number":"",
+                "drivers_license_issue_date":"01/11/2022",
+                "applicant_email":"dtwjr3@gmail.com",
+                "race":"I do not wish to furnish this information",
+                "co_applicant_race":"",
+                "co_applicant_last_name":"",
+                "insurance_company":"",
+                "applicant_otherRace":"",
+                "previous_address_of_applicant_zip":"",
+                "address_of_applicant_zip":"63042",
+                "previous_address_how_long":"",
+                "address_of_applicant_city":"Hazelwood",
+                "ethnicity":"",
+                "address_relationship_street":"",
+                "co_applicant_drivers_license_exp_date":"",
+                "co_applicant_previous_employers_address":"",
+                "applicant_not_furnish_info":"0",
+                "lender_address_city":"",
+                "co_applicant_otherRace":"",
+                "original_purchase_price":0,
+                "co_applicant_first_name":"",
+                "downpayment":"25",
+                "earnings_per_month":"",
+                "co_applicant_previous_zip":"",
+                "street2":"",
+                "owners_if_different":"",
+                "co_applicant_how_long":"",
+                "lender_phone":"",
+                "second_mortage":"Yes",
+                "additional_income":"Yes",
+                "previous_employers_address_street":"",
+                "property_details":"MORTGAGE",
+                "present_employer":"Costco",
+                "cell_phone":"",
+                "present_balance_second_mortage":0,
+                "monthly_mortage_payment":0,
+                "previous_address_of_applicant":"",
+                "co_applicant_skip":1,
+                "city":"",
+                "co_applicant_previous_street":"",
+                "owners":"",
+                "co_applicant_social_security_number":"",
+                "employers_phone_number":"",
+                "applicant_last_name":"Wortham",
+                "co_applicant_employers_phone_number":"",
+                "total_monthly_payments":0,
+                "co_applicant_earnings_per_month":0,
+                "original_amount":0,
+                "supervisor_or_department":"",
+                "relationship":"",
+                "co_applicant_address_of_applicant":"",
+                "present_balance":0,
+                "co_applicant_secondary_phone":"",
+                "applicant_middle_name":"",
+                "co_applicant_previous_employers_street":"",
+                "date_of_birth":"12/11/1992",
+                "co_applicant_previous_employers_state":"",
+                "previous_address_of_applicant_street2":"",
+                "co_applicant_years_on_job":"",
+                "address_relationship":"",
+                "street":"",
+                "present_employers_address_street2":"",
+                "phone_number_relationship":"",
+                "co_applicant_previous_address_of_applicant":"",
+                "joint_credit_initials":"",
+                "co_applicant_present_employers_street2":"",
+                "co_applicant_marital_status":"",
+                "co_applicant_middle_name":"",
+                "address_relationship_street2":"",
+                "amount_financed":"8554",
+                "type_of_loan":"No Interest",
+                "co_applicant_state":"",
+                "drivers_license":"U050154030",
+                "co_applicant_street":"",
+                "years_on_job_previous_employer":"",
+                "applicant_first_name":"Jasmine",
+                "lender_address":"",
+                "co_applicant_sex":"",
+                "insurance_phone_no":"",
+                "previous_employers_address_street2":"",
+                "sex":"Female",
+                "other_obligations":0,
+                "coverage":"",
+                "applicant_signature_date":"01/24/2023",
+                "monthly_payment":0,
+                "present_employers_address_state":"",
+                "co_applicant_email":"",
+                "work_to_be_done":"FLOORING",
+                "co_applicant_ethnicity":"",
+                "amount_monthly":0,
+                "present_employers_address_street":"",
+                "original_mortage_amount":0,
+                "address_relationship_state":"",
+                "lender_address_state":"",
+                "co_applicant_phone":"",
+                "present_employers_address_zip":"",
+                "previous_employers_address_zip":"",
+                "source_of_other_income":"Social Security",
+                "lender_name_or_phone":"",
+                "years_on_job":"1",
+                "co_applicant_not_furnish_info":"0",
+                "agent":"",
+                "previous_employers_phone_number":"",
+                "previous_address_of_applicant_city":"",
+                "name_of_bank":"",
+                "co_applicant_street2":"",
+                "address_of_applicant_state":"MO",
+                "occupation":"Service Clerk",
+                "co_applicant_previous_state":"",
+                "co_applicant_present_employers_zip":"",
+                "address_of_property":"",
+                "lender_address_street":"",
+                "bank_phone_number":"",
+                "appointment_id":6132,
+                "co_applicant_occupation_previous_employer":"",
+                "co_applicant_drivers_license":"",
+                "how_long":"1",
+                "co_applicant_present_employers_city":"",
+                "previous_employers_address":"",
+                "previous_employers_address_state":"",
+                "co_applicant_previous_city":"",
+                "address_of_applicant_street2":"",
+                "nearest_relative":"",
+                "address_of_applicant_street":"",
+                "type_of_property":"Single Family",
+                "marital_status":"Married",
+                "present_employers_address":"",
+                "co_applicant_zip":"",
+                "lender_address_street2":"",
+                "state":"",
+                "co_applicant_years_on_job_previous_employer":"",
+                "previous_employers_address_city":"",
+                "address_of_applicant":"427 White Birch Way",
+                "checking_account_no":"",
+                "address_relationship_zip":"",
+                "previous_address_of_applicant_state":"",
+                "co_applicant_previous_employers_street2":"",
+                "present_employers_address_city":"",
+                "additional_monthly_income":1455,
+                "lender_address_zip":"",
+                "drivers_license_exp_date":"12/11/2028",
+                "co_applicant_present_employer":""
+            
+            })</field>
+        </record>
+
+        <record id="model_action_call_create_order_line" model="ir.actions.server">
+            <field name="name">Create Order Line</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <!-- <field name="binding_model_id" ref="sale.model_sale_order"/> -->
+            <field name="state">code</field>
+            <field name="code">record.add_payment_line(record.discount, record.adjustment, record.additional_cost, 0, 0)</field>
+        </record>
+
+        <record id="model_action_link_room_images_with_sale_order" model="ir.actions.server">
+            <field name="name">Link Room Images with Sale Order</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <!-- <field name="binding_model_id" ref="sale.model_sale_order"/> -->
+            <field name="state">code</field>
+            <field name="code">
+customer_data = {
+
+        "answer":[
+        {
+            "answer":[
+                "Other"
+            ],
+            "room_id":9,
+            "question_id":18
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":9,
+            "question_id":14
+        },
+        {
+            "answer":[
+            ],
+            "room_id":9,
+            "question_id":11
+        },
+        {
+            "answer":[
+            ],
+            "room_id":9,
+            "question_id":1
+        },
+        {
+            "answer":[
+            ],
+            "room_id":9,
+            "question_id":2
+        },
+        {
+            "answer":[
+            ],
+            "room_id":9,
+            "question_id":15
+        },
+        {
+            "answer":[
+                "Yes"
+            ],
+            "room_id":9,
+            "question_id":13
+        },
+        {
+            "answer":[
+            ],
+            "room_id":9,
+            "question_id":9
+        },
+        {
+            "answer":[
+                "1"
+            ],
+            "room_id":9,
+            "question_id":6
+        },
+        {
+            "answer":[
+            ],
+            "room_id":9,
+            "question_id":8
+        },
+        {
+            "answer":[
+                ""
+            ],
+            "room_id":9,
+            "question_id":16
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":9,
+            "question_id":19
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":9,
+            "question_id":7
+        },
+        {
+            "answer":[
+            ],
+            "room_id":9,
+            "question_id":17
+        },
+        {
+            "answer":[
+            ],
+            "room_id":9,
+            "question_id":12
+        },
+        {
+            "answer":[
+                "2"
+            ],
+            "room_id":9,
+            "question_id":20
+        },
+        {
+            "answer":[
+            ],
+            "room_id":9,
+            "question_id":4
+        },
+        {
+            "answer":[
+                "40"
+            ],
+            "room_id":9,
+            "question_id":10
+        },
+        {
+            "answer":[
+                "Yes"
+            ],
+            "room_id":9,
+            "question_id":5
+        },
+        {
+            "answer":[
+            ],
+            "room_id":9,
+            "question_id":3
+        },
+        {
+            "answer":[
+            ],
+            "room_id":9,
+            "question_id":22
+        },
+        {
+            "room_id":31,
+            "question_id":18,
+            "answer":[
+                "Other"
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":14,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":11,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":1,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":2,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":15,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":13,
+            "answer":[
+                "Yes"
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":9,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":6,
+            "answer":[
+                "2"
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":8,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":16,
+            "answer":[
+                ""
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":19,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":7,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":17,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":12,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":20,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":4,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":10,
+            "answer":[
+                "25"
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":5,
+            "answer":[
+                "Yes"
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":3,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":31,
+            "question_id":22,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":18,
+            "answer":[
+                "Other"
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":14,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":11,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":1,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":2,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":15,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":13,
+            "answer":[
+                "Yes"
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":9,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":6,
+            "answer":[
+                "1"
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":8,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":16,
+            "answer":[
+                ""
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":19,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":7,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":17,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":12,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":20,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":4,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":10,
+            "answer":[
+                "20"
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":5,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":3,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":19,
+            "question_id":22,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":18,
+            "answer":[
+                "Other"
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":14,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":11,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":1,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":2,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":15,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":13,
+            "answer":[
+                "Yes"
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":9,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":6,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":8,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":16,
+            "answer":[
+                ""
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":19,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":7,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":17,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":12,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":20,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":4,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":10,
+            "answer":[
+                "30"
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":5,
+            "answer":[
+                "Yes"
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":3,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":29,
+            "question_id":22,
+            "answer":[
+            ]
+        },
+        {
+            "answer":[
+                "Other"
+            ],
+            "question_id":18,
+            "room_id":24
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":14,
+            "room_id":24
+        },
+        {
+            "answer":[
+            ],
+            "question_id":11,
+            "room_id":24
+        },
+        {
+            "answer":[
+            ],
+            "question_id":1,
+            "room_id":24
+        },
+        {
+            "answer":[
+            ],
+            "question_id":2,
+            "room_id":24
+        },
+        {
+            "answer":[
+                "2"
+            ],
+            "question_id":15,
+            "room_id":24
+        },
+        {
+            "answer":[
+                ""
+            ],
+            "question_id":13,
+            "room_id":24
+        },
+        {
+            "answer":[
+            ],
+            "question_id":9,
+            "room_id":24
+        },
+        {
+            "answer":[
+            ],
+            "question_id":6,
+            "room_id":24
+        },
+        {
+            "answer":[
+            ],
+            "question_id":8,
+            "room_id":24
+        },
+        {
+            "answer":[
+                ""
+            ],
+            "question_id":16,
+            "room_id":24
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":19,
+            "room_id":24
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":7,
+            "room_id":24
+        },
+        {
+            "answer":[
+            ],
+            "question_id":17,
+            "room_id":24
+        },
+        {
+            "answer":[
+            ],
+            "question_id":12,
+            "room_id":24
+        },
+        {
+            "answer":[
+            ],
+            "question_id":20,
+            "room_id":24
+        },
+        {
+            "answer":[
+            ],
+            "question_id":4,
+            "room_id":24
+        },
+        {
+            "answer":[
+                "20"
+            ],
+            "question_id":10,
+            "room_id":24
+        },
+        {
+            "answer":[
+                "Yes"
+            ],
+            "question_id":5,
+            "room_id":24
+        },
+        {
+            "answer":[
+            ],
+            "question_id":3,
+            "room_id":24
+        },
+        {
+            "answer":[
+            ],
+            "question_id":22,
+            "room_id":24
+        },
+        {
+            "room_id":7,
+            "question_id":18,
+            "answer":[
+                "Other"
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":14,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":11,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":1,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":2,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":15,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":13,
+            "answer":[
+                "Yes"
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":9,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":6,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":8,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":16,
+            "answer":[
+                ""
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":19,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":7,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":17,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":12,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":20,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":4,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":10,
+            "answer":[
+                "20"
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":5,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":3,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":7,
+            "question_id":22,
+            "answer":[
+            ]
+        },
+        {
+            "answer":[
+                "Other"
+            ],
+            "room_id":28,
+            "question_id":18
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":28,
+            "question_id":14
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":11
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":1
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":2
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":15
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":28,
+            "question_id":13
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":9
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":6
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":8
+        },
+        {
+            "answer":[
+                ""
+            ],
+            "room_id":28,
+            "question_id":16
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":28,
+            "question_id":19
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":28,
+            "question_id":7
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":17
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":12
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":20
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":4
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":10
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":28,
+            "question_id":5
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":3
+        },
+        {
+            "answer":[
+            ],
+            "room_id":28,
+            "question_id":22
+        },
+        {
+            "answer":[
+                "Other"
+            ],
+            "room_id":18,
+            "question_id":18
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":18,
+            "question_id":14
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":11
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":1
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":2
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":15
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":18,
+            "question_id":13
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":9
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":6
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":8
+        },
+        {
+            "answer":[
+                ""
+            ],
+            "room_id":18,
+            "question_id":16
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":18,
+            "question_id":19
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":18,
+            "question_id":7
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":17
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":12
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":20
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":4
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":10
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":18,
+            "question_id":5
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":3
+        },
+        {
+            "answer":[
+            ],
+            "room_id":18,
+            "question_id":22
+        },
+        {
+            "answer":[
+                "Other"
+            ],
+            "room_id":11,
+            "question_id":18
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":11,
+            "question_id":14
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":11
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":1
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":2
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":15
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":11,
+            "question_id":13
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":9
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":6
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":8
+        },
+        {
+            "answer":[
+                ""
+            ],
+            "room_id":11,
+            "question_id":16
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":11,
+            "question_id":19
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":11,
+            "question_id":7
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":17
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":12
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":20
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":4
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":10
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":11,
+            "question_id":5
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":3
+        },
+        {
+            "answer":[
+            ],
+            "room_id":11,
+            "question_id":22
+        },
+        {
+            "room_id":27,
+            "question_id":18,
+            "answer":[
+                "Other"
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":14,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":11,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":1,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":2,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":15,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":13,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":9,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":6,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":8,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":16,
+            "answer":[
+                ""
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":19,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":7,
+            "answer":[
+                "Yes"
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":17,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":12,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":20,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":4,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":10,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":5,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":3,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":27,
+            "question_id":22,
+            "answer":[
+            ]
+        },
+        {
+            "answer":[
+                "Other"
+            ],
+            "room_id":6,
+            "question_id":18
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":6,
+            "question_id":14
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":11
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":1
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":2
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":15
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":6,
+            "question_id":13
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":9
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":6
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":8
+        },
+        {
+            "answer":[
+                ""
+            ],
+            "room_id":6,
+            "question_id":16
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":6,
+            "question_id":19
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":6,
+            "question_id":7
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":17
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":12
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":20
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":4
+        },
+        {
+            "answer":[
+                "20"
+            ],
+            "room_id":6,
+            "question_id":10
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "room_id":6,
+            "question_id":5
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":3
+        },
+        {
+            "answer":[
+            ],
+            "room_id":6,
+            "question_id":22
+        },
+        {
+            "room_id":14,
+            "question_id":18,
+            "answer":[
+                "Other"
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":14,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":11,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":1,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":2,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":15,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":13,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":9,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":6,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":8,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":16,
+            "answer":[
+                ""
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":19,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":7,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":17,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":12,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":20,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":4,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":10,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":5,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":3,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":14,
+            "question_id":22,
+            "answer":[
+            ]
+        },
+        {
+            "answer":[
+                "Other"
+            ],
+            "question_id":18,
+            "room_id":21
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":14,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":11,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":1,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":2,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":15,
+            "room_id":21
+        },
+        {
+            "answer":[
+                "Yes"
+            ],
+            "question_id":13,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":9,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":6,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":8,
+            "room_id":21
+        },
+        {
+            "answer":[
+                ""
+            ],
+            "question_id":16,
+            "room_id":21
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":19,
+            "room_id":21
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":7,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":17,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":12,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":20,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":4,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":10,
+            "room_id":21
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":5,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":3,
+            "room_id":21
+        },
+        {
+            "answer":[
+            ],
+            "question_id":22,
+            "room_id":21
+        },
+        {
+            "answer":[
+                "Other"
+            ],
+            "question_id":18,
+            "room_id":23
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":14,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":11,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":1,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":2,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":15,
+            "room_id":23
+        },
+        {
+            "answer":[
+                "Yes"
+            ],
+            "question_id":13,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":9,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":6,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":8,
+            "room_id":23
+        },
+        {
+            "answer":[
+                ""
+            ],
+            "question_id":16,
+            "room_id":23
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":19,
+            "room_id":23
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":7,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":17,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":12,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":20,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":4,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":10,
+            "room_id":23
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":5,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":3,
+            "room_id":23
+        },
+        {
+            "answer":[
+            ],
+            "question_id":22,
+            "room_id":23
+        },
+        {
+            "answer":[
+                "Other"
+            ],
+            "question_id":18,
+            "room_id":1
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":14,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":11,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":1,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":2,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":15,
+            "room_id":1
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":13,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":9,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":6,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":8,
+            "room_id":1
+        },
+        {
+            "answer":[
+                ""
+            ],
+            "question_id":16,
+            "room_id":1
+        },
+        {
+            "answer":[
+                "Yes"
+            ],
+            "question_id":19,
+            "room_id":1
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":7,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":17,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":12,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":20,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":4,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":10,
+            "room_id":1
+        },
+        {
+            "answer":[
+                "No"
+            ],
+            "question_id":5,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":3,
+            "room_id":1
+        },
+        {
+            "answer":[
+            ],
+            "question_id":22,
+            "room_id":1
+        },
+        {
+            "room_id":8,
+            "question_id":18,
+            "answer":[
+                "Other"
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":14,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":11,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":1,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":2,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":15,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":13,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":9,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":6,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":8,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":16,
+            "answer":[
+                ""
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":19,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":7,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":17,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":12,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":20,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":4,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":10,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":5,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":3,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":8,
+            "question_id":22,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":18,
+            "answer":[
+                "Other"
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":14,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":11,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":1,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":2,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":15,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":13,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":9,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":6,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":8,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":16,
+            "answer":[
+                ""
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":19,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":7,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":17,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":12,
+            "answer":[
+                "2"
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":20,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":4,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":10,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":5,
+            "answer":[
+                "No"
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":3,
+            "answer":[
+            ]
+        },
+        {
+            "room_id":10,
+            "question_id":22,
+            "answer":[
+            ]
+        }
+    ],
+    "paymentdetails":{
+        "finance_amount":17154,
+        "discount":0,
+        "selected_package_id":22,
+        "photo_permission":0,
+        "payment_method":"finance",
+        "savings":0,
+        "final_payment":0,
+        "down_payment_amount":0,
+        "additional_cost":480,
+        "msrp":28809.3,
+        "price":17154,
+        "installation_date":"",
+        "coapplicant_skip":1,
+        "appointment_id":6614,
+        "discount_history_line":[
+            {
+                "actual_price":25284,
+                "promo_type":0,
+                "value":"5.0",
+                "type":"percentage",
+                "sale_price":24019.8,
+                "discount_amount":1264.2
+            },
+            {
+                "actual_price":24019.8,
+                "value":"5.0",
+                "promo_type":0,
+                "type":"percentage",
+                "sale_price":22818.809999999998,
+                "discount_amount":1200.99
+            },
+            {
+                "promo_type":0,
+                "value":"5.0",
+                "actual_price":22818.809999999998,
+                "type":"percentage",
+                "sale_price":21677.869499999997,
+                "discount_amount":1140.9405
+            },
+            {
+                "actual_price":21677.869499999997,
+                "promo_type":0,
+                "value":"500.0",
+                "type":"amount",
+                "sale_price":21177.869499999997,
+                "discount_amount":500
+            },
+            {
+                "promo_type":0,
+                "value":"10.0",
+                "actual_price":21177.869499999997,
+                "type":"percentage",
+                "sale_price":19060.08255,
+                "discount_amount":2117.7869499999997
+            },
+            {
+                "actual_price":19060.08255,
+                "value":"10.0",
+                "promo_type":0,
+                "type":"percentage",
+                "sale_price":17154.074295,
+                "discount_amount":1906.008255
+            }
+        ],
+        "finance_option_id":8,
+        "adjustment":8129.925705
+    },
+    "applicationInfo":{
+        "co_applicant_present_employers_state":"",
+        "address_relationship_city":"",
+        "co_applicant_signature_date":"02/04/2023",
+        "co_applicant_previous_street2":"",
+        "co_applicant_previous_employers_city":"",
+        "co_applicant_date_of_birth":"01/05/1939",
+        "date_aquired":"",
+        "hunterMessageStatus":"Yes",
+        "occupation_previous_employer":"",
+        "zip":"",
+        "home_phone":"(317) 332-8815",
+        "present_value_of_home":250000,
+        "co_applicant_previoust_employers_zip":"",
+        "previous_address_of_applicant_street":"",
+        "type_of_credit_requested":"Joint Credit - We intend to apply for joint credit",
+        "co_applicant_city":"Greenfield",
+        "total_price":"17154",
+        "co_applicant_earnings_from_employment":3500,
+        "co_applicant_present_employers_street":"",
+        "co_applicant_supervisor_or_department":"",
+        "co_applicant_occupation":"",
+        "co_applicant_present_employers_address":"",
+        "co_applicant_drivers_license_issue_date":"12/29/2022",
+        "same_property_address":"SAME AS APPLICANT",
+        "social_security_number":"371-72-5961",
+        "applicant_mortgage_company":"Union home mortgage",
+        "checking_routing_no":"",
+        "earnings_from_employment":3400,
+        "race":"I do not wish to furnish this information",
+        "drivers_license_issue_date":"",
+        "co_applicant_previous_employers_phone_number":"",
+        "applicant_email":"jaw0030@aol.com",
+        "co_applicant_race":"I do not wish to furnish this information",
+        "co_applicant_last_name":"Martin",
+        "previous_address_of_applicant_zip":"",
+        "applicant_otherRace":"",
+        "insurance_company":"",
+        "address_of_applicant_zip":"46140",
+        "previous_address_how_long":"",
+        "address_of_applicant_city":"Greenfield",
+        "ethnicity":"",
+        "address_relationship_street":"",
+        "co_applicant_drivers_license_exp_date":"01/05/2025",
+        "co_applicant_previous_employers_address":"",
+        "applicant_not_furnish_info":"0",
+        "lender_address_city":"",
+        "co_applicant_otherRace":"",
+        "original_purchase_price":20000,
+        "co_applicant_first_name":"Thomas",
+        "downpayment":"0",
+        "earnings_per_month":"",
+        "co_applicant_previous_zip":"",
+        "street2":"",
+        "owners_if_different":"",
+        "co_applicant_how_long":"12",
+        "lender_phone":"",
+        "second_mortage":"No",
+        "additional_income":"No",
+        "previous_employers_address_street":"",
+        "present_employer":"Sonicu ",
+        "property_details":"MORTGAGE",
+        "cell_phone":"",
+        "present_balance_second_mortage":0,
+        "monthly_mortage_payment":780,
+        "previous_address_of_applicant":"",
+        "co_applicant_skip":0,
+        "city":"",
+        "co_applicant_previous_street":"",
+        "owners":"",
+        "co_applicant_social_security_number":"307-38-6491",
+        "employers_phone_number":"",
+        "applicant_last_name":"Martin",
+        "total_monthly_payments":0,
+        "co_applicant_employers_phone_number":"",
+        "co_applicant_earnings_per_month":0,
+        "original_amount":0,
+        "supervisor_or_department":"",
+        "relationship":"Daughter",
+        "co_applicant_address_of_applicant":"117 Tague St.",
+        "present_balance":105000,
+        "co_applicant_secondary_phone":"",
+        "applicant_middle_name":"",
+        "co_applicant_previous_employers_street":"",
+        "previous_address_of_applicant_street2":"",
+        "date_of_birth":"08/01/1968",
+        "co_applicant_previous_employers_state":"",
+        "co_applicant_years_on_job":"",
+        "address_relationship":"",
+        "street":"",
+        "present_employers_address_street2":"",
+        "phone_number_relationship":"(317) 332-8815",
+        "co_applicant_previous_address_of_applicant":"",
+        "joint_credit_initials":"",
+        "co_applicant_present_employers_street2":"",
+        "co_applicant_marital_status":"Married",
+        "co_applicant_middle_name":"",
+        "amount_financed":"17154",
+        "address_relationship_street2":"",
+        "type_of_loan":"No Interest",
+        "co_applicant_state":"Indiana",
+        "drivers_license":"",
+        "co_applicant_street":"",
+        "years_on_job_previous_employer":"",
+        "applicant_first_name":"Julie A",
+        "insurance_phone_no":"",
+        "co_applicant_sex":"Male",
+        "lender_address":"",
+        "previous_employers_address_street2":"",
+        "other_obligations":0,
+        "sex":"Female",
+        "coverage":"",
+        "applicant_signature_date":"02/04/2023",
+        "monthly_payment":0,
+        "present_employers_address_state":"",
+        "co_applicant_email":"jaw0030@aol.com",
+        "work_to_be_done":"FLOORING",
+        "lender_address_state":"",
+        "amount_monthly":0,
+        "present_employers_address_street":"",
+        "co_applicant_ethnicity":"",
+        "address_relationship_state":"",
+        "original_mortage_amount":20000,
+        "co_applicant_phone":"(317) 332-8815",
+        "present_employers_address_zip":"",
+        "previous_employers_address_zip":"",
+        "source_of_other_income":"",
+        "lender_name_or_phone":"",
+        "years_on_job":"2",
+        "co_applicant_not_furnish_info":"0",
+        "agent":"",
+        "previous_employers_phone_number":"",
+        "previous_address_of_applicant_city":"",
+        "name_of_bank":"",
+        "co_applicant_street2":"",
+        "address_of_applicant_state":"IN",
+        "occupation":"Accountant",
+        "co_applicant_previous_state":"",
+        "co_applicant_present_employers_zip":"",
+        "address_of_property":"",
+        "lender_address_street":"",
+        "bank_phone_number":"",
+        "appointment_id":6614,
+        "co_applicant_occupation_previous_employer":"",
+        "co_applicant_drivers_license":"8909915769",
+        "how_long":"12",
+        "co_applicant_present_employers_city":"",
+        "previous_employers_address":"",
+        "type_of_property":"Single Family",
+        "co_applicant_previous_city":"",
+        "previous_employers_address_state":"",
+        "address_of_applicant_street":"",
+        "nearest_relative":"Vanessa Martin",
+        "address_of_applicant_street2":"",
+        "marital_status":"Married",
+        "co_applicant_zip":"46140",
+        "present_employers_address":"",
+        "lender_address_street2":"",
+        "state":"",
+        "co_applicant_years_on_job_previous_employer":"",
+        "previous_employers_address_city":"",
+        "address_of_applicant":"117 Tague St",
+        "checking_account_no":"",
+        "address_relationship_zip":"",
+        "previous_address_of_applicant_state":"",
+        "additional_monthly_income":0,
+        "present_employers_address_city":"",
+        "co_applicant_previous_employers_street2":"",
+        "lender_address_zip":"",
+        "drivers_license_exp_date":"",
+        "co_applicant_present_employer":"Pension/ Social Security"
+    },
+    "appointment_id":6614,
+    "paymentmethod":{
+    },
+    "operation_mode":"offline",
+    "rooms":[
+        {
+            "room_id":9,
+            "material_id":218,
+            "room_name":"LIVING ROOM",
+            "transitions":[
+                {
+                    "name":"No Transition",
+                    "width":4
+                }
+            ],
+            "room_adjusted_area":"224.0",
+            "room_perimeter":60,
+            "room_comments":"House is under remodel. Had to move everything all over.",
+            "room_area_image":"Attachment_2023_02_04_09:39:02.JPG",
+            "exclude_from_calculation":1,
+            "room_area":"224.0",
+            "room_image_names":[
+                "AttachmentDNSm4VKU66.JPG",
+                "AttachmentL1JdGvCtXH.JPG",
+                "Attachment75Ej3Rftgv.JPG",
+                "AttachmentatD20JpHy9.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":31,
+            "material_id":218,
+            "room_name":"BEDROOM 1",
+            "room_adjusted_area":"190.0",
+            "transitions":[
+            ],
+            "room_perimeter":52,
+            "room_comments":"Floor was creaky.",
+            "room_area_image":"Attachment_2023_02_04_09:46:46.JPG",
+            "exclude_from_calculation":1,
+            "room_area":"190.0",
+            "room_image_names":[
+                "Attachment3BhnWyKJkY.JPG",
+                "Attachment4W4x9uCxqb.JPG",
+                "AttachmentZ863pX4FlE.JPG",
+                "Attachmentqj0qgEapGb.JPG",
+                "AttachmentCvnKptzKAs.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":19,
+            "material_id":218,
+            "room_name":"HALLWAY 1",
+            "room_adjusted_area":"36.0",
+            "transitions":[
+                {
+                    "width":6,
+                    "name":"No Transition"
+                },
+                {
+                    "width":4,
+                    "name":"No Transition"
+                },
+                {
+                    "name":"No Transition",
+                    "width":3
+                }
+            ],
+            "room_comments":"Floor is a little uneven.",
+            "exclude_from_calculation":1,
+            "room_area_image":"Attachment_2023_02_04_09:52:20.JPG",
+            "room_perimeter":25,
+            "room_area":"36.0",
+            "room_image_names":[
+                "AttachmenttAqcRZzMO2.JPG",
+                "AttachmenttEiQsOCGUQ.JPG",
+                "Attachment80evbjJu1L.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":29,
+            "material_id":218,
+            "room_name":"DINING ROOM",
+            "room_adjusted_area":"176.0",
+            "transitions":[
+                {
+                    "width":6,
+                    "name":"No Transition"
+                },
+                {
+                    "name":"No Transition",
+                    "width":4
+                },
+                {
+                    "name":"No Transition",
+                    "width":3
+                }
+            ],
+            "room_comments":"Floor felt good.",
+            "room_perimeter":60,
+            "room_area_image":"Attachment_2023_02_04_09:58:27.JPG",
+            "exclude_from_calculation":1,
+            "room_area":"176.0",
+            "room_image_names":[
+                "AttachmentUMqYaXX9oG.JPG",
+                "Attachment2kM4bgbLuP.JPG",
+                "AttachmentN9ySiczuWp.JPG",
+                "AttachmentGTyfbn9Pun.JPG",
+                "Attachmentr8g7bZRM02.JPG",
+                "AttachmentlzXtQs9qSx.JPG",
+                "AttachmentLpnVsPS2dg.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":24,
+            "material_id":218,
+            "room_name":"KITCHEN",
+            "room_adjusted_area":"138.0",
+            "transitions":[
+                {
+                    "width":3,
+                    "name":"No Transition"
+                },
+                {
+                    "width":3,
+                    "name":"No Transition"
+                },
+                {
+                    "width":3,
+                    "name":"No Transition"
+                }
+            ],
+            "room_comments":"Floor felt good.",
+            "room_perimeter":47,
+            "room_area_image":"Attachment_2023_02_04_10:02:42.JPG",
+            "exclude_from_calculation":1,
+            "room_area":"138.0",
+            "room_image_names":[
+                "Attachment68XoZa68Ap.JPG",
+                "Attachment0A7vltnLhs.JPG",
+                "AttachmentNZDN7QGL84.JPG",
+                "Attachmentq3EsmkkrEn.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":7,
+            "material_id":218,
+            "room_name":"NOOK",
+            "transitions":[
+                {
+                    "width":3,
+                    "name":"No Transition"
+                }
+            ],
+            "room_adjusted_area":"171.0",
+            "room_comments":"This room will be done at a later date.",
+            "exclude_from_calculation":1,
+            "room_area_image":"Attachment_2023_02_04_10:07:24.JPG",
+            "room_perimeter":53,
+            "room_area":"171.0",
+            "room_image_names":[
+                "AttachmentXgnrn3vNCq.JPG",
+                "Attachmentf4cT9ec9rm.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":28,
+            "material_id":218,
+            "room_name":"BEDROOM 2",
+            "transitions":[
+                {
+                    "name":"No Transition",
+                    "width":3
+                }
+            ],
+            "room_adjusted_area":"216.0",
+            "room_comments":"Sub floor is brand new.",
+            "exclude_from_calculation":0,
+            "room_area_image":"Attachment_2023_02_04_10:11:36.JPG",
+            "room_perimeter":60,
+            "room_area":"216.0",
+            "room_image_names":[
+                "Attachmentt7xRrqQvzL.JPG",
+                "AttachmenttUXWKOtHqz.JPG",
+                "AttachmentMAZh6ziojn.JPG",
+                "AttachmentIijGbXEaBW.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":18,
+            "material_id":218,
+            "room_name":"FAMILY ROOM",
+            "transitions":[
+                {
+                    "width":3,
+                    "name":"No Transition"
+                },
+                {
+                    "name":"No Transition",
+                    "width":7
+                }
+            ],
+            "room_adjusted_area":"375.0",
+            "room_comments":"Sub floor is new.",
+            "room_perimeter":83,
+            "room_area_image":"Attachment_2023_02_04_10:15:15.JPG",
+            "exclude_from_calculation":0,
+            "room_area":"375.0",
+            "room_image_names":[
+                "Attachmentk0r3Ic7Qrk.JPG",
+                "Attachment2ZDX7FSGy3.JPG",
+                "AttachmentqfWKybD3WF.JPG",
+                "Attachment03Tn6GiSQa.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":11,
+            "material_id":218,
+            "room_name":"OFFICE",
+            "room_adjusted_area":"141.0",
+            "transitions":[
+                {
+                    "name":"No Transition",
+                    "width":7
+                },
+                {
+                    "width":3,
+                    "name":"No Transition"
+                },
+                {
+                    "width":3,
+                    "name":"No Transition"
+                }
+            ],
+            "room_perimeter":48,
+            "exclude_from_calculation":0,
+            "room_area_image":"Attachment_2023_02_04_10:18:17.JPG",
+            "room_comments":"Sub floor is good.",
+            "room_area":"141.0",
+            "room_image_names":[
+                "AttachmentBXwcjvJgcR.JPG",
+                "AttachmentA99EQwqqbU.JPG",
+                "AttachmentP2nsitJLVv.JPG",
+                "AttachmentShUUDxL6se.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":27,
+            "material_id":218,
+            "room_name":"BATHROOM 1",
+            "transitions":[
+                {
+                    "width":3,
+                    "name":"No Transition"
+                }
+            ],
+            "room_adjusted_area":"53.0",
+            "room_perimeter":30,
+            "room_comments":"Floor is brand new.",
+            "exclude_from_calculation":0,
+            "room_area_image":"Attachment_2023_02_04_10:20:16.JPG",
+            "room_area":"53.0",
+            "room_image_names":[
+                "AttachmentJ1KqHWtzlA.JPG",
+                "AttachmentbOJ6RinAhr.JPG",
+                "Attachmentt7vvFO20qs.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":6,
+            "material_id":218,
+            "room_name":"HALLWAY 2",
+            "transitions":[
+                {
+                    "name":"No Transition",
+                    "width":3
+                },
+                {
+                    "name":"No Transition",
+                    "width":3
+                }
+            ],
+            "room_adjusted_area":"42.0",
+            "room_perimeter":29,
+            "room_comments":"Floor felt good.",
+            "exclude_from_calculation":1,
+            "room_area_image":"Attachment_2023_02_04_10:30:16.JPG",
+            "room_area":"42.0",
+            "room_image_names":[
+                "AttachmentoIw357pGtW.JPG",
+                "Attachmente5d9g2QJ9m.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":14,
+            "material_id":218,
+            "room_name":"STUDY",
+            "room_adjusted_area":"102.0",
+            "transitions":[
+                {
+                    "name":"No Transition",
+                    "width":9
+                },
+                {
+                    "width":6,
+                    "name":"No Transition"
+                },
+                {
+                    "width":3,
+                    "name":"No Transition"
+                }
+            ],
+            "room_comments":"Sub floor will be brand new.",
+            "exclude_from_calculation":0,
+            "room_area_image":"Attachment_2023_02_04_10:42:56.JPG",
+            "room_perimeter":41,
+            "room_area":"102.0",
+            "room_image_names":[
+                "AttachmentVEOhmN8o3H.JPG",
+                "Attachmenthl28PvZm9i.JPG",
+                "AttachmentU3qgPGMZBQ.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":21,
+            "material_id":218,
+            "room_name":"SUNROOM",
+            "room_adjusted_area":"198.0",
+            "transitions":[
+                {
+                    "width":5,
+                    "name":"No Transition"
+                },
+                {
+                    "width":6,
+                    "name":"No Transition"
+                },
+                {
+                    "name":"No Transition",
+                    "width":8
+                }
+            ],
+            "room_perimeter":56,
+            "room_comments":"Sub floor is all brand new.",
+            "room_area_image":"Attachment_2023_02_04_10:46:17.JPG",
+            "exclude_from_calculation":0,
+            "room_area":"198.0",
+            "room_image_names":[
+                "Attachment6WbBs2CQFp.JPG",
+                "AttachmentDpKcUf6LJH.JPG",
+                "Attachmento5KJy6Tf0F.JPG",
+                "AttachmentQ78k8ytP22.JPG",
+                "Attachment1fimUXivVZ.JPG",
+                "AttachmentWiylDf5BJc.JPG",
+                "Attachment7TL3OEk0AX.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":23,
+            "material_id":218,
+            "room_name":"CLOSET 1",
+            "transitions":[
+                {
+                    "width":6,
+                    "name":"No Transition"
+                }
+            ],
+            "room_adjusted_area":"15.0",
+            "room_perimeter":17,
+            "room_comments":"Sub floor is all new.",
+            "room_area_image":"Attachment_2023_02_04_10:48:48.JPG",
+            "exclude_from_calculation":0,
+            "room_area":"15.0",
+            "room_image_names":[
+                "AttachmentpctkJWCZR2.JPG",
+                "AttachmentdJaMe0575K.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":1,
+            "material_id":218,
+            "room_name":"CLOSET 2",
+            "transitions":[
+                {
+                    "width":6,
+                    "name":"No Transition"
+                }
+            ],
+            "room_adjusted_area":"16.0",
+            "room_comments":"Sub floor is all new.",
+            "exclude_from_calculation":0,
+            "room_area_image":"Attachment_2023_02_04_10:50:09.JPG",
+            "room_perimeter":17,
+            "room_area":"16.0",
+            "room_image_names":[
+                "AttachmentO1cauwf8N3.JPG",
+                "AttachmentQMnaCNPw63.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":8,
+            "material_id":218,
+            "room_name":"HALLWAY 3",
+            "transitions":[
+                {
+                    "name":"No Transition",
+                    "width":3
+                },
+                {
+                    "name":"No Transition",
+                    "width":3
+                },
+                {
+                    "width":5,
+                    "name":"No Transition"
+                }
+            ],
+            "room_adjusted_area":"22.0",
+            "room_comments":"Sub floor is all new.",
+            "exclude_from_calculation":0,
+            "room_area_image":"Attachment_2023_02_04_10:52:25.JPG",
+            "room_perimeter":19,
+            "room_area":"22.0",
+            "room_image_names":[
+                "AttachmentMud9giGpYx.JPG",
+                "AttachmentkNeBYVkhFG.JPG",
+                "AttachmenteQTOjHirr2.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        },
+        {
+            "room_id":10,
+            "material_id":218,
+            "room_name":"DEN",
+            "transitions":[
+                {
+                    "name":"No Transition",
+                    "width":3
+                },
+                {
+                    "name":"No Transition",
+                    "width":3
+                },
+                {
+                    "name":"No Transition",
+                    "width":3
+                }
+            ],
+            "room_adjusted_area":"197.0",
+            "room_perimeter":57,
+            "room_comments":"Floor felt good.",
+            "room_area_image":"Attachment_2023_02_04_10:54:54.JPG",
+            "exclude_from_calculation":0,
+            "room_area":"197.0",
+            "room_image_names":[
+                "AttachmentUNVas649BK.JPG",
+                "Attachmentydm8O9V5ff.JPG",
+                "AttachmenttABiSRGajN.JPG",
+                "AttachmentVIU9NEgSkY.JPG",
+                "AttachmentsQTFOMk2Yp.JPG",
+                "Attachment9RLw4EHC1X.JPG"
+            ],
+            "moulding_type":"NO MOLDING"
+        }
+    ],
+    "customer":{
+        "co_applicant_phone":"(317) 332-8815",
+        "street2":"",
+        "zip":"",
+        "sales_person":"Justin Kennedy",
+        "country_code":"",
+        "appointment_result":"Sold",
+        "co_applicant_email":"jaw0030@aol.com",
+        "street":"",
+        "applicant_first_name":"Julie A",
+        "city":"",
+        "customer_id":"",
+        "appointment_date":"2023-02-04 09:30:00",
+        "partner_latitude":0,
+        "co_applicant_last_name":"Martin",
+        "state":"",
+        "applicant_middle_name":"",
+        "co_applicant_middle_name":"",
+        "additional_comments":"Stips will be provided a later day. Install will happen later on down the road. They will need to schedule out about a month if not longer. Ms. Martin would not give me stips until they are ready to do the project. Will need a few days to talk to husband as well because he has dementia.",
+        "applicant_last_name":"Martin",
+        "co_applicant_city":"Greenfield",
+        "partner_longitude":0,
+        "co_applicant_state":"Indiana",
+        "appointment_id":6614,
+        "salesperson_id":65,
+        "co_applicant_first_name":"Thomas",
+        "co_applicant_secondary_phone":"",
+        "send_physical_document":0,
+        "co_applicant_zip":"46140",
+        "completed_date":"2023-02-04 13:17:51",
+        "country_id":0,
+        "timezone":"EST"
+    },
+    "data_completed":0
+
+}
+room_datas = customer_data.get('rooms', [])
+for data in room_datas:
+    room_id = data.get('room_id', False)
+    room_measurement_line = record.room_measurement_line.filtered(lambda x: x.room_id.id == int(room_id))
+    if room_measurement_line:
+        measurement_image = model.env['ir.attachment'].search([('appointment_id', '=', record.appointment_id.id), ('name', '=', data.get('room_area_image', ''))])
+        if measurement_image and not room_measurement_line.shape_image_id:
+            room_measurement_line.write({'shape_image_id': measurement_image.id})
+        room_images = model.env['ir.attachment'].search([('appointment_id', '=', record.appointment_id.id), ('name', 'in', data.get('room_image_names', []))])
+        if room_images and not room_measurement_line.attachment_ids:
+            room_measurement_line.write({'attachment_ids': [(6, 0, room_images.ids)]})
+
+            </field>
+        </record>
+
+        <record id="model_action_link_sale_order_with_room_measurement" model="ir.actions.server">
+            <field name="name">Link Sale order with Room Measurement</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+appointment_id = record.appointment_id.id or False
+if appointment_id:
+    team_question_obj = model.env['team.contract.question.line'].search([('appointment_id', '=', appointment_id)])
+    team_room_obj = model.env['team.contract.room.measurement.line'].search([('appointment_id', '=', appointment_id)])
+    room_transition_obj = model.env['team.contract.transition.line'].search([('appointment_id', '=', appointment_id)])
+    if team_question_obj:
+        team_question_obj.write({'order_id': record.id})
+    if team_room_obj:
+        team_room_obj.write({'order_id': record.id})
+    if room_transition_obj:
+        room_transition_obj.write({'order_id': record.id})
+            </field>
+        </record>
+
+        <record id="model_action_mark_quotation_as_sent" model="ir.actions.server">
+            <field name="name">Mark Quotation as Sent</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+for order in records:
+    order.appointment_id.write({'start_sync_to_i360': False})
+    order.write({ 'is_data_upload_completed': True})
+            </field>
+        </record>
+
+        <record id="model_action_mark_i360_sync_completed" model="ir.actions.server">
+            <field name="name">Mark i360 Sync Completed</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+for order in records:
+    if order.appointment_id:
+        order.appointment_id.write({'start_sync_to_i360': False})
+    order.write({'is_data_upload_completed': True})
+            </field>
+        </record>
+
+        <record id="model_action_mark_i360_sync_pending" model="ir.actions.server">
+            <field name="name">Mark i360 Sync Pending</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <!-- <field name="binding_model_id" ref="sale.model_sale_order"/> -->
+            <field name="state">code</field>
+            <field name="code">
+for order in records:
+    if order.appointment_id:
+        order.appointment_id.write({'start_sync_to_i360': True})
+    order.write({ 'is_data_upload_completed': False})
+            </field>
+        </record>
+
+        <record id="model_action_re_generate_contract_document" model="ir.actions.server">
+            <field name="name">Re-Generate Contract Document</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">records.action_generate_contract_document({'appointment_id': record.appointment_id.id, 'contract_plumbing_option_1': 0, 'contract_plumbing_option_2': 1, 'send_physical_document': 1, 'flexible_installation': 0, 'additional_comments': '', 'recision_date': '2023-10-10'})</field>
+        </record>
+
+        <record id="model_action_send_credit_application" model="ir.actions.server">
+            <field name="name">Send Credit Application</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+credit_application = model.env['team.credit.application'].search([('order_id', '=', record.id)], limit=1, order='id desc')
+if credit_application:
+    if credit_application.attachment_id:
+        credit_application.attachment_id.write({'improveit_id': ''})
+record.action_upload_credit_application({})
+            </field>
+        </record>
+
+        <record id="model_action_set_transaction_log_as_synced" model="ir.actions.server">
+            <field name="name">Set Transaction Log as Synced</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <!-- <field name="binding_model_id" ref="sale.model_sale_order"/> -->
+            <field name="state">code</field>
+            <field name="code">
+transaction_logs = record.card_transaction_log_line.filtered(lambda x: x.state == 'failed' and not x.synced)
+if transaction_logs:
+    transaction_logs.write({'synced': True})
+            </field>
+        </record>
+
+        <record id="model_action_sync_pending_sale_items" model="ir.actions.server">
+            <field name="name">Sync Pending Sale Items</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">records.add_sale_items_api()</field>
+        </record>
+
+        <record id="model_action_sync_sale_data_to_i360_cron_1" model="ir.actions.server">
+            <field name="name">Sync Sale Data to i360(Cron 1)</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <!-- <field name="binding_model_id" ref="sale.model_sale_order"/> -->
+            <field name="state">code</field>
+            <field name="code">model.cron_action_sync_order_to_i360()</field>
+        </record>
+
+        <record id="model_action_update_i360_document_upload_status" model="ir.actions.server">
+            <field name="name">Update i360 Document Upload Status</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <!-- <field name="binding_model_id" ref="sale.model_sale_order"/> -->
+            <field name="state">code</field>
+            <field name="code">records.write({'is_data_upload_completed': False})</field>
+        </record>
+    </data>
+</odoo>

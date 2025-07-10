@@ -3,17 +3,16 @@
 # 	* website_mail
 # 
 # Translators:
-# Linkup <link-up@naver.com>, 2019
-# JH CHOI <hwangtog@gmail.com>, 2020
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:13+0000\n"
-"PO-Revision-Date: 2019-08-26 09:16+0000\n"
-"Last-Translator: JH CHOI <hwangtog@gmail.com>, 2020\n"
-"Language-Team: Korean (https://www.transifex.com/odoo/teams/41243/ko/)\n"
+"POT-Creation-Date: 2025-01-27 13:04+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
+"Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -22,39 +21,24 @@ msgstr ""
 
 #. module: website_mail
 #: model_terms:ir.ui.view,arch_db:website_mail.follow
-msgid "<small>Follow</small><i class=\"fa fa-fw ml-1\"/>"
-msgstr "<small>팔로우</small><i class=\"fa fa-fw ml-1\"/>"
+msgid "<small>Follow</small><i class=\"fa fa-fw ms-1\"/>"
+msgstr "<small>팔로우</small><i class=\"fa fa-fw ms-1\"/>"
 
 #. module: website_mail
 #: model_terms:ir.ui.view,arch_db:website_mail.follow
-msgid "<small>Unfollow</small><i class=\"fa fa-fw ml-1\"/>"
-msgstr "<small>팔로우 취소</small><i class=\"fa fa-fw ml-1\"/>"
+msgid "<small>Unfollow</small><i class=\"fa fa-fw ms-1\"/>"
+msgstr "<small>팔로우 취소</small><i class=\"fa fa-fw ms-1\"/>"
 
 #. module: website_mail
-#: model:ir.model.fields,field_description:website_mail.field_mail_mail__description
-#: model:ir.model.fields,field_description:website_mail.field_mail_message__description
-msgid "Description"
-msgstr "설명"
+#. odoo-javascript
+#: code:addons/website_mail/static/src/js/follow.js:0
+msgid "Error"
+msgstr "오류"
 
 #. module: website_mail
-#: model:ir.model,name:website_mail.model_mail_message
-msgid "Message"
-msgstr "메시지"
-
-#. module: website_mail
-#: model:ir.model.fields,help:website_mail.field_mail_mail__description
-#: model:ir.model.fields,help:website_mail.field_mail_message__description
-msgid "Message description: either the subject, or the beginning of the body"
-msgstr "메시지 설명 : 제목 또는 본문의 시작 부분"
-
-#. module: website_mail
-#. openerp-web
-#: code:addons/website_mail/static/src/xml/portal_chatter.xml:0
-#: model:ir.model.fields,field_description:website_mail.field_mail_mail__website_published
-#: model:ir.model.fields,field_description:website_mail.field_mail_message__website_published
-#, python-format
-msgid "Published"
-msgstr "게시됨"
+#: model:ir.model,name:website_mail.model_ir_http
+msgid "HTTP Routing"
+msgstr "HTTP 라우팅"
 
 #. module: website_mail
 #: model:ir.model,name:website_mail.model_publisher_warranty_contract
@@ -62,51 +46,20 @@ msgid "Publisher Warranty Contract"
 msgstr "게시자 보증 계약"
 
 #. module: website_mail
-#: code:addons/website_mail/models/mail_message.py:0
-#, python-format
-msgid "Records:"
-msgstr "기록 :"
-
-#. module: website_mail
 #: model_terms:ir.ui.view,arch_db:website_mail.follow
 msgid "Subscribe"
 msgstr "구독"
 
 #. module: website_mail
-#: code:addons/website_mail/models/mail_message.py:0
-#, python-format
-msgid ""
-"The requested operation cannot be completed due to security restrictions. Please contact your system administrator.\n"
-"\n"
-"(Document type: %s, Operation: %s)"
-msgstr ""
-"보안 제한으로 인해 요청한 작업을 완료할 수 없습니다. 시스템 관리자에게 문의하십시오.\n"
-"\n"
-"(문서 유형 : %s, 운영자 : %s)"
-
-#. module: website_mail
-#. openerp-web
-#: code:addons/website_mail/static/src/xml/portal_chatter.xml:0
-#, python-format
-msgid "Unpublished"
-msgstr "게시 안함"
+#. odoo-python
+#: code:addons/website_mail/controllers/main.py:0
+msgid "Suspicious activity detected by Google reCaptcha."
+msgstr "구글 reCaptcha에서 의심스러운 활동이 감지되었습니다."
 
 #. module: website_mail
 #: model_terms:ir.ui.view,arch_db:website_mail.follow
 msgid "Unsubscribe"
 msgstr "구독 취소"
-
-#. module: website_mail
-#: code:addons/website_mail/models/mail_message.py:0
-#, python-format
-msgid "User:"
-msgstr "사용자 :"
-
-#. module: website_mail
-#: model:ir.model.fields,help:website_mail.field_mail_mail__website_published
-#: model:ir.model.fields,help:website_mail.field_mail_message__website_published
-msgid "Visible on the website as a comment"
-msgstr "웹 사이트에 댓글로 표시"
 
 #. module: website_mail
 #: model_terms:ir.ui.view,arch_db:website_mail.follow

@@ -1,10 +1,10 @@
+# -*- coding: utf-8 -*-
 from odoo import models, fields, api, _
 import time
 from datetime import timedelta, datetime
 import pytz
 import requests
 import base64
-
 
 _STATES = [
     ('draft', 'New'),
@@ -164,32 +164,32 @@ class TeamCustomerAppointment(models.Model):
 
     name = fields.Char('Reference', required=True, copy=False, default='/')
     customer_name = fields.Char('Customer Name', required=False, readonly=False)
-    phone = fields.Char('Phone Number',  readonly=True, states={'draft': [('readonly', False)]})
-    mobile = fields.Char('Secondary Phone Number',  readonly=True, states={'draft': [('readonly', False)]})
-    email = fields.Char(string='Email', readonly=True, states={'draft': [('readonly', False)]})
-    user_id = fields.Many2one('res.users', string='Sales Person', required=False, default=lambda self: self.env.user,  readonly=True, states={'draft': [('readonly', False)]})
-    company_id = fields.Many2one('res.company', string='Company', requires=True, default=_default_company)
-    partner_id = fields.Many2one('res.partner', string='Customer',
-                                 domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",  readonly=True, states={'draft': [('readonly', False)]})
-    street = fields.Char(readonly=True, states={'draft': [('readonly', False)]})
-    street2 = fields.Char(readonly=True, states={'draft': [('readonly', False)]})
-    city = fields.Char(readonly=True, states={'draft': [('readonly', False)]})
-    state_id = fields.Many2one("res.country.state", string="State", readonly=True, states={'draft': [('readonly', False)]})
-    zip = fields.Char(readonly=True, states={'draft': [('readonly', False)]})
-    country_id = fields.Many2one('res.country', string="Country", readonly=True, states={'draft': [('readonly', False)]})
-    partner_latitude = fields.Float(string='Geo Latitude', digits=(16, 5),  readonly=True, states={'draft': [('readonly', False)]})
-    partner_longitude = fields.Float(string='Geo Longitude', digits=(16, 5),  readonly=True, states={'draft': [('readonly', False)]})
-    date_localization = fields.Date('On',  readonly=True, states={'draft': [('readonly', False)]})
+    phone = fields.Char('Phone Number', readonly=True)
+    mobile = fields.Char('Secondary Phone Number', readonly=True)
+    email = fields.Char(string='Email', readonly=True)
+    user_id = fields.Many2one('res.users', string='Sales Person', required=False, default=lambda self: self.env.user, readonly=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True, default=_default_company)
+    partner_id = fields.Many2one('res.partner', string='Customer', readonly=True,
+                                 domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
+    street = fields.Char(readonly=True)
+    street2 = fields.Char(readonly=True)
+    city = fields.Char(readonly=True)
+    state_id = fields.Many2one("res.country.state", string="State", readonly=True)
+    zip = fields.Char(readonly=True)
+    country_id = fields.Many2one('res.country', string="Country", readonly=True)
+    partner_latitude = fields.Float(string='Geo Latitude', digits=(16, 5), readonly=True)
+    partner_longitude = fields.Float(string='Geo Longitude', digits=(16, 5), readonly=True)
+    date_localization = fields.Date('On',  readonly=True)
     state = fields.Selection(selection=_STATES, string='Status', index=True, tracking=True, required=True,
-                             copy=False, default='draft', readonly=True, states={'draft': [('readonly', False)]})
-    appointment_date = fields.Datetime('Appointment Date', required=True, readonly=True, tracking=True, states={'draft': [('readonly', False)]})
-    co_applicant = fields.Char(string='Co-Applicant', readonly=True, states={'draft': [('readonly', False)]})
+                             copy=False, default='draft', readonly=True)
+    appointment_date = fields.Datetime('Appointment Date', required=True, readonly=True, tracking=True)
+    co_applicant = fields.Char(string='Co-Applicant', readonly=True)
     co_applicant_phone = fields.Char(string='Co-Applicant Phone')
     co_applicant_email = fields.Char(string='Co-Applicant Email')
     co_applicant_address = fields.Char(string='Co-Applicant Address')
-    co_applicant_city = fields.Char(string="City")
+    co_applicant_city = fields.Char(string="Co-Applicant City")
     co_applicant_zip = fields.Char(string="Co-Applicant ZIP")
-    co_applicant_state = fields.Many2one("res.country.state", string="Co-Applicant State", readonly=True, states={'draft': [('readonly', False)]})
+    co_applicant_state = fields.Many2one("res.country.state", string="Co-Applicant State", readonly=True)
     co_applicant_country_id = fields.Many2one('res.country', 'Co-Applicant Country', related='co_applicant_state.country_id', readonly=True)
     co_applicant_secondary_phone = fields.Char(string="Co-Applicant Secondary Phone")
 
@@ -203,7 +203,7 @@ class TeamCustomerAppointment(models.Model):
     finance_application = fields.Boolean('Finance Application')
     credit_card = fields.Boolean('Credit Card')
     contract = fields.Boolean('Contract')
-    applicant_signature = fields.Binary('Applicant Signature', compute='_compute_applicant_signature')
+    applicant_signature = fields.Binary('Applicant Signature (Flag)', compute='_compute_applicant_signature')
     co_applicant_signature = fields.Binary('Co-Applicant Signature', compute='_compute_co_applicant_signature')
     applicant_initial = fields.Binary('Applicant Initial', compute='_compute_applicant_initial')
     co_applicant_initial = fields.Binary('Co-Applicant Initial', compute='_compute_co_applicant_initial')
@@ -236,7 +236,7 @@ class TeamCustomerAppointment(models.Model):
     card_transaction_log_line = fields.One2many('otl.card.transaction.log', 'appointment_id',
                                                 string='Card Transaction Log Line')
     transaction_log_exists = fields.Boolean('Exist Transaction Logs', compute='_compute_transaction_log_exists')
-    office_location_id = fields.Many2one('otl.office.location', 'Office Location', readonly=True, states={'draft': [('readonly', False)]})
+    office_location_id = fields.Many2one('otl.office.location', 'Office Location', readonly=True)
     market_segment = fields.Char('Market Segment')
     app_version_id = fields.Many2one('otl.sales.app.version', 'App Version')
     make_payment_failure = fields.Boolean('Set Payment as Failure')
@@ -249,7 +249,8 @@ class TeamCustomerAppointment(models.Model):
     sent_review_link = fields.Boolean("Sent Review Link", default=False, copy=False)
     last_price_quoted_value = fields.Float("Last Price Quoted Value", copy=False)
     compressed_attachment_id = fields.Many2one('ir.attachment', string="Compressed Appointment Data")
-    both_parties_present = fields.Boolean("Both Parties Present", default=False, copy=False)
+    both_parties_present = fields.Boolean("All Homeowners Present", default=False, copy=False)
+    destination_selection_id = fields.Many2one('otl.destination.selection', 'Destination Selection', copy=False)
 
     @api.onchange('country_id')
     def _onchange_country_id(self):
@@ -261,20 +262,20 @@ class TeamCustomerAppointment(models.Model):
         if self.state_id.country_id:
             self.country_id = self.state_id.country_id
 
-    @api.model
-    def create(self, vals):
-        if vals.get('name', '/') == '/':
-            seq_date = None
-            if 'appointment_date' in vals:
-                seq_date = fields.Datetime.context_timestamp(self,
-                                                             fields.Datetime.to_datetime(vals['appointment_date']))
-            if 'company_id' in vals:
-                vals['name'] = self.env['ir.sequence'].with_context(force_company=vals['company_id']).next_by_code(
-                    'team.customer.appointment', sequence_date=seq_date) or _('New')
-            else:
-                vals['name'] = self.env['ir.sequence'].next_by_code('team.customer.appointment', sequence_date=seq_date) or _('New')
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('name', '/') == '/':
+                seq_date = None
+                if 'appointment_date' in vals:
+                    seq_date = fields.Datetime.context_timestamp(self, fields.Datetime.to_datetime(vals['appointment_date']))
+                if 'company_id' in vals:
+                    vals['name'] = self.env['ir.sequence'].with_context(force_company=vals['company_id']).next_by_code(
+                        'team.customer.appointment', sequence_date=seq_date) or _('New')
+                else:
+                    vals['name'] = self.env['ir.sequence'].next_by_code('team.customer.appointment', sequence_date=seq_date) or _('New')
 
-        return super(TeamCustomerAppointment, self).create(vals)
+        return super(TeamCustomerAppointment, self).create(vals_list)
 
     def button_scheduled(self):
         return self.write({'state': 'scheduled'})

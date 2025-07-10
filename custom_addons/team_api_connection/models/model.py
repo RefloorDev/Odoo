@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
 # import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import fromstring, ElementTree
 from odoo import models, fields, api, _
 import json
 from odoo.exceptions import UserError
-
+from odoo.tools import format_date, str2bool
 from odoo.addons.team_api_configuration.controllers.configurations import URL, DB, API_USER_ID, API_USER_PASSWORD
 from odoo.http import request
-from odoo.addons.payment.controllers.portal import PaymentProcessing
+# from odoo.addons.payment.controllers.portal import PaymentProcessing
 from odoo.addons.payment_authorize.models.authorize_request import AuthorizeAPI
 from datetime import datetime, timedelta
 import logging
@@ -295,7 +294,6 @@ class ResUsers(models.Model):
                     _logger.error(f"Authentication - i360 - user : {username} - i360 Authentication failed , salesperson id not found")
                     status = {'message': 'Authenticating User Failed', 'result': 'Failed'}
                     return status
-
             except Exception as e:
                 _logger.info(f"Authentication - i360 - user : {username} - i360 Authentication exception : {e}")
                 status = {'message': 'An error occurred during the authentication process.', 'result': 'Failed'}
@@ -639,7 +637,7 @@ class TeamCustomerAppointment(models.Model):
         if sale_order and result:
             try:
                 completed_document = False
-                model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+                model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
                 sign_request = self.env['otl_document_sign.request'].sudo().search(
                     [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)], limit=1)
                 if sign_request:
@@ -723,7 +721,7 @@ class TeamCustomerAppointment(models.Model):
                 room_transition_obj.write({'order_id': sale_order_ref.id})
             try:
                 completed_document = False
-                model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+                model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
                 sign_request = self.env['otl_document_sign.request'].sudo().search(
                     [('model_id', '=', model_id.id), ('res_id', '=', sale_order_ref.id)], limit=1)
                 if sign_request and sign_request.completed_document:
@@ -767,7 +765,7 @@ class TeamCustomerAppointment(models.Model):
         if sale_order and result:
             try:
                 completed_document = False
-                model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+                model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
                 sign_request = self.env['otl_document_sign.request'].sudo().search(
                     [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)], limit=1)
                 # if sign_request:
@@ -859,7 +857,7 @@ class TeamCustomerAppointment(models.Model):
                 room_transition_obj.write({'order_id': sale_order_ref.id})
             try:
                 completed_document = False
-                model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+                model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
                 sign_request = self.env['otl_document_sign.request'].sudo().search(
                     [('model_id', '=', model_id.id), ('res_id', '=', sale_order_ref.id)], limit=1)
                 # if sign_request and sign_request.completed_document:
@@ -1317,11 +1315,12 @@ class TeamCustomerAppointment(models.Model):
 
         list = []
         customer_name = data.get('customer_name', '')
-        user_id = data.get('uid', False)
+        user_id = data.get('user_id', False)
         user = self.env['res.users'].browse(user_id)
         tz = user.tz or self._context.get('tz') or 'UTC'
+        customer_name = customer_name or ''
         appointment_data = self.env['team.customer.appointment'].search([
-            ('customer_name', 'ilike', '%' + customer_name),
+            ('customer_name', 'ilike', f'%{customer_name}%'),
             ('state', '=', 'scheduled'),
             ('user_id', '=', user_id)
         ], order='appointment_date asc')
@@ -1545,12 +1544,12 @@ class Product(models.Model):
         if color_up_charge_total:
             additional_cost += color_up_charge_total
         floor_type_data = self.env['product.template'].search(
-            [('type', '=', 'product'), ('product_variant_ids', '!=', False), ('categ_id.name', 'not ilike', 'Stairs')],
+            [('type', '=', 'consu'), ('product_variant_ids', '!=', False), ('categ_id.name', 'not ilike', 'Stairs')],
             order='sequence asc')
         if floor_type_data:
             for data in floor_type_data:
                 stair_product = self.env['product.template'].search([
-                    ('type', '=', 'product'),
+                    ('type', '=', 'consu'),
                     ('product_variant_ids', '!=', False),
                     ('categ_id.name', 'ilike', 'Stairs'),
                     ('grade', '=', data.grade)
@@ -1617,8 +1616,8 @@ class Product(models.Model):
             'payment_options': payment_option_list,
             'monthly_promo': discount_coupon_list,
             # 'materials': list,
-            'admin_fee': float(self.env['ir.config_parameter'].sudo().get_param('admin_fee')) or 0.0,
-            'min_sale_price': float(self.env['ir.config_parameter'].sudo().get_param('min_sale_price')) or 0.0
+            'admin_fee': float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.admin_fee')) or 0.0,
+            'min_sale_price': float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.min_sale_price')) or 0.0
         }
         return [values]
 
@@ -2003,6 +2002,7 @@ class TeamContractQuestions(models.Model):
         appointment_id = vals.get('appointment_id', 0)
         room_id = vals.get('room_id', 0)
         if appointment_id:
+            custom_room = False
             if self.env['team.room.room'].browse(int(room_id)).is_custom:
                 room_measurement_id = vals.get('room_measurement_id', '')
                 custom_room = True
@@ -2020,9 +2020,9 @@ class TeamContractQuestions(models.Model):
             if contract_questions:
                 for data in contract_questions:
                     if data.room_id.is_custom:
-                        custom_room = 'True'
+                        custom_room = True
                     else:
-                        custom_room = 'False'
+                        custom_room = False
                     list_answers = []
                     for answer in data.answers:
                         answer_vals = {
@@ -3236,7 +3236,7 @@ class TeamContractRoomMeasurement(models.Model):
                 'room_id': contracts_measurement.room_id and contracts_measurement.room_id.id or False,
                 'appointment_id': contracts_measurement.appointment_id and contracts_measurement.appointment_id.id or False,
             }
-            result = self.update_room_measurement(values)
+            result = self.sudo().update_room_measurement(values)
             status = {
                 'message': 'Update Images,Comment on Room Successful',
                 'contract_room_measurement_id': contracts_measurement.id,
@@ -3265,6 +3265,8 @@ class SaleOrder(models.Model):
                 is_data_upload_completed = False
             if record.appointment_id:
                 appointment = record.appointment_id
+                if appointment.destination_selection_id and not record.update_destination_selection_synced:
+                    is_data_upload_completed = False
                 if (not appointment.arrival_departure_synced) and (
                         appointment.arrival_date or appointment.departure_date):
                     is_data_upload_completed = False
@@ -3289,7 +3291,9 @@ class SaleOrder(models.Model):
 
     @api.model
     def verify_parameters(self, data):
-        if not self.env['sale.order'].browse(int(data.get('order_id', 0))).exists():
+        sale_order_id = self.env['sale.order'].search([('id', '=', int(data.get('order_id', 0)))], limit=1)
+        print('sale_order_idsale_order_idsale_order_id----', sale_order_id)
+        if not sale_order_id:
             return False
         # if not data.get('total_amount', 0):
         #     return False
@@ -3365,7 +3369,7 @@ class SaleOrder(models.Model):
         sale_order = self.env['sale.order'].search([('appointment_id', '=', int(appointment_id))], limit=1)
         if not sale_order:
             return {'message': 'Sale Order Not Created For this appointment', 'result': 'Success'}
-        model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+        model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
         sign_requests = self.env['otl_document_sign.request'].sudo().search(
             [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)], order='create_date desc')
         if sign_requests:
@@ -4647,7 +4651,7 @@ class SaleOrder(models.Model):
             return status
         else:
             if sale_order.link_to_share:
-                model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+                model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
                 sign_request = self.env['otl_document_sign.request'].sudo().search(
                     [('model_id', '=', model_id.id), ('res_id', '=', sale_order_id)], order='create_date desc', limit=1)
                 if sign_request:
@@ -4690,7 +4694,7 @@ class SaleOrder(models.Model):
                 'result': 'incomplete',
                 'message': 'sale order not found', }
             return status
-        model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+        model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
         sign_request = self.env['otl_document_sign.request'].sudo().search(
             [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)], order='create_date desc', limit=1)
         if sign_request:
@@ -4698,13 +4702,13 @@ class SaleOrder(models.Model):
                 status = {
                     'result': 'incomplete',
                     'signed': 'False',
-                    'message': self.env['ir.config_parameter'].sudo().get_param('doc_status_message') or ""}
+                    'message': self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.doc_status_message') or ""}
                 return status
             if sign_request.state == 'signed':
                 status = {
                     'result': 'Success',
                     'signed': 'True',
-                    'message': self.env['ir.config_parameter'].sudo().get_param('doc_completion_message') or "",
+                    'message': self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.doc_completion_message') or "",
                     'document_url': sign_request.document_url or '',
                 }
                 return status
@@ -4730,7 +4734,8 @@ class SaleOrder(models.Model):
 
     def confirm_order_and_create_invoice(self):
         for order in self:
-            order.action_confirm()
+            if order.state != 'sale':
+               order.action_confirm()
             if order.down_payment_amount:
                 adv_wiz = self.env['sale.advance.payment.inv'].with_context(active_ids=[order.id],
                                                                             open_invoices=True).create({
@@ -4757,10 +4762,11 @@ class SaleOrder(models.Model):
                         'amount': order.down_payment_amount,
                         'partner_type': 'customer',
                         'partner_id': order.partner_id.id,
-                        'communication': order.invoice_ids.name,
+                        # 'communication': order.invoice_ids.name,
                         'invoice_ids': [(6, 0, order.invoice_ids.ids)]
                     })
-                    register_payment_wizard.post()
+                    # register_payment_wizard.post()
+                    register_payment_wizard.action_post()
         return True
 
     @api.model
@@ -4772,7 +4778,7 @@ class SaleOrder(models.Model):
                 'result': 'Failed',
                 'message': 'sale order not found', }
             return status
-        model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+        model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
         sign_request = self.env['otl_document_sign.request'].sudo().search(
             [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)], order='create_date desc', limit=1)
         if sign_request:
@@ -4780,7 +4786,7 @@ class SaleOrder(models.Model):
                 status = {
                     'result': 'incomplete',
                     'signed': 'False',
-                    'message': self.env['ir.config_parameter'].sudo().get_param('doc_status_message') or ""}
+                    'message': self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.doc_status_message') or ""}
                 return status
             if sign_request.state == 'signed':
                 if not sale_order.quote_id:
@@ -4857,7 +4863,7 @@ class SaleOrder(models.Model):
                 'result': 'Failed',
                 'message': 'sale order not found', }
             return status
-        model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+        model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
         sign_request = self.env['otl_document_sign.request'].sudo().search(
             [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)], order='create_date desc', limit=1)
         if sign_request:
@@ -4865,7 +4871,7 @@ class SaleOrder(models.Model):
                 status = {
                     'result': 'incomplete',
                     'signed': 'False',
-                    'message': self.env['ir.config_parameter'].sudo().get_param('doc_status_message') or ""}
+                    'message': self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.doc_status_message') or ""}
                 return status
             if sign_request.state == 'signed':
                 if not sale_order.quote_id:
@@ -4941,7 +4947,7 @@ class SaleOrder(models.Model):
     def action_do_file_upload(self, data):
         _logger.info("------ Start Processing: action_do_file_upload-------------")
         sale_order_id = int(data.get('sale_order_id', False))
-        model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+        model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
         sale_order = self.env['sale.order'].search([('id', '=', sale_order_id)], limit=1)
         sale_order_vals = {}
         if not sale_order:
@@ -5013,9 +5019,9 @@ class SaleOrder(models.Model):
             ('appointment_id.start_sync_to_i360', '=', True),
             ('appointment_id.sync_initiated_date', '<=', sync_start_allow_time)])
         sync_log = self.env['otl.appointment.sync.log']
-        model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+        model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
         current_time = datetime.now()
-        max_i360_sync_retry_limit = int(self.env['ir.config_parameter'].sudo().get_param('max_i360_sync_retry_limit')) or 0
+        max_i360_sync_retry_limit = int(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.max_i360_sync_retry_limit')) or 0
         for sale_order in orders:
             appointment = sale_order.appointment_id
             if appointment and appointment.start_sync_to_i360:
@@ -5317,8 +5323,9 @@ class SaleOrder(models.Model):
                                 })
                         if result.get('success', '') == 'true':
                             sale_order_vals.update({'other_files_uploaded': True})
-                    enable_additional_comment_api = eval(
-                        str(self.env['ir.config_parameter'].sudo().get_param('enable_additional_comment_api')))
+                    # enable_additional_comment_api = eval(
+                    #     str(self.env['ir.config_parameter'].sudo().get_param('enable_additional_comment_api')))
+                    enable_additional_comment_api = str2bool(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_additional_comment_api'))
                     if sale_order.appointment_result == 'Sold' and enable_additional_comment_api and not sale_order.additional_comment_synced:
                         result = sale_order.create_additional_comments_in_i360()
                         if result.get('success', '') == 'true':
@@ -5333,6 +5340,21 @@ class SaleOrder(models.Model):
                                 'response': result,
                                 'state': 'failed',
                                 'name': 'AddSaleComments',
+                            })
+                    if appointment.destination_selection_id and not sale_order.update_destination_selection_synced:
+                        result = sale_order.update_destination_selection_in_i360()
+                        if result.get('success', '') == 'true':
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'UpdateDestinationSelection',
+                            })
+                        else:
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'UpdateDestinationSelection',
                             })
                     if sale_order.check_document_upload_completed():
                         sale_order_vals.update({'is_data_upload_completed': True})
@@ -5359,7 +5381,7 @@ class SaleOrder(models.Model):
         # -----------------------------------------------------
         one_hour_ago_time = datetime.now() - relativedelta(minutes=10)
         orders = self.search([('is_data_upload_completed', '=', False), ('quote_id', '!=', False), ('appointment_id.sync_initiated_date', '<=', one_hour_ago_time)])
-        model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+        model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
         sync_log = self.env['otl.appointment.sync.log']
         for sale_order in orders:
             appointment = sale_order.appointment_id
@@ -5632,7 +5654,8 @@ class SaleOrder(models.Model):
                     'result': 'Success',
                 }
                 return status
-            plan = self.env['product.template'].search([('id', '=', floor_type)], limit=1)
+
+            plan = self.env['product.template'].search([('id', '=', int(floor_type))], limit=1)
             if not plan:
                 _logger.info("------Floor Plan Not Exist------------")
                 status = {
@@ -5744,7 +5767,7 @@ class SaleOrder(models.Model):
                 })
                 sale_order_ref.add_payment_line(discount, adjustment, additional_cost, plan.monthly_promo,
                                                 self.env['ir.config_parameter'].sudo().get_param(
-                                                    'admin_fee') or 0.0 if photo_permission == 1 else 0.0)
+                                                    'team_sale_contract.admin_fee') or 0.0 if photo_permission == 1 else 0.0)
                 if finance_amount:
                     sale_order_vals.update({'balance_finance': True})
                 else:
@@ -5936,7 +5959,8 @@ class SaleOrder(models.Model):
             }
         :return:
         """
-        acquirer = self.env.ref('payment.payment_acquirer_authorize')
+        # acquirer = self.env.ref('payment_bancard.payment_acquirer_authorize')
+        acquirer = self.env.ref('payment.payment_provider_authorize').sudo()
         for order in self:
             transaction = AuthorizeAPICustom(acquirer)
             if order.authorize_transaction_id:
@@ -5999,7 +6023,8 @@ class SaleOrder(models.Model):
             }
         :return:
         """
-        acquirer = self.env.ref('payment.payment_acquirer_authorize')
+        # acquirer = self.env.ref('payment_bancard.payment_acquirer_authorize')
+        acquirer = self.env.ref('payment.payment_provider_authorize').sudo()
         for order in self:
             values = self.prepare_capture_payment_values(acquirer, order, data)
             transaction = AuthorizeAPICustom(acquirer)

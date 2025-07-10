@@ -19,7 +19,7 @@ class ResPartner(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Signature(s)',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'res_model': 'otl_document_sign.request',
             'domain': [('id', 'in', request_ids.ids)]
         }

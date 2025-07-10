@@ -1,22 +1,33 @@
-odoo.define('portal.tour', function (require) {
-'use strict';
+/** @odoo-module **/
 
-var tour = require("web_tour.tour");
+import { registry } from "@web/core/registry";
 
-tour.register('portal_load_homepage', {
-    test: true,
+registry.category("web_tour.tours").add('portal_load_homepage', {
     url: '/my',
-},
-    [
+    steps: () => [
         {
             content: "Check portal is loaded",
             trigger: 'a[href*="/my/account"]:contains("Edit"):first',
+            run: "click",
         },
         {
             content: "Load my account details",
-            trigger: 'input[value="Joel Willis"]'
+            trigger: 'input[value="Joel Willis"]',
+            run: "click",
+        },
+        {
+            content: 'type a different phone number',
+            trigger: 'input[name="phone"]',
+            run: "edit +1 555 666 7788",
+        },
+        {
+            content: "Submit the form",
+            trigger: 'button[type=submit]',
+            run: "click",
+        },
+        {
+            content: "Check that we are back on the portal",
+            trigger: 'a[href*="/my/account"]:contains("Edit"):first',
         }
     ]
-);
-
 });
