@@ -306,6 +306,36 @@ class ResUsers(models.Model):
             })
         return finance_checklist
 
+    def get_auto_answer_logic(self):
+        logic_list = []
+        logics = self.env['otl.questionnaire.calc.logic'].search([])
+        for logic in logics:
+            logic_line = []
+            for line in logic.logic_line:
+                logic_line.append({
+                    'question_id': line.question_id.id  or 0,
+                    'excluded_question_ids': line.excluded_question_ids and line.excluded_question_ids.ids or [],
+                    'code': line.code,
+                })
+            logic_list.append({
+                'logic_type': logic.type,
+                'question_lines': logic_line
+            })
+        return logic_list
+
+    def get_destination_selection(self):
+        destination_list = []
+        destinations = self.env['otl.destination.selection'].search([])
+        for destination in destinations:
+            destination_list.append({
+                'destination_id': destination.id,
+                'name': destination.name or '',
+                'terms_and_conditions': destination.terms_and_conditions or '',
+            })
+        return destination_list
+
+
+
     @api.model
     def get_master_data_contents(self, data={}):
         result = {
@@ -332,6 +362,8 @@ class ResUsers(models.Model):
         rules = self.get_restriction_rules_api()
         reasons_list = self.get_appointment_result_reasons_api()
         finance_checklist = self.get_finance_checklist_items()
+        auto_answer_logic_list = self.get_auto_answer_logic()
+        destination_list = self.get_destination_selection()
         templates = self.sudo().get_dynamic_contract_vals_api(app_version)
         credential_list = self.sudo().get_external_application_credentials()
         auto_logout_time = ''
@@ -370,6 +402,8 @@ class ResUsers(models.Model):
             'appointment_result_reasons': reasons_list,
             'contract_document_templates': templates,
             'finance_checklist': finance_checklist,
+            'auto_answer_logic_list': auto_answer_logic_list,
+            'destination_selection_list': destination_list,
             'versatile_url': company.versatile_url or '',
             'versatile_api_key': company.versatile_api_key or '',
             'versatile_entity_key': company.versatile_entity_key or '',
@@ -378,6 +412,7 @@ class ResUsers(models.Model):
             'external_credentials': credential_list,
             'max_stair_width': float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.max_stair_width')) or 0,
             'min_down_payment_amount': float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.min_down_payment_amount')) or 0.0,
+            'destination_selection_consent_message': str(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.destination_selection_consent_message')) or '',
         })
         # except:
         #     result = {
@@ -737,6 +772,7 @@ class ProductProduct(models.Model):
                         'material_image_url': floor_color_url,
                         'color_up_charge_price': product.color_up_charge_price or 0,
                         'in_stock': product.in_stock and 1 or 0,
+                        'glue_down': product.glue_down and 1 or 0,
                         'special_order': product.special_order and 1 or 0,
                         'office_location_ids': product.office_location_ids and product.office_location_ids.ids or []
                     }
@@ -915,6 +951,8 @@ class TeamCustomerAppointment(models.Model):
                 # ('appointment_date', '<', first_end_date_utc),
             ], order='appointment_date asc')
         improveit_appointment_ids = []
+        enable_destination_selection = eval(str(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_destination_selection'))) or False
+
         if appointment_data:
             for data in appointment_data:
                 if data.improveit_appointment_id:
@@ -968,6 +1006,7 @@ class TeamCustomerAppointment(models.Model):
                     'city': data.city or '',
                     'state_id': data.state_id.id or 0,
                     'office_location_id': data.office_location_id and data.office_location_id.id or 0,
+                    'enable_destination_selection': enable_destination_selection and data.office_location_id and data.office_location_id.enable_destination_selection and 1 or 0,
                     'state_code': data.state_id.code or '',
                     'state': data.state_id.name or '',
                     'country_id': data.country_id.id or 0,
@@ -1018,7 +1057,7 @@ class TeamCustomerAppointment(models.Model):
         for appointment in self:
             partner_vals = {}
             completed_date = data.get('completed_date', '')
-            timezone = data.get('timezone', '')
+            timezone = data.get('timezone', 'US/Eastern')
             completed_date_utc = False
             if completed_date and timezone:
                 completed_date_utc = self.get_timezone_based_time(completed_date, timezone)
@@ -1040,6 +1079,12 @@ class TeamCustomerAppointment(models.Model):
                 resulting_reason= self.env['otl.appointment.result.reason'].browse(resulting_reason_id)
                 if not resulting_reason or not resulting_reason.exists():
                     return {'message': 'Wrong value for Appointment Resulting Reason', 'result': 'Failed'}
+            destination_selection_id = False
+            if data.get('destination_selection_id', False):
+                destination_selection_id = int(data.get('destination_selection_id', 0))
+                destination_selection= self.env['otl.appointment.result.reason'].browse(destination_selection_id)
+                if not destination_selection or not destination_selection.exists():
+                    return {'message': 'Wrong value for Destination Selection', 'result': 'Failed'}
             vals = {
                 'what_happened_notes': data.get('what_happened_notes', ''),
                 'whats_next_notes': data.get('whats_next_notes', ''),
@@ -1052,8 +1097,16 @@ class TeamCustomerAppointment(models.Model):
                 'app_version_id':  app_version_id,
                 'last_price_quoted_value': data.get('last_price_quoted_value') if 'last_price_quoted_value' in data else 0,
             }
+            if destination_selection_id:
+                vals.update({'destination_selection_id':  destination_selection_id})
             if completed_date_utc:
                 vals.update({'completed_date': completed_date_utc})
+            manual_arrival_date = data.get('manual_arrival_date', False)
+            manual_arrival_date_utc = manual_arrival_date
+            if manual_arrival_date and timezone:
+                manual_arrival_date_utc = self.get_timezone_based_time(manual_arrival_date, timezone)
+            if manual_arrival_date_utc:
+                vals.update({'manual_arrival_date': manual_arrival_date_utc})
             applicant_first_name = ''
             applicant_last_name = ''
             partner = appointment.partner_id or False
@@ -2134,7 +2187,7 @@ class TeamCustomerAppointment(models.Model):
 
                         contract_doc_attachment = sale_order.contract_doc_attachment_id or False
                         if not contract_doc_attachment:
-                            model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+                            model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
                             sign_request = self.env['otl_document_sign.request'].sudo().search(
                                 [('model_id', '=', model_id.id), ('res_id', '=', sale_order.id)],
                                 order='create_date desc',
@@ -2222,6 +2275,21 @@ class TeamCustomerAppointment(models.Model):
                                 'response': result,
                                 'state': 'failed',
                                 'name': 'AddSaleComments',
+                            })
+                    if appointment.destination_selection_id and not sale_order.update_destination_selection_synced:
+                        result = sale_order.update_destination_selection_in_i360()
+                        if result.get('success', '') == 'true':
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'name': 'UpdateDestinationSelection',
+                            })
+                        else:
+                            sync_log.create({
+                                'appointment_id': appointment.id,
+                                'response': result,
+                                'state': 'failed',
+                                'name': 'UpdateDestinationSelection',
                             })
                     if sale_order.check_document_upload_completed():
                         sale_order_vals.update({'is_data_upload_completed': True})
@@ -2523,6 +2591,9 @@ class TeamCustomerAppointment(models.Model):
                         if payment_transaction_info_dict:
                             existing_auth_transaction_id = payment_transaction_info_dict.get('authorize_transaction_id', 0)
                             card_type = payment_transaction_info_dict.get('card_type', '')
+                        invoice_created = False
+                        if order.order_line.filtered(lambda x: x.invoice_lines):
+                            invoice_created = True
                         retry_order_creation = False
                         if payment_method_dict and paymentdetails_dict and not existing_auth_transaction_id:
                             payment_method = payment_method_dict.get('payment_method', '')
@@ -2531,12 +2602,12 @@ class TeamCustomerAppointment(models.Model):
                                 retry_order_creation = True
                             elif order.payment_method in ['credit_card', 'debit_card'] and down_payment_amount and order.card_transaction_log_line.filtered(lambda x: x.state == 'success') and order.payment_method != payment_method:
                                 retry_order_creation = True
-                        if (operation_mode == 'online' or retry_order_creation) and not existing_auth_transaction_id:
+                        if (operation_mode == 'online' or invoice_created or retry_order_creation) and not existing_auth_transaction_id:
                             valid_transactions_lines = appointment.card_transaction_log_line.filtered(lambda x:x.state == 'success' and not x.void_transaction)
                             for line in valid_transactions_lines:
                                 authorize_transaction_id = line.name or ''
                                 if authorize_transaction_id:
-                                    acquirer = self.env.ref('payment.payment_provider_authorize')
+                                    acquirer = self.env.ref('payment.payment_provider_authorize').sudo()
                                     transaction = AuthorizeAPICustom(acquirer)
                                     response = transaction.void(authorize_transaction_id or '')
                                     if response.get('x_trans_id', ''):
@@ -3290,14 +3361,23 @@ class TeamCustomerAppointment(models.Model):
             flexible_installation = False
             if data.get('flexible_installation', 0) == 1:
                 flexible_installation = True
+            destination_selection_id = False
+            if data.get('destination_selection_id', False):
+                destination_selection_id = int(data.get('destination_selection_id', 0))
+                destination_selection = self.env['otl.appointment.result.reason'].browse(destination_selection_id)
+                if not destination_selection or not destination_selection.exists():
+                    return {'message': 'Wrong value for Destination Selection', 'result': 'Failed'}
             if appointment_id:
                 appointment = self.env['team.customer.appointment'].browse(appointment_id)
                 if appointment.exists():
-                    appointment.write({
+                    appointment_vals = {
                         'additional_comments': data.get('additional_comments', ''),
                         'send_physical_document': send_physical_document,
                         'flexible_installation': flexible_installation,
-                    })
+                    }
+                    if destination_selection_id:
+                        appointment_vals.update({'destination_selection_id': destination_selection_id})
+                    appointment.write(appointment_vals)
                     order = self.env['sale.order'].search([('appointment_id', '=', appointment_id)], limit=1)
                     if not order:
                         return {
@@ -3633,10 +3713,16 @@ class TeamCustomerAppointment(models.Model):
                 appointment = self.sudo().search([('id', '=', appointment_id)], limit=1)
                 if appointment:
                     if appointment.appointment_result:
-                        result = {
-                            'message': 'The appointment has already been completed.',
-                            'result': 'Failed'
-                        }
+                        initiate_sync_log = self.env['otl.api.sync.log'].search([
+                            ('appointment_id', '=', appointment_id),
+                            ('name', '=', '/api/initiate_sync_to_i360_json'),
+                            ('state', '=', 'success')
+                        ], limit=1)
+                        if initiate_sync_log:
+                            result = {
+                                'message': 'The appointment has already been completed.',
+                                'result': 'Failed'
+                            }
                     elif appointment.user_id.id != user_id:
                         result = {
                             'message': 'You are not the assigned salesperson for this appointment',
@@ -3744,7 +3830,7 @@ class SaleOrder(models.Model):
             }
         :return:
         """
-        acquirer = self.env.ref('payment.payment_provider_authorize')
+        acquirer = self.env.ref('payment.payment_provider_authorize').sudo()
         card_type = ''
         for order in self:
             transaction = AuthorizeAPICustom(acquirer)
@@ -4658,14 +4744,23 @@ class SaleOrder(models.Model):
             flexible_installation = False
             if data.get('flexible_installation', 0) == 1:
                 flexible_installation = True
+            destination_selection_id = False
+            if data.get('destination_selection_id', False):
+                destination_selection_id = int(data.get('destination_selection_id', 0))
+                destination_selection = self.env['otl.appointment.result.reason'].browse(destination_selection_id)
+                if not destination_selection or not destination_selection.exists():
+                    return {'message': 'Wrong value for Destination Selection', 'result': 'Failed'}
             if appointment_id:
                 appointment = self.env['team.customer.appointment'].browse(appointment_id)
                 if appointment.exists():
-                    appointment.write({
+                    appointment_vals = {
                         'additional_comments': data.get('additional_comments', ''),
                         'send_physical_document':  send_physical_document,
                         'flexible_installation':  flexible_installation,
-                    })
+                    }
+                    if destination_selection_id:
+                        appointment_vals.update({'destination_selection_id': destination_selection_id})
+                    appointment.write(appointment_vals)
                     order = self.search([('appointment_id', '=', appointment_id)], limit=1)
                     if not order:
                         return {
@@ -4687,7 +4782,7 @@ class SaleOrder(models.Model):
                             [('appointment_id', '=', appointment_id)])
                         if room_transition_obj:
                             room_transition_obj.write({'order_id': order.id})
-                    model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
+                    model_id = self.env['ir.model'].sudo().search([('model', '=', 'sale.order')], limit=1)
                     sign_requests = self.env['otl_document_sign.request'].sudo().search(
                         [('model_id', '=', model_id.id), ('res_id', '=', order.id)], order='create_date desc')
                     if sign_requests:
@@ -4806,136 +4901,6 @@ class SaleOrder(models.Model):
                         'message': 'Wrong Appointment id',
                         'result': 'Failed'
                     }
-                if not order.room_measurement_line:
-                    team_room_obj = self.env['team.contract.room.measurement.line'].search(
-                        [('appointment_id', '=', appointment_id)])
-                    if team_room_obj:
-                        team_room_obj.write({'order_id': order.id})
-                if not order.contract_question_line:
-                    team_question_obj = self.env['team.contract.question.line'].search(
-                        [('appointment_id', '=', appointment_id)])
-                    if team_question_obj:
-                        team_question_obj.write({'order_id': order.id})
-                if not order.room_transition_line:
-                    room_transition_obj = self.env['team.contract.transition.line'].search(
-                        [('appointment_id', '=', appointment_id)])
-                    if room_transition_obj:
-                        room_transition_obj.write({'order_id': order.id})
-                model_id = self.env['ir.model'].search([('model', '=', 'sale.order')], limit=1)
-                sign_requests = self.env['otl_document_sign.request'].sudo().search(
-                    [('model_id', '=', model_id.id), ('res_id', '=', order.id)], order='create_date desc')
-                if sign_requests:
-                    sign_logs = self.env['otl_document_sign.log'].search(
-                        [('sign_request_id', 'in', sign_requests.ids)])
-                    if sign_logs:
-                        sign_logs.sudo().with_context(delete_log=True).unlink()
-                    sign_requests.sudo().unlink()
-                order_vals = {}
-                if order.appointment_id.completed_date:
-                    order_vals.update({'date_order': order.appointment_id.completed_date})
-                if data.get('recision_date', False):
-                    order_vals.update({'recision_date': data.get('recision_date', False)})
-                if order_vals:
-                    order.write(order_vals)
-                if appointment.app_version_id:
-                    if order.coapplicant_skip or not order.appointment_id.co_applicant:
-                        document_template_id = appointment.app_version_id.sale_contract_tmpl_id_ncp.id or False
-                    else:
-                        document_template_id = appointment.app_version_id.sale_contract_tmpl_id.id or False
-                else:
-                    if order.coapplicant_skip or not order.appointment_id.co_applicant:
-                        document_template_id = self.env['ir.config_parameter'].sudo().get_param(
-                            'team_sale_contract.sale_contract_tmpl_id_ncp') or False
-                    else:
-                        document_template_id = self.env['ir.config_parameter'].sudo().get_param(
-                            'team_sale_contract.sale_contract_tmpl_id') or False
-                if document_template_id:
-                    template = self.env['otl_document_sign.template'].sudo().browse(int(document_template_id))
-                    # if template.sign_item_ids.filtered(lambda x: x.type_id.option_field):
-                    #     if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
-                    #             (not contract_plumbing_option_1 and not contract_plumbing_option_2):
-                    #         return {
-                    #             'result': 'Failed',
-                    #             'message': 'Plumbing option should select either one option'
-                    #         }
-                    vals = {
-                        'template_id': template.id,
-                        'reference': template.name,
-                        'model_id': template.model_id.id,
-                        'res_id': order.id,
-                    }
-                    _logger.info("Creating sign request with values::: %s", vals)
-                    sign_request = sign_req_obj.create(vals)
-                    _logger.info("Created sign request with ID:::::::: %s", sign_request and sign_request.id or 'None')
-                    if sign_request:
-                        item_vals = {
-                            'partner_id': order.partner_id.id,
-                            'sign_request_id': sign_request.id,
-                            'role_id': template.sign_item_ids and template.sign_item_ids.mapped('responsible_id').id,
-
-                        }
-                        request_item = sign_req_item_obj.create(item_vals)
-                        if request_item:
-                            sign_request.action_sent()
-                            current_request_item = sign_request.request_item_ids
-                            sign_item_types = self.env['otl_document_sign.item.type'].sudo().search_read(
-                                [('model_id', '=', template.model_id.id)])
-                            if current_request_item:
-                                for item_type in sign_item_types:
-                                    if item_type['auto_field']:
-                                        auto_fields = item_type['auto_field'].split('.')
-                                        selected_record = self.env[
-                                            current_request_item.model_id.model].sudo().search(
-                                            [('id', '=', current_request_item.res_id)], limit=1)
-                                        auto_field = selected_record if selected_record else current_request_item.partner_id
-                                        for field in auto_fields:
-                                            if auto_field and field in auto_field:
-                                                auto_field = auto_field[field]
-                                            else:
-                                                auto_field = ""
-                                                break
-                                        if auto_field == 0.0:
-                                            if isinstance(auto_field, bool):
-                                                auto_field = ''
-                                            else:
-                                                auto_field = '0.0'
-                                        if isinstance(auto_field, date):
-                                            lg = self.env['res.lang']._lang_get(self.env.user.lang)
-                                            auto_field = auto_field.strftime(lg.date_format) or auto_field
-                                        SignItemValue = self.env['otl_document_sign.request.item.value']
-                                        sign_item_ids = sign_request.template_id.sign_item_ids.filtered(lambda
-                                                                                                            r: not r.responsible_id or r.responsible_id.id == request_item.role_id.id)
-                                        for sign_item_id in sign_item_ids:
-                                            id_sign_item = False
-                                            if sign_item_id.type_id.id == int(item_type['id']):
-                                                id_sign_item = sign_item_id
-                                            if id_sign_item:
-                                                if item_type['option_field']  == 'option':
-                                                    if item_type['name']  == 'initials7' and not contract_plumbing_option_1:
-                                                        continue
-                                                    elif item_type['name']  == 'initials8' and not contract_plumbing_option_2:
-                                                        continue
-
-                                                item_value = SignItemValue.create(
-                                                    {'sign_item_id': id_sign_item.id, 'sign_request_id': sign_request.id,
-                                                        'value': auto_field, 'sign_request_item_id': request_item.id})
-                            sr_values = self.env['otl_document_sign.request.item.value'].sudo().search(
-                                [('sign_request_id', '=', sign_request.id)])
-                            item_values = {}
-                            for value in sr_values:
-                                item_values[value.sign_item_id.id] = value.value
-                            request_item.sign(request_item.signature)
-                            current_date = fields.Date.context_today(self).strftime(DEFAULT_SERVER_DATE_FORMAT)
-                            request_item.write({'signing_date': current_date, 'state': 'completed'})
-                            # request_item.action_completed()
-                            # sign_request.action_signed()
-                            sign_request.write({'state': 'signed'})
-                            # appointment.write({'start_sync_to_i360': True})
-                    result = {
-                        'message': 'Document created successfully',
-                        'result': 'Success',
-                    }
-                    _logger.info("------Document created successfully-------------")
             else:
                 _logger.info("------Empty Appointment id-------------")
                 result = {

@@ -74,8 +74,14 @@
                     <setting id="geolocation_radius_limit" string="Geolocation Radius" help="Geolocation radius limit to determine arrival and departure time from the appointment venue.">
                         <field name="geolocation_radius_limit" options="{'no_create': True}"/>
                     </setting>
-                    <setting id="enable_geolocation" string="Enable Geolocation Tracking" help="Enable geolocation tracking to get saleperson arrival and departure time in appointment venue.">
+                    <setting id="enable_geolocation" string="Enable Geolocation Tracking" help="Enable geolocation tracking to get salesperson arrival and departure time in appointment venue.">
                         <field name="enable_geolocation" options="{'no_create': True}"/>
+                    </setting>
+                    <setting id="enable_destination_selection" string="Enable Destination Selection" help="Enable destination motivation page in salesapp to choose destination selection.">
+                        <field name="enable_destination_selection"/>
+                    </setting>
+                    <setting id="destination_selection_consent_message" string="Destination Selection Consent Message" help="Enter consent message to display in destination motivation page in salesapp.">
+                        <field name="destination_selection_consent_message"/>
                     </setting>
                 </block>
                 <block title="Google API Configuration" id="sale_other_data_id_setting">

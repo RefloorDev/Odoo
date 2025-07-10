@@ -249,7 +249,8 @@ class TeamCustomerAppointment(models.Model):
     sent_review_link = fields.Boolean("Sent Review Link", default=False, copy=False)
     last_price_quoted_value = fields.Float("Last Price Quoted Value", copy=False)
     compressed_attachment_id = fields.Many2one('ir.attachment', string="Compressed Appointment Data")
-    both_parties_present = fields.Boolean("Both Parties Present", default=False, copy=False)
+    both_parties_present = fields.Boolean("All Homeowners Present", default=False, copy=False)
+    destination_selection_id = fields.Many2one('otl.destination.selection', 'Destination Selection', copy=False)
 
     @api.onchange('country_id')
     def _onchange_country_id(self):

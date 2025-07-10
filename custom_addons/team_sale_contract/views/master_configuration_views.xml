@@ -516,6 +516,7 @@
                     <field name="color"/>
                     <field name="color_up_charge_price"/>
                     <field name="in_stock"/>
+                    <field name="glue_down"/>
                     <field name="special_order"/>
                     <field name="office_location_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
                 </field>
@@ -829,6 +830,7 @@
                         </div>
                         <group>
                             <group name="left">
+                                <field name="enable_destination_selection"/>
                                 <field name="company_id" options="{'no_create': True}"
                                        groups="base.group_multi_company"/>
                             </group>
@@ -875,6 +877,7 @@
             <field name="arch" type="xml">
                 <list>
                     <field name="name"/>
+                    <field name="enable_destination_selection"/>
                     <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
                 </list>
             </field>
@@ -1397,5 +1400,144 @@
               parent="measurement_conf_root"
               action="finance_checklist_items_action"
               sequence="60"/>
+
+    <record id="questionnaire_calc_logic_form" model="ir.ui.view">
+            <field name="name">otl.questionnaire.calc.logic.form</field>
+            <field name="model">otl.questionnaire.calc.logic</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active == True"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="type"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                        </group>
+                        <group>
+                            <notebook>
+                                <page string="Logic">
+                                    <field name="logic_line">
+                                        <list editable="bottom">
+                                            <field name="question_id" options="{'no_create': True}"/>
+                                            <field name="excluded_question_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                                            <field name="code"/>
+                                        </list>
+                                        <form>
+                                            <group>
+                                                <field name="question_id" options="{'no_create': True}"/>
+                                                <field name="excluded_question_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                                                <field name="code"/>
+                                            </group>
+                                        </form>
+                                    </field>
+                                </page>
+                            </notebook>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="questionnaire_calc_logic_tree" model="ir.ui.view">
+            <field name="name">questionnaire.calc.logic.tree</field>
+            <field name="model">otl.questionnaire.calc.logic</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="name"/>
+                    <field name="type"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="questionnaire_calc_logic_action" model="ir.actions.act_window">
+        <field name="name">Questionnaire Auto Answer Logics</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">otl.questionnaire.calc.logic</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create!
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="questionnaire_calc_logic_menu"
+              name="Questionnaire Auto Answer Logics"
+              parent="measurement_conf_root"
+              action="questionnaire_calc_logic_action"
+              sequence="65"/>
+
+    <record id="destination_selection_form" model="ir.ui.view">
+            <field name="name">destination.selection.form</field>
+            <field name="model">otl.destination.selection</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active == True"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="sequence"/>
+                            </group>
+                            <group>
+                                <field name="terms_and_conditions"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="destination_selection_tree" model="ir.ui.view">
+            <field name="name">destination.selection.tree</field>
+            <field name="model">otl.destination.selection</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="sequence" widget='handle'/>
+                    <field name="name"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="destination_selection_action" model="ir.actions.act_window">
+        <field name="name">Destination Selection</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">otl.destination.selection</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create!
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="destination_selection_menu"
+              name="Destination Selection"
+              parent="measurement_conf_root"
+              action="destination_selection_action"
+              sequence="70"/>
+
+
     </data>
 </odoo>

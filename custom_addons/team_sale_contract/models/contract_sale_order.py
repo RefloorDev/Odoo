@@ -489,6 +489,7 @@ class SaleOrder(models.Model):
     min_sale_price = fields.Float('Minimum Sale Price', default=0)
     available_installation_line = fields.One2many('otl.available.installation.line', 'order_id', string='Available Installtion Dates')
     additional_comment_synced = fields.Boolean("Synced Additional Comments", default=False)
+    update_destination_selection_synced = fields.Boolean("Synced Destination Selection", default=False)
     email_sent = fields.Boolean('Email Sent', default=False)
     synced_to_cloud_storage = fields.Boolean('Synced Files to Cloud Storage', default=False)
     i360_sync_stopped_manually = fields.Boolean('i360 Sync Stopped Manually', default=False, copy=False)
@@ -1335,6 +1336,8 @@ class SaleOrder(models.Model):
                     if payment_method == 'Credit Card':
                         if sale_order.card_transaction_log_line.filtered(lambda x: x.state == 'success'):
                             down_payment_amount = sale_order.down_payment_amount or 0
+                    else:
+                        down_payment_amount = sale_order.down_payment_amount or 0
                     data = {
                         "AppointmentID": improveit_appointment_id,
                         "Name": customer_name,
@@ -4017,6 +4020,50 @@ class SaleOrder(models.Model):
         except IOError:
             pass
             _logger.error("******--------Error in action_sync_discount_history_line_to_i360 API---------********")
+            result.update({"success": "false"})
+        return result
+
+    def update_destination_selection_in_i360(self):
+        result = {
+            "success": "true",
+            "errors": []
+        }
+        try:
+            configurations = self.env['team.improveit.configuration'].search(
+                [('api_type', '=', 'boomi')], limit=1)
+            for sale_order in self:
+                appointment = sale_order.appointment_id
+                _logger.info('--------Starting UpdateDestinationSelection API Appointment ID---------: %s' % (sale_order.appointment_id.id))
+                if sale_order.quote_id and appointment and appointment.destination_selection_id:
+                    data = {
+                        'Id': sale_order.quote_id or '',
+                        'DestinationSelection': appointment.destination_selection_id.name or '',
+                    }
+                    headers = {
+                        'Content-type': 'application/json',
+                    }
+                    end_point_url = configurations.token_url
+                    client_token = configurations.client_token
+                    _logger.info('UpdateDestinationSelection API Input of Appointment %s :%s' % (appointment.id, data))
+                    if end_point_url and client_token:
+                        request_url = end_point_url + 'UpdateDestinationSelection' + client_token
+                    req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
+                                        verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    _logger.info('UpdateDestinationSelection API Response of Appointment %s :%s' % (appointment.id, content))
+                    if content.get('success', '') == "true":
+                        sale_order.write({
+                            'update_destination_selection_synced': True,
+                        })
+                    if content.get('success', '') == "false":
+                        return content
+                    elif "Errors" in content:
+                        return content.get('Errors', {})
+
+        except IOError:
+            pass
+            _logger.error("******--------Error in update_destination_selection_in_i360 API---------********")
             result.update({"success": "false"})
         return result
 

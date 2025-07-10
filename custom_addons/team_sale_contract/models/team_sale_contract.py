@@ -909,8 +909,8 @@ class ExternalCreditApplication(models.Model):
         for vals in vals_list:
             if vals.get('name', '/') == '/':
                 seq_date = None
-                if 'submitted_date' in vals:
-                    seq_date = fields.Datetime.context_timestamp(self, fields.Datetime.to_datetime(vals['submitted_date']))
+                if vals.get('event_date', False):
+                    seq_date = fields.Datetime.context_timestamp(self, fields.Datetime.to_datetime(vals['event_date']))
                 if 'company_id' in vals:
                     vals['name'] = self.env['ir.sequence'].with_context(
                         force_company=vals['company_id']).next_by_code('versatile.credit.application', sequence_date=seq_date) or _('/')

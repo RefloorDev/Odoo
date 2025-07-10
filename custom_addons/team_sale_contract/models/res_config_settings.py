@@ -26,4 +26,6 @@ class ResConfigSettings(models.TransientModel):
     max_i360_sync_retry_limit = fields.Integer('Maximum Allowed i360 Sync Retry Duration', default=24, config_parameter='team_sale_contract.max_i360_sync_retry_limit')
     send_review_success_message = fields.Char('Send Review Success Message', default='Review link sent successfully.', config_parameter="team_sale_contract.send_review_success_message")
     send_review_failure_message = fields.Char('Send Review Failure Message', default='Something went wrong while sending the review link.', config_parameter="team_sale_contract.send_review_failure_message")
+    destination_selection_consent_message = fields.Char('Destination Selection Consent Message', default='By submitting this form and signing up for texts, you consent to receive customer support and informational text messages from Destination Motivation at the number provided. Msg & data rates may apply. Msg frequency varies. Unsubscribe at any time by replying STOP. Reply HELP for help. Privacy Policy & terms based on vacation-type selected: Condo/Resort Terms or Cruise Terms', config_parameter="team_sale_contract.destination_selection_consent_message")
+    enable_destination_selection = fields.Boolean("Enable Destination Selection", default=False, config_parameter="team_sale_contract.enable_destination_selection")
 

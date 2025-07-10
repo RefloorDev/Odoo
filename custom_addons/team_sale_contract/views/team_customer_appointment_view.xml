@@ -101,6 +101,7 @@
                             <field name="both_parties_present" readonly="1"/>
                             <field name="sent_review_link" readonly="1"/>
                             <field name="make_payment_failure" invisible="1"/>
+                        <field name="destination_selection_id" readonly="1" invisible="destination_selection_id == False"/>
                         </group>
                     </group>
                     <group col="4" string="Additional Comments" invisible="additional_comments == False">
@@ -210,6 +211,7 @@
                                     </group>
                                     <group>
                                         <field name="response"/>
+                                        <field name="data" groups="base.group_no_one"/>
                                     </group>
                                 </form>
                             </field>
@@ -341,15 +343,4 @@
     <menuitem name="Appointments" id="menu_team_customers_appointment_act" sequence="0" parent="sale.sale_order_menu" action="action_team_customer_appointment"/>
     <menuitem id="mail.menu_root_discuss" name="Discuss" action="mail.action_discuss" web_icon="mail,static/description/icon.png" groups="base.group_erp_manager,base.group_system" sequence="1" />
 
-    <record id="view_attachment_search" model="ir.ui.view">
-        <field name="name">ir.attachment.search</field>
-        <field name="model">ir.attachment</field>
-        <field name="inherit_id" ref="base.view_attachment_search"/>
-        <field name="arch" type="xml">
-            <filter name="creation_month" position="after">
-                <!-- context="{'group_by':'image_type'}" -->
-                <filter string="Image Type" name="image_type" domain="[]" />
-            </filter>
-        </field>
-    </record>
 </odoo>

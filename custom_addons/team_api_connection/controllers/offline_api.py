@@ -1530,7 +1530,7 @@ class APIHomes(API_Homes):
                     'appointment_id': appointment_id,
                     'image_type': image_type,
                 })
-                data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment', 'action_upload_images',
+                data = models.execute_kw(DB, uid, password, 'ir.attachment', 'action_upload_images',
                                          [file_data])
             if data:
                 image_id = data[0].get('attachment_id', False)
@@ -1575,6 +1575,7 @@ class APIHomes(API_Homes):
         contract_plumbing_option_2 = params.get('contract_plumbing_option_2', 0) and int(params.get('contract_plumbing_option_2', 0)) or 0
         send_physical_document = params.get('send_physical_document', 0) and int(params.get('send_physical_document', 0)) or 0
         flexible_installation = params.get('flexible_installation', 0) and int(params.get('flexible_installation', 0)) or 0
+        destination_selection_id = params.get('destination_selection_id', 0) and int(params.get('destination_selection_id', 0)) or 0
         recision_date = params.get('recision_date', False)
         additional_comments = params.get('additional_comments', '')
         network_strength = params.get('network_strength', '')
@@ -1612,6 +1613,7 @@ class APIHomes(API_Homes):
                 'contract_plumbing_option_2': contract_plumbing_option_2,
                 'send_physical_document': send_physical_document,
                 'flexible_installation': flexible_installation,
+                'destination_selection_id': destination_selection_id,
                 'additional_comments': additional_comments,
                 'recision_date': recision_date
             }
@@ -2273,6 +2275,7 @@ class APIHomes(API_Homes):
         appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
         recision_date = params.get('recision_date', False)
         network_strength = params.get('network_strength', '')
+        destination_selection_id = params.get('destination_selection_id', 0) and str(params.get('destination_selection_id', 0)) or '0'
 
         _logger.info("------------update_additional_appointment_data params: %s------------------" % (params))
         result = {}
@@ -2298,7 +2301,8 @@ class APIHomes(API_Homes):
                     'send_physical_document': send_physical_document,
                     'flexible_installation': flexible_installation,
                     'additional_comments': additional_comments,
-                    'recision_date': recision_date
+                    'recision_date': recision_date,
+                    'destination_selection_id': int(destination_selection_id),
                 }
                 if enable_api_queue_system:
                     _logger.info('update_additional_appointment_data_api_queue Data - Starting--:%s - Appointment ID: %s' % (
