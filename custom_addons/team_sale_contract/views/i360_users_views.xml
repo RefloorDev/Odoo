@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="i360_users_action_window" model="ir.actions.act_window">
+            <field name="name">i360 Users</field>
+            <field name="res_model">res.users</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('improveit_user_id', '!=', False)]</field>
+        </record>
+
+        <menuitem name="i360 Users" parent="sale.menu_sale_config" id="menu_act_i360_users" action="i360_users_action_window"/>
+    </data>
+</odoo>

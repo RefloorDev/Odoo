@@ -3,10 +3,9 @@
 {
     'name': 'test-inherits-depends',
     'version': '0.1',
-    'category': 'Tests',
+    'category': 'Hidden/Tests',
     'description': """A module to verify the inheritance using _inherits in non-original modules.""",
     'depends': ['test_inherits'],
-    'data': [],
     'installable': True,
-    'auto_install': False,
+    'license': 'LGPL-3',
 }

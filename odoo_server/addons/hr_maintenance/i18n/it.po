@@ -3,25 +3,27 @@
 # 	* hr_maintenance
 # 
 # Translators:
-# Luigi Di Naro <gigidn@gmail.com>, 2019
-# Simone Bernini <simone@aperturelabs.it>, 2019
-# Paolo Valier, 2019
-# Pietro Della Notte <pdellanotte@gmail.com>, 2019
-# Sergio Zanchetta <primes2h@gmail.com>, 2019
+# Wil Odoo, 2024
+# Marianna Ciofani, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:17+0000\n"
-"PO-Revision-Date: 2019-08-26 09:10+0000\n"
-"Last-Translator: Sergio Zanchetta <primes2h@gmail.com>, 2019\n"
-"Language-Team: Italian (https://www.transifex.com/odoo/teams/41243/it/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Marianna Ciofani, 2024\n"
+"Language-Team: Italian (https://app.transifex.com/odoo/teams/41243/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: it\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
+
+#. module: hr_maintenance
+#: model:ir.model.fields,field_description:hr_maintenance.field_maintenance_equipment__assign_date
+msgid "Assigned Date"
+msgstr "Data assegnata"
 
 #. module: hr_maintenance
 #: model:ir.model.fields,field_description:hr_maintenance.field_maintenance_equipment__department_id
@@ -35,8 +37,8 @@ msgstr "Dipendente assegnato"
 
 #. module: hr_maintenance
 #: model:ir.model.fields,field_description:hr_maintenance.field_res_users__equipment_count
-msgid "Assigned Equipments"
-msgstr "Attrezzature assegnate"
+msgid "Assigned Equipment"
+msgstr "Attrezzatura assegnata"
 
 #. module: hr_maintenance
 #: model_terms:ir.ui.view,arch_db:hr_maintenance.maintenance_request_view_form_inherit_hr
@@ -50,13 +52,17 @@ msgid "Created by User"
 msgstr "Creato dall'utente"
 
 #. module: hr_maintenance
-#: model:ir.model.fields,field_description:hr_maintenance.field_maintenance_request__department_id
 #: model:ir.model.fields.selection,name:hr_maintenance.selection__maintenance_equipment__equipment_assign_to__department
 #: model_terms:ir.ui.view,arch_db:hr_maintenance.maintenance_equipment_view_form_inherit_hr
 #: model_terms:ir.ui.view,arch_db:hr_maintenance.maintenance_equipment_view_search_inherit_hr
 #: model_terms:ir.ui.view,arch_db:hr_maintenance.maintenance_equipment_view_tree_inherit_hr
 msgid "Department"
 msgstr "Ufficio"
+
+#. module: hr_maintenance
+#: model:ir.model,name:hr_maintenance.model_hr_departure_wizard
+msgid "Departure Wizard"
+msgstr "Procedura di uscita"
 
 #. module: hr_maintenance
 #: model:ir.model,name:hr_maintenance.model_hr_employee
@@ -69,15 +75,21 @@ msgid "Employee"
 msgstr "Dipendente"
 
 #. module: hr_maintenance
-#: model:ir.model.fields,field_description:hr_maintenance.field_res_users__equipment_ids
+#: model:ir.model.fields,field_description:hr_maintenance.field_hr_employee__equipment_ids
+#: model:ir.model.fields,field_description:hr_maintenance.field_maintenance_request__equipment_id
+#: model_terms:ir.ui.view,arch_db:hr_maintenance.hr_departure_wizard_view_form
 msgid "Equipment"
 msgstr "Attrezzatura"
 
 #. module: hr_maintenance
 #: model:ir.model.fields,field_description:hr_maintenance.field_hr_employee__equipment_count
-#: model:ir.model.fields,field_description:hr_maintenance.field_res_users__equipment_count
-msgid "Equipments"
-msgstr "Attrezzature"
+msgid "Equipment Count"
+msgstr "Numero attrezzature"
+
+#. module: hr_maintenance
+#: model:ir.model.fields,field_description:hr_maintenance.field_hr_departure_wizard__unassign_equipment
+msgid "Free Equiments"
+msgstr "Attrezzatura libera"
 
 #. module: hr_maintenance
 #: model:ir.model,name:hr_maintenance.model_maintenance_equipment
@@ -91,7 +103,7 @@ msgstr "Richiesta di manutenzione"
 
 #. module: hr_maintenance
 #: model:ir.model.fields,field_description:hr_maintenance.field_res_users__equipment_ids
-msgid "Managed Equipments"
+msgid "Managed Equipment"
 msgstr "Attrezzature gestite"
 
 #. module: hr_maintenance
@@ -110,9 +122,14 @@ msgid "Owner"
 msgstr "Proprietario"
 
 #. module: hr_maintenance
+#: model:ir.model.fields,help:hr_maintenance.field_hr_departure_wizard__unassign_equipment
+msgid "Unassign Employee from Equipments"
+msgstr "Annulla assegnazione attrezzatura per il dipendente"
+
+#. module: hr_maintenance
 #: model_terms:ir.ui.view,arch_db:hr_maintenance.maintenance_equipment_view_kanban_inherit_hr
 msgid "Unassigned"
-msgstr "Non assegnato"
+msgstr "Non assegnati"
 
 #. module: hr_maintenance
 #: model:ir.model.fields,field_description:hr_maintenance.field_maintenance_equipment__equipment_assign_to
@@ -121,5 +138,5 @@ msgstr "Usata da"
 
 #. module: hr_maintenance
 #: model:ir.model,name:hr_maintenance.model_res_users
-msgid "Users"
-msgstr "Utenti"
+msgid "User"
+msgstr "Utente"

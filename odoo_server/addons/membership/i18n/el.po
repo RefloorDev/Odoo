@@ -3,19 +3,19 @@
 # 	* membership
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Kostas Goutoudis <goutoudis@gmail.com>, 2019
-# Stefanos Nikou <stefanos.nikou@gmail.com>, 2019
-# George Tarasidis <george_tarasidis@yahoo.com>, 2019
+# Stefanos Nikou <stefanos.nikou@gmail.com>, 2024
+# George Tarasidis <george_tarasidis@yahoo.com>, 2024
+# Martin Trigaux, 2024
+# Kostas Goutoudis <goutoudis@gmail.com>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:11+0000\n"
-"Last-Translator: George Tarasidis <george_tarasidis@yahoo.com>, 2019\n"
-"Language-Team: Greek (https://www.transifex.com/odoo/teams/41243/el/)\n"
+"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Kostas Goutoudis <goutoudis@gmail.com>, 2024\n"
+"Language-Team: Greek (https://app.transifex.com/odoo/teams/41243/el/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -142,11 +142,6 @@ msgid "Company"
 msgstr "Εταιρία"
 
 #. module: membership
-#: model:ir.model.fields,help:membership.field_membership_membership_line__company_id
-msgid "Company related to this journal"
-msgstr "Η εταιρία που σχετίζεται με το ημερολόγιο"
-
-#. module: membership
 #: model:ir.ui.menu,name:membership.menu_marketing_config_association
 msgid "Configuration"
 msgstr "Διαμόρφωση"
@@ -155,11 +150,6 @@ msgstr "Διαμόρφωση"
 #: model:ir.model,name:membership.model_res_partner
 msgid "Contact"
 msgstr "Επαφή"
-
-#. module: membership
-#: model_terms:ir.ui.view,arch_db:membership.view_partner_tree
-msgid "Contacts"
-msgstr "Επαφές"
 
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_membership_invoice__create_uid
@@ -241,18 +231,13 @@ msgid "End Membership Date"
 msgstr "Ημερ. Λήξης Μέλους"
 
 #. module: membership
-#: model:ir.model.fields,help:membership.field_report_membership__date_to
-msgid "End membership date"
-msgstr "Ημερ. λήξης μέλους"
-
-#. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.view_res_partner_member_filter
 msgid "Ending Date Of Membership"
 msgstr ""
 
 #. module: membership
 #: model:ir.model.constraint,message:membership.constraint_product_template_membership_date_greater
-msgid "Error ! Ending Date cannot be set before Beginning Date."
+msgid "Error! Ending Date cannot be set before Beginning Date."
 msgstr ""
 
 #. module: membership
@@ -356,20 +341,13 @@ msgstr ""
 
 #. module: membership
 #: model:ir.model,name:membership.model_account_move
-msgid "Journal Entries"
-msgstr "Ημερολογιακές Καταχωρήσεις"
+msgid "Journal Entry"
+msgstr "Εγγραφή Ημερολογίου"
 
 #. module: membership
 #: model:ir.model,name:membership.model_account_move_line
 msgid "Journal Item"
 msgstr "Στοιχείο Ημερολογίου"
-
-#. module: membership
-#: model:ir.model.fields,field_description:membership.field_membership_invoice____last_update
-#: model:ir.model.fields,field_description:membership.field_membership_membership_line____last_update
-#: model:ir.model.fields,field_description:membership.field_report_membership____last_update
-msgid "Last Modified on"
-msgstr "Τελευταία τροποποίηση στις"
 
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_membership_invoice__write_uid
@@ -414,6 +392,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:membership.field_product_template__membership
 #: model:ir.model.fields,field_description:membership.field_res_partner__member_lines
 #: model:ir.model.fields,field_description:membership.field_res_users__member_lines
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
 #: model_terms:ir.ui.view,arch_db:membership.view_partner_form
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_graph1
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_pivot
@@ -477,6 +456,7 @@ msgstr ""
 
 #. module: membership
 #: model:ir.actions.act_window,name:membership.action_membership_products
+#: model:ir.ui.menu,name:membership.menu_membership_products
 #: model_terms:ir.ui.view,arch_db:membership.membership_product_search_form_view
 msgid "Membership Products"
 msgstr "Είδη Συνδρομών"
@@ -507,8 +487,6 @@ msgstr "Είδη Συνδρομών"
 
 #. module: membership
 #: model:ir.actions.server,name:membership.ir_cron_update_membership_ir_actions_server
-#: model:ir.cron,cron_name:membership.ir_cron_update_membership
-#: model:ir.cron,name:membership.ir_cron_update_membership
 msgid "Membership: update memberships"
 msgstr ""
 
@@ -521,6 +499,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_search
 msgid "Month"
 msgstr "Μήνας"
+
+#. module: membership
+#: model_terms:ir.actions.act_window,help:membership.action_report_membership_tree
+msgid "No data yet!"
+msgstr ""
 
 #. module: membership
 #: model:ir.model.fields.selection,name:membership.selection__membership_membership_line__state__none
@@ -556,14 +539,14 @@ msgid "Partner"
 msgstr "Συναλλασόμενος"
 
 #. module: membership
+#. odoo-python
 #: code:addons/membership/models/partner.py:0
-#, python-format
 msgid "Partner doesn't have an address to make the invoice."
 msgstr ""
 
 #. module: membership
+#. odoo-python
 #: code:addons/membership/models/partner.py:0
-#, python-format
 msgid "Partner is a free Member."
 msgstr ""
 
@@ -574,8 +557,13 @@ msgstr ""
 
 #. module: membership
 #: model:ir.model,name:membership.model_product_template
-msgid "Product Template"
-msgstr "Πρότυπο Είδους "
+msgid "Product"
+msgstr "Είδος"
+
+#. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.membership_products_form
+msgid "Product Name"
+msgstr "Περιγραφή Είδους"
 
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_report_membership__quantity
@@ -618,14 +606,29 @@ msgid "Starting Date Of Membership"
 msgstr ""
 
 #. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
+msgid "Sum of # Invoiced"
+msgstr ""
+
+#. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
+msgid "Sum of # Paid"
+msgstr ""
+
+#. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
+msgid "Sum of Earned Amount"
+msgstr ""
+
+#. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
+msgid "Sum of Quantity"
+msgstr ""
+
+#. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.membership_products_form
 msgid "Taxes"
 msgstr "Φόροι"
-
-#. module: membership
-#: model:ir.model.fields,help:membership.field_membership_membership_line__account_invoice_id
-msgid "The move of this entry line."
-msgstr "Η κίνηση της γραμμής εγγραφής"
 
 #. module: membership
 #: model:ir.model.fields,help:membership.field_res_partner__membership_amount
@@ -666,7 +669,7 @@ msgid "Waiting Member"
 msgstr "Αναμονή Μέλους"
 
 #. module: membership
+#. odoo-python
 #: code:addons/membership/models/partner.py:0
-#, python-format
 msgid "You cannot create recursive associated members."
 msgstr ""

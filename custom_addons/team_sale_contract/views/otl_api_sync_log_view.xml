@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="otl_api_sync_log_form_view" model="ir.ui.view">
+            <field name="name">otl.api.sync.log.form.view</field>
+            <field name="model">otl.api.sync.log</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="created_date"/>
+                                <field name="user_id"/>
+                                <field name="response"/>
+                                <field name="name"/>
+                            </group>
+                            <group>
+                                <field name="appointment_id"/>
+                                <field name="state"/>
+                                <field name="network_strength"/>
+                                <field name="data"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="otl_api_sync_log_list_view" model="ir.ui.view">
+            <field name="name">otl.api.sync.log.list.view</field>
+            <field name="model">otl.api.sync.log</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="name"/>
+                    <field name="created_date"/>
+                    <field name="appointment_id"/>
+                    <field name="user_id"/>
+                    <field name="network_strength"/>
+                    <field name="state"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="otl_api_sync_log_action_window" model="ir.actions.act_window">
+            <field name="name">API Sync Log</field>
+            <field name="res_model">otl.api.sync.log</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem name="API Sync Log" parent="sale.menu_sale_config" id="menu_act_otl_api_sync_log" action="otl_api_sync_log_action_window"/>
+    </data>
+</odoo>

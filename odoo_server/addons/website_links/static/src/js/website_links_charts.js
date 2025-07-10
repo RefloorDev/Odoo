@@ -1,15 +1,11 @@
-odoo.define('website_links.charts', function (require) {
-'use strict';
+/** @odoo-module **/
 
-var core = require('web.core');
-var publicWidget = require('web.public.widget');
-
-var _t = core._t;
+import { loadBundle } from "@web/core/assets";
+import { _t } from "@web/core/l10n/translation";
+import publicWidget from "@web/legacy/js/public/public_widget";
+const { DateTime } = luxon;
 
 var BarChart = publicWidget.Widget.extend({
-    jsLibs: [
-        '/web/static/lib/Chart/Chart.js',
-    ],
     /**
      * @constructor
      * @param {Object} parent
@@ -19,9 +15,12 @@ var BarChart = publicWidget.Widget.extend({
      */
     init: function (parent, beginDate, endDate, dates) {
         this._super.apply(this, arguments);
-        this.beginDate = beginDate;
-        this.endDate = endDate;
-        this.number_of_days = this.endDate.diff(this.beginDate, 'days') + 2;
+        this.beginDate = beginDate.startOf("day");
+        this.endDate = endDate.startOf("day");
+        if (this.beginDate.toISO() === this.endDate.toISO()) {
+            this.endDate = this.endDate.plus({ days: 1 });
+        }
+        this.number_of_days = this.endDate.diff(this.beginDate).as("days");
         this.dates = dates;
     },
     /**
@@ -30,11 +29,10 @@ var BarChart = publicWidget.Widget.extend({
     start: function () {
         // Fill data for each day (with 0 click for days without data)
         var clicksArray = [];
-        var beginDateCopy = this.beginDate;
-        for (var i = 0; i < this.number_of_days; i++) {
-            var dateKey = beginDateCopy.format('YYYY-MM-DD');
+        for (var i = 0; i <= this.number_of_days; i++) {
+            var dateKey = this.beginDate.toFormat("yyyy-MM-dd");
             clicksArray.push([dateKey, (dateKey in this.dates) ? this.dates[dateKey] : 0]);
-            beginDateCopy.add(1, 'days');
+            this.beginDate = this.beginDate.plus({ days: 1 });
         }
 
         var nbClicks = 0;
@@ -46,7 +44,7 @@ var BarChart = publicWidget.Widget.extend({
             data.push(pt[1]);
         });
 
-        this.$('.title').html(nbClicks + _t(' clicks'));
+        this.$('.title').text(_t('%(clicks)s clicks', {clicks: nbClicks}));
 
         var config = {
             type: 'line',
@@ -61,17 +59,30 @@ var BarChart = publicWidget.Widget.extend({
 
                 }],
             },
+            options: {
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                if (Number.isInteger(value)) {
+                                    return value;
+                                }
+                            },
+                        }
+                    }
+                }
+            }
         };
         var canvas = this.$('canvas')[0];
         var context = canvas.getContext('2d');
         new Chart(context, config);
     },
+    willStart: async function () {
+        await loadBundle("web.chartjs_lib");
+    },
 });
 
 var PieChart = publicWidget.Widget.extend({
-    jsLibs: [
-        '/web/static/lib/Chart/Chart.js',
-    ],
     /**
      * @override
      * @param {Object} parent
@@ -96,7 +107,7 @@ var PieChart = publicWidget.Widget.extend({
         }
 
         // Set title
-        this.$('.title').html(this.data.length + _t(' countries'));
+        this.$('.title').text(_t('%(count)s countries', {count: this.data.length}));
 
         var config = {
             type: 'pie',
@@ -104,8 +115,11 @@ var PieChart = publicWidget.Widget.extend({
                 labels: labels,
                 datasets: [{
                     data: data,
-                    label: this.data[0].key,
+                    label: this.data.length > 0 ? this.data[0].key : _t('No data'),
                 }]
+            },
+            options: {
+                aspectRatio: 2,
             },
         };
 
@@ -113,19 +127,23 @@ var PieChart = publicWidget.Widget.extend({
         var context = canvas.getContext('2d');
         new Chart(context, config);
     },
+    willStart: async function () {
+        await loadBundle("web.chartjs_lib");
+    },
 });
 
 publicWidget.registry.websiteLinksCharts = publicWidget.Widget.extend({
     selector: '.o_website_links_chart',
-    events: {
-        'click .graph-tabs li a': '_onGraphTabClick',
-        'click .copy-to-clipboard': '_onCopyToClipboardClick',
+
+    init() {
+        this._super(...arguments);
+        this.orm = this.bindService("orm");
     },
 
     /**
      * @override
      */
-    start: function () {
+    start: async function () {
         var self = this;
         this.charts = {};
 
@@ -140,8 +158,6 @@ publicWidget.registry.websiteLinksCharts = publicWidget.Widget.extend({
         defs.push(this._lastWeekClicksByCountry());
         defs.push(this._lastMonthClicksByCountry());
         defs.push(this._super.apply(this, arguments));
-
-        new ClipboardJS($('.copy-to-clipboard')[0]);
 
         this.animating_copy = false;
 
@@ -162,25 +178,33 @@ publicWidget.registry.websiteLinksCharts = publicWidget.Widget.extend({
             var formattedClicksByDay = {};
             var beginDate;
             for (var i = 0; i < _clicksByDay.length; i++) {
-                var date = moment(_clicksByDay[i]['create_date:day'], 'DD MMMM YYYY');
+                // This is a trick to get the date without the local formatting.
+                // We can't simply do .locale("en") because some Odoo languages
+                // are not supported by moment.js (eg: Arabic Syria).
+                // FIXME this now uses luxon, check if this is still needed? Probably can be replaced by deserializeDate
+                const date = DateTime.fromFormat(
+                    _clicksByDay[i]["__domain"].find((el) => el.length && el.includes(">="))[2]
+                        .split(" ")[0], "yyyy-MM-dd"
+                );
                 if (i === 0) {
                     beginDate = date;
                 }
-                formattedClicksByDay[date.format('YYYY-MM-DD')] = _clicksByDay[i]['create_date_count'];
+                formattedClicksByDay[date.setLocale("en").toFormat("yyyy-MM-dd")] =
+                    _clicksByDay[i]["create_date_count"];
             }
 
             // Process all time line chart data
-            var now = moment();
+            var now = DateTime.now();
             self.charts.all_time_bar = new BarChart(self, beginDate, now, formattedClicksByDay);
             self.charts.all_time_bar.attachTo($('#all_time_clicks_chart'));
 
             // Process month line chart data
-            beginDate = moment().subtract(30, 'days');
+            beginDate = DateTime.now().minus({ days: 30 });
             self.charts.last_month_bar = new BarChart(self, beginDate, now, formattedClicksByDay);
             self.charts.last_month_bar.attachTo($('#last_month_clicks_chart'));
 
             // Process week line chart data
-            beginDate = moment().subtract(7, 'days');
+            beginDate = DateTime.now().minus({ days: 7 });
             self.charts.last_week_bar = new BarChart(self, beginDate, now, formattedClicksByDay);
             self.charts.last_week_bar.attachTo($('#last_week_clicks_chart'));
 
@@ -209,104 +233,63 @@ publicWidget.registry.websiteLinksCharts = publicWidget.Widget.extend({
      * @private
      */
     _totalClicks: function () {
-        return this._rpc({
-            model: 'link.tracker.click',
-            method: 'search_count',
-            args: [[this.links_domain]],
-        });
+        return this.orm.searchCount("link.tracker.click", [this.links_domain]);
     },
     /**
      * @private
      */
     _clicksByDay: function () {
-        return this._rpc({
-            model: 'link.tracker.click',
-            method: 'read_group',
-            args: [[this.links_domain], ['create_date']],
-            kwargs: {groupby: 'create_date:day'},
-        });
+        return this.orm.readGroup(
+            "link.tracker.click",
+            [this.links_domain],
+            ["create_date"],
+            ["create_date:day"]
+        );
     },
     /**
      * @private
      */
     _clicksByCountry: function () {
-        return this._rpc({
-            model: 'link.tracker.click',
-            method: 'read_group',
-            args: [[this.links_domain], ['country_id']],
-            kwargs: {groupby: 'country_id'},
-        });
+        return this.orm.readGroup(
+            "link.tracker.click",
+            [this.links_domain],
+            ["country_id"],
+            ["country_id"]
+        );
     },
     /**
      * @private
      */
     _lastWeekClicksByCountry: function () {
-        var interval = moment().subtract(7, 'days').format('YYYY-MM-DD');
-        return this._rpc({
-            model: 'link.tracker.click',
-            method: 'read_group',
-            args: [[this.links_domain, ['create_date', '>', interval]], ['country_id']],
-            kwargs: {groupby: 'country_id'},
-        });
+        // 7 days * 24 hours * 60 minutes * 60 seconds * 1000 milliseconds.
+        const aWeekAgoDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        // get the date in the format YYYY-MM-DD.
+        const aWeekAgoString = aWeekAgoDate.toISOString().split("T")[0];
+        return this.orm.readGroup(
+            "link.tracker.click",
+            [this.links_domain, ["create_date", ">", aWeekAgoString]],
+            ["country_id"],
+            ["country_id"]
+        );
     },
     /**
      * @private
      */
     _lastMonthClicksByCountry: function () {
-        var interval = moment().subtract(30, 'days').format('YYYY-MM-DD');
-        return this._rpc({
-            model: 'link.tracker.click',
-            method: 'read_group',
-            args: [[this.links_domain, ['create_date', '>', interval]], ['country_id']],
-            kwargs: {groupby: 'country_id'},
-        });
-    },
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    //--------------------------------------------------------------------------
-
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onGraphTabClick: function (ev) {
-        ev.preventDefault();
-        $('.graph-tabs li a').tab('show');
-    },
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onCopyToClipboardClick: function (ev) {
-        ev.preventDefault();
-
-        if (this.animating_copy) {
-            return;
-        }
-
-        this.animating_copy = true;
-
-        $('.o_website_links_short_url').clone()
-            .css('position', 'absolute')
-            .css('left', '15px')
-            .css('bottom', '10px')
-            .css('z-index', 2)
-            .removeClass('.o_website_links_short_url')
-            .addClass('animated-link')
-            .appendTo($('.o_website_links_short_url'))
-            .animate({
-                opacity: 0,
-                bottom: '+=20',
-            }, 500, function () {
-                $('.animated-link').remove();
-                this.animating_copy = false;
-            });
+        // 30 days * 24 hours * 60 minutes * 60 seconds * 1000 milliseconds.
+        const aMonthAgoDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        // get the date in the format YYYY-MM-DD.
+        const aMonthAgoString = aMonthAgoDate.toISOString().split("T")[0];
+        return this.orm.readGroup(
+            "link.tracker.click",
+            [this.links_domain, ["create_date", ">", aMonthAgoString]],
+            ["country_id"],
+            ["country_id"]
+        );
     },
 });
 
-return {
+export default {
     BarChart: BarChart,
     PieChart: PieChart,
 };
-});

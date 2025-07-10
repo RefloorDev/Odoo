@@ -1,24 +1,26 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import models, fields, api, _
+import json
+
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    carrier_id = fields.Many2one('delivery.carrier', string="Delivery Method", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]", help="Fill this field if you plan to invoice the shipping based on picking.")
+    pickup_location_data = fields.Json()
+    carrier_id = fields.Many2one('delivery.carrier', string="Delivery Method", check_company=True, help="Fill this field if you plan to invoice the shipping based on picking.")
     delivery_message = fields.Char(readonly=True, copy=False)
-    delivery_rating_success = fields.Boolean(copy=False)
     delivery_set = fields.Boolean(compute='_compute_delivery_state')
     recompute_delivery_price = fields.Boolean('Delivery cost should be recomputed')
     is_all_service = fields.Boolean("Service Product", compute="_compute_is_service_products")
+    shipping_weight = fields.Float("Shipping Weight", compute="_compute_shipping_weight", store=True, readonly=False)
 
     @api.depends('order_line')
     def _compute_is_service_products(self):
         for so in self:
-            so.is_all_service = all(line.product_id.type == 'service' for line in so.order_line)
+            so.is_all_service = all(line.product_id.type == 'service' for line in so.order_line.filtered(lambda x: not x.display_type))
 
     def _compute_amount_total_without_delivery(self):
         self.ensure_one()
@@ -30,24 +32,90 @@ class SaleOrder(models.Model):
         for order in self:
             order.delivery_set = any(line.is_delivery for line in order.order_line)
 
-    @api.onchange('order_line', 'partner_id')
+    @api.onchange('order_line', 'partner_id', 'partner_shipping_id')
     def onchange_order_line(self):
+        self.ensure_one()
         delivery_line = self.order_line.filtered('is_delivery')
         if delivery_line:
             self.recompute_delivery_price = True
 
+    def _get_update_prices_lines(self):
+        """ Exclude delivery lines from price list recomputation based on product instead of carrier """
+        lines = super()._get_update_prices_lines()
+        return lines.filtered(lambda line: not line.is_delivery)
+
     def _remove_delivery_line(self):
-        self.env['sale.order.line'].search([('order_id', 'in', self.ids), ('is_delivery', '=', True)]).unlink()
+        """Remove delivery products from the sales orders"""
+        delivery_lines = self.order_line.filtered("is_delivery")
+        if not delivery_lines:
+            return
+        to_delete = delivery_lines.filtered(lambda x: x.qty_invoiced == 0)
+        if not to_delete:
+            raise UserError(
+                _('You can not update the shipping costs on an order where it was already invoiced!\n\nThe following delivery lines (product, invoiced quantity and price) have already been processed:\n\n')
+                + '\n'.join(['- %s: %s x %s' % (line.product_id.with_context(display_default_code=False).display_name, line.qty_invoiced, line.price_unit) for line in delivery_lines])
+            )
+        to_delete.unlink()
 
     def set_delivery_line(self, carrier, amount):
-
-        # Remove delivery products from the sales order
         self._remove_delivery_line()
-
         for order in self:
             order.carrier_id = carrier.id
             order._create_delivery_line(carrier, amount)
         return True
+
+    def _set_pickup_location(self, pickup_location_data):
+        """ Set the pickup location on the current order.
+
+        Note: self.ensure_one()
+
+        :param str pickup_location_data: The JSON-formatted pickup location address.
+        :return: None
+        """
+        self.ensure_one()
+        use_locations_fname = f'{self.carrier_id.delivery_type}_use_locations'
+        if hasattr(self.carrier_id, use_locations_fname):
+            use_location = getattr(self.carrier_id, use_locations_fname)
+            if use_location and pickup_location_data:
+                pickup_location = json.loads(pickup_location_data)
+            else:
+                pickup_location = None
+            self.pickup_location_data = pickup_location
+
+    def _get_pickup_locations(self, zip_code=None, country=None, **kwargs):
+        """ Return the pickup locations of the delivery method close to a given zip code.
+
+        Use provided `zip_code` and `country` or the order's delivery address to determine the zip
+        code and the country to use.
+
+        Note: self.ensure_one()
+
+        :param int zip_code: The zip code to look up to, optional.
+        :param res.country country: The country to look up to, required if `zip_code` is provided.
+        :return: The close pickup locations data.
+        :rtype: dict
+        """
+        self.ensure_one()
+        if zip_code:
+            assert country  # country is required if zip_code is provided.
+            partner_address = self.env['res.partner'].new({
+                'active': False,
+                'country_id': country.id,
+                'zip': zip_code,
+            })
+        else:
+            partner_address = self.partner_shipping_id
+        try:
+            error = {'error': _("No pick-up points are available for this delivery address.")}
+            function_name = f'_{self.carrier_id.delivery_type}_get_close_locations'
+            if not hasattr(self.carrier_id, function_name):
+                return error
+            pickup_locations = getattr(self.carrier_id, function_name)(partner_address, **kwargs)
+            if not pickup_locations:
+                return error
+            return {'pickup_locations': pickup_locations}
+        except UserError as e:
+            return {'error': str(e)}
 
     def action_open_delivery_wizard(self):
         view_id = self.env.ref('delivery.choose_delivery_carrier_view_form').id
@@ -56,7 +124,10 @@ class SaleOrder(models.Model):
             carrier = self.carrier_id
         else:
             name = _('Add a shipping method')
-            carrier = self.partner_id.property_delivery_carrier_id
+            carrier = (
+                self.with_company(self.company_id).partner_shipping_id.property_delivery_carrier_id
+                or self.with_company(self.company_id).partner_shipping_id.commercial_partner_id.property_delivery_carrier_id
+            )
         return {
             'name': name,
             'type': 'ir.actions.act_window',
@@ -68,104 +139,119 @@ class SaleOrder(models.Model):
             'context': {
                 'default_order_id': self.id,
                 'default_carrier_id': carrier.id,
+                'default_total_weight': self._get_estimated_weight()
             }
         }
 
-    def _create_delivery_line(self, carrier, price_unit):
-        SaleOrderLine = self.env['sale.order.line']
+    def _action_confirm(self):
+        for order in self:
+            order_location = order.pickup_location_data
+
+            if not order_location:
+                continue
+
+            # Retrieve all the data : name, street, city, state, zip, country.
+            name = order_location.get('name') or order.partner_shipping_id.name
+            street = order_location['street']
+            city = order_location['city']
+            zip_code = order_location['zip_code']
+            country_code = order_location['country_code']
+            country = order.env['res.country'].search([('code', '=', country_code)]).id
+            state = order.env['res.country.state'].search([
+                ('code', '=', order_location['state']),
+                ('country_id', '=', country),
+            ]).id if (order_location.get('state') and country) else None
+            parent_id = order.partner_shipping_id.id
+            email = order.partner_shipping_id.email
+            phone = order.partner_shipping_id.phone
+
+            # Check if the current partner has a partner of type 'delivery' with the same address.
+            existing_partner = order.env['res.partner'].search([
+                ('street', '=', street),
+                ('city', '=', city),
+                ('state_id', '=', state),
+                ('country_id', '=', country),
+                ('parent_id', '=', parent_id),
+                ('type', '=', 'delivery'),
+            ], limit=1)
+
+            shipping_partner = existing_partner or order.env['res.partner'].create({
+                'parent_id': parent_id,
+                'type': 'delivery',
+                'name': name,
+                'street': street,
+                'city': city,
+                'state_id': state,
+                'zip': zip_code,
+                'country_id': country,
+                'email': email,
+                'phone': phone,
+            })
+            order.with_context(update_delivery_shipping_partner=True).write({'partner_shipping_id': shipping_partner})
+        return super()._action_confirm()
+
+    def _prepare_delivery_line_vals(self, carrier, price_unit):
+        context = {}
         if self.partner_id:
             # set delivery detail in the customer language
+            context['lang'] = self.partner_id.lang
             carrier = carrier.with_context(lang=self.partner_id.lang)
 
         # Apply fiscal position
-        taxes = carrier.product_id.taxes_id.filtered(lambda t: t.company_id.id == self.company_id.id)
+        taxes = carrier.product_id.taxes_id._filter_taxes_by_company(self.company_id)
         taxes_ids = taxes.ids
         if self.partner_id and self.fiscal_position_id:
-            taxes_ids = self.fiscal_position_id.map_tax(taxes, carrier.product_id, self.partner_id).ids
+            taxes_ids = self.fiscal_position_id.map_tax(taxes).ids
 
         # Create the sales order line
-        carrier_with_partner_lang = carrier.with_context(lang=self.partner_id.lang)
-        if carrier_with_partner_lang.product_id.description_sale:
-            so_description = '%s: %s' % (carrier_with_partner_lang.name,
-                                        carrier_with_partner_lang.product_id.description_sale)
+
+        if carrier.product_id.description_sale:
+            so_description = '%s: %s' % (carrier.name,
+                                        carrier.product_id.description_sale)
         else:
-            so_description = carrier_with_partner_lang.name
+            so_description = carrier.name
         values = {
             'order_id': self.id,
             'name': so_description,
+            'price_unit': price_unit,
             'product_uom_qty': 1,
             'product_uom': carrier.product_id.uom_id.id,
             'product_id': carrier.product_id.id,
             'tax_id': [(6, 0, taxes_ids)],
             'is_delivery': True,
         }
-        if carrier.invoice_policy == 'real':
-            values['price_unit'] = 0
-            values['name'] += _(' (Estimated Cost: %s )') % self._format_currency_amount(price_unit)
-        else:
-            values['price_unit'] = price_unit
         if carrier.free_over and self.currency_id.is_zero(price_unit) :
-            values['name'] += '\n' + 'Free Shipping'
+            values['name'] = _('%s\nFree Shipping', values['name'])
         if self.order_line:
             values['sequence'] = self.order_line[-1].sequence + 1
-        sol = SaleOrderLine.sudo().create(values)
-        return sol
+        del context
+        return values
 
-    def _format_currency_amount(self, amount):
-        pre = post = u''
-        if self.currency_id.position == 'before':
-            pre = u'{symbol}\N{NO-BREAK SPACE}'.format(symbol=self.currency_id.symbol or '')
-        else:
-            post = u'\N{NO-BREAK SPACE}{symbol}'.format(symbol=self.currency_id.symbol or '')
-        return u' {pre}{0}{post}'.format(amount, pre=pre, post=post)
+    def _create_delivery_line(self, carrier, price_unit):
+        values = self._prepare_delivery_line_vals(carrier, price_unit)
+        return self.env['sale.order.line'].sudo().create(values)
 
-    @api.depends('order_line.is_delivery', 'order_line.is_downpayment',
-                 'order_line.product_id.invoice_policy')
-    def _get_invoice_status(self):
-        super()._get_invoice_status()
+    @api.depends('order_line.product_uom_qty', 'order_line.product_uom')
+    def _compute_shipping_weight(self):
         for order in self:
-            if order.invoice_status in ['no', 'invoiced']:
-                continue
-            order_lines = order.order_line.filtered(lambda x: not x.is_delivery and not x.is_downpayment and not x.display_type)
-            if all(line.product_id.invoice_policy == 'delivery' and line.invoice_status == 'no' for line in order_lines):
-                order.invoice_status = 'no'
+            order.shipping_weight = order._get_estimated_weight()
 
-
-class SaleOrderLine(models.Model):
-    _inherit = 'sale.order.line'
-
-    is_delivery = fields.Boolean(string="Is a Delivery", default=False)
-    product_qty = fields.Float(compute='_compute_product_qty', string='Product Qty', digits='Product Unit of Measure')
-    recompute_delivery_price = fields.Boolean(related='order_id.recompute_delivery_price')
-
-    @api.depends('product_id', 'product_uom', 'product_uom_qty')
-    def _compute_product_qty(self):
-        for line in self:
-            if not line.product_id or not line.product_uom or not line.product_uom_qty:
-                line.product_qty = 0.0
-                continue
-            line.product_qty = line.product_uom._compute_quantity(line.product_uom_qty, line.product_id.uom_id)
-
-    def unlink(self):
-        for line in self:
-            if line.is_delivery:
-                line.order_id.carrier_id = False
-        super(SaleOrderLine, self).unlink()
-
-    def _is_delivery(self):
+    def _get_estimated_weight(self):
         self.ensure_one()
-        return self.is_delivery
+        weight = 0.0
+        for order_line in self.order_line.filtered(lambda l: l.product_id.type == 'consu' and not l.is_delivery and not l.display_type and l.product_uom_qty > 0):
+            weight += order_line.product_qty * order_line.product_id.weight
+        return weight
 
-    # override to allow deletion of delivery line in a confirmed order
-    def _check_line_unlink(self):
+    def _update_order_line_info(self, product_id, quantity, **kwargs):
+        """ Override of `sale` to recompute the delivery prices.
+
+        :param int product_id: The product, as a `product.product` id.
+        :return: The unit price price of the product, based on the pricelist of the sale order and
+                 the quantity selected.
+        :rtype: float
         """
-        Extend the allowed deletion policy of SO lines.
-
-        Lines that are delivery lines can be deleted from a confirmed order.
-
-        :rtype: recordset sale.order.line
-        :returns: set of lines that cannot be deleted
-        """
-
-        undeletable_lines = super()._check_line_unlink()
-        return undeletable_lines.filtered(lambda line: not line.is_delivery)
+        price_unit = super()._update_order_line_info(product_id, quantity, **kwargs)
+        if self:
+            self.onchange_order_line()
+        return price_unit

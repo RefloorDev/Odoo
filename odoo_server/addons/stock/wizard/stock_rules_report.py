@@ -32,7 +32,7 @@ class StockRulesReport(models.TransientModel):
                     res['product_has_variants'] = True
         if 'warehouse_ids' in fields:
             company = product_tmpl_id.company_id or self.env.company
-            warehouse_id = self.env['stock.warehouse'].search([('company_id', '=', company.id)], limit=1).id
+            warehouse_id = self.env['stock.warehouse'].search(self.env['stock.warehouse']._check_company_domain(company), limit=1).id
             res['warehouse_ids'] = [(6, 0, [warehouse_id])]
         return res
 
@@ -47,4 +47,3 @@ class StockRulesReport(models.TransientModel):
         self.ensure_one()
         data = self._prepare_report_data()
         return self.env.ref('stock.action_report_stock_rule').report_action(None, data=data)
-

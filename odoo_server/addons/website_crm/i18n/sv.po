@@ -3,24 +3,22 @@
 # 	* website_crm
 # 
 # Translators:
-# Kristoffer Grundström <hamnisdude@gmail.com>, 2019
-# Martin Trigaux, 2019
-# Anders Wallenquist <anders.wallenquist@vertel.se>, 2019
-# Christelle Wehbe <libanon_cristelle@hotmail.com>, 2019
-# lasch a <bmail440@gmail.com>, 2019
-# Zou Haojun <haojunzou84@gmail.com>, 2019
-# Jan-Eric Lindh <jelindh@gmail.com>, 2019
-# Chrille Hedberg <hedberg.chrille@gmail.com>, 2019
-# Kim Asplund <kim.asplund@gmail.com>, 2020
+# Martin Trigaux, 2024
+# Lasse L, 2024
+# Zou Haojun <haojunzou84@gmail.com>, 2024
+# Kim Asplund <kim.asplund@gmail.com>, 2024
+# Anders Wallenquist <anders.wallenquist@vertel.se>, 2024
+# Chrille Hedberg <hedberg.chrille@gmail.com>, 2024
+# Jakob Krabbe <jakob.krabbe@vertel.se>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-23 11:31+0000\n"
-"PO-Revision-Date: 2019-08-26 09:15+0000\n"
-"Last-Translator: Kim Asplund <kim.asplund@gmail.com>, 2020\n"
-"Language-Team: Swedish (https://www.transifex.com/odoo/teams/41243/sv/)\n"
+"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Jakob Krabbe <jakob.krabbe@vertel.se>, 2024\n"
+"Language-Team: Swedish (https://app.transifex.com/odoo/teams/41243/sv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -30,95 +28,52 @@ msgstr ""
 #. module: website_crm
 #: model:ir.model.fields,field_description:website_crm.field_website_visitor__lead_count
 msgid "# Leads"
-msgstr ""
+msgstr "# Kundämnen"
 
 #. module: website_crm
 #: model:ir.model.fields,field_description:website_crm.field_crm_lead__visitor_page_count
 msgid "# Page Views"
-msgstr "# Sidvisningar"
+msgstr "# sidvisningar"
 
 #. module: website_crm
-#: model_terms:ir.ui.view,arch_db:website_crm.res_config_settings_view_form
-msgid "Add a contact form in the"
-msgstr ""
-
-#. module: website_crm
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_crm/static/src/js/website_crm_editor.js:0
-#, python-format
-msgid "Assign leads/opportunities to a sales channel."
-msgstr ""
+msgid "Assign leads/opportunities to a sales team."
+msgstr "Tilldela leads/möjligheter till ett säljteam."
 
 #. module: website_crm
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_crm/static/src/js/website_crm_editor.js:0
-#, python-format
 msgid "Assign leads/opportunities to a salesperson."
-msgstr ""
+msgstr "Tilldela leads/möjligheter till en säljare."
 
 #. module: website_crm
-#: model_terms:ir.ui.view,arch_db:website_crm.res_config_settings_view_form
-msgid "Communication"
-msgstr "OCR / Meddelande rad 1"
-
-#. module: website_crm
-#: model:ir.model,name:website_crm.model_res_config_settings
-msgid "Config Settings"
-msgstr "Konfigurations Inställningar"
-
-#. module: website_crm
-#: model_terms:ir.ui.view,arch_db:website_crm.res_config_settings_view_form
-msgid "Contact Form"
-msgstr "Kontaktformulär"
-
-#. module: website_crm
-#: model_terms:ir.ui.view,arch_db:website_crm.res_config_settings_view_form
-msgid "Contact Us"
-msgstr "Kontakta oss"
-
-#. module: website_crm
-#: model:ir.model.fields,field_description:website_crm.field_res_config_settings__crm_default_team_id
-msgid "Default Sales Team"
-msgstr "Standardsäljlaget"
-
-#. module: website_crm
-#: model:ir.model.fields,help:website_crm.field_res_config_settings__crm_default_team_id
 #: model:ir.model.fields,help:website_crm.field_website__crm_default_team_id
 msgid "Default Sales Team for new leads created through the Contact Us form."
-msgstr ""
+msgstr "Det säljteam som standard tilldelas nya leads via kontaktformuläret."
 
 #. module: website_crm
 #: model:ir.model.fields,field_description:website_crm.field_website__crm_default_team_id
 msgid "Default Sales Teams"
-msgstr "Standard Försäljnings Team"
+msgstr "Standard säljteam"
 
 #. module: website_crm
-#: model:ir.model.fields,field_description:website_crm.field_res_config_settings__crm_default_user_id
 #: model:ir.model.fields,field_description:website_crm.field_website__crm_default_user_id
 msgid "Default Salesperson"
-msgstr "Standard Försäljare"
+msgstr "Standard säljare"
 
 #. module: website_crm
-#: model:ir.model.fields,help:website_crm.field_res_config_settings__crm_default_user_id
 #: model:ir.model.fields,help:website_crm.field_website__crm_default_user_id
 msgid "Default salesperson for new leads created through the Contact Us form."
-msgstr ""
-
-#. module: website_crm
-#. openerp-web
-#: code:addons/website_crm/static/src/xml/website_crm.xml:0
-#: model_terms:ir.ui.view,arch_db:website_crm.contactus_form
-#, python-format
-msgid "Email"
-msgstr "E-post"
+msgstr "Den säljare som standard tilldelas nya leads via kontaktformuläret."
 
 #. module: website_crm
 #: model:ir.model,name:website_crm.model_crm_lead
 msgid "Lead/Opportunity"
-msgstr "Kundämnen/affärsmöjligheter"
+msgstr "Kundämne/Möjlighet"
 
 #. module: website_crm
-#: model:ir.actions.act_window,name:website_crm.website_visitor_crm_lead_action
+#: model:ir.actions.act_window,name:website_crm.crm_lead_action_from_visitor
 #: model:ir.model.fields,field_description:website_crm.field_website_visitor__lead_ids
 #: model_terms:ir.ui.view,arch_db:website_crm.website_visitor_view_form
 #: model_terms:ir.ui.view,arch_db:website_crm.website_visitor_view_search
@@ -127,81 +82,52 @@ msgstr "Kundämnen"
 
 #. module: website_crm
 #: model_terms:ir.ui.view,arch_db:website_crm.website_visitor_view_kanban
-msgid "Leads/Opportunities"
-msgstr "Kundämnen / affärsmöjligheter"
+msgid "Leads / Opportunities"
+msgstr "Leads / möjligheter"
 
 #. module: website_crm
-#: model_terms:ir.ui.view,arch_db:website_crm.res_config_settings_view_form
-msgid "New messages are managed as leads or opportunities in your CRM app."
-msgstr ""
-
-#. module: website_crm
-#: model_terms:ir.actions.act_window,help:website_crm.website_visitor_crm_lead_action
+#: model_terms:ir.actions.act_window,help:website_crm.crm_lead_action_from_visitor
 msgid "No lead linked for this visitor"
-msgstr ""
+msgstr "Ingen lead länkad till den här besökaren"
 
 #. module: website_crm
 #: model_terms:ir.ui.view,arch_db:website_crm.crm_lead_view_form
 msgid "Page views"
-msgstr ""
+msgstr "Sidvisningar"
 
 #. module: website_crm
-#. openerp-web
-#: code:addons/website_crm/static/src/xml/website_crm.xml:0
-#: model_terms:ir.ui.view,arch_db:website_crm.contactus_form
-#, python-format
-msgid "Phone Number"
-msgstr "Telefon"
-
-#. module: website_crm
-#: model_terms:ir.ui.view,arch_db:website_crm.res_config_settings_view_form
-msgid ""
-"Please set a Sales Team for the website. Otherwise you can't follow related "
-"events."
-msgstr ""
-
-#. module: website_crm
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_crm/static/src/js/website_crm_editor.js:0
-#, python-format
-msgid "Sales Channel"
-msgstr "Säljkanal"
+msgid "Phone Number"
+msgstr "Telefonnummer"
 
 #. module: website_crm
-#: model_terms:ir.ui.view,arch_db:website_crm.res_config_settings_view_form
+#. odoo-javascript
+#: code:addons/website_crm/static/src/js/website_crm_editor.js:0
 msgid "Sales Team"
 msgstr "Säljlag"
 
 #. module: website_crm
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_crm/static/src/js/website_crm_editor.js:0
-#: model_terms:ir.ui.view,arch_db:website_crm.res_config_settings_view_form
-#, python-format
 msgid "Salesperson"
 msgstr "Säljare"
 
 #. module: website_crm
-#: model_terms:ir.ui.view,arch_db:website_crm.contactus_form
-msgid "Send"
-msgstr "Skicka"
-
-#. module: website_crm
-#. openerp-web
-#: code:addons/website_crm/static/src/xml/website_crm.xml:0
-#: model_terms:ir.ui.view,arch_db:website_crm.contactus_form
-#, python-format
+#. odoo-javascript
+#: code:addons/website_crm/static/src/js/website_crm_editor.js:0
 msgid "Subject"
 msgstr "Ämne"
 
 #. module: website_crm
-#: model_terms:ir.ui.view,arch_db:website_crm.website_visitor_view_search
-msgid "Visitors"
-msgstr ""
-
-#. module: website_crm
 #: model:ir.model.fields,field_description:website_crm.field_crm_lead__visitor_ids
 msgid "Web Visitors"
-msgstr ""
+msgstr "Besökare"
+
+#. module: website_crm
+#: model_terms:ir.ui.view,arch_db:website_crm.crm_lead_merge_summary_inherit_website
+msgid "Web Visitors:"
+msgstr "Besökare på webben:"
 
 #. module: website_crm
 #: model:ir.model,name:website_crm.model_website
@@ -216,33 +142,28 @@ msgstr "Webbplatsens kontaktformulär"
 #. module: website_crm
 #: model:ir.model,name:website_crm.model_website_visitor
 msgid "Website Visitor"
-msgstr "Webplats Besökare"
+msgstr "Besökare"
 
 #. module: website_crm
-#. openerp-web
-#: code:addons/website_crm/static/src/xml/website_crm.xml:0
-#: model_terms:ir.ui.view,arch_db:website_crm.contactus_form
-#, python-format
+#. odoo-javascript
+#: code:addons/website_crm/static/src/js/website_crm_editor.js:0
 msgid "Your Company"
-msgstr "Ditt bolag"
+msgstr "Ditt företag"
 
 #. module: website_crm
-#. openerp-web
-#: code:addons/website_crm/static/src/xml/website_crm.xml:0
-#: model_terms:ir.ui.view,arch_db:website_crm.contactus_form
-#, python-format
+#. odoo-javascript
+#: code:addons/website_crm/static/src/js/website_crm_editor.js:0
+msgid "Your Email"
+msgstr "Din e-post"
+
+#. module: website_crm
+#. odoo-javascript
+#: code:addons/website_crm/static/src/js/website_crm_editor.js:0
 msgid "Your Name"
 msgstr "Ditt namn"
 
 #. module: website_crm
-#. openerp-web
-#: code:addons/website_crm/static/src/xml/website_crm.xml:0
-#: model_terms:ir.ui.view,arch_db:website_crm.contactus_form
-#, python-format
+#. odoo-javascript
+#: code:addons/website_crm/static/src/js/website_crm_editor.js:0
 msgid "Your Question"
 msgstr "Din fråga"
-
-#. module: website_crm
-#: model_terms:ir.ui.view,arch_db:website_crm.res_config_settings_view_form
-msgid "page"
-msgstr "sida"

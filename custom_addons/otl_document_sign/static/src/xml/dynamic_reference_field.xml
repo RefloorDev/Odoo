@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="otl_document_sign.DynamicReferenceField" owl="1">
+        <div class="o_dynamic_reference_widget">
+            <select t-on-change="onModelChange">
+                <option value="">Select Document Type</option>
+                <t t-foreach="state.models" t-as="model" t-key="model[0]">
+                    <option t-att-value="model[0]" t-att-selected="model[0] === state.selectedModel">
+                        <t t-esc="model[1]" />
+                    </option>
+                </t>
+            </select>
+
+            <select t-if="state.selectedModel" t-on-change="onRecordChange">
+                <option value="">Select Record</option>
+                <t t-foreach="state.records" t-as="rec" t-key="rec.id">
+                    <option t-att-value="rec.id" t-att-selected="rec.id === state.selectedId">
+                        <t t-esc="rec.name" />
+                    </option>
+                </t>
+            </select>
+        </div>
+    </t>
+</templates>

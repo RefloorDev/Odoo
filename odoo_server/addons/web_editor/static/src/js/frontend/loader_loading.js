@@ -1,3 +1,5 @@
+// @odoo-module ignore
+
 (function () {
 'use strict';
 
@@ -6,7 +8,7 @@
  * tweaked as soon as the DOM is ready so that they appear to be loading.
  *
  * They must then be loaded using standard Odoo modules system. In particular,
- * @see web_editor.loader
+ * @see @web_editor/js/frontend/loadWysiwygFromTextarea
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     for (var i = 0; i < textareaEls.length; i++) {
         var textarea = textareaEls[i];
         var wrapper = document.createElement('div');
-        wrapper.classList.add('position-relative', 'o_wysiwyg_wrapper');
+        wrapper.classList.add('position-relative', 'o_wysiwyg_textarea_wrapper');
 
         var loadingElement = document.createElement('div');
         loadingElement.classList.add('o_wysiwyg_loading');

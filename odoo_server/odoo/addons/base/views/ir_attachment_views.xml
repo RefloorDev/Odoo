@@ -6,15 +6,16 @@
             <field name="arch" type="xml">
                 <form string="Attachments">
                    <sheet>
-                    <label for="name" class="oe_edit_only"/>
+                    <label for="name"/>
                     <h1>
                         <field name="name"/>
                     </h1>
                     <group>
-                        <group>
+                        <group class="w-100">
                             <field name="type"/>
-                            <field name="datas" filename="name" attrs="{'invisible':[('type','=','url')]}"/>
-                            <field name="url" widget="url" attrs="{'invisible':[('type','=','binary')]}"/>
+                            <label for="datas" class="mt-1"/>
+                            <field name="datas" nolabel="1" class="w-100" filename="name" invisible="type == 'url'"/>
+                            <field name="url" widget="url" invisible="type == 'binary'"/>
                             <field name="mimetype" groups="base.group_no_one"/>
                         </group>
                         <group string="Attached To" groups="base.group_no_one">
@@ -25,14 +26,14 @@
                             <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
                             <field name="public"/>
                         </group>
-                        <group string="History" groups="base.group_no_one" attrs="{'invisible':[('create_date','=',False)]}">
+                        <group string="History" groups="base.group_no_one" invisible="not create_date">
                             <label for="create_uid" string="Creation"/>
                             <div name="creation_div">
                                 <field name="create_uid" readonly="1" class="oe_inline"/> on
                                 <field name="create_date" readonly="1" class="oe_inline"/>
                             </div>
                         </group>
-                        <group name="description_group" string="Description" groups="base.group_no_one"  colspan="4">
+                        <group name="description_group" string="Description" groups="base.group_no_one" colspan="4">
                             <field name="description" nolabel="1"/>
                         </group>
                         <group groups="base.group_no_one" string="Indexed Content" colspan="4">
@@ -46,16 +47,17 @@
         <record id="view_attachment_tree" model="ir.ui.view">
             <field name="model">ir.attachment</field>
             <field name="arch" type="xml">
-                <tree string="Attachments">
+                <list string="Attachments">
                     <field name="name"/>
                     <field name="res_model"/>
                     <field name="res_field"/>
                     <field name="res_id"/>
                     <field name="type"/>
+                    <field name="file_size"/>
                     <field name="company_id" groups="base.group_multi_company"/>
                     <field name="create_uid"/>
                     <field name="create_date"/>
-                </tree>
+                </list>
             </field>
         </record>
         <record id="view_attachment_search" model="ir.ui.view">
@@ -84,7 +86,6 @@
         </record>
         <record id="action_attachment" model="ir.actions.act_window">
             <field name="name">Attachments</field>
-            <field name="type">ir.actions.act_window</field>
             <field name="res_model">ir.attachment</field>
             <field name="view_id" eval="False"/>
             <field name="search_view_id" ref="view_attachment_search"/>

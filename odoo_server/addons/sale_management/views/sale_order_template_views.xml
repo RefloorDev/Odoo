@@ -7,6 +7,9 @@
             <search string="Search Quotation Template">
                 <field name="name"/>
                 <filter string="Archived" name="inactive" domain="[('active','=', False)]"/>
+                <group expand="1" string="Group By">
+                    <filter string="Company" name="company_id" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
             </search>
         </field>
     </record>
@@ -14,32 +17,44 @@
     <record id="sale_order_template_view_form" model="ir.ui.view">
         <field name="name">sale.order.template.form</field>
         <field name="model">sale.order.template</field>
-        <field name="type">form</field>
         <field name="arch" type="xml">
             <form string="Quotation Template">
                 <sheet>
                     <div name="button_box" class="oe_button_box"/>
-                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>
-                    <div class="oe_title">
-                        <label for="name" class="oe_edit_only"/>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title" name="sale_order_template_title">
+                        <label for="name" id="sale_order_template_title"/>
                         <h1>
-                            <field name="name" placeholder="Quotation Template"/>
+                            <field name="name" placeholder="e.g. Standard Consultancy Package" class="d-block"/>
                         </h1>
                     </div>
                     <group>
-                        <group>
+                        <group name="sale_info">
                             <field name="active" invisible="1"/>
-                           <label for="number_of_days" string="Quotation expires after"/>
-                           <div id="number_of_days">
-                               <field name="number_of_days" class="oe_inline"/> days
-                           </div>
-                        </group>
-                        <group>
+                            <label for="number_of_days" string="Quotation Validity"/>
+                            <div id="number_of_days">
+                                <field name="number_of_days" style="width: 3rem;"/>
+                                <div class="d-inline-block">days</div>
+                            </div>
+                            <field name="mail_template_id" context="{'default_model': 'sale.order'}"/>
                             <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                            <field name="journal_id"/>
+                        </group>
+                        <group name="so_confirmation">
+                            <field name="require_signature"/>
+                            <label for="require_payment"/>
+                            <div id="require_payment" class="o_row">
+                                <field name="require_payment" class="oe_inline"/>
+                                <span invisible="not require_payment">of</span>
+                                <field name="prepayment_percent"
+                                       invisible="not require_payment"
+                                       widget="percentage"
+                                       class="oe_inline"/>
+                            </div>
                         </group>
                     </group>
                     <notebook name="main_book">
-                        <page string="Lines">
+                        <page string="Lines" name="order_lines">
                         <field name="sale_order_template_line_ids" widget="section_and_note_one2many">
                             <form string="Quotation Template Lines">
                                 <!--
@@ -49,99 +64,87 @@
                                 <field name="sequence" invisible="1"/>
                                 <field name="display_type" invisible="1"/>
                                 <field name="product_uom_category_id" invisible="1"/>
-                                <group attrs="{'invisible': [('display_type', '!=', False)]}">
+                                <field name="company_id" invisible="1"/>
+                                <group invisible="display_type">
                                     <group>
-                                        <field name="product_id" attrs="{'required': [('display_type', '=', False)]}"/>
+                                        <field name="product_id" required="not display_type"/>
                                         <label for="product_uom_qty"/>
                                         <div>
                                             <field name="product_uom_qty" class="oe_inline"/>
                                         </div>
-                                        <field name="price_unit"/>
-                                        <label for="discount" groups="product.group_discount_per_so_line"/>
-                                        <div groups="product.group_discount_per_so_line">
-                                            <field name="discount" class="oe_inline"/> %%
-                                        </div>
                                     </group>
                                 </group>
                                 <notebook colspan="4" name="description">
-                                    <page string="Description" attrs="{'invisible': [('display_type', '!=', False)]}">
+                                    <page string="Description" name="order_description" invisible="display_type">
                                         <field name="name" />
                                     </page>
-                                    <page string="Section" attrs="{'invisible': [('display_type', '!=', 'line_section')]}">
+                                    <page string="Section" name="order_section" invisible="display_type != 'line_section'">
                                         <field name="name" />
                                     </page>
-                                    <page string="Note" attrs="{'invisible': [('display_type', '!=', 'line_note')]}">
+                                    <page string="Note" name="order_note" invisible="display_type != 'line_note'">
                                         <field name="name" />
                                     </page>
                                 </notebook>
                             </form>
-                            <tree string="Quotation Template Lines" editable="bottom">
+                            <list string="Quotation Template Lines" editable="bottom">
                                 <control>
                                     <create name="add_product_control" string="Add a product"/>
                                     <create name="add_section_control" string="Add a section" context="{'default_display_type': 'line_section'}"/>
                                     <create name="add_note_control" string="Add a note" context="{'default_display_type': 'line_note'}"/>
                                 </control>
 
-                                <field name="display_type" invisible="1"/>
+                                <field name="display_type" column_invisible="True"/>
+                                <field name="company_id" column_invisible="True"/>
                                 <field name="sequence" widget="handle"/>
                                 <field name="product_id"/>
-                                <field name="name" widget="section_and_note_text"/>
+                                <field name="name"/>
                                 <field name="product_uom_qty"/>
-                                <field name="product_uom_category_id" invisible="1"/>
+                                <field name="product_uom_category_id" column_invisible="True"/>
                                 <field
                                     name="product_uom_id"
                                     groups="uom.group_uom"
-                                    attrs="{'required': [('display_type', '=', False)]}"
-                                />
-                                <field name="discount" groups="product.group_discount_per_so_line"/>
-                                <field name="price_unit"/>
-                            </tree>
+                                    required="not display_type"/>
+                            </list>
                         </field>
                     </page>
-                    <page string="Optional Products">
+                    <page string="Optional Products" name="optional_products">
                         <field name="sale_order_template_option_ids">
-                          <tree string="Quotation Template Lines" editable="bottom">
+                          <list string="Quotation Template Lines" editable="bottom">
                             <field name="product_id"/>
                             <field name="name"/>
                             <field name="quantity"/>
-                            <field name="product_uom_category_id" invisible="1"/>
+                            <field name="product_uom_category_id" column_invisible="True"/>
                             <field name="uom_id" groups="uom.group_uom"/>
-                            <field name="price_unit"/>
-                            <field name="discount" groups="product.group_discount_per_so_line"/>
-                          </tree>
+                            <field name="company_id" column_invisible="True"/>
+                          </list>
                         </field>
                     </page>
-                    <page string="Confirmation">
-                        <group>
-                            <field name="require_signature"/>
-                            <field name="require_payment"/>
-                            <field name="mail_template_id" context="{'default_model':'sale.order'}"/>
-                        </group>
-                    </page>
+                        <page string="Terms &amp; Conditions" name="terms_and_conditions">
+                            <field name="note" nolabel="1"
+                                   placeholder="The Administrator can set default Terms &amp; Conditions in Sales Settings. Terms set here will show up instead if you select this quotation template."/>
+                        </page>
                     </notebook>
-                    <field name="note" nolabel="1"
-                        placeholder="The Administrator can set default Terms &amp; Conditions in Sales Settings. Terms set here will show up instead if you select this quotation template."/>
                 </sheet>
             </form>
         </field>
     </record>
 
     <record id="sale_order_template_view_tree" model="ir.ui.view">
-        <field name="name">sale.order.template.tree</field>
+        <field name="name">sale.order.template.list</field>
         <field name="model">sale.order.template</field>
-        <field name="type">tree</field>
         <field name="arch" type="xml">
-            <tree string="Quotation Template">
+            <list string="Quotation Template">
+                <field name="sequence" widget="handle"/>
                 <field name="name"/>
-            </tree>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
         </field>
     </record>
 
     <record id="sale_order_template_action" model="ir.actions.act_window">
         <field name="name">Quotation Templates</field>
-        <field name="type">ir.actions.act_window</field>
         <field name="res_model">sale.order.template</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create your quotation template
@@ -152,7 +155,5 @@
             </p>
         </field>
     </record>
-
-    <menuitem id="sale_order_template_menu" action="sale_order_template_action" parent="sale.menu_sales_config" sequence="1" name="Quotation Templates" groups="sale_management.group_sale_order_template"/>
 
 </odoo>

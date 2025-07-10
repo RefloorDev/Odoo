@@ -1,34 +1,37 @@
-odoo.define('mail.DebugManager.Backend', function (require) {
-"use strict";
+import { _t } from "@web/core/l10n/translation";
+import { registry } from "@web/core/registry";
 
-var core = require('web.core');
-var DebugManager = require('web.DebugManager.Backend');
+export function manageMessages({ component, env }) {
+    const resId = component.model.root.resId;
+    if (!resId) {
+        return null; // No record
+    }
+    const description = _t("Messages");
+    return {
+        type: "item",
+        description,
+        callback: () => {
+            env.services.action.doAction({
+                res_model: "mail.message",
+                name: description,
+                views: [
+                    [false, "list"],
+                    [false, "form"],
+                ],
+                type: "ir.actions.act_window",
+                domain: [
+                    ["res_id", "=", resId],
+                    ["model", "=", component.props.resModel],
+                ],
+                context: {
+                    default_res_model: component.props.resModel,
+                    default_res_id: resId,
+                },
+            });
+        },
+        sequence: 130,
+        section: "record",
+    };
+}
 
-var _t = core._t;
-/**
- * adds a new method available for the debug manager, called by the "Manage Messages" button.
- *
- */
-DebugManager.include({
-    getMailMessages: function () {
-        var self = this;
-        var selectedIDs = this._controller.getSelectedIds();
-        if (!selectedIDs.length) {
-            console.warn(_t("No message available"));
-            return;
-        }
-        this.do_action({
-            res_model: 'mail.message',
-            name: _t('Manage Messages'),
-            views: [[false, 'list'], [false, 'form']],
-            type: 'ir.actions.act_window',
-            domain: [['res_id', '=', selectedIDs[0]], ['model', '=', this._controller.modelName]],
-            context: {
-                default_res_model: this._controller.modelName,
-                default_res_id: selectedIDs[0],
-            },
-        });
-    },
-});
-
-});
+registry.category("debug").category("form").add("mail.manageMessages", manageMessages);

@@ -3,22 +3,22 @@
 # 	* website_partner
 # 
 # Translators:
-# Martin Trigaux, 2019
-# Manuela Silva <manuelarodsilva@gmail.com>, 2019
+# Wil Odoo, 2025
+# Peter Lawrence Romão <peterromao@yahoo.co.uk>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 12:27+0000\n"
-"PO-Revision-Date: 2019-08-26 09:16+0000\n"
-"Last-Translator: Manuela Silva <manuelarodsilva@gmail.com>, 2019\n"
-"Language-Team: Portuguese (https://www.transifex.com/odoo/teams/41243/pt/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Peter Lawrence Romão <peterromao@yahoo.co.uk>, 2025\n"
+"Language-Team: Portuguese (https://app.transifex.com/odoo/teams/41243/pt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: pt\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #. module: website_partner
 #: model:ir.model,name:website_partner.model_res_partner
@@ -26,9 +26,19 @@ msgid "Contact"
 msgstr "Contacto"
 
 #. module: website_partner
-#: model_terms:ir.ui.view,arch_db:website_partner.partner_detail
-msgid "Short Description for List View"
-msgstr "Descrição Curta para 'Ver Lista'"
+#: model_terms:ir.ui.view,arch_db:website_partner.partner_page
+msgid "DROP BUILDING BLOCKS HERE TO MAKE THEM AVAILABLE ACROSS ALL PARTNERS"
+msgstr ""
+
+#. module: website_partner
+#: model:ir.model.fields,field_description:website_partner.field_res_partner__is_seo_optimized
+msgid "SEO optimized"
+msgstr "Optimizado para SEO"
+
+#. module: website_partner
+#: model:ir.model.fields,field_description:website_partner.field_res_partner__seo_name
+msgid "Seo name"
+msgstr "Nome seo"
 
 #. module: website_partner
 #: model:ir.model.fields,field_description:website_partner.field_res_partner__website_description
@@ -41,3 +51,23 @@ msgstr "Descrição Extensiva para o Website do Parceiro"
 #: model:ir.model.fields,field_description:website_partner.field_res_users__website_short_description
 msgid "Website Partner Short Description"
 msgstr "Descrição Breve do Parceiro no Website"
+
+#. module: website_partner
+#: model:ir.model.fields,field_description:website_partner.field_res_partner__website_meta_description
+msgid "Website meta description"
+msgstr "Website meta descrição"
+
+#. module: website_partner
+#: model:ir.model.fields,field_description:website_partner.field_res_partner__website_meta_keywords
+msgid "Website meta keywords"
+msgstr "Website meta palavra-chaves"
+
+#. module: website_partner
+#: model:ir.model.fields,field_description:website_partner.field_res_partner__website_meta_title
+msgid "Website meta title"
+msgstr "Website meta título"
+
+#. module: website_partner
+#: model:ir.model.fields,field_description:website_partner.field_res_partner__website_meta_og_img
+msgid "Website opengraph image"
+msgstr "Imagem opengraph do website"

@@ -3,24 +3,21 @@
 
 {
     'name': 'OdooBot',
-    'version': '1.0',
-    'category': 'Discuss',
+    'version': '1.2',
+    'category': 'Productivity/Discuss',
     'summary': 'Add OdooBot in discussions',
-    'description': "",
-    'website': 'https://www.odoo.com/page/discuss',
+    'website': 'https://www.odoo.com/app/discuss',
     'depends': ['mail'],
-    'installable': True,
-    'application': False,
     'auto_install': True,
+    'installable': True,
     'data': [
-        'views/assets.xml',
         'views/res_users_views.xml',
         'data/mailbot_data.xml',
     ],
-    'demo': [
-        'data/mailbot_demo.xml',
-    ],
-    'qweb': [
-        'views/discuss.xml',
-    ],
+    'assets': {
+        'web.assets_backend': [
+            'mail_bot/static/src/scss/odoobot_style.scss',
+        ],
+    },
+    'license': 'LGPL-3',
 }

@@ -28,17 +28,18 @@ class MailMessageSubtype(models.Model):
                 department_subtype = self.create({
                     'name': subtype.name,
                     'res_model': 'hr.department',
-                    'default': subtype.default or False,
+                    'default': False,
                     'parent_id': subtype.id,
                     'relation_field': 'department_id',
                 })
             return department_subtype
 
-    @api.model
-    def create(self, vals):
-        result = super(MailMessageSubtype, self).create(vals)
-        if result.res_model in ['hr.leave', 'hr.leave.allocation']:
-            result._update_department_subtype()
+    @api.model_create_multi
+    def create(self, vals_list):
+        result = super(MailMessageSubtype, self).create(vals_list)
+        result.filtered(
+            lambda st: st.res_model in ['hr.leave', 'hr.leave.allocation']
+        )._update_department_subtype()
         return result
 
     def write(self, vals):

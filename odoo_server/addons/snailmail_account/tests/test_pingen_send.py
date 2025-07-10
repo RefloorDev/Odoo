@@ -4,13 +4,13 @@ import json
 import base64
 import logging
 
-from odoo.addons.account.tests.account_test_classes import AccountingTestCase
+from odoo.tests.common import HttpCase
 from odoo.tests import tagged
 
 _logger = logging.getLogger(__name__)
 
 @tagged('post_install', '-at_install', '-standard', 'external')
-class TestPingenSend(AccountingTestCase):
+class TestPingenSend(HttpCase):
 
     def setUp(self):
         super(TestPingenSend, self).setUp()
@@ -36,8 +36,8 @@ class TestPingenSend(AccountingTestCase):
 
     def create_invoice(self):
         """ Create a sample invoice """
-        invoice = self.env['account.move'].with_context(default_type='out_invoice').create({
-            'type': 'out_invoice',
+        invoice = self.env['account.move'].with_context(default_move_type='out_invoice').create({
+            'move_type': 'out_invoice',
             'partner_id': self.env.ref("base.res_partner_2").id,
             'currency_id': self.env.ref('base.EUR').id,
             'invoice_date': '2018-12-11',
@@ -48,7 +48,7 @@ class TestPingenSend(AccountingTestCase):
             })],
         })
 
-        invoice.post()
+        invoice.action_post()
 
         return invoice
 
@@ -62,20 +62,20 @@ class TestPingenSend(AccountingTestCase):
         }
 
         response = requests.post(self.pingen_url, data=self.data, files=files)
-        if 400 <= response.status_code <= 599:
+        if 400 <= response.status_code <= 599 or response.json()['error']:
             msg = "%(code)s %(side)s Error: %(reason)s for url: %(url)s\n%(body)s" % {
                 'code': response.status_code,
                 'side': r"%s",
                 'reason': response.reason,
                 'url': self.pingen_url,
                 'body': response.text}
-            if response.status_code <= 499:
+            if response.status_code <= 499 or response.json()['error']:
                 raise requests.HTTPError(msg % "Client")
             else:
                 _logger.warning(msg % "Server")
 
     def test_pingen_send_invoice(self):
         self.render_and_send('external_layout_standard')
-        self.render_and_send('external_layout_background')
+        self.render_and_send('external_layout_striped')
         self.render_and_send('external_layout_boxed')
-        self.render_and_send('external_layout_clean')
+        self.render_and_send('external_layout_bold')

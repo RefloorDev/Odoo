@@ -23,7 +23,7 @@
                         <field name="name"/>
                         <field name="classname"/>
                         <field name="is_published"/>
-                        <field name="active"/>
+                        <field name="active" widget="boolean_toggle"/>
                     </group>
                 </sheet>
                 </form>
@@ -35,12 +35,12 @@
             <field name="model">res.partner.tag</field>
             <field eval="6" name="priority"/>
             <field name="arch" type="xml">
-                <tree string="Website Tags" editable="bottom">
+                <list string="Website Tags" editable="bottom">
                     <field name="name"/>
                     <field name="classname"/>
                     <field name="is_published"/>
-                    <field name="active" invisible="1"/>
-                </tree>
+                    <field name="active" column_invisible="True"/>
+                </list>
             </field>
         </record>
 
@@ -58,7 +58,6 @@
 
         <record id="action_partner_tag_form" model="ir.actions.act_window">
             <field name="name">Website Tags</field>
-            <field name="type">ir.actions.act_window</field>
             <field name="res_model">res.partner.tag</field>
             <field name="search_view_id" ref="res_partner_tag_view_search"/>
             <field name="help" type="html">

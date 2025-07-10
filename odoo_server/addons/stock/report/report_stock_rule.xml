@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-    <template id="assets_common" name="report_stock_rule assets" inherit_id="web.report_assets_common">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/scss" href="/stock/static/src/scss/report_stock_rule.scss"/>
-        </xpath>
-    </template>
-
     <template id="report_stock_rule">
         <t t-set="data_report_landscape" t-value="True"/>
         <t t-set="full_width" t-value="True"/>
@@ -164,14 +158,14 @@
         </div>
     </template>
     <template id="report_stock_rule_right_arrow">
-        <div class="o_report_stock_rule_arrow">
+        <div t-attf-class="o_report_stock_rule_arrow {{ 'o_report_stock_rule_rtl' if is_rtl else '' }}">
             <svg width="100%" height="100%" viewBox="0 0 10 10">
                 <polygon points="0,0 0,10 10,5" t-attf-style="stroke: #{color}; fill: #{color};"/>
             </svg>
         </div>
     </template>
     <template id="report_stock_rule_left_arrow">
-        <div class="o_report_stock_rule_arrow">
+        <div t-attf-class="o_report_stock_rule_arrow {{ 'o_report_stock_rule_rtl' if is_rtl else '' }}">
             <svg width="100%" height="100%" viewBox="0 0 10 10">
                 <polygon points="0,5 10,10 10,0" t-attf-style="stroke: #{color}; fill: #{color};"/>
             </svg>

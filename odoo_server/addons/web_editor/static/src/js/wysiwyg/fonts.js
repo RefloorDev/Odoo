@@ -1,7 +1,6 @@
-odoo.define('wysiwyg.fonts', function (require) {
-'use strict';
+/** @odoo-module **/
 
-return {
+export const fonts = {
     /**
      * Retrieves all the CSS rules which match the given parser (Regex).
      *
@@ -35,8 +34,7 @@ return {
                 // document.styleSheets[].cssRules[] for cross-domain
                 // stylesheets.
                 rules = sheets[i].rules || sheets[i].cssRules;
-            } catch (e) {
-                console.warn("Can't read the css rules of: " + sheets[i].href, e);
+            } catch {
                 continue;
             }
             if (!rules) {
@@ -85,15 +83,20 @@ return {
      * @type Array
      */
     fontIcons: [{base: 'fa', parser: /\.(fa-(?:\w|-)+)::?before/i}],
+    computedFonts: false,
     /**
      * Searches the fonts described by the @see fontIcons variable.
      */
-    computeFonts: _.once(function () {
-        var self = this;
-        _.each(this.fontIcons, function (data) {
-            data.cssData = self.getCssSelectors(data.parser);
-            data.alias = _.flatten(_.map(data.cssData, _.property('names')));
-        });
-    }),
+    computeFonts: function () {
+        if (!this.computedFonts) {
+            var self = this;
+            this.fontIcons.forEach((data) => {
+                data.cssData = self.getCssSelectors(data.parser);
+                data.alias = data.cssData.map((x) => x.names).flat();
+            });
+            this.computedFonts = true;
+        }
+    },
 };
-});
+
+export default fonts;

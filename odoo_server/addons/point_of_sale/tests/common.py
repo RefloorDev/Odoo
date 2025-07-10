@@ -1,102 +1,145 @@
 # -*- coding: utf-8 -*-
 from random import randint
+from datetime import datetime
 
-from odoo import fields
-from odoo.tests.common import TransactionCase, Form
-from odoo.tools import float_is_zero
+from odoo import fields, tools
+from odoo.addons.stock_account.tests.test_anglo_saxon_valuation_reconciliation_common import ValuationReconciliationTestCommon
+from odoo.tests import Form
 
+import logging
 
-class TestPointOfSaleCommon(TransactionCase):
+_logger = logging.getLogger(__name__)
 
-    def setUp(self):
-        super(TestPointOfSaleCommon, self).setUp()
-        self.AccountBankStatement = self.env['account.bank.statement']
-        self.AccountBankStatementLine = self.env['account.bank.statement.line']
-        self.PosMakePayment = self.env['pos.make.payment']
-        self.PosOrder = self.env['pos.order']
-        self.PosSession = self.env['pos.session']
-        self.company = self.env.ref('base.main_company')
-        self.company_id = self.company.id
-        coa = self.env['account.chart.template'].search([
-            ('currency_id', '=', self.company.currency_id.id),
-            ], limit=1)
-        test_sale_journal = self.env['account.journal'].create({'name': 'Sales Journal - Test',
-                                                'code': 'TSJ',
-                                                'type': 'sale',
-                                                'company_id': self.company_id})
-        self.company.write({'anglo_saxon_accounting': coa.use_anglo_saxon,
-            'bank_account_code_prefix': coa.bank_account_code_prefix,
-            'cash_account_code_prefix': coa.cash_account_code_prefix,
-            'transfer_account_code_prefix': coa.transfer_account_code_prefix,
-            'chart_template_id': coa.id,
+def archive_products(env):
+    # Archive all existing product to avoid noise during the tours
+    all_pos_product = env['product.product'].search([('available_in_pos', '=', True)])
+    tip = env.ref('point_of_sale.product_product_tip')
+    (all_pos_product - tip)._write({'active': False})
+
+class TestPointOfSaleCommon(ValuationReconciliationTestCommon):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.company_data_2 = cls.setup_other_company()
+
+        cls.company_data['company'].write({
+            'point_of_sale_update_stock_quantities': 'real',
         })
-        self.product3 = self.env.ref('product.product_product_3')
-        self.product4 = self.env.ref('product.product_product_4')
-        self.partner1 = self.env.ref('base.res_partner_1')
-        self.partner4 = self.env.ref('base.res_partner_4')
-        self.pos_config = self.env.ref('point_of_sale.pos_config_main')
-        self.pos_config.write({
-            'journal_id': test_sale_journal.id,
-            'invoice_journal_id': test_sale_journal.id,
-        })
-        self.led_lamp = self.env.ref('point_of_sale.led_lamp')
-        self.whiteboard_pen = self.env.ref('point_of_sale.whiteboard_pen')
-        self.newspaper_rack = self.env.ref('point_of_sale.newspaper_rack')
 
-        self.cash_payment_method = self.pos_config.payment_method_ids.filtered(lambda pm: pm.name == 'Cash')
-        self.bank_payment_method = self.pos_config.payment_method_ids.filtered(lambda pm: pm.name == 'Bank')
-        self.credit_payment_method = self.env['pos.payment.method'].create({
+        cls.AccountBankStatement = cls.env['account.bank.statement']
+        cls.AccountBankStatementLine = cls.env['account.bank.statement.line']
+        cls.PosMakePayment = cls.env['pos.make.payment']
+        cls.PosOrder = cls.env['pos.order']
+        cls.PosSession = cls.env['pos.session']
+        cls.company = cls.company_data['company']
+        cls.product3 = cls.env['product.product'].create({
+            'name': 'Product 3',
+            'list_price': 450,
+        })
+        cls.product4 = cls.env['product.product'].create({
+            'name': 'Product 4',
+            'list_price': 750,
+        })
+        cls.partner1 = cls.env['res.partner'].create({'name': 'Partner 1'})
+        cls.partner4 = cls.env['res.partner'].create({'name': 'Partner 4'})
+        cls.pos_config = cls.env['pos.config'].create({
+            'name': 'Main',
+            'journal_id': cls.company_data['default_journal_sale'].id,
+            'invoice_journal_id': cls.company_data['default_journal_sale'].id,
+        })
+        cls.led_lamp = cls.env['product.product'].create({
+            'name': 'LED Lamp',
+            'available_in_pos': True,
+            'list_price': 0.90,
+        })
+        cls.whiteboard_pen = cls.env['product.product'].create({
+            'name': 'Whiteboard Pen',
+            'available_in_pos': True,
+            'list_price': 1.20,
+        })
+        cls.newspaper_rack = cls.env['product.product'].create({
+            'name': 'Newspaper Rack',
+            'available_in_pos': True,
+            'list_price': 1.28,
+        })
+        cls.company_data['default_journal_cash'].pos_payment_method_ids.unlink()
+        cls.cash_payment_method = cls.env['pos.payment.method'].create({
+            'name': 'Cash',
+            'receivable_account_id': cls.company_data['default_account_receivable'].id,
+            'journal_id': cls.company_data['default_journal_cash'].id,
+            'company_id': cls.env.company.id,
+        })
+        cls.bank_payment_method = cls.env['pos.payment.method'].create({
+            'name': 'Bank',
+            'journal_id': cls.company_data['default_journal_bank'].id,
+            'receivable_account_id': cls.company_data['default_account_receivable'].id,
+            'company_id': cls.env.company.id,
+        })
+        cls.credit_payment_method = cls.env['pos.payment.method'].create({
             'name': 'Credit',
-            'receivable_account_id': self.company.account_default_pos_receivable_account_id.id,
+            'receivable_account_id': cls.company_data['default_account_receivable'].id,
             'split_transactions': True,
+            'company_id': cls.env.company.id,
         })
-        self.pos_config.write({'payment_method_ids': [(4, self.credit_payment_method.id)]})
+        cls.pos_config.write({'payment_method_ids': [(4, cls.credit_payment_method.id), (4, cls.bank_payment_method.id), (4, cls.cash_payment_method.id)]})
+
+        # Create POS journal
+        cls.pos_config.journal_id = cls.env['account.journal'].create({
+            'type': 'general',
+            'name': 'Point of Sale - Test',
+            'code': 'POSS - Test',
+            'company_id': cls.env.company.id,
+            'sequence': 20
+        })
 
         # create a VAT tax of 10%, included in the public price
-        Tax = self.env['account.tax']
+        Tax = cls.env['account.tax']
         account_tax_10_incl = Tax.create({
             'name': 'VAT 10 perc Incl',
             'amount_type': 'percent',
             'amount': 10.0,
-            'price_include': 1
+            'price_include_override': 'tax_included',
         })
 
         # assign this 10 percent tax on the [PCSC234] PC Assemble SC234 product
         # as a sale tax
-        self.product3.taxes_id = [(6, 0, [account_tax_10_incl.id])]
+        cls.product3.taxes_id = [(6, 0, [account_tax_10_incl.id])]
 
         # create a VAT tax of 5%, which is added to the public price
         account_tax_05_incl = Tax.create({
             'name': 'VAT 5 perc Incl',
             'amount_type': 'percent',
             'amount': 5.0,
-            'price_include': 0
+            'price_include_override': 'tax_excluded',
         })
 
         # create a second VAT tax of 5% but this time for a child company, to
         # ensure that only product taxes of the current session's company are considered
         #(this tax should be ignore when computing order's taxes in following tests)
-        account_tax_05_incl_chicago = Tax.with_context(default_company_id=self.ref('stock.res_company_1')).create({
+        account_tax_05_incl_chicago = Tax.create({
             'name': 'VAT 05 perc Excl (US)',
             'amount_type': 'percent',
             'amount': 5.0,
-            'price_include': 0,
+            'price_include_override': 'tax_excluded',
+            'company_id': cls.company_data_2['company'].id,
         })
 
-        self.product4.company_id = False
+        cls.product4.company_id = False
         # I assign those 5 percent taxes on the PCSC349 product as a sale taxes
-        self.product4.write(
+        cls.product4.write(
             {'taxes_id': [(6, 0, [account_tax_05_incl.id, account_tax_05_incl_chicago.id])]})
 
         # Set account_id in the generated repartition lines. Automatically, nothing is set.
-        invoice_rep_lines = (account_tax_05_incl | account_tax_05_incl_chicago | account_tax_10_incl).mapped('invoice_repartition_line_ids')
-        refund_rep_lines = (account_tax_05_incl | account_tax_05_incl_chicago | account_tax_10_incl).mapped('refund_repartition_line_ids')
+        invoice_rep_lines = (account_tax_05_incl | account_tax_10_incl).mapped('invoice_repartition_line_ids')
+        refund_rep_lines = (account_tax_05_incl | account_tax_10_incl).mapped('refund_repartition_line_ids')
 
-        tax_received_account = self.company.account_sale_tax_id.mapped('invoice_repartition_line_ids.account_id')
-        (invoice_rep_lines | refund_rep_lines).write({'account_id': tax_received_account.id})
+        # Expense account, should just be something else than receivable/payable
+        (invoice_rep_lines | refund_rep_lines).write({'account_id': cls.company_data['default_account_tax_sale'].id})
 
 
-class TestPoSCommon(TransactionCase):
+class TestPoSCommon(ValuationReconciliationTestCommon):
     """ Set common values for different special test cases.
 
     The idea is to set up common values here for the tests
@@ -104,56 +147,59 @@ class TestPoSCommon(TransactionCase):
     this class.
     """
 
-    def setUp(self):
-        super(TestPoSCommon, self).setUp()
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
 
-        self.pos_manager = self.env.ref('base.user_admin')
-        self.env = self.env(user=self.pos_manager)
+        cls.company_data['company'].write({
+            'point_of_sale_update_stock_quantities': 'real',
+            'country_id': cls.env['res.country'].create({
+                'name': 'PoS Land',
+                'code': 'WOW',
+            }),
+        })
 
         # Set basic defaults
-        self.company = self.env.ref('base.main_company')
-        self.pos_sale_journal = self.env['account.journal'].create({
-            'type': 'sale',
-            'name': 'Point of Sale Test',
-            'code': 'POST',
-            'company_id': self.company.id,
-            'sequence': 20
+        cls.sales_account = cls.company_data['default_account_revenue']
+        cls.invoice_journal = cls.company_data['default_journal_sale']
+        cls.receivable_account = cls.company_data['default_account_receivable']
+        cls.tax_received_account = cls.company_data['default_account_tax_sale']
+        cls.company.account_default_pos_receivable_account_id = cls.env['account.account'].create({
+            'code': 'X1012.POS',
+            'name': 'Debtors - (POS)',
+            'reconcile': True,
+            'account_type': 'asset_receivable',
         })
-        self.invoice_journal = self.env['account.journal'].create({
-            'type': 'sale',
-            'name': 'Invoice Journal Test',
-            'code': 'INVT',
-            'company_id': self.company.id,
-            'sequence': 21
-        })
-        self.receivable_account = self.pos_manager.partner_id.property_account_receivable_id
-        self.tax_received_account = self.company.account_sale_tax_id.mapped('invoice_repartition_line_ids.account_id')
-        self.pos_receivable_account = self.company.account_default_pos_receivable_account_id
-        self.other_receivable_account = self.env['account.account'].create({
+        cls.pos_receivable_account = cls.company.account_default_pos_receivable_account_id
+        cls.pos_receivable_cash = cls.copy_account(cls.company.account_default_pos_receivable_account_id, {'name': 'POS Receivable Cash'})
+        cls.pos_receivable_bank = cls.copy_account(cls.company.account_default_pos_receivable_account_id, {'name': 'POS Receivable Bank'})
+        cls.outstanding_bank = cls.copy_account(cls.inbound_payment_method_line.payment_account_id, {'name': 'Outstanding Bank'})
+        cls.c1_receivable = cls.copy_account(cls.receivable_account, {'name': 'Customer 1 Receivable'})
+        cls.other_receivable_account = cls.env['account.account'].create({
             'name': 'Other Receivable',
-            'code': 'RCV00' ,
-            'user_type_id': self.env['account.account.type'].create({'name': 'RCV type', 'type': 'receivable', 'internal_group': 'asset'}).id,
+            'code': 'RCV00',
+            'account_type': 'asset_receivable',
             'internal_group': 'asset',
             'reconcile': True,
         })
 
         # company_currency can be different from `base.USD` depending on the localization installed
-        self.company_currency = self.company.currency_id
+        cls.company_currency = cls.company.currency_id
         # other_currency is a currency different from the company_currency
         # sometimes company_currency is different from USD, so handle appropriately.
-        self.other_currency = self.env.ref('base.EUR') if self.company_currency == self.env.ref('base.USD') else self.env.ref('base.USD')
+        cls.other_currency = cls.setup_other_currency("EUR", rounding=0.001)
 
-        self.currency_pricelist = self.env['product.pricelist'].create({
+        cls.currency_pricelist = cls.env['product.pricelist'].create({
             'name': 'Public Pricelist',
-            'currency_id': self.company_currency.id,
+            'currency_id': cls.company_currency.id,
         })
         # Set Point of Sale configurations
         # basic_config
         #   - derived from 'point_of_sale.pos_config_main' with added invoice_journal_id and credit payment method.
         # other_currency_config
         #   - pos.config set to have currency different from company currency.
-        self.basic_config = self._create_basic_config()
-        self.other_currency_config = self._create_other_currency_config()
+        cls.basic_config = cls._create_basic_config()
+        cls.other_currency_config = cls._create_other_currency_config()
 
         # Set product categories
         # categ_basic
@@ -161,128 +207,248 @@ class TestPoSCommon(TransactionCase):
         # categ_anglo
         #   - product category with fifo and real_time valuations
         #   - used for checking anglo saxon accounting behavior
-        self.categ_basic = self.env.ref('product.product_category_all')
-        self.categ_anglo = self._create_categ_anglo()
+        cls.categ_basic = cls.env.ref('product.product_category_all')
+        cls.env.company.anglo_saxon_accounting = True
+        cls.categ_anglo = cls._create_categ_anglo()
 
         # other basics
-        self.sale_account = self.categ_basic.property_account_income_categ_id
-        self.other_sale_account = self.env['account.account'].search([
-            ('company_id', '=', self.company.id),
-            ('user_type_id', '=', self.env.ref('account.data_account_type_revenue').id),
-            ('id', '!=', self.sale_account.id)
+        cls.sale_account = cls.categ_basic.property_account_income_categ_id
+        cls.other_sale_account = cls.env['account.account'].search([
+            ('company_ids', '=', cls.company.id),
+            ('account_type', '=', 'income'),
+            ('id', '!=', cls.sale_account.id)
         ], limit=1)
 
         # Set customers
-        self.customer = self.env['res.partner'].create({'name': 'Test Customer'})
-        self.other_customer = self.env['res.partner'].create({'name': 'Other Customer', 'property_account_receivable_id': self.other_receivable_account.id})
+        cls.customer = cls.env['res.partner'].create({'name': 'Customer 1', 'property_account_receivable_id': cls.c1_receivable.id})
+        cls.other_customer = cls.env['res.partner'].create({'name': 'Other Customer', 'property_account_receivable_id': cls.other_receivable_account.id})
 
         # Set taxes
-        # self.taxes => dict
+        # cls.taxes => dict
         #   keys: 'tax7', 'tax10'(price_include=True), 'tax_group_7_10'
-        self.taxes = self._create_taxes()
+        cls.taxes = cls._create_taxes()
+
+        cls.stock_location_components = cls.env["stock.location"].create({
+            'name': 'Shelf 1',
+            'location_id': cls.company_data['default_warehouse'].lot_stock_id.id,
+        })
+
 
     #####################
     ## private methods ##
     #####################
 
-    def _create_basic_config(self):
-        new_config = Form(self.env['pos.config'])
-        new_config.name = 'PoS Shop Test'
-        new_config.module_account = True
-        new_config.invoice_journal_id = self.invoice_journal
-        new_config.journal_id = self.pos_sale_journal
-        new_config.available_pricelist_ids.clear()
-        new_config.available_pricelist_ids.add(self.currency_pricelist)
-        new_config.pricelist_id = self.currency_pricelist
-        config = new_config.save()
-        cash_journal = config.payment_method_ids.filtered(lambda pm: pm.is_cash_count)[:1].cash_journal_id
-        cash_split_pm = self.env['pos.payment.method'].create({
-            'name': 'Split (Cash) PM',
-            'receivable_account_id': self.pos_receivable_account.id,
-            'split_transactions': True,
-            'is_cash_count': True,
-            'cash_journal_id': cash_journal.id,
+    @classmethod
+    def _create_basic_config(cls):
+        config = cls.env['pos.config'].create({
+            'name': 'PoS Shop Test',
+            'invoice_journal_id': cls.invoice_journal.id,
+            'available_pricelist_ids': cls.currency_pricelist.ids,
+            'pricelist_id': cls.currency_pricelist.id,
         })
-        config.write({'payment_method_ids': [(4,cash_split_pm.id,0)]})
+        cls.company_data['default_journal_cash'].pos_payment_method_ids.unlink()
+        cls.cash_pm1 = config.payment_method_ids.filtered(lambda c: c.journal_id.type == 'cash')
+        if cls.cash_pm1:
+            cls.cash_pm1.write({'receivable_account_id': cls.pos_receivable_cash.id})
+        else:
+            cls.cash_pm1 = cls.env['pos.payment.method'].create({
+                'name': 'Cash',
+                'journal_id': cls.company_data['default_journal_cash'].id,
+                'receivable_account_id': cls.pos_receivable_cash.id,
+                'company_id': cls.env.company.id,
+            })
+        cls.bank_pm1 = cls.env['pos.payment.method'].create({
+            'name': 'Bank',
+            'journal_id': cls.company_data['default_journal_bank'].id,
+            'receivable_account_id': cls.pos_receivable_bank.id,
+            'outstanding_account_id': cls.outstanding_bank.id,
+            'company_id': cls.env.company.id,
+        })
+        cls.cash_split_pm1 = cls.cash_pm1.copy(default={
+            'name': 'Split (Cash) PM',
+            'split_transactions': True,
+            'journal_id': cls.env['account.journal'].create({
+                                'name': "Cash",
+                                'code': "CSH %s" % config.id,
+                                'type': 'cash',
+                            }).id
+        })
+        cls.bank_split_pm1 = cls.bank_pm1.copy(default={
+            'name': 'Split (Bank) PM',
+            'split_transactions': True,
+        })
+        cls.pay_later_pm = cls.env['pos.payment.method'].create({'name': 'Pay Later', 'split_transactions': True})
+        config.write({'payment_method_ids': [(4, cls.cash_split_pm1.id), (4, cls.bank_split_pm1.id), (4, cls.cash_pm1.id), (4, cls.bank_pm1.id), (4, cls.pay_later_pm.id)]})
         return config
 
-    def _create_other_currency_config(self):
-        (self.other_currency.rate_ids | self.company_currency.rate_ids).unlink()
-        self.env['res.currency.rate'].create({
+    @classmethod
+    def _create_other_currency_config(cls):
+        (cls.other_currency.rate_ids | cls.company_currency.rate_ids).unlink()
+        cls.env['res.currency.rate'].create({
             'rate': 0.5,
-            'currency_id': self.other_currency.id,
+            'currency_id': cls.other_currency.id,
+            'name': datetime.today().date(),
         })
-        other_cash_journal = self.env['account.journal'].create({
+        other_cash_journal = cls.env['account.journal'].create({
             'name': 'Cash Other',
             'type': 'cash',
-            'company_id': self.company.id,
+            'company_id': cls.company.id,
             'code': 'CSHO',
             'sequence': 10,
-            'currency_id': self.other_currency.id
+            'currency_id': cls.other_currency.id
         })
-        other_invoice_journal = self.env['account.journal'].create({
+        other_invoice_journal = cls.env['account.journal'].create({
             'name': 'Customer Invoice Other',
             'type': 'sale',
-            'company_id': self.company.id,
+            'company_id': cls.company.id,
             'code': 'INVO',
             'sequence': 11,
-            'currency_id': self.other_currency.id
+            'currency_id': cls.other_currency.id
         })
-        other_sales_journal = self.env['account.journal'].create({
+        other_sales_journal = cls.env['account.journal'].create({
             'name':'PoS Sale Other',
             'type': 'sale',
             'code': 'POSO',
-            'company_id': self.company.id,
+            'company_id': cls.company.id,
             'sequence': 12,
-            'currency_id': self.other_currency.id
+            'currency_id': cls.other_currency.id
         })
-        other_pricelist = self.env['product.pricelist'].create({
-            'name': 'Public Pricelist Other',
-            'currency_id': self.other_currency.id,
-        })
-        other_cash_payment_method = self.env['pos.payment.method'].create({
-            'name': 'Cash Other',
-            'receivable_account_id': self.pos_receivable_account.id,
-            'is_cash_count': True,
-            'cash_journal_id': other_cash_journal.id,
-        })
-        other_bank_payment_method = self.env['pos.payment.method'].create({
+        other_bank_journal = cls.env['account.journal'].create({
             'name': 'Bank Other',
-            'receivable_account_id': self.pos_receivable_account.id,
+            'type': 'bank',
+            'company_id': cls.company.id,
+            'code': 'BNKO',
+            'sequence': 13,
+            'currency_id': cls.other_currency.id
+        })
+        other_pricelist = cls.env['product.pricelist'].create({
+            'name': 'Public Pricelist Other',
+            'currency_id': cls.other_currency.id,
+        })
+        cls.cash_pm2 = cls.env['pos.payment.method'].create({
+            'name': 'Cash Other',
+            'journal_id': other_cash_journal.id,
+            'receivable_account_id': cls.pos_receivable_cash.id,
+        })
+        cls.bank_pm2 = cls.env['pos.payment.method'].create({
+            'name': 'Bank Other',
+            'journal_id': other_bank_journal.id,
+            'receivable_account_id': cls.pos_receivable_bank.id,
+            'outstanding_account_id': cls.outstanding_bank.id,
         })
 
-        new_config = Form(self.env['pos.config'])
-        new_config.name = 'Shop Other'
-        new_config.invoice_journal_id = other_invoice_journal
-        new_config.journal_id = other_sales_journal
-        new_config.use_pricelist = True
-        new_config.available_pricelist_ids.clear()
-        new_config.available_pricelist_ids.add(other_pricelist)
-        new_config.pricelist_id = other_pricelist
-        new_config.payment_method_ids.clear()
-        new_config.payment_method_ids.add(other_cash_payment_method)
-        new_config.payment_method_ids.add(other_bank_payment_method)
-        config = new_config.save()
+        config = cls.env['pos.config'].create({
+            'name': 'Shop Other',
+            'invoice_journal_id': other_invoice_journal.id,
+            'journal_id': other_sales_journal.id,
+            'use_pricelist': True,
+            'available_pricelist_ids': other_pricelist.ids,
+            'pricelist_id': other_pricelist.id,
+            'payment_method_ids': [cls.cash_pm2.id, cls.bank_pm2.id],
+        })
         return config
 
-    def _create_categ_anglo(self):
-        return self.env['product.category'].create({
+    @classmethod
+    def _create_categ_anglo(cls):
+        return cls.env['product.category'].create({
             'name': 'Anglo',
             'parent_id': False,
             'property_cost_method': 'fifo',
             'property_valuation': 'real_time',
+            'property_stock_account_input_categ_id': cls.company_data['default_account_stock_in'].id,
+            'property_stock_account_output_categ_id': cls.company_data['default_account_stock_out'].id,
         })
 
-    def _create_taxes(self):
+    @classmethod
+    def _create_taxes(cls):
         """ Create taxes
 
         tax7: 7%, excluded in product price
         tax10: 10%, included in product price
+        tax21: 21%, included in product price
         """
-        tax7 = self.env['account.tax'].create({'name': 'Tax 7%', 'amount': 7})
-        tax10 = self.env['account.tax'].create({'name': 'Tax 10%', 'amount': 10, 'price_include': True, 'include_base_amount': False})
-        (tax7 | tax10).mapped('invoice_repartition_line_ids').write({'account_id': self.tax_received_account.id})
-        (tax7 | tax10).mapped('refund_repartition_line_ids').write({'account_id': self.tax_received_account.id})
+        def create_tag(name):
+            return cls.env['account.account.tag'].create({
+                'name': name,
+                'applicability': 'taxes',
+                'country_id': cls.env.company.account_fiscal_country_id.id
+            })
+
+        cls.tax_tag_invoice_base = create_tag('Invoice Base tag')
+        cls.tax_tag_invoice_tax = create_tag('Invoice Tax tag')
+        cls.tax_tag_refund_base = create_tag('Refund Base tag')
+        cls.tax_tag_refund_tax = create_tag('Refund Tax tag')
+
+        def create_tax(percentage, price_include_override='tax_excluded', include_base_amount=False):
+            return cls.env['account.tax'].create({
+                'name': f'Tax {percentage}%',
+                'amount': percentage,
+                'price_include_override': price_include_override,
+                'amount_type': 'percent',
+                'include_base_amount': include_base_amount,
+                'invoice_repartition_line_ids': [
+                    (0, 0, {
+                        'repartition_type': 'base',
+                        'tag_ids': [(6, 0, cls.tax_tag_invoice_base.ids)],
+                    }),
+                    (0, 0, {
+                        'repartition_type': 'tax',
+                        'account_id': cls.tax_received_account.id,
+                        'tag_ids': [(6, 0, cls.tax_tag_invoice_tax.ids)],
+                    }),
+                ],
+                'refund_repartition_line_ids': [
+                    (0, 0, {
+                        'repartition_type': 'base',
+                        'tag_ids': [(6, 0, cls.tax_tag_refund_base.ids)],
+                    }),
+                    (0, 0, {
+                        'repartition_type': 'tax',
+                        'account_id': cls.tax_received_account.id,
+                        'tag_ids': [(6, 0, cls.tax_tag_refund_tax.ids)],
+                    }),
+                ],
+            })
+
+        def create_tax_fixed(amount, price_include_override='tax_excluded', include_base_amount=False):
+            return cls.env['account.tax'].create({
+                'name': f'Tax fixed amount {amount}',
+                'amount': amount,
+                'price_include_override': price_include_override,
+                'include_base_amount': include_base_amount,
+                'amount_type': 'fixed',
+                'invoice_repartition_line_ids': [
+                    (0, 0, {
+                        'repartition_type': 'base',
+                        'tag_ids': [(6, 0, cls.tax_tag_invoice_base.ids)],
+                    }),
+                    (0, 0, {
+                        'repartition_type': 'tax',
+                        'account_id': cls.tax_received_account.id,
+                        'tag_ids': [(6, 0, cls.tax_tag_invoice_tax.ids)],
+                    }),
+                ],
+                'refund_repartition_line_ids': [
+                    (0, 0, {
+                        'repartition_type': 'base',
+                        'tag_ids': [(6, 0, cls.tax_tag_refund_base.ids)],
+                    }),
+                    (0, 0, {
+                        'repartition_type': 'tax',
+                        'account_id': cls.tax_received_account.id,
+                        'tag_ids': [(6, 0, cls.tax_tag_refund_tax.ids)],
+                    }),
+                ],
+            })
+
+        tax_fixed006 = create_tax_fixed(0.06, price_include_override='tax_included', include_base_amount=True)
+        tax_fixed012 = create_tax_fixed(0.12, price_include_override='tax_included', include_base_amount=True)
+        tax7 = create_tax(7, price_include_override='tax_excluded')
+        tax8 = create_tax(8, include_base_amount=True)
+        tax9 = create_tax(9)
+        tax10 = create_tax(10, price_include_override='tax_included')
+        tax21 = create_tax(21, price_include_override='tax_included')
+
 
         tax_group_7_10 = tax7.copy()
         with Form(tax_group_7_10) as tax:
@@ -293,7 +459,12 @@ class TestPoSCommon(TransactionCase):
 
         return {
             'tax7': tax7,
+            'tax8': tax8,
+            'tax9': tax9,
             'tax10': tax10,
+            'tax21': tax21,
+            'tax_fixed006': tax_fixed006,
+            'tax_fixed012': tax_fixed012,
             'tax_group_7_10': tax_group_7_10
         }
 
@@ -304,7 +475,7 @@ class TestPoSCommon(TransactionCase):
     def create_random_uid(self):
         return ('%05d-%03d-%04d' % (randint(1, 99999), randint(1, 999), randint(1, 9999)))
 
-    def create_ui_order_data(self, product_quantity_pairs, customer=False, is_invoiced=False, payments=None, uid=None):
+    def create_ui_order_data(self, pos_order_lines_ui_args, customer=False, is_invoiced=False, payments=None, uuid=None):
         """ Mocks the order_data generated by the pos ui.
 
         This is useful in making orders in an open pos session without making tours.
@@ -319,17 +490,31 @@ class TestPoSCommon(TransactionCase):
 
         The above values should be set when `self.open_new_session` is called.
 
-        :param list(tuple) product_quantity_pairs: pair of `ordered product` and `quantity`
+        :param list(tuple) pos_order_lines_ui_args: pairs of `ordered product` and `quantity`
+        or triplet of `ordered product`, `quantity` and discount
         :param list(tuple) payments: pair of `payment_method` and `amount`
         """
         default_fiscal_position = self.config.default_fiscal_position_id
         fiscal_position = customer.property_account_position_id if customer else default_fiscal_position
 
-        def create_order_line(product, quantity):
-            price_unit = self.pricelist.get_product_price(product, quantity, False)
-            tax_ids = fiscal_position.map_tax(product.taxes_id) if fiscal_position else product.taxes_id
+        def normalize_order_line_param(param):
+            if isinstance(param, dict):
+                return param
+
+            assert len(param) >= 2
+            return {
+                'product': param[0],
+                'quantity': param[1],
+                'discount': 0.0 if len(param) == 2 else param[2],
+            }
+
+        def create_order_line(product, quantity, **kwargs):
+            price_unit = self.pricelist._get_product_price(product, quantity)
+            tax_ids = fiscal_position.map_tax(product.taxes_id.filtered_domain(self.env['account.tax']._check_company_domain(self.env.company)))
+            discount = kwargs.get('discount', 0.0)
+            price_unit_after_discount = price_unit * (1 - discount / 100.0)
             tax_values = (
-                tax_ids.compute_all(price_unit, self.currency, quantity)
+                tax_ids.compute_all(price_unit_after_discount, self.currency, quantity)
                 if tax_ids
                 else {
                     'total_excluded': price_unit * quantity,
@@ -337,7 +522,7 @@ class TestPoSCommon(TransactionCase):
                 }
             )
             return (0, 0, {
-                'discount': 0,
+                **kwargs,
                 'id': randint(1, 1000000),
                 'pack_lot_ids': [],
                 'price_unit': price_unit,
@@ -355,15 +540,21 @@ class TestPoSCommon(TransactionCase):
                 'payment_method_id': payment_method.id,
             })
 
-        uid = uid or self.create_random_uid()
+        uuid = uuid or self.create_random_uid()
 
         # 1. generate the order lines
-        order_lines = [create_order_line(product, quantity) for product, quantity in product_quantity_pairs]
+        order_lines = [
+            create_order_line(**normalize_order_line_param(param))
+            for param in pos_order_lines_ui_args
+        ]
 
         # 2. generate the payments
         total_amount_incl = sum(line[2]['price_subtotal_incl'] for line in order_lines)
         if payments is None:
-            payments = [create_payment(self.cash_pm, total_amount_incl)]
+            default_cash_pm = self.config.payment_method_ids.filtered(lambda pm: pm.is_cash_count and not pm.split_transactions)[:1]
+            if not default_cash_pm:
+                raise Exception('There should be a cash payment method set in the pos.config.')
+            payments = [create_payment(default_cash_pm, total_amount_incl)]
         else:
             payments = [
                 create_payment(pm, amount)
@@ -373,61 +564,53 @@ class TestPoSCommon(TransactionCase):
         # 3. complete the fields of the order_data
         total_amount_base = sum(line[2]['price_subtotal'] for line in order_lines)
         return {
-            'data': {
-                'amount_paid': sum(payment[2]['amount'] for payment in payments),
-                'amount_return': 0,
-                'amount_tax': total_amount_incl - total_amount_base,
-                'amount_total': total_amount_incl,
-                'creation_date': fields.Datetime.to_string(fields.Datetime.now()),
-                'fiscal_position_id': fiscal_position.id,
-                'pricelist_id': self.config.pricelist_id.id,
-                'lines': order_lines,
-                'name': 'Order %s' % uid,
-                'partner_id': customer and customer.id,
-                'pos_session_id': self.pos_session.id,
-                'sequence_number': 2,
-                'statement_ids': payments,
-                'uid': uid,
-                'user_id': self.pos_manager.id,
-                'to_invoice': is_invoiced,
-            },
-            'id': uid,
+            'amount_paid': sum(payment[2]['amount'] for payment in payments),
+            'amount_return': 0,
+            'amount_tax': total_amount_incl - total_amount_base,
+            'amount_total': total_amount_incl,
+            'date_order': fields.Datetime.to_string(fields.Datetime.now()),
+            'fiscal_position_id': fiscal_position.id,
+            'pricelist_id': self.config.pricelist_id.id,
+            'name': 'Order %s' % uuid,
+            'last_order_preparation_change': '{}',
+            'lines': order_lines,
+            'partner_id': customer and customer.id,
+            'session_id': self.pos_session.id,
+            'sequence_number': 2,
+            'payment_ids': payments,
+            'uuid': uuid,
+            'user_id': self.env.uid,
             'to_invoice': is_invoiced,
         }
 
-    def create_product(self, name, category, lst_price, standard_price=None, tax_ids=None, sale_account=None):
-        product = self.env['product.product'].create({
-            'type': 'product',
+    @classmethod
+    def create_product(cls, name, category, lst_price, standard_price=None, tax_ids=None, sale_account=None):
+        product = cls.env['product.product'].create({
+            'is_storable': True,
             'available_in_pos': True,
             'taxes_id': [(5, 0, 0)] if not tax_ids else [(6, 0, tax_ids)],
             'name': name,
             'categ_id': category.id,
             'lst_price': lst_price,
             'standard_price': standard_price if standard_price else 0.0,
+            'company_id': cls.env.company.id,
         })
-        product.invoice_policy = 'delivery'
         if sale_account:
             product.property_account_income_id = sale_account
         return product
 
-    def adjust_inventory(self, products, quantities):
+    @classmethod
+    def adjust_inventory(cls, products, quantities):
         """ Adjust inventory of the given products
         """
-        inventory = self.env['stock.inventory'].create({
-            'name': 'Inventory adjustment'
-        })
         for product, qty in zip(products, quantities):
-            self.env['stock.inventory.line'].create({
+            cls.env['stock.quant'].with_context(inventory_mode=True).create({
                 'product_id': product.id,
-                'product_uom_id': self.env.ref('uom.product_uom_unit').id,
-                'inventory_id': inventory.id,
-                'product_qty': qty,
-                'location_id': self.env.ref('stock.stock_location_components').id,
-            })
-        inventory._action_start()
-        inventory.action_validate()
+                'inventory_quantity': qty,
+                'location_id': cls.stock_location_components.id,
+            }).action_apply_inventory()
 
-    def open_new_session(self):
+    def open_new_session(self, opening_cash=0):
         """ Used to open new pos session in each configuration.
 
         - The idea is to properly set values that are constant
@@ -439,17 +622,128 @@ class TestPoSCommon(TransactionCase):
             * config : the pos.config currently being used.
                 Its value is set at `self.setUp` of the inheriting
                 test class.
-            * session : the current_session_id of config
+            * pos_session : the current_session_id of config
             * currency : currency of the current pos.session
             * pricelist : the default pricelist of the session
-            * cash_pm : cash payment method of the session
-            * bank_pm : bank payment method of the session
-            * cash_split_pm : credit payment method of the session
         """
-        self.config.open_session_cb()
+        self.config.open_ui()
         self.pos_session = self.config.current_session_id
         self.currency = self.pos_session.currency_id
         self.pricelist = self.pos_session.config_id.pricelist_id
-        self.cash_pm = self.pos_session.payment_method_ids.filtered(lambda pm: pm.is_cash_count and not pm.split_transactions)[:1]
-        self.bank_pm = self.pos_session.payment_method_ids.filtered(lambda pm: not pm.is_cash_count and not pm.split_transactions)[:1]
-        self.cash_split_pm = self.pos_session.payment_method_ids.filtered(lambda pm: pm.is_cash_count and pm.split_transactions)[:1]
+        self.pos_session.set_opening_control(opening_cash, None)
+        return self.pos_session
+
+    def _run_test(self, args):
+        pos_session = self._start_pos_session(args['payment_methods'], args.get('opening_cash', 0))
+        _logger.info('DONE: Start session.')
+        orders_map = self._create_orders(args['orders'])
+        _logger.info('DONE: Orders created.')
+        before_closing_cb = args.get('before_closing_cb')
+        if before_closing_cb:
+            before_closing_cb()
+            _logger.info('DONE: Call of before_closing_cb.')
+        self._check_invoice_journal_entries(pos_session, orders_map, expected_values=args['journal_entries_before_closing'])
+        _logger.info('DONE: Checks for journal entries before closing the session.')
+        cash_payment_method = pos_session.payment_method_ids.filtered('is_cash_count')[:1]
+        total_cash_payment = sum(pos_session.mapped('order_ids.payment_ids').filtered(lambda payment: payment.payment_method_id.id == cash_payment_method.id).mapped('amount'))
+        pos_session.post_closing_cash_details(total_cash_payment)
+        pos_session.close_session_from_ui()
+        after_closing_cb = args.get('after_closing_cb')
+        if after_closing_cb:
+            after_closing_cb()
+            _logger.info('DONE: Call of after_closing_cb.')
+        self._check_session_journal_entries(pos_session, expected_values=args['journal_entries_after_closing'])
+        _logger.info('DONE: Checks for journal entries after closing the session.')
+
+    def _start_pos_session(self, payment_methods, opening_cash):
+        self.config.write({'payment_method_ids': [(6, 0, payment_methods.ids)]})
+        pos_session = self.open_new_session(opening_cash)
+        self.assertEqual(self.config.payment_method_ids.ids, pos_session.payment_method_ids.ids, msg='Payment methods in the config should be the same as the session.')
+        return pos_session
+
+    def _create_orders(self, order_data_params):
+        '''Returns a dict mapping uuid to its created pos.order record.'''
+        result = {}
+        order_data = [self.create_ui_order_data(**params) for params in order_data_params]
+        order_ids = [order['id'] for order in self.env['pos.order'].sync_from_ui(order_data)['pos.order']]
+        for order_id in self.env["pos.order"].browse(order_ids):
+            result[order_id.uuid] = order_id
+        return result
+
+    def _check_invoice_journal_entries(self, pos_session, orders_map, expected_values):
+        '''Checks the invoice, together with the payments, from each invoiced order.'''
+        currency_rounding = pos_session.currency_id.rounding
+
+        for uid in orders_map:
+            order = orders_map[uid]
+            if not order.is_invoiced:
+                continue
+            invoice = order.account_move
+            # allow not checking the invoice since pos is not creating the invoices
+            if expected_values[uid].get('invoice'):
+                self._assert_account_move(invoice, expected_values[uid]['invoice'])
+                _logger.info('DONE: Check of invoice for order %s.', uid)
+
+            for pos_payment in order.payment_ids:
+                if pos_payment.payment_method_id == self.pay_later_pm:
+                    # Skip the pay later payments since there are no journal entries
+                    # for them when invoicing.
+                    continue
+
+                # This predicate is used to match the pos_payment's journal entry to the
+                # list of payments specified in the 'payments' field of the `_run_test`
+                # args.
+                def predicate(args):
+                    payment_method, amount = args
+                    first = payment_method == pos_payment.payment_method_id
+                    second = tools.float_is_zero(pos_payment.amount - amount, precision_rounding=currency_rounding)
+                    return first and second
+
+                self._find_then_assert_values(pos_payment.account_move_id, expected_values[uid]['payments'], predicate)
+                _logger.info('DONE: Check of invoice payment (%s, %s) for order %s.', pos_payment.payment_method_id.name, pos_payment.amount, uid)
+
+    def _check_session_journal_entries(self, pos_session, expected_values):
+        '''Checks the journal entries after closing the session excluding entries checked in `_check_invoice_journal_entries`.'''
+        currency_rounding = pos_session.currency_id.rounding
+
+        # check expected session journal entry
+        self._assert_account_move(pos_session.move_id, expected_values['session_journal_entry'])
+        _logger.info("DONE: Check of the session's account move.")
+
+        # check expected cash journal entries
+        for statement_line in pos_session.statement_line_ids:
+            def statement_line_predicate(args):
+                return tools.float_is_zero(statement_line.amount - args[0], precision_rounding=currency_rounding)
+            self._find_then_assert_values(statement_line.move_id, expected_values['cash_statement'], statement_line_predicate)
+        _logger.info("DONE: Check of cash statement lines.")
+
+        # check expected bank payments
+        for bank_payment in pos_session.bank_payment_ids:
+            def bank_payment_predicate(args):
+                return tools.float_is_zero(bank_payment.amount - args[0], precision_rounding=currency_rounding)
+            self._find_then_assert_values(bank_payment.move_id, expected_values['bank_payments'], bank_payment_predicate)
+        _logger.info("DONE: Check of bank account payments.")
+
+    def _find_then_assert_values(self, account_move, source_of_expected_vals, predicate):
+        expected_move_vals = next(move_vals for args, move_vals in source_of_expected_vals if predicate(args))
+        self._assert_account_move(account_move, expected_move_vals)
+
+    def _assert_account_move(self, account_move, expected_account_move_vals):
+        if expected_account_move_vals:
+            # We allow partial checks of the lines of the account move if `line_ids_predicate` is specified.
+            # This means that only those that satisfy the predicate are compared to the expected account move line_ids.
+            line_ids_predicate = expected_account_move_vals.pop('line_ids_predicate', lambda _: True)
+            self.assertRecordValues(account_move.line_ids.filtered(line_ids_predicate), expected_account_move_vals.pop('line_ids'))
+            self.assertRecordValues(account_move, [expected_account_move_vals])
+        else:
+            # if the expected_account_move_vals is falsy, the account_move should be falsy.
+            self.assertFalse(account_move)
+
+    def make_payment(self, order, payment_method, amount):
+        """ Make payment for the order using the given payment method.
+        """
+        payment_context = {"active_id": order.id, "active_ids": order.ids}
+        return self.env['pos.make.payment'].with_context(**payment_context).create({
+            'amount': amount,
+            'payment_method_id': payment_method.id,
+        }).check()

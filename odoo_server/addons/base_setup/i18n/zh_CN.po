@@ -3,32 +3,18 @@
 # 	* base_setup
 # 
 # Translators:
-# Zamba Lee <zambalee@gmail.com>, 2019
-# Martin Trigaux, 2019
-# liAnGjiA <liangjia@qq.com>, 2019
-# 苏州远鼎 <tiexinliu@126.com>, 2019
-# fausthuang, 2019
-# xiaobin wu <bd5dml@gmail.com>, 2019
-# lttlsnk <lttlsnk@gmail.com>, 2019
-# 山西清水欧度(QQ:54773801) <54773801@qq.com>, 2019
-# aishiby Ail <15287995117@189.cn>, 2019
-# Cécile Collart <cco@odoo.com>, 2019
-# keecome <7017511@qq.com>, 2019
-# ChinaMaker <liuct@chinamaker.net>, 2019
-# neter ji <jifuyi@qq.com>, 2019
-# snow wang <147156565@qq.com>, 2019
-# inspur qiuguodong <qiuguodong@inspur.com>, 2019
-# Jeffery CHEN Fan <jeffery9@gmail.com>, 2020
-# as co02 <asco02@163.com>, 2020
+# Wil Odoo, 2024
+# Chloe Wang, 2024
+# Odoo哥 <vnsoft.he@gmail.com>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-13 11:27+0000\n"
-"PO-Revision-Date: 2019-08-26 09:09+0000\n"
-"Last-Translator: as co02 <asco02@163.com>, 2020\n"
-"Language-Team: Chinese (China) (https://www.transifex.com/odoo/teams/41243/zh_CN/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Odoo哥 <vnsoft.he@gmail.com>, 2024\n"
+"Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -36,91 +22,82 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
-msgid "(Community Edition)"
-msgstr "(社区版)"
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "<span class=\"fa fa-lg fa-users\" aria-label=\"Number of active users\"/>"
+msgstr "<span class=\"fa fa-lg fa-users\" aria-label=\"有效用户数量\"/>"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
-"<span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-"
-"specific.\" aria-label=\"Values set here are company-specific.\" "
-"groups=\"base.group_multi_company\" role=\"img\"/>"
+"<span class=\"o_form_label\" invisible=\"active_user_count &gt; 1\">\n"
+"                                        Active User\n"
+"                                    </span>\n"
+"                                    <span class=\"o_form_label\" invisible=\"active_user_count &lt;= 1\">\n"
+"                                        Active Users\n"
+"                                    </span>"
 msgstr ""
-"<span class=\"fa fa-lg fa-building-o\" title=\"此值仅针对当前公司。\" aria-"
-"label=\"此值仅针对当前公司。\" groups=\"base.group_multi_company\" role=\"img\"/>"
+"<span class=\"o_form_label\" invisible=\"active_user_count &gt; 1\">\n"
+"                                        活跃用户\n"
+"                                    </span>\n"
+"                                    <span class=\"o_form_label\" invisible=\"active_user_count &lt;= 1\">\n"
+"                                        活跃用户\n"
+"                                    </span>"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
-"<span class=\"o_form_label\" attrs=\"{'invisible':[('active_user_count', '&gt;', '1')]}\">\n"
-"                                            Active User\n"
-"                                        </span>\n"
-"                                        <span class=\"o_form_label\" attrs=\"{'invisible':[('active_user_count', '&lt;=', '1')]}\">\n"
-"                                            Active Users\n"
-"                                        </span>\n"
-"\n"
-"                                        <br/>"
+"<span class=\"o_form_label\" invisible=\"company_count &gt; 1\">\n"
+"                                        Company\n"
+"                                    </span>\n"
+"                                    <span class=\"o_form_label\" invisible=\"company_count &lt;= 1\">\n"
+"                                        Companies\n"
+"                                    </span>\n"
+"                                    <br/>"
 msgstr ""
-"<span class=\"o_form_label\" attrs=\"{'invisible':[('active_user_count', '&gt;', '1')]}\">\n"
-"                                            有效用户\n"
-"                                        </span>\n"
-"                                        <span class=\"o_form_label\" attrs=\"{'invisible':[('active_user_count', '&lt;=', '1')]}\">\n"
-"                                            有效用户\n"
-"                                        </span>\n"
-"\n"
-"                                        <br/>"
+"<span class=\"o_form_label\" invisible=\"company_count &gt; 1\">\n"
+"                                        公司\n"
+"                                    </span>\n"
+"                                    <span class=\"o_form_label\" invisible=\"company_count &lt;= 1\">\n"
+"                                        公司\n"
+"                                    </span>\n"
+"                                    <br/>"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
-"<span class=\"o_form_label\">\n"
-"                                                Languages\n"
-"                                            </span>"
-msgstr ""
-"<span class=\"o_form_label\">\n"
-"                                                语言\n"
-"                                            </span>"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"<span class=\"o_form_label\">\n"
-"                                            Companies\n"
+"<span class=\"o_form_label\" invisible=\"language_count &gt; 1\">\n"
+"                                            Language\n"
 "                                        </span>\n"
-"                                        <br/>"
+"                                        <span class=\"o_form_label\" invisible=\"language_count &lt;= 1\">\n"
+"                                            Languages\n"
+"                                        </span>"
 msgstr ""
-"<span class=\"o_form_label\">\n"
-"                                            公司\n"
+"<span class=\"o_form_label\" invisible=\"language_count &gt; 1\">\n"
+"                                            种语言\n"
 "                                        </span>\n"
-"                                        <br/>"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"<span class=\"o_form_label\">Document Layout</span>\n"
-"                                        <span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-specific.\" aria-label=\"Values set here are company-specific.\" groups=\"base.group_multi_company\" role=\"img\"/>"
-msgstr ""
-"<span class=\"o_form_label\">文档布局</span>\n"
-"                                        <span class=\"fa fa-lg fa-building-o\" title=\"此值仅针对当前公司。\" aria-label=\"此值仅针对当前公司。\" groups=\"base.group_multi_company\" role=\"img\"/>"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"<span class=\"o_form_label\">Format</span>\n"
-"                                        <span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-specific.\" aria-label=\"Values set here are company-specific.\" groups=\"base.group_multi_company\" role=\"img\"/>"
-msgstr ""
-"<span class=\"o_form_label\">格式</span>\n"
-"                                        <span class=\"fa fa-lg fa-building-o\" title=\"此值仅针对当前公司。 aria-label=\"此值仅针对当前公司。\" groups=\"base.group_multi_company\" role=\"img\"/>"
+"                                        <span class=\"o_form_label\" invisible=\"language_count &lt;= 1\">\n"
+"                                            种语言\n"
+"                                        </span>"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
 "<strong>Save</strong> this page and come back here to choose your Geo "
 "Provider."
-msgstr "<strong>保存</strong> 此页面并返回此处再选择Geo提供商。"
+msgstr "<strong>保存</strong>这个页面并返回这里来选择您的地理定位供应商。"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid ""
+"<strong>Save</strong> this page and come back here to set up Cloudflare "
+"turnstile."
+msgstr "<strong>保存</strong> 此页面并返回此处进行 Cloudflare Turnstile 设置。"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid ""
+"<strong>Save</strong> this page and come back here to set up reCaptcha."
+msgstr "<strong>保存</strong> 此页面，然后返回此处设置 reCaptcha。"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -130,35 +107,31 @@ msgstr "<strong>保存</strong> 此页面并返回此处以设置该功能。"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "API Keys"
+msgstr "API密钥"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid ""
+"API Keys allow your users to access Odoo with external tools when multi-"
+"factor authentication is enabled."
+msgstr "通过API密钥，您的用户在启用多因素身份验证时可以使用外部工具访问Odoo。"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "About"
 msgstr "关于"
 
 #. module: base_setup
+#. odoo-python
 #: code:addons/base_setup/controllers/main.py:0
-#, python-format
 msgid "Access Denied"
-msgstr "拒绝访问"
+msgstr "访问被拒绝"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Activate the developer mode"
-msgstr "激活开发者模式"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Activate the developer mode (with assets)"
-msgstr "激活开发者模式 (assets)"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Activate the developer mode (with tests assets)"
-msgstr "激活开发者模式 (以及测试资产)"
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Add Languages"
+msgstr "添加语言"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -166,9 +139,19 @@ msgid "Add fun feedback and motivate your employees"
 msgstr "增加有趣的反馈并激励员工"
 
 #. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_mail_plugin
+msgid "Allow integration with the mail plugins"
+msgstr "允许与邮件插件集成"
+
+#. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_calendar
 msgid "Allow the users to synchronize their calendar  with Google Calendar"
-msgstr "允许用户同步Google日历"
+msgstr "允许用户同步谷歌日历"
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_microsoft_calendar
+msgid "Allow the users to synchronize their calendar with Outlook Calendar"
+msgstr "允许用户同步Outlook日历"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_base_import
@@ -179,50 +162,34 @@ msgstr "允许用户导入 CSV/XLS/XLSX/ODS格式的文档数据"
 #. module: base_setup
 #: model:ir.model.fields,help:base_setup.field_res_config_settings__group_multi_currency
 msgid "Allows to work in a multi currency environment"
-msgstr "允许在多货币环境中使用"
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_voip
-msgid "Asterisk (VoIP)"
-msgstr "Asterisk (开源VoIP平台)"
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_drive
-msgid "Attach Google documents to any record"
-msgstr "附加Google文档到记录"
+msgstr "允许在多币别环境中使用"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Automatically enrich your contact base with company data"
-msgstr "自动填充联系人的公司信息"
+msgstr "自动使用公司数据填写您的联系方式"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Automatically generate counterpart documents in recipient companies"
+msgstr "自动生成接收公司的对应文件"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
-"Automatically generate counterpart documents for orders/invoices between "
-"companies"
-msgstr "自动为公司之间的订单/发票生成对应的凭证"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Business Documents"
-msgstr "商业文档"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid ""
-"By default, new users get highest access rights for all installed apps."
-msgstr "默认情况下，新用户获得所有安装的应用程序的最高访问权限。"
+"By default, new users get highest access rights for all installed apps. If "
+"unchecked, new users will only have basic employee access."
+msgstr "默认情况下，新用户可获得所有已安装应用程序的最高访问权限。如果不勾选，新用户将只有基本的员工访问权限。"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Choose the layout of your documents"
-msgstr "选择文档的布局"
+msgstr "选择文档排版"
 
 #. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_pad
-msgid "Collaborative Pads"
-msgstr "协作pad"
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_website_cf_turnstile
+msgid "Cloudflare Turnstile"
+msgstr "Cloudflare Turnstile"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -233,6 +200,11 @@ msgstr "公司"
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__company_id
 msgid "Company"
 msgstr "公司"
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__company_country_code
+msgid "Company Country Code"
+msgstr "公司所在国家/地区代码"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__company_informations
@@ -252,7 +224,7 @@ msgstr "配置设置"
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Configure Document Layout"
-msgstr "配置文档布局"
+msgstr "设置文档外观"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -264,31 +236,12 @@ msgstr "配置公司规则，当您的公司向另一个公司销售/购买产�
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Contacts"
-msgstr "更多联系人"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
-msgid "Copyright © 2004"
-msgstr "Copyright © 2004"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Create and attach Google Drive documents to any record"
-msgstr "创建Google云端硬盘文档并将其附加到任何记录"
+msgstr "联系人"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__report_footer
 msgid "Custom Report Footer"
 msgstr "自定义报表页脚"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Deactivate the developer mode"
-msgstr "取消开发者模式"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__user_default_rights
@@ -297,16 +250,20 @@ msgid "Default Access Rights"
 msgstr "默认访问权限"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Developer Tools"
-msgstr "开发者工具"
+#. odoo-python
+#: code:addons/base_setup/models/res_config_settings.py:0
+msgid "Default User Template not found."
+msgstr "没有找到默认的用户模板。"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Document Layout"
+msgstr "文档布局"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__external_report_layout_id
 msgid "Document Template"
-msgstr "文档模板"
+msgstr "单据模板"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -314,21 +271,11 @@ msgid "Edit Layout"
 msgstr "编辑布局"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "Enter e-mail address"
-msgstr "输入Email地址"
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__external_email_server_default
-msgid "External Email Servers"
-msgstr "外部邮件服务器"
-
-#. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Extract and analyze Odoo data from Google Spreadsheet"
-msgstr "从Google Spreadsheet中提取和分析Odoo数据"
+msgid ""
+"Enable the profiling tool. Profiling may impact performance while being "
+"active."
+msgstr "有效分析工具。分析可能会在处于活动状态时影响性能。"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -338,35 +285,13 @@ msgstr "从Unsplash中查找免费的高分辨率图像"
 #. module: base_setup
 #: model:ir.model.fields,help:base_setup.field_res_config_settings__report_footer
 msgid "Footer text displayed at the bottom of all reports."
-msgstr "页脚文本显示在所有报告的底部。"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Format"
-msgstr "格式"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
-msgid "GNU LGPL Licensed"
-msgstr "GNU LGPL授权"
+msgstr "显示在所有报告下方的页脚文字。"
 
 #. module: base_setup
 #: model:ir.ui.menu,name:base_setup.menu_config
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "General Settings"
-msgstr "常规设置"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Gengo Translations"
-msgstr "Gengo 翻译"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Geo Localization"
-msgstr "Geo 定位"
+msgstr "一般设置"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_base_geolocalize
@@ -375,23 +300,18 @@ msgstr "地理定位"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "GeoLocalize your partners"
-msgstr "定位合作伙伴"
+msgid "Geolocate your partners"
+msgstr "定位合作伙伴地理位置"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Google Calendar"
-msgstr "Google日历"
+msgid "Geolocation"
+msgstr "地理位置"
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Google Drive"
-msgstr "Google网盘"
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_spreadsheet
-msgid "Google Spreadsheet"
-msgstr "Google 电子表格"
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_product_images
+msgid "Get product pictures using barcode"
+msgstr "使用条形码获取产品图片"
 
 #. module: base_setup
 #: model:ir.model,name:base_setup.model_ir_http
@@ -401,7 +321,12 @@ msgstr "HTTP 路由"
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Import & Export"
-msgstr "导入 & 导出"
+msgstr "导入和 导出"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Integrate with mail client plugins"
+msgstr "与邮件客户端插件集成"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -414,18 +339,9 @@ msgid "Inter-Company Transactions"
 msgstr "公司间交易"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "Invite"
-msgstr "邀请"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "Invite New Users"
-msgstr "邀请新用户"
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__is_root_company
+msgid "Is Root Company"
+msgstr "是母公司"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_auth_ldap
@@ -444,11 +360,14 @@ msgid "Layout"
 msgstr "布局"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_dev_tool.xml:0
-#, python-format
-msgid "Load demo data"
-msgstr "加载演示数据"
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Mail Plugin"
+msgstr "邮件插件"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Manage API Keys"
+msgstr "管理 API 密钥"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -456,7 +375,7 @@ msgid "Manage Companies"
 msgstr "管理公司"
 
 #. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_inter_company_rules
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_account_inter_company_rules
 msgid "Manage Inter Company"
 msgstr "管理公司间交易"
 
@@ -471,19 +390,14 @@ msgid "Manage Users"
 msgstr "管理用户"
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Multi-Company"
-msgstr "多公司"
-
-#. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__group_multi_currency
 msgid "Multi-Currencies"
-msgstr "多币种"
+msgstr "多币别"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__active_user_count
 msgid "Number of Active Users"
-msgstr "有效用户数"
+msgstr "有效用户数量"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__company_count
@@ -501,45 +415,24 @@ msgid "OAuth Authentication"
 msgstr "OAuth认证"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Odoo"
 msgstr "Odoo"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_edition.xml:0
-#, python-format
-msgid "Odoo S.A."
-msgstr "Odoo S.A."
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "On Apple Store"
-msgstr "苹果应用商店"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "On Google Play"
-msgstr "谷歌应用市场"
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__paperformat_id
-msgid "Paper format"
-msgstr "纸张格式"
-
-#. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_partner_autocomplete
 msgid "Partner Autocomplete"
-msgstr "业务伙伴自动完成"
+msgstr "合作伙伴自动完成"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "Pending Invitations:"
-msgstr "待处理邀请："
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Performance"
+msgstr "性能"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Permissions"
+msgstr "权限"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -547,24 +440,44 @@ msgid "Preview Document"
 msgstr "预览文档"
 
 #. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__profiling_enabled_until
+msgid "Profiling enabled until"
+msgstr "启用分析直到"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Progressive Web App"
+msgstr "PWA程序"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Protect your forms from spam and abuse."
+msgstr "保护您的表格不被垃圾邮件和滥用。"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Protect your forms with CF Turnstile."
+msgstr "使用 CF Turnstile 保护您的表单。"
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_sms
+msgid "SMS"
+msgstr "短信息"
+
+#. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Send SMS"
-msgstr "发送短信"
+msgstr "发送短信息"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Send texts to your contacts"
-msgstr "给联系人发信息"
+msgstr "向您的联系人发送短信"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Set custom access rights for new users"
 msgstr "为新用户设置自定义访问权限"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Set the paper format of printed documents"
-msgstr "设置打印文档的纸张格式"
 
 #. module: base_setup
 #: model:ir.actions.act_window,name:base_setup.action_general_configuration
@@ -577,38 +490,20 @@ msgid "Show Effect"
 msgstr "显示效果"
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Statistics"
-msgstr "统计信息"
+#: model:ir.model.fields,help:base_setup.field_res_config_settings__company_country_code
+msgid ""
+"The ISO country code in two chars. \n"
+"You can use this field for quick search."
+msgstr ""
+"两位数的ISO国家/地区代码。\n"
+"可以使用该字段进行快速搜索。"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Synchronize your calendar with Google Calendar"
-msgstr "将日历与Google日历同步"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/js/res_config_invite_users.js:0
-#, python-format
-msgid "The following email addresses already exist: %s."
-msgstr "下列邮件地址已经存在：%s。"
-
-#. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/js/res_config_invite_users.js:0
-#, python-format
-msgid "The following email addresses are invalid: %s."
-msgstr "下列邮件地址无效：%s。"
-
-#. module: base_setup
-#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_base_gengo
-msgid "Translate Your Website with Gengo"
-msgstr "用Gengo翻译您的网站"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Translate your website with Gengo"
-msgstr "用Gengo翻译您的网站"
+msgid ""
+"This name will be used for the application when Odoo is installed through "
+"the browser."
+msgstr "如果Odoo通过浏览器安装了PWA，则将以此名称命名。"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_web_unsplash
@@ -628,7 +523,7 @@ msgstr "使用LDAP凭据登录"
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Use external accounts to log in (Google, Facebook, etc.)"
-msgstr "使用外部帐户登录（Google，Facebook等）"
+msgstr "使用外部帐户登录（谷歌，脸书等）"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_auth_oauth
@@ -636,18 +531,25 @@ msgid "Use external authentication providers (OAuth)"
 msgstr "使用外部验证提供者 (OAuth)"
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Use external pads in Odoo Notes"
-msgstr "在Odoo Notes中使用外部记事板"
+#: model:ir.model,name:base_setup.model_res_users
+msgid "User"
+msgstr "用户"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/js/res_config_invite_users.js:0
-#: model:ir.model,name:base_setup.model_res_users
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-#, python-format
 msgid "Users"
 msgstr "用户"
+
+#. module: base_setup
+#. odoo-python
+#: code:addons/base_setup/models/res_config_settings.py:0
+msgid "VAT"
+msgstr "增值税"
+
+#. module: base_setup
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_voip
+msgid "VoIP"
+msgstr "网络电话"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -655,11 +557,9 @@ msgid ""
 "When populating your address book, Odoo provides a list of matching "
 "companies. When selecting one item, the company data and logo are auto-"
 "filled."
-msgstr "当公布你的地址簿时，系统为你提供一个匹配公司列表。当选择其中一个，公司数据和logo会自动填充。"
+msgstr "当公布您的地址簿时，系统为您提供一个匹配公司列表。当选择其中一个，公司数据和logo会自动填充。"
 
 #. module: base_setup
-#. openerp-web
-#: code:addons/base_setup/static/src/xml/res_config_invite_users.xml:0
-#, python-format
-msgid "more"
-msgstr "更多"
+#: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_recaptcha
+msgid "reCAPTCHA"
+msgstr "验证码"

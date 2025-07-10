@@ -8,9 +8,9 @@ from odoo.exceptions import ValidationError
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    report_grids = fields.Boolean(
-        string="Print Variant Grids", default=True,
-        help="If set, the matrix of the products configurable by matrix will be shown on the report of the order.")
+    # if set, the matrix of the products configurable by matrix will be shown
+    # on the report of the order.
+    report_grids = fields.Boolean(string="Print Variant Grids", default=True)
 
     """ Matrix loading and update: fields and methods :
 
@@ -23,14 +23,14 @@ class SaleOrder(models.Model):
     """
 
     grid_product_tmpl_id = fields.Many2one(
-        'product.template', store=False,
-        help="Technical field for product_matrix functionalities.")
-    grid_update = fields.Boolean(
-        default=False, store=False,
-        help="Whether the grid field contains a new matrix to apply or not.")
+        'product.template', store=False)
+    # Whether the grid field contains a new matrix to apply or not
+    grid_update = fields.Boolean(default=False, store=False)
     grid = fields.Char(
         "Matrix local storage", store=False,
-        help="Technical local storage of grid. \nIf grid_update, will be loaded on the SO. \nIf not, represents the matrix to open.")
+        help="Technical local storage of grid. "
+        "\nIf grid_update, will be loaded on the SO."
+        "\nIf not, represents the matrix to open.")
 
     @api.onchange('grid_product_tmpl_id')
     def _set_grid_up(self):
@@ -55,14 +55,21 @@ class SaleOrder(models.Model):
 
                 # create or find product variant from combination
                 product = product_template._create_product_variant(combination)
-                order_lines = self.order_line.filtered(lambda line: (line._origin or line).product_id == product and (line._origin or line).product_no_variant_attribute_value_ids == no_variant_attribute_values)
+                order_lines = self.order_line.filtered(
+                    lambda line: line.product_id.id == product.id
+                    and line.product_no_variant_attribute_value_ids.ids == no_variant_attribute_values.ids
+                )
 
                 # if product variant already exist in order lines
                 old_qty = sum(order_lines.mapped('product_uom_qty'))
                 qty = cell['qty']
                 diff = qty - old_qty
+
+                if not diff:
+                    continue
+
                 # TODO keep qty check? cannot be 0 because we only get cell changes ...
-                if diff and order_lines:
+                if order_lines:
                     if qty == 0:
                         if self.state in ['draft', 'sent']:
                             # Remove lines if qty was set to 0 in matrix
@@ -92,10 +99,13 @@ class SaleOrder(models.Model):
                             # if len(order_lines) > 1:
                             #     # Remove 1+ lines
                             #     self.order_line -= order_lines[1:]
-                elif diff and not order_lines:
+                else:
                     if not default_so_line_vals:
                         OrderLine = self.env['sale.order.line']
                         default_so_line_vals = OrderLine.default_get(OrderLine._fields.keys())
+                    last_sequence = self.order_line[-1:].sequence
+                    if last_sequence:
+                        default_so_line_vals['sequence'] = last_sequence
                     new_lines.append((0, 0, dict(
                         default_so_line_vals,
                         product_id=product.id,
@@ -103,11 +113,8 @@ class SaleOrder(models.Model):
                         product_no_variant_attribute_value_ids=no_variant_attribute_values.ids)
                     ))
             if new_lines:
+                # Add new SO lines
                 self.update(dict(order_line=new_lines))
-                for line in self.order_line.filtered(lambda line: line.product_template_id == product_template):
-                    line.product_id_change()
-                    line._onchange_discount()
-                    
 
     def _get_matrix(self, product_template):
         """Return the matrix of the given product, updated with current SOLines quantities.
@@ -151,6 +158,11 @@ class SaleOrder(models.Model):
             grid_configured_templates = self.order_line.filtered('is_configurable_product').product_template_id.filtered(lambda ptmpl: ptmpl.product_add_mode == 'matrix')
             for template in grid_configured_templates:
                 if len(self.order_line.filtered(lambda line: line.product_template_id == template)) > 1:
-                    # TODO do we really want the whole matrix even if there isn't a lot of lines ??
-                    matrixes.append(self._get_matrix(template))
+                    matrix = self._get_matrix(template)
+                    matrix_data = []
+                    for row in matrix['matrix']:
+                        if any(column['qty'] != 0 for column in row[1:]):
+                            matrix_data.append(row)
+                    matrix['matrix'] = matrix_data
+                    matrixes.append(matrix)
         return matrixes

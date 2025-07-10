@@ -3,28 +3,25 @@
 # 	* membership
 # 
 # Translators:
-# Pedro Filipe <pedro2.10@hotmail.com>, 2019
-# Martin Trigaux, 2019
-# Manuela Silva <inactive+h_manuela_rodsilva@transifex.com>, 2019
-# Ricardo Martins <ricardo.nbs.martins@gmail.com>, 2019
-# Manuela Silva <manuelarodsilva@gmail.com>, 2019
-# Pedro Castro Silva <pedrocs@exo.pt>, 2019
-# Nuno Silva <nuno.silva@arxi.pt>, 2019
-# Diogo Fonseca <dsf@thinkopensolutions.pt>, 2019
+# a75f12d3d37ea5bf159c4b3e85eb30e7_0fa6927, 2025
+# NumerSpiral HBG, 2025
+# Arxi, 2025
+# Peter Lawrence Romão <peterromao@yahoo.co.uk>, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:11+0000\n"
-"Last-Translator: Diogo Fonseca <dsf@thinkopensolutions.pt>, 2019\n"
-"Language-Team: Portuguese (https://www.transifex.com/odoo/teams/41243/pt/)\n"
+"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
+"Language-Team: Portuguese (https://app.transifex.com/odoo/teams/41243/pt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: pt\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_report_membership__num_invoiced
@@ -51,7 +48,7 @@ msgstr ""
 #. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.membership_products_kanban
 msgid "<i class=\"fa fa-money\" role=\"img\" aria-label=\"Price\" title=\"Price\"/>"
-msgstr ""
+msgstr "<i class=\"fa fa-money\" role=\"img\" aria-label=\"Price\" title=\"Price\"/>"
 
 #. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.membership_products_kanban
@@ -146,11 +143,6 @@ msgid "Company"
 msgstr "Empresa"
 
 #. module: membership
-#: model:ir.model.fields,help:membership.field_membership_membership_line__company_id
-msgid "Company related to this journal"
-msgstr "Empresa relacionada com este diário"
-
-#. module: membership
 #: model:ir.ui.menu,name:membership.menu_marketing_config_association
 msgid "Configuration"
 msgstr "Configuração"
@@ -159,11 +151,6 @@ msgstr "Configuração"
 #: model:ir.model,name:membership.model_res_partner
 msgid "Contact"
 msgstr "Contacto"
-
-#. module: membership
-#: model_terms:ir.ui.view,arch_db:membership.view_partner_tree
-msgid "Contacts"
-msgstr "Contactos"
 
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_membership_invoice__create_uid
@@ -245,18 +232,13 @@ msgid "End Membership Date"
 msgstr ""
 
 #. module: membership
-#: model:ir.model.fields,help:membership.field_report_membership__date_to
-msgid "End membership date"
-msgstr ""
-
-#. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.view_res_partner_member_filter
 msgid "Ending Date Of Membership"
 msgstr ""
 
 #. module: membership
 #: model:ir.model.constraint,message:membership.constraint_product_template_membership_date_greater
-msgid "Error ! Ending Date cannot be set before Beginning Date."
+msgid "Error! Ending Date cannot be set before Beginning Date."
 msgstr ""
 
 #. module: membership
@@ -282,7 +264,7 @@ msgstr "De"
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_search
 #: model_terms:ir.ui.view,arch_db:membership.view_res_partner_member_filter
 msgid "Group By"
-msgstr "Agrupar por"
+msgstr "Agrupar Por"
 
 #. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.membership_product_search_form_view
@@ -294,7 +276,7 @@ msgstr "Agrupar por..."
 #: model:ir.model.fields,field_description:membership.field_membership_membership_line__id
 #: model:ir.model.fields,field_description:membership.field_report_membership__id
 msgid "ID"
-msgstr "ID"
+msgstr "Id."
 
 #. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.membership_product_search_form_view
@@ -360,20 +342,13 @@ msgstr ""
 
 #. module: membership
 #: model:ir.model,name:membership.model_account_move
-msgid "Journal Entries"
-msgstr "Lançamentos de Diário"
+msgid "Journal Entry"
+msgstr "Lançamento em Diário"
 
 #. module: membership
 #: model:ir.model,name:membership.model_account_move_line
 msgid "Journal Item"
-msgstr "Item do Diário"
-
-#. module: membership
-#: model:ir.model.fields,field_description:membership.field_membership_invoice____last_update
-#: model:ir.model.fields,field_description:membership.field_membership_membership_line____last_update
-#: model:ir.model.fields,field_description:membership.field_report_membership____last_update
-msgid "Last Modified on"
-msgstr "Última Modificação em"
+msgstr "Item no Diário"
 
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_membership_invoice__write_uid
@@ -418,6 +393,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:membership.field_product_template__membership
 #: model:ir.model.fields,field_description:membership.field_res_partner__member_lines
 #: model:ir.model.fields,field_description:membership.field_res_users__member_lines
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
 #: model_terms:ir.ui.view,arch_db:membership.view_partner_form
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_graph1
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_pivot
@@ -454,7 +430,7 @@ msgstr "Data de Término da Filiação"
 #: model_terms:ir.ui.view,arch_db:membership.membership_products_form
 #: model_terms:ir.ui.view,arch_db:membership.membership_products_tree
 msgid "Membership Fee"
-msgstr ""
+msgstr "Taxa Membresia"
 
 #. module: membership
 #: model:ir.model,name:membership.model_membership_invoice
@@ -481,6 +457,7 @@ msgstr ""
 
 #. module: membership
 #: model:ir.actions.act_window,name:membership.action_membership_products
+#: model:ir.ui.menu,name:membership.menu_membership_products
 #: model_terms:ir.ui.view,arch_db:membership.membership_product_search_form_view
 msgid "Membership Products"
 msgstr "Artigos de adesão"
@@ -501,7 +478,7 @@ msgstr ""
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_membership_membership_line__state
 msgid "Membership Status"
-msgstr ""
+msgstr "Estado da Membresia"
 
 #. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.membership_products_form
@@ -511,8 +488,6 @@ msgstr "Artigos de adesão"
 
 #. module: membership
 #: model:ir.actions.server,name:membership.ir_cron_update_membership_ir_actions_server
-#: model:ir.cron,cron_name:membership.ir_cron_update_membership
-#: model:ir.cron,name:membership.ir_cron_update_membership
 msgid "Membership: update memberships"
 msgstr ""
 
@@ -525,6 +500,11 @@ msgstr "Associações"
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_search
 msgid "Month"
 msgstr "Mês"
+
+#. module: membership
+#: model_terms:ir.actions.act_window,help:membership.action_report_membership_tree
+msgid "No data yet!"
+msgstr "Sem dados ainda!"
 
 #. module: membership
 #: model:ir.model.fields.selection,name:membership.selection__membership_membership_line__state__none
@@ -560,14 +540,14 @@ msgid "Partner"
 msgstr "Parceiro"
 
 #. module: membership
+#. odoo-python
 #: code:addons/membership/models/partner.py:0
-#, python-format
 msgid "Partner doesn't have an address to make the invoice."
 msgstr "O parceiro não tem uma morada para criar a fatura."
 
 #. module: membership
+#. odoo-python
 #: code:addons/membership/models/partner.py:0
-#, python-format
 msgid "Partner is a free Member."
 msgstr ""
 
@@ -578,8 +558,13 @@ msgstr "Montante Pendente"
 
 #. module: membership
 #: model:ir.model,name:membership.model_product_template
-msgid "Product Template"
-msgstr "Modelo de Artigo"
+msgid "Product"
+msgstr "Artigo"
+
+#. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.membership_products_form
+msgid "Product Name"
+msgstr "Nome do Artigo"
 
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_report_membership__quantity
@@ -589,7 +574,7 @@ msgstr "Quantidade"
 #. module: membership
 #: model:ir.ui.menu,name:membership.menu_report_membership
 msgid "Reporting"
-msgstr "Relatórios"
+msgstr "A Reportar"
 
 #. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_search
@@ -622,14 +607,29 @@ msgid "Starting Date Of Membership"
 msgstr ""
 
 #. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
+msgid "Sum of # Invoiced"
+msgstr ""
+
+#. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
+msgid "Sum of # Paid"
+msgstr ""
+
+#. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
+msgid "Sum of Earned Amount"
+msgstr ""
+
+#. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
+msgid "Sum of Quantity"
+msgstr ""
+
+#. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.membership_products_form
 msgid "Taxes"
 msgstr "Impostos"
-
-#. module: membership
-#: model:ir.model.fields,help:membership.field_membership_membership_line__account_invoice_id
-msgid "The move of this entry line."
-msgstr "O movimento desta linha de lançamento."
 
 #. module: membership
 #: model:ir.model.fields,help:membership.field_res_partner__membership_amount
@@ -655,7 +655,7 @@ msgstr ""
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_membership_membership_line__date_to
 msgid "To"
-msgstr "Para"
+msgstr "A"
 
 #. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.view_res_partner_member_filter
@@ -670,7 +670,7 @@ msgid "Waiting Member"
 msgstr "A Espera de Membro"
 
 #. module: membership
+#. odoo-python
 #: code:addons/membership/models/partner.py:0
-#, python-format
 msgid "You cannot create recursive associated members."
 msgstr ""

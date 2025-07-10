@@ -3,18 +3,17 @@
 # 	* web_unsplash
 # 
 # Translators:
-# Nancy Momoland <thanhnguyen.icsc@gmail.com>, 2019
-# Dao Nguyen <trucdao.uel@gmail.com>, 2019
-# Chinh Chinh <trinhttp@trobz.com>, 2019
+# Wil Odoo, 2024
+# Thi Huong Nguyen, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:33+0000\n"
-"PO-Revision-Date: 2019-08-26 09:15+0000\n"
-"Last-Translator: Chinh Chinh <trinhttp@trobz.com>, 2019\n"
-"Language-Team: Vietnamese (https://www.transifex.com/odoo/teams/41243/vi/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:42+0000\n"
+"Last-Translator: Thi Huong Nguyen, 2024\n"
+"Language-Team: Vietnamese (https://app.transifex.com/odoo/teams/41243/vi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -22,85 +21,86 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: web_unsplash
-#: model_terms:ir.ui.view,arch_db:web_unsplash.res_config_settings_view_form
-msgid "<i class=\"fa fa-arrow-right\"/> Generate an Access Key"
-msgstr "<i class=\"fa fa-arrow-right\"/> Tạo ra khóa truy cập"
-
-#. module: web_unsplash
 #: model:ir.model.fields,field_description:web_unsplash.field_res_config_settings__unsplash_access_key
 msgid "Access Key"
 msgstr "Khóa truy cập"
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:57
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+#: model:ir.model.fields,field_description:web_unsplash.field_res_config_settings__unsplash_app_id
+msgid "Application ID"
+msgstr "ID ứng dụng"
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
 msgid "Apply"
 msgstr "Áp dụng"
 
 #. module: web_unsplash
-#: model:ir.model,name:web_unsplash.model_res_config_settings
-msgid "Config Settings"
-msgstr "Cấu hình"
+#: model:ir.model,name:web_unsplash.model_ir_attachment
+msgid "Attachment"
+msgstr "Tệp đính kèm"
 
 #. module: web_unsplash
-#: code:addons/web_unsplash/controllers/main.py:86
-#, python-format
+#: model:ir.model,name:web_unsplash.model_res_config_settings
+msgid "Config Settings"
+msgstr "Cài đặt cấu hình"
+
+#. module: web_unsplash
+#. odoo-python
+#: code:addons/web_unsplash/controllers/main.py:0
 msgid "ERROR: Unknown Unsplash URL!"
 msgstr "LRI: URL không xác định!"
 
 #. module: web_unsplash
-#: code:addons/web_unsplash/controllers/main.py:34
-#, python-format
+#. odoo-python
+#: code:addons/web_unsplash/controllers/main.py:0
 msgid "ERROR: Unknown Unsplash notify URL!"
 msgstr "LRI: URL thông báo Unsplash không xác định!"
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:52
-#, python-format
-msgid "Generate an access key"
-msgstr "Tạo khóa truy cập"
+#: model_terms:ir.ui.view,arch_db:web_unsplash.res_config_settings_view_form
+msgid "Generate an Access Key"
+msgstr "Tạo Khoá truy cập"
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:56
-#, python-format
-msgid "How to find my Unsplash Application ID?"
-msgstr "Làm cách nào để tìm ID Unsplash của tôi?"
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+msgid "Get an Access key"
+msgstr "Lấy khoá truy cập"
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:50
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
 msgid "Paste your access key here"
 msgstr "Dán khóa truy cập ở đây"
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:54
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
 msgid "Paste your application ID here"
 msgstr "Dán ID của bạn tại đây"
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:40
-#, python-format
-msgid "Photos not found"
-msgstr "Không tìm thấy hình ảnh"
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/media_dialog.xml:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.xml:0
+msgid "Photos (via Unsplash)"
+msgstr "Hình ảnh (thông qua Unsplash)"
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:84
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
 msgid "Please check your Unsplash access key and application ID."
-msgstr "Vui lòng kiểm tra khóa truy cập của bạn và ID ứng dụng."
+msgstr "Vui lòng kiểm tra khóa truy cập của bạn và ID."
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:93
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
 msgid "Please check your internet connection or contact administrator."
 msgstr ""
 "Vui lòng kiểm tra kết nối internet của bạn hoặc liên hệ với quản trị viên."
@@ -111,37 +111,30 @@ msgid "Qweb Field Image"
 msgstr "Trường ảnh Qweb"
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:17
-#, python-format
-msgid "Search among my images for:"
-msgstr ""
-
-#. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:21
-#, python-format
-msgid "Search from Unsplash for:"
-msgstr ""
-
-#. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:72
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
 msgid "Search is temporarily unavailable"
 msgstr "Chức năng tìm kiếm tạm thời không khả dụng"
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:90
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
+msgid "Setup Unsplash to access royalty free photos."
+msgstr "Thiết lập Unsplash để truy cập ảnh miễn phí bản quyền."
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
 msgid "Something went wrong"
 msgstr "Đã xảy ra lỗi"
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:75
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
 msgid ""
 "The max number of searches is exceeded. Please retry in an hour or extend to"
 " a better account."
@@ -150,20 +143,50 @@ msgstr ""
 "mở rộng đến một tài khoản tốt hơn."
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:81
-#, python-format
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/image_selector_patch.js:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.js:0
 msgid "Unauthorized Key"
-msgstr "Unauthorized Key"
+msgstr "Khóa trái phép"
 
 #. module: web_unsplash
-#. openerp-web
-#: code:addons/web_unsplash/static/src/xml/unsplash_image_widget.xml:66
-#, python-format
-msgid "Unsplash requires an access key and an application ID"
-msgstr "Unsplash yêu cầu khóa truy cập và ID"
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_service.js:0
+msgid "Uploading %(count)s '%(query)s' images."
+msgstr "Đang tải %(count)s '%(query)s' hình ảnh."
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_service.js:0
+msgid "Uploading '%s' image."
+msgstr "Đang tải lên '%s' hình ảnh."
 
 #. module: web_unsplash
 #: model:ir.model,name:web_unsplash.model_res_users
-msgid "Users"
+msgid "User"
 msgstr "Người dùng"
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+msgid "and paste"
+msgstr "và dán"
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+msgid "and paste it here:"
+msgstr "và dán tại đây:"
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+msgid "here:"
+msgstr "tại đây:"
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/media_dialog/media_dialog.xml:0
+#: code:addons/web_unsplash/static/src/media_dialog_legacy/image_selector.xml:0
+msgid "unsplash"
+msgstr "unsplash"

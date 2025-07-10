@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        
-        <record id="team_customer_appointment_form_view" model="ir.ui.view">
+        <record id="team_customer_appointment_form_view_inherited" model="ir.ui.view">
             <field name="name">team.customer.appointment.form</field>
             <field name="model">team.customer.appointment</field>
             <field name="inherit_id" ref="team_sale_contract.team_customer_appointment_form_view"/>
@@ -23,7 +22,18 @@
                     <field name="improveit_appointment_id" readonly="1"/>
                 </field>
             </field>
-        </record>team_customer_appointment_tree_view
+        </record>
+
+        <record id="view_attachment_search" model="ir.ui.view">
+            <field name="name">ir.attachment.search</field>
+            <field name="model">ir.attachment</field>
+            <field name="inherit_id" ref="base.view_attachment_search"/>
+            <field name="arch" type="xml">
+                <filter name="creation_month" position="after">
+                    <filter string="Image Type" name="image_type" domain="[]" context="{'group_by':'image_type'}"/>
+                </filter>
+            </field>
+        </record>
     
     </data>
 </odoo>

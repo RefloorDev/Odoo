@@ -13,16 +13,32 @@ class L10nLatamDocumentType(models.Model):
             ('invoice_in', 'Purchase Invoices'),
             ('debit_note', 'Debit Notes'),
             ('credit_note', 'Credit Notes'),
-            ('receipt_invoice', 'Receipt Invoice')])
+            ('receipt_invoice', 'Receipt Invoice'),
+            ('stock_picking', 'Stock Delivery'),
+        ],
+    )
+    l10n_cl_active = fields.Boolean(
+        'Active in localization', help='This boolean enables document to be included on invoicing')
 
-    def _get_document_sequence_vals(self, journal):
-        values = super(L10nLatamDocumentType, self)._get_document_sequence_vals(journal)
-        if self.country_id != self.env.ref('base.cl'):
-            return values
-        values.update({
-            'padding': 6,
-            'implementation': 'no_gap',
-            'l10n_latam_document_type_id': self.id,
-            'prefix': None
-        })
-        return values
+    def _format_document_number(self, document_number):
+        """ Make validation of Import Dispatch Number
+          * making validations on the document_number. If it is wrong it should raise an exception
+          * format the document_number against a pattern and return it
+        """
+        self.ensure_one()
+        if self.country_id.code != "CL":
+            return super()._format_document_number(document_number)
+
+        if not document_number:
+            return False
+
+        return document_number.zfill(6)
+
+    def _is_doc_type_vendor(self):
+        return self.code == '46'
+
+    def _is_doc_type_export(self):
+        return self.code in ['110', '111', '112'] and self.country_id.code == 'CL'
+
+    def _is_doc_type_electronic_ticket(self):
+        return self.code in ['39', '41'] and self.country_id.code == 'CL'

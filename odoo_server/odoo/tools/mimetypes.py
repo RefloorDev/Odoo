@@ -5,8 +5,10 @@ Mimetypes-related utilities
 # TODO: reexport stdlib mimetypes?
 """
 import collections
+import functools
 import io
 import logging
+import mimetypes
 import re
 import zipfile
 
@@ -105,9 +107,13 @@ def _check_olecf(data):
 
 def _check_svg(data):
     """This simply checks the existence of the opening and ending SVG tags"""
-    if b'<svg' in data and b'/svg>' in data:
+    if b'<svg' in data and b'/svg' in data:
         return 'image/svg+xml'
 
+def _check_webp(data):
+    """This checks the presence of the WEBP and VP8 in the RIFF"""
+    if data[8:15] == b'WEBPVP8':
+        return 'image/webp'
 
 # for "master" formats with many subformats, discriminants is a list of
 # functions, tried in order and the first non-falsy value returned is the
@@ -117,15 +123,18 @@ _Entry = collections.namedtuple('_Entry', ['mimetype', 'signatures', 'discrimina
 _mime_mappings = (
     # pdf
     _Entry('application/pdf', [b'%PDF'], []),
-    # jpg, jpeg, png, gif, bmp
-    _Entry('image/jpeg', [b'\xFF\xD8\xFF\xE0', b'\xFF\xD8\xFF\xE2', b'\xFF\xD8\xFF\xE3', b'\xFF\xD8\xFF\xE1'], []),
+    # jpg, jpeg, png, gif, bmp, jfif
+    _Entry('image/jpeg', [b'\xFF\xD8\xFF\xE0', b'\xFF\xD8\xFF\xE2', b'\xFF\xD8\xFF\xE3', b'\xFF\xD8\xFF\xE1', b'\xFF\xD8\xFF\xDB'], []),
     _Entry('image/png', [b'\x89PNG\r\n\x1A\n'], []),
     _Entry('image/gif', [b'GIF87a', b'GIF89a'], []),
     _Entry('image/bmp', [b'BM'], []),
-    _Entry('image/svg+xml', [b'<'], [
+    _Entry('application/xml', [b'<'], [
         _check_svg,
     ]),
     _Entry('image/x-icon', [b'\x00\x00\x01\x00'], []),
+    _Entry('image/webp', [b'RIFF'], [
+        _check_webp,
+    ]),
     # OLECF files in general (Word, Excel, PPT, default to word because why not?)
     _Entry('application/msword', [b'\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1', b'\x0D\x44\x4F\x43'], [
         _check_olecf
@@ -133,7 +142,7 @@ _mime_mappings = (
     # zip, but will include jar, odt, ods, odp, docx, xlsx, pptx, apk
     _Entry('application/zip', [b'PK\x03\x04'], [_check_ooxml, _check_open_container_format]),
 )
-def guess_mimetype(bin_data, default='application/octet-stream'):
+def _odoo_guess_mimetype(bin_data, default='application/octet-stream'):
     """ Attempts to guess the mime type of the provided binary data, similar
     to but significantly more limited than libmagic
 
@@ -159,6 +168,11 @@ def guess_mimetype(bin_data, default='application/octet-stream'):
                 # if no discriminant or no discriminant matches, return
                 # primary mime type
                 return entry.mimetype
+    try:
+        if bin_data and all(c >= ' ' or c in '\t\n\r' for c in bin_data[:1024].decode()):
+            return 'text/plain'
+    except ValueError:
+        pass
     return default
 
 
@@ -166,14 +180,76 @@ try:
     import magic
 except ImportError:
     magic = None
-else:
-    # There are 2 python libs named 'magic' with incompatible api.
 
+if magic:
+    # There are 2 python libs named 'magic' with incompatible api.
     # magic from pypi https://pypi.python.org/pypi/python-magic/
-    if hasattr(magic,'from_buffer'):
-        guess_mimetype = lambda bin_data, default=None: magic.from_buffer(bin_data, mime=True)
+    if hasattr(magic, 'from_buffer'):
+        _guesser = functools.partial(magic.from_buffer, mime=True)
     # magic from file(1) https://packages.debian.org/squeeze/python-magic
-    elif hasattr(magic,'open'):
+    elif hasattr(magic, 'open'):
         ms = magic.open(magic.MAGIC_MIME_TYPE)
         ms.load()
-        guess_mimetype = lambda bin_data, default=None: ms.buffer(bin_data)
+        _guesser = ms.buffer
+
+    def guess_mimetype(bin_data, default=None):
+        mimetype = _guesser(bin_data[:1024])
+        # upgrade incorrect mimetype to official one, fixed upstream
+        # https://github.com/file/file/commit/1a08bb5c235700ba623ffa6f3c95938fe295b262
+        if mimetype == 'image/svg':
+            return 'image/svg+xml'
+        return mimetype
+else:
+    guess_mimetype = _odoo_guess_mimetype
+
+
+def neuter_mimetype(mimetype, user):
+    wrong_type = 'ht' in mimetype or 'xml' in mimetype or 'svg' in mimetype
+    if wrong_type and not user._is_system():
+        return 'text/plain'
+    return mimetype
+
+def get_extension(filename):
+    # A file has no extension if it has no dot (ignoring the leading one
+    # of hidden files) or that what follow the last dot is not a single
+    # word, e.g. "Mr. Doe"
+    _stem, dot, ext = filename.lstrip('.').rpartition('.')
+    if not dot or not ext.isalnum():
+        return ''
+
+    # Assume all 4-chars extensions to be valid extensions even if it is
+    # not known from the mimetypes database. In /etc/mime.types, only 7%
+    # known extensions are longer.
+    if len(ext) <= 4:
+        return f'.{ext}'.lower()
+
+    # Use the mimetype database to determine the extension of the file.
+    guessed_mimetype, guessed_ext = mimetypes.guess_type(filename)
+    if guessed_ext:
+        return guessed_ext
+    if guessed_mimetype:
+        return f'.{ext}'.lower()
+
+    # Unknown extension.
+    return ''
+
+
+def fix_filename_extension(filename, mimetype):
+    """
+    Make sure the filename ends with an extension of the mimetype.
+
+    :param str filename: the filename with an unsafe extension
+    :param str mimetype: the mimetype detected reading the file's content
+    :returns: the same filename if its extension matches the detected
+        mimetype, otherwise the same filename with the mimetype's
+        extension added at the end.
+    """
+    if mimetypes.guess_type(filename)[0] == mimetype:
+        return filename
+
+    if extension := mimetypes.guess_extension(mimetype):
+        _logger.warning("File %r has an invalid extension for mimetype %r, adding %r", filename, mimetype, extension)
+        return filename + extension
+
+    _logger.warning("File %r has an unknown extension for mimetype %r", filename, mimetype)
+    return filename

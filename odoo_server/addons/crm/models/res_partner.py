@@ -1,24 +1,25 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models
+from odoo.osv import expression
 
 
 class Partner(models.Model):
     _name = 'res.partner'
     _inherit = 'res.partner'
 
-    team_id = fields.Many2one('crm.team', string='Sales Team')
     opportunity_ids = fields.One2many('crm.lead', 'partner_id', string='Opportunities', domain=[('type', '=', 'opportunity')])
-    meeting_ids = fields.Many2many('calendar.event', 'calendar_event_res_partner_rel', 'res_partner_id', 'calendar_event_id', string='Meetings', copy=False)
-    opportunity_count = fields.Integer("Opportunity", compute='_compute_opportunity_count')
-    meeting_count = fields.Integer("# Meetings", compute='_compute_meeting_count')
+    opportunity_count = fields.Integer(
+        string="Opportunity Count",
+        groups='sales_team.group_sale_salesman',
+        compute='_compute_opportunity_count',
+    )
 
     @api.model
     def default_get(self, fields):
         rec = super(Partner, self).default_get(fields)
         active_model = self.env.context.get('active_model')
-        if active_model == 'crm.lead':
+        if active_model == 'crm.lead' and len(self.env.context.get('active_ids', [])) <= 1:
             lead = self.env[active_model].browse(self.env.context.get('active_id')).exists()
             if lead:
                 rec.update(
@@ -37,19 +38,36 @@ class Partner(models.Model):
         return rec
 
     def _compute_opportunity_count(self):
-        for partner in self:
-            operator = 'child_of' if partner.is_company else '='  # the opportunity count should counts the opportunities of this company and all its contacts
-            partner.opportunity_count = self.env['crm.lead'].search_count([('partner_id', operator, partner.id), ('type', '=', 'opportunity')])
+        self.opportunity_count = 0
+        if not self.env.user._has_group('sales_team.group_sale_salesman'):
+            return
 
-    def _compute_meeting_count(self):
-        for partner in self:
-            partner.meeting_count = len(partner.meeting_ids)
+        # retrieve all children partners and prefetch 'parent_id' on them
+        all_partners = self.with_context(active_test=False).search_fetch(
+            [('id', 'child_of', self.ids)], ['parent_id'],
+        )
 
-    def schedule_meeting(self):
-        partner_ids = self.ids
-        partner_ids.append(self.env.user.partner_id.id)
-        action = self.env.ref('calendar.action_calendar_event').read()[0]
-        action['context'] = {
-            'default_partner_ids': partner_ids,
-        }
+        opportunity_data = self.env['crm.lead'].with_context(active_test=False)._read_group(
+            domain=[('partner_id', 'in', all_partners.ids)],
+            groupby=['partner_id'], aggregates=['__count']
+        )
+        self_ids = set(self._ids)
+
+        for partner, count in opportunity_data:
+            while partner:
+                if partner.id in self_ids:
+                    partner.opportunity_count += count
+                partner = partner.parent_id
+
+    def action_view_opportunity(self):
+        '''
+        This function returns an action that displays the opportunities from partner.
+        '''
+        action = self.env['ir.actions.act_window']._for_xml_id('crm.crm_lead_opportunities')
+        action['context'] = {}
+        if self.is_company:
+            action['domain'] = [('partner_id.commercial_partner_id', '=', self.id)]
+        else:
+            action['domain'] = [('partner_id', '=', self.id)]
+        action['domain'] = expression.AND([action['domain'], [('active', 'in', [True, False])]])
         return action

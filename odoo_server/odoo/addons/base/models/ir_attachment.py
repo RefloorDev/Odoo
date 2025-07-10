@@ -1,19 +1,25 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 import base64
+import binascii
+import contextlib
 import hashlib
-import itertools
 import logging
 import mimetypes
 import os
+import psycopg2
 import re
-from collections import defaultdict
 import uuid
+import werkzeug
 
-from odoo import api, fields, models, tools, _
-from odoo.exceptions import AccessError, ValidationError, MissingError
-from odoo.tools import config, human_size, ustr, html_escape
-from odoo.tools.mimetypes import guess_mimetype
+from collections import defaultdict
+
+from odoo import api, fields, models, SUPERUSER_ID, tools, _
+from odoo.exceptions import AccessError, ValidationError, UserError
+from odoo.http import Stream, root, request
+from odoo.tools import config, human_size, image, str2bool, consteq
+from odoo.tools.mimetypes import guess_mimetype, fix_filename_extension
+from odoo.osv import expression
 
 _logger = logging.getLogger(__name__)
 
@@ -53,20 +59,38 @@ class IrAttachment(models.Model):
         return config.filestore(self._cr.dbname)
 
     @api.model
+    def _get_storage_domain(self):
+        # domain to retrieve the attachments to migrate
+        return {
+            'db': [('store_fname', '!=', False)],
+            'file': [('db_datas', '!=', False)],
+        }[self._storage()]
+
+    @api.model
     def force_storage(self):
         """Force all attachments to be stored in the currently configured storage"""
         if not self.env.is_admin():
             raise AccessError(_('Only administrators can execute this action.'))
 
-        # domain to retrieve the attachments to migrate
-        domain = {
-            'db': [('store_fname', '!=', False)],
-            'file': [('db_datas', '!=', False)],
-        }[self._storage()]
+        # Migrate only binary attachments and bypass the res_field automatic
+        # filter added in _search override
+        self.search(expression.AND([
+            self._get_storage_domain(),
+            ['&', ('type', '=', 'binary'), '|', ('res_field', '=', False), ('res_field', '!=', False)]
+        ]))._migrate()
 
-        for attach in self.search(domain):
-            attach.write({'datas': attach.datas})
-        return True
+    def _migrate(self):
+        record_count = len(self)
+        storage = self._storage().upper()
+        # When migrating to filestore verifying if the directory has write permission
+        if storage == 'FILE':
+            filestore = self._filestore()
+            if not os.access(filestore, os.W_OK):
+                raise PermissionError("Write permission denied for filestore directory.")
+        for index, attach in enumerate(self):
+            _logger.debug("Migrate attachment %s/%s to %s", index + 1, record_count, storage)
+            # pass mimetype, to avoid recomputation
+            attach.write({'raw': attach.raw, 'mimetype': attach.mimetype})
 
     @api.model
     def _full_path(self, path):
@@ -77,38 +101,33 @@ class IrAttachment(models.Model):
 
     @api.model
     def _get_path(self, bin_data, sha):
-        # retro compatibility
-        fname = sha[:3] + '/' + sha
-        full_path = self._full_path(fname)
-        if os.path.isfile(full_path):
-            return fname, full_path        # keep existing path
-
         # scatter files across 256 dirs
         # we use '/' in the db (even on windows)
         fname = sha[:2] + '/' + sha
         full_path = self._full_path(fname)
         dirname = os.path.dirname(full_path)
         if not os.path.isdir(dirname):
-            os.makedirs(dirname)
+            os.makedirs(dirname, exist_ok=True)
+
+        # prevent sha-1 collision
+        if os.path.isfile(full_path) and not self._same_content(bin_data, full_path):
+            raise UserError(_("The attachment collides with an existing file."))
         return fname, full_path
 
     @api.model
-    def _file_read(self, fname, bin_size=False):
+    def _file_read(self, fname):
+        assert isinstance(self, IrAttachment)
         full_path = self._full_path(fname)
-        r = ''
         try:
-            if bin_size:
-                r = human_size(os.path.getsize(full_path))
-            else:
-                with open(full_path,'rb') as fd:
-                    r = base64.b64encode(fd.read())
+            with open(full_path, 'rb') as f:
+                return f.read()
         except (IOError, OSError):
             _logger.info("_read_file reading %s", full_path, exc_info=True)
-        return r
+        return b''
 
     @api.model
-    def _file_write(self, value, checksum):
-        bin_value = base64.b64decode(value)
+    def _file_write(self, bin_value, checksum):
+        assert isinstance(self, IrAttachment)
         fname, full_path = self._get_path(bin_value, checksum)
         if not os.path.exists(full_path):
             try:
@@ -127,18 +146,21 @@ class IrAttachment(models.Model):
 
     def _mark_for_gc(self, fname):
         """ Add ``fname`` in a checklist for the filestore garbage collection. """
+        assert isinstance(self, IrAttachment)
+        fname = re.sub('[.]', '', fname).strip('/\\')
         # we use a spooldir: add an empty file in the subdirectory 'checklist'
         full_path = os.path.join(self._full_path('checklist'), fname)
         if not os.path.exists(full_path):
             dirname = os.path.dirname(full_path)
             if not os.path.isdir(dirname):
-                with tools.ignore(OSError):
+                with contextlib.suppress(OSError):
                     os.makedirs(dirname)
             open(full_path, 'ab').close()
 
-    @api.model
-    def _file_gc(self):
+    @api.autovacuum
+    def _gc_file_store(self):
         """ Perform the garbage collection of the filestore. """
+        assert isinstance(self, IrAttachment)
         if self._storage() != 'file':
             return
 
@@ -156,8 +178,18 @@ class IrAttachment(models.Model):
         # but only attempt to grab the lock for a little bit, otherwise it'd
         # start blocking other transactions. (will be retried later anyway)
         cr.execute("SET LOCAL lock_timeout TO '10s'")
-        cr.execute("LOCK ir_attachment IN SHARE MODE")
+        try:
+            cr.execute("LOCK ir_attachment IN SHARE MODE")
+        except psycopg2.errors.LockNotAvailable:
+            cr.rollback()
+            return False
 
+        self._gc_file_store_unsafe()
+
+        # commit to release the lock
+        cr.commit()
+
+    def _gc_file_store_unsafe(self):
         # retrieve the file names from the checklist
         checklist = {}
         for dirpath, _, filenames in os.walk(self._full_path('checklist')):
@@ -166,40 +198,60 @@ class IrAttachment(models.Model):
                 fname = "%s/%s" % (dirname, filename)
                 checklist[fname] = os.path.join(dirpath, filename)
 
-        # determine which files to keep among the checklist
-        whitelist = set()
-        for names in cr.split_for_in_conditions(checklist):
-            cr.execute("SELECT store_fname FROM ir_attachment WHERE store_fname IN %s", [names])
-            whitelist.update(row[0] for row in cr.fetchall())
-
-        # remove garbage files, and clean up checklist
+        # Clean up the checklist. The checklist is split in chunks and files are garbage-collected
+        # for each chunk.
         removed = 0
-        for fname, filepath in checklist.items():
-            if fname not in whitelist:
-                try:
-                    os.unlink(self._full_path(fname))
-                    removed += 1
-                except (OSError, IOError):
-                    _logger.info("_file_gc could not unlink %s", self._full_path(fname), exc_info=True)
-            with tools.ignore(OSError):
-                os.unlink(filepath)
+        for names in self.env.cr.split_for_in_conditions(checklist):
+            # determine which files to keep among the checklist
+            self.env.cr.execute("SELECT store_fname FROM ir_attachment WHERE store_fname IN %s", [names])
+            whitelist = set(row[0] for row in self.env.cr.fetchall())
 
-        # commit to release the lock
-        cr.commit()
+            # remove garbage files, and clean up checklist
+            for fname in names:
+                filepath = checklist[fname]
+                if fname not in whitelist:
+                    try:
+                        os.unlink(self._full_path(fname))
+                        _logger.debug("_file_gc unlinked %s", self._full_path(fname))
+                        removed += 1
+                    except (OSError, IOError):
+                        _logger.info("_file_gc could not unlink %s", self._full_path(fname), exc_info=True)
+                with contextlib.suppress(OSError):
+                    os.unlink(filepath)
+
         _logger.info("filestore gc %d checked, %d removed", len(checklist), removed)
 
-    @api.depends('store_fname', 'db_datas')
+    @api.depends('store_fname', 'db_datas', 'file_size')
+    @api.depends_context('bin_size')
     def _compute_datas(self):
-        bin_size = self._context.get('bin_size')
+        if self._context.get('bin_size'):
+            for attach in self:
+                attach.datas = human_size(attach.file_size)
+            return
+
+        for attach in self:
+            attach.datas = base64.b64encode(attach.raw or b'')
+
+    @api.depends('store_fname', 'db_datas')
+    def _compute_raw(self):
         for attach in self:
             if attach.store_fname:
-                attach.datas = self._file_read(attach.store_fname, bin_size)
+                attach.raw = attach._file_read(attach.store_fname)
             else:
-                attach.datas = attach.db_datas
+                attach.raw = attach.db_datas
+
+    def _inverse_raw(self):
+        self._set_attachment_data(lambda a: a.raw or b'')
 
     def _inverse_datas(self):
+        self._set_attachment_data(lambda attach: base64.b64decode(attach.datas or b''))
+
+    def _set_attachment_data(self, asbytes):
         for attach in self:
-            vals = self._get_datas_related_values(attach.datas, attach.mimetype)
+            # compute the fields that depend on datas
+            bin_data = asbytes(attach)
+            vals = self._get_datas_related_values(bin_data, attach.mimetype)
+
             # take current location in filestore to possibly garbage-collect it
             fname = attach.store_fname
             # write as superuser, as user probably does not have write access
@@ -208,12 +260,15 @@ class IrAttachment(models.Model):
                 self._file_delete(fname)
 
     def _get_datas_related_values(self, data, mimetype):
-        # compute the fields that depend on datas
-        bin_data = base64.b64decode(data) if data else b''
+        checksum = self._compute_checksum(data)
+        try:
+            index_content = self._index(data, mimetype, checksum=checksum)
+        except TypeError:
+            index_content = self._index(data, mimetype)
         values = {
-            'file_size': len(bin_data),
-            'checksum': self._compute_checksum(bin_data),
-            'index_content': self._index(bin_data, mimetype),
+            'file_size': len(data),
+            'checksum': checksum,
+            'index_content': index_content,
             'store_fname': False,
             'db_datas': data,
         }
@@ -229,6 +284,20 @@ class IrAttachment(models.Model):
         # an empty file has a checksum too (for caching)
         return hashlib.sha1(bin_data or b'').hexdigest()
 
+    @api.model
+    def _same_content(self, bin_data, filepath):
+        BLOCK_SIZE = 1024
+        with open(filepath, 'rb') as fd:
+            i = 0
+            while True:
+                data = fd.read(BLOCK_SIZE)
+                if data != bin_data[i * BLOCK_SIZE:(i + 1) * BLOCK_SIZE]:
+                    return False
+                if not data:
+                    break
+                i += 1
+        return True
+
     def _compute_mimetype(self, values):
         """ compute the mimetype of the given values
             :param values : dict of values to create or write an ir_attachment
@@ -240,23 +309,74 @@ class IrAttachment(models.Model):
         if not mimetype and values.get('name'):
             mimetype = mimetypes.guess_type(values['name'])[0]
         if not mimetype and values.get('url'):
-            mimetype = mimetypes.guess_type(values['url'])[0]
-        if values.get('datas') and (not mimetype or mimetype == 'application/octet-stream'):
-            mimetype = guess_mimetype(base64.b64decode(values['datas']))
-        return mimetype or 'application/octet-stream'
+            mimetype = mimetypes.guess_type(values['url'].split('?')[0])[0]
+        if not mimetype or mimetype == 'application/octet-stream':
+            raw = None
+            if values.get('raw'):
+                raw = values['raw']
+            elif values.get('datas'):
+                raw = base64.b64decode(values['datas'])
+            if raw:
+                mimetype = guess_mimetype(raw)
+        return mimetype and mimetype.lower() or 'application/octet-stream'
+
+    def _postprocess_contents(self, values):
+        ICP = self.env['ir.config_parameter'].sudo().get_param
+        supported_subtype = ICP('base.image_autoresize_extensions', 'png,jpeg,bmp,tiff').split(',')
+
+        mimetype = values['mimetype'] = self._compute_mimetype(values)
+        _type, _match, _subtype = mimetype.partition('/')
+        is_image_resizable = _type == 'image' and _subtype in supported_subtype
+        if is_image_resizable and (values.get('datas') or values.get('raw')):
+            is_raw = values.get('raw')
+
+            # Can be set to 0 to skip the resize
+            max_resolution = ICP('base.image_autoresize_max_px', '1920x1920')
+            if str2bool(max_resolution, True):
+                try:
+                    if is_raw:
+                        img = image.ImageProcess(values['raw'], verify_resolution=False)
+                    else:  # datas
+                        img = image.ImageProcess(base64.b64decode(values['datas']), verify_resolution=False)
+
+                    if not img.image:
+                        _logger.info('Post processing ignored : Empty source, SVG, or WEBP')
+                        return values
+
+                    w, h = img.image.size
+                    nw, nh = map(int, max_resolution.split('x'))
+                    if w > nw or h > nh:
+                        img = img.resize(nw, nh)
+                        quality = int(ICP('base.image_autoresize_quality', 80))
+                        image_data = img.image_quality(quality=quality)
+                        if is_raw:
+                            values['raw'] = image_data
+                        else:
+                            values['datas'] = base64.b64encode(image_data)
+                except UserError as e:
+                    # Catch error during test where we provide fake image
+                    # raise UserError(_("This file could not be decoded as an image file. Please try with a different file."))
+                    msg = str(e)  # the exception can be lazy-translated, resolve it here
+                    _logger.info('Post processing ignored : %s', msg)
+        return values
 
     def _check_contents(self, values):
         mimetype = values['mimetype'] = self._compute_mimetype(values)
-        xml_like = 'ht' in mimetype or 'xml' in mimetype # hta, html, xhtml, etc.
-        user = self.env.context.get('binary_field_real_user', self.env.user)
-        force_text = (xml_like and (not user._is_system() or
-            self.env.context.get('attachments_mime_plainxml')))
+        xml_like = 'ht' in mimetype or ( # hta, html, xhtml, etc.
+                'xml' in mimetype and    # other xml (svg, text/xml, etc)
+                not mimetype.startswith('application/vnd.openxmlformats'))  # exception for Office formats
+        force_text = xml_like and (
+            self.env.context.get('attachments_mime_plainxml')
+            or not self.env['ir.ui.view'].sudo(False).has_access('write')
+        )
         if force_text:
             values['mimetype'] = 'text/plain'
+        if not self.env.context.get('image_no_postprocess'):
+            values = self._postprocess_contents(values)
         return values
 
     @api.model
-    def _index(self, bin_data, file_type):
+    def _index(self, bin_data, file_type, checksum=None):
         """ compute the index content of the given binary data.
             This is a python implementation of the unix command 'strings'.
             :param bin_data : datas in binary form
@@ -282,27 +402,27 @@ class IrAttachment(models.Model):
     name = fields.Char('Name', required=True)
     description = fields.Text('Description')
     res_name = fields.Char('Resource Name', compute='_compute_res_name')
-    res_model = fields.Char('Resource Model', readonly=True, help="The database object this attachment will be attached to.")
-    res_field = fields.Char('Resource Field', readonly=True)
-    res_id = fields.Many2oneReference('Resource ID', model_field='res_model',
-                                      readonly=True, help="The record id this is attached to.")
+    res_model = fields.Char('Resource Model')
+    res_field = fields.Char('Resource Field')
+    res_id = fields.Many2oneReference('Resource ID', model_field='res_model')
     company_id = fields.Many2one('res.company', string='Company', change_default=True,
                                  default=lambda self: self.env.company)
     type = fields.Selection([('url', 'URL'), ('binary', 'File')],
                             string='Type', required=True, default='binary', change_default=True,
                             help="You can either upload a file from your computer or copy/paste an internet link to your file.")
-    url = fields.Char('Url', index=True, size=1024)
+    url = fields.Char('Url', index='btree_not_null', size=1024)
     public = fields.Boolean('Is public document')
 
     # for external access
     access_token = fields.Char('Access Token', groups="base.group_user")
 
     # the field 'datas' is computed and may use the other fields below
-    datas = fields.Binary(string='File Content', compute='_compute_datas', inverse='_inverse_datas')
+    raw = fields.Binary(string="File Content (raw)", compute='_compute_raw', inverse='_inverse_raw')
+    datas = fields.Binary(string='File Content (base64)', compute='_compute_datas', inverse='_inverse_datas')
     db_datas = fields.Binary('Database Data', attachment=False)
-    store_fname = fields.Char('Stored Filename')
+    store_fname = fields.Char('Stored Filename', index=True)
     file_size = fields.Integer('File Size', readonly=True)
-    checksum = fields.Char("Checksum/SHA1", size=40, index=True, readonly=True)
+    checksum = fields.Char("Checksum/SHA1", size=40, readonly=True)
     mimetype = fields.Char('Mime Type', readonly=True)
     index_content = fields.Text('Indexed Content', readonly=True, prefetch=False)
 
@@ -323,32 +443,34 @@ class IrAttachment(models.Model):
             # XDO note: if read on sudo, read twice, one for constraints, one for _inverse_datas as user
             if attachment.type == 'binary' and attachment.url:
                 has_group = self.env.user.has_group
-                if not any([has_group(g) for g in attachment.get_serving_groups()]):
-                    raise ValidationError("Sorry, you are not allowed to write on this document")
+                if not any(has_group(g) for g in attachment.get_serving_groups()):
+                    raise ValidationError(_("Sorry, you are not allowed to write on this document"))
 
     @api.model
     def check(self, mode, values=None):
-        """Restricts the access to an ir.attachment, according to referred model
-        In the 'document' module, it is overridden to relax this hard rule, since
-        more complex ones apply there.
-        """
+        """ Restricts the access to an ir.attachment, according to referred mode """
         if self.env.is_superuser():
             return True
+        # Always require an internal user (aka, employee) to access to a attachment
+        if not (self.env.is_admin() or self.env.user._is_internal()):
+            raise AccessError(_("Sorry, you are not allowed to access this document."))
         # collect the records to check (by model)
         model_ids = defaultdict(set)            # {model_name: set(ids)}
-        require_employee = False
         if self:
             # DLE P173: `test_01_portal_attachment`
-            self.env['ir.attachment'].flush(['res_model', 'res_id', 'create_uid', 'public', 'res_field'])
+            self.env['ir.attachment'].flush_model(['res_model', 'res_id', 'create_uid', 'public', 'res_field'])
             self._cr.execute('SELECT res_model, res_id, create_uid, public, res_field FROM ir_attachment WHERE id IN %s', [tuple(self.ids)])
             for res_model, res_id, create_uid, public, res_field in self._cr.fetchall():
-                if not self.env.is_system() and res_field:
-                    raise AccessError(_("Sorry, you are not allowed to access this document."))
                 if public and mode == 'read':
                     continue
+                if not self.env.is_system():
+                    if not res_id and create_uid != self.env.uid:
+                        raise AccessError(_("Sorry, you are not allowed to access this document."))
+                    if res_field:
+                        field = self.env[res_model]._fields[res_field]
+                        if not field.is_accessible(self.env):
+                            raise AccessError(_("Sorry, you are not allowed to access this document."))
                 if not (res_model and res_id):
-                    if create_uid != self._uid:
-                        require_employee = True
                     continue
                 model_ids[res_model].add(res_id)
         if values and values.get('res_model') and values.get('res_id'):
@@ -360,132 +482,125 @@ class IrAttachment(models.Model):
             # when checking access rights (resource was deleted but attachment
             # was not)
             if res_model not in self.env:
-                require_employee = True
                 continue
-            elif res_model == 'res.users' and len(res_ids) == 1 and self._uid == list(res_ids)[0]:
+            if res_model == 'res.users' and len(res_ids) == 1 and self.env.uid == list(res_ids)[0]:
                 # by default a user cannot write on itself, despite the list of writeable fields
                 # e.g. in the case of a user inserting an image into his image signature
                 # we need to bypass this check which would needlessly throw us away
                 continue
             records = self.env[res_model].browse(res_ids).exists()
-            if len(records) < len(res_ids):
-                require_employee = True
             # For related models, check if we can write to the model, as unlinking
             # and creating attachments can be seen as an update to the model
             access_mode = 'write' if mode in ('create', 'unlink') else mode
-            records.check_access_rights(access_mode)
-            records.check_access_rule(access_mode)
-
-        if require_employee:
-            if not (self.env.is_admin() or self.env.user.has_group('base.group_user')):
-                raise AccessError(_("Sorry, you are not allowed to access this document."))
-
-    def _read_group_allowed_fields(self):
-        return ['type', 'company_id', 'res_id', 'create_date', 'create_uid', 'name', 'mimetype', 'id', 'url', 'res_field', 'res_model']
+            records.check_access(access_mode)
 
     @api.model
-    def read_group(self, domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True):
-        """Override read_group to add res_field=False in domain if not present."""
-        if not fields:
-            raise AccessError(_("Sorry, you must provide fields to read on attachments"))
-        if any('(' in field for field in fields + groupby):
-            raise AccessError(_("Sorry, the syntax 'name:agg(field)' is not available for attachments"))
-        if not any(item[0] in ('id', 'res_field') for item in domain):
-            domain.insert(0, ('res_field', '=', False))
-        groupby = [groupby] if isinstance(groupby, str) else groupby
-        allowed_fields = self._read_group_allowed_fields()
-        fields_set = set(field.split(':')[0] for field in fields + groupby)
-        if not self.env.is_system() and (not fields or fields_set.difference(allowed_fields)):
-            raise AccessError(_("Sorry, you are not allowed to access these fields on attachments."))
-        return super().read_group(domain, fields, groupby, offset=offset, limit=limit, orderby=orderby, lazy=lazy)
+    def _filter_attachment_access(self, attachment_ids):
+        """Filter the given attachment to return only the records the current user have access to.
+
+        :param attachment_ids: List of attachment ids we want to filter
+        :return: <ir.attachment> the current user have access to
+        """
+        ret_attachments = self.env['ir.attachment']
+        attachments = self.browse(attachment_ids)
+        if not attachments.has_access('read'):
+            return ret_attachments
+
+        for attachment in attachments.sudo():
+            # Use SUDO here to not raise an error during the prefetch
+            # And then drop SUDO right to check if we can access it
+            try:
+                attachment.sudo(False).check('read')
+                ret_attachments |= attachment
+            except AccessError:
+                continue
+        return ret_attachments
 
     @api.model
-    def _search(self, args, offset=0, limit=None, order=None, count=False, access_rights_uid=None):
+    def _search(self, domain, offset=0, limit=None, order=None):
         # add res_field=False in domain if not present; the arg[0] trick below
         # works for domain items and '&'/'|'/'!' operators too
-        if not any(arg[0] in ('id', 'res_field') for arg in args):
-            args.insert(0, ('res_field', '=', False))
+        disable_binary_fields_attachments = False
+        if not self.env.context.get('skip_res_field_check') and not any(arg[0] in ('id', 'res_field') for arg in domain):
+            disable_binary_fields_attachments = True
+            domain = [('res_field', '=', False)] + domain
 
-        ids = super(IrAttachment, self)._search(args, offset=offset, limit=limit, order=order,
-                                                count=False, access_rights_uid=access_rights_uid)
-
-        if self.env.is_system():
+        if self.env.is_superuser():
             # rules do not apply for the superuser
-            return len(ids) if count else ids
-
-        if not ids:
-            return 0 if count else []
-
-        # Work with a set, as list.remove() is prohibitive for large lists of documents
-        # (takes 20+ seconds on a db with 100k docs during search_count()!)
-        orig_ids = ids
-        ids = set(ids)
+            return super()._search(domain, offset, limit, order)
 
         # For attachments, the permissions of the document they are attached to
         # apply, so we must remove attachments for which the user cannot access
-        # the linked document.
-        # Use pure SQL rather than read() as it is about 50% faster for large dbs (100k+ docs),
-        # and the permissions are checked in super() and below anyway.
+        # the linked document. For the sake of performance, fetch the fields to
+        # determine those permissions within the same SQL query.
+        fnames_to_read = ['id', 'res_model', 'res_id', 'res_field', 'public', 'create_uid']
+        query = super()._search(domain, offset, limit, order)
+        rows = self.env.execute_query(query.select(
+            *[self._field_to_sql(self._table, fname) for fname in fnames_to_read],
+        ))
+
+        # determine permissions based on linked records
+        all_ids = []
+        allowed_ids = set()
         model_attachments = defaultdict(lambda: defaultdict(set))   # {res_model: {res_id: set(ids)}}
-        binary_fields_attachments = set()
-        self._cr.execute("""SELECT id, res_model, res_id, public, res_field FROM ir_attachment WHERE id IN %s""", [tuple(ids)])
-        for row in self._cr.dictfetchall():
-            if not row['res_model'] or row['public']:
+        for id_, res_model, res_id, res_field, public, create_uid in rows:
+            all_ids.append(id_)
+            if public:
+                allowed_ids.add(id_)
                 continue
-            # model_attachments = {res_model: {res_id: set(ids)}}
-            model_attachments[row['res_model']][row['res_id']].add(row['id'])
-            # Should not retrieve binary fields attachments
-            if row['res_field']:
-                binary_fields_attachments.add(row['id'])
+            if not res_id and (self.env.is_system() or create_uid == self.env.uid):
+                allowed_ids.add(id_)
+                continue
+            if not (res_field and disable_binary_fields_attachments) and res_model and res_id:
+                model_attachments[res_model][res_id].add(id_)
 
-        if binary_fields_attachments:
-            ids.difference_update(binary_fields_attachments)
-
-        # To avoid multiple queries for each attachment found, checks are
-        # performed in batch as much as possible.
+        # check permissions on records model by model
         for res_model, targets in model_attachments.items():
             if res_model not in self.env:
+                allowed_ids.update(id_ for ids in targets.values() for id_ in ids)
                 continue
-            if not self.env[res_model].check_access_rights('read', False):
-                # remove all corresponding attachment ids
-                ids.difference_update(itertools.chain(*targets.values()))
+            if not self.env[res_model].has_access('read'):
                 continue
             # filter ids according to what access rules permit
-            target_ids = list(targets)
-            allowed = self.env[res_model].with_context(active_test=False).search([('id', 'in', target_ids)])
-            for res_id in set(target_ids).difference(allowed.ids):
-                ids.difference_update(targets[res_id])
+            ResModel = self.env[res_model].with_context(active_test=False)
+            for res_id in ResModel.search([('id', 'in', list(targets))])._ids:
+                allowed_ids.update(targets[res_id])
 
-        # sort result according to the original sort ordering
-        result = [id for id in orig_ids if id in ids]
+        # filter out all_ids by keeping allowed_ids only
+        result = [id_ for id_ in all_ids if id_ in allowed_ids]
 
         # If the original search reached the limit, it is important the
-        # filtered record set does so too. When a JS view recieve a
-        # record set whose length is bellow the limit, it thinks it
-        # reached the last page.
-        if len(orig_ids) == limit and len(result) < len(orig_ids):
-            result.extend(self._search(args, offset=offset + len(orig_ids),
-                                       limit=limit, order=order, count=count,
-                                       access_rights_uid=access_rights_uid)[:limit - len(result)])
+        # filtered record set does so too. When a JS view receive a
+        # record set whose length is below the limit, it thinks it
+        # reached the last page. To avoid an infinite recursion due to the
+        # permission checks the sub-call need to be aware of the number of
+        # expected records to retrieve
+        if len(all_ids) == limit and len(result) < self._context.get('need', limit):
+            need = self._context.get('need', limit) - len(result)
+            more_ids = self.with_context(need=need)._search(
+                domain, offset + len(all_ids), limit, order,
+            )
+            result.extend(list(more_ids)[:limit - len(result)])
 
-        return len(result) if count else list(result)
-
-    def _read(self, fields):
-        self.check('read')
-        return super(IrAttachment, self)._read(fields)
+        return self.browse(result)._as_query(order)
 
     def write(self, vals):
         self.check('write', values=vals)
         # remove computed field depending of datas
-        for field in ('file_size', 'checksum'):
+        for field in ('file_size', 'checksum', 'store_fname'):
             vals.pop(field, False)
-        if 'mimetype' in vals or 'datas' in vals:
+        if 'mimetype' in vals or 'datas' in vals or 'raw' in vals:
             vals = self._check_contents(vals)
         return super(IrAttachment, self).write(vals)
 
-    def copy(self, default=None):
-        self.check('write')
-        return super(IrAttachment, self).copy(default)
+    def copy_data(self, default=None):
+        default = dict(default or {})
+        vals_list = super().copy_data(default=default)
+        for attachment, vals in zip(self, vals_list):
+            if not default.keys() & {'datas', 'db_datas', 'raw'}:
+                # ensure the content is kept and recomputes checksum/store_fname
+                vals['raw'] = attachment.raw
+        return vals_list
 
     def unlink(self):
         if not self:
@@ -506,24 +621,41 @@ class IrAttachment(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         record_tuple_set = set()
+
+        # remove computed field depending of datas
+        vals_list = [{
+            key: value
+            for key, value
+            in vals.items()
+            if key not in ('file_size', 'checksum', 'store_fname')
+        } for vals in vals_list]
+
         for values in vals_list:
-            # remove computed field depending of datas
-            for field in ('file_size', 'checksum'):
-                values.pop(field, False)
             values = self._check_contents(values)
-            if 'datas' in values:
-                values.update(self._get_datas_related_values(values.pop('datas'), values['mimetype']))
+            raw, datas = values.pop('raw', None), values.pop('datas', None)
+            if raw or datas:
+                if isinstance(raw, str):
+                    # b64decode handles str input but raw needs explicit encoding
+                    raw = raw.encode()
+                values.update(self._get_datas_related_values(
+                    raw or base64.b64decode(datas or b''),
+                    values['mimetype']
+                ))
+
             # 'check()' only uses res_model and res_id from values, and make an exists.
-            # We can group the values by model, res_id to make only one query when 
+            # We can group the values by model, res_id to make only one query when
             # creating multiple attachments on a single record.
             record_tuple = (values.get('res_model'), values.get('res_id'))
             record_tuple_set.add(record_tuple)
-        for record_tuple in record_tuple_set:
-            (res_model, res_id) = record_tuple
-            self.check('create', values={'res_model':res_model, 'res_id':res_id})
-        return super(IrAttachment, self).create(vals_list)
 
-    def _post_add_create(self):
+        # don't use possible contextual recordset for check, see commit for details
+        Attachments = self.browse()
+        for res_model, res_id in record_tuple_set:
+            Attachments.check('create', values={'res_model':res_model, 'res_id':res_id})
+        return super().create(vals_list)
+
+    def _post_add_create(self, **kwargs):
+        # TODO master: rename to _post_upload, better indicating its usage
         pass
 
     def generate_access_token(self):
@@ -537,20 +669,158 @@ class IrAttachment(models.Model):
             tokens.append(access_token)
         return tokens
 
+    @api.model
+    def create_unique(self, values_list):
+        ids = []
+        for values in values_list:
+            # Create only if record does not already exist for checksum and size.
+            try:
+                bin_data = base64.b64decode(values.get('datas', '')) or False
+            except binascii.Error:
+                raise UserError(_("Attachment is not encoded in base64."))
+            checksum = self._compute_checksum(bin_data)
+            existing_domain = [
+                ['id', '!=', False],  # No implicit condition on res_field.
+                ['checksum', '=', checksum],
+                ['file_size', '=', len(bin_data)],
+                ['mimetype', '=', values['mimetype']],
+            ]
+            existing = self.sudo().search(existing_domain)
+            if existing:
+                for attachment in existing:
+                    ids.append(attachment.id)
+            else:
+                attachment = self.create(values)
+                ids.append(attachment.id)
+        return ids
+
     def _generate_access_token(self):
         return str(uuid.uuid4())
 
+    def validate_access(self, access_token):
+        self.ensure_one()
+        record_sudo = self.sudo()
+
+        if access_token:
+            tok = record_sudo.with_context(prefetch_fields=False).access_token
+            valid_token = consteq(tok or '', access_token)
+            if not valid_token:
+                raise AccessError("Invalid access token")
+            return record_sudo
+
+        if record_sudo.with_context(prefetch_fields=False).public:
+            return record_sudo
+
+        if self.env.user._is_portal():
+            # Check the read access on the record linked to the attachment
+            # eg: Allow to download an attachment on a task from /my/tasks/task_id
+            self.check('read')
+            return record_sudo
+
+        return self
+
     @api.model
     def action_get(self):
-        return self.env['ir.actions.act_window'].for_xml_id('base', 'action_attachment')
+        return self.env['ir.actions.act_window']._for_xml_id('base.action_attachment')
 
     @api.model
-    def get_serve_attachment(self, url, extra_domain=None, extra_fields=None, order=None):
+    def _get_serve_attachment(self, url, extra_domain=None, order=None):
         domain = [('type', '=', 'binary'), ('url', '=', url)] + (extra_domain or [])
-        fieldNames = ['__last_update', 'datas', 'mimetype'] + (extra_fields or [])
-        return self.search_read(domain, fieldNames, order=order, limit=1)
+        return self.search(domain, order=order, limit=1)
 
     @api.model
-    def get_attachment_by_key(self, key, extra_domain=None, order=None):
-        domain = [('key', '=', key)] + (extra_domain or [])
-        return self.search(domain, order=order, limit=1)
+    def regenerate_assets_bundles(self):
+        self.search([
+            ('public', '=', True),
+            ("url", "=like", "/web/assets/%"),
+            ('res_model', '=', 'ir.ui.view'),
+            ('res_id', '=', 0),
+            ('create_uid', '=', SUPERUSER_ID),
+        ]).unlink()
+        self.env.registry.clear_cache('assets')
+
+    def _from_request_file(self, file, *, mimetype, **vals):
+        """
+        Create an attachment out of a request file
+
+        :param file: the request file
+        :param str mimetype:
+            * "TRUST" to use the mimetype and file extension from the
+              request file with no verification.
+            * "GUESS" to determine the mimetype and file extension on
+              the file's content. The determined extension is added at
+              the end of the filename unless the filename already had a
+              valid extension.
+            * a mimetype in format "{type}/{subtype}" to force the
+              mimetype to the given value, it adds the corresponding
+              file extension at the end of the filename unless the
+              filename already had a valid extension.
+        """
+        if mimetype == 'TRUST':
+            mimetype = file.content_type
+            filename = file.filename
+        elif mimetype == 'GUESS':
+            head = file.read(1024)
+            file.seek(-len(head), 1)  # rewind
+            mimetype = guess_mimetype(head)
+            filename = fix_filename_extension(file.filename, mimetype)
+        elif all(mimetype.partition('/')):
+            filename = fix_filename_extension(file.filename, mimetype)
+        else:
+            raise ValueError(f'{mimetype=}')
+
+        return self.create({
+            'name': filename,
+            'type': 'binary',
+            'raw': file.read(),  # load the entire file in memory :(
+            'mimetype': mimetype,
+            **vals,
+        })
+
+    def _to_http_stream(self):
+        """ Create a :class:`~Stream`: from an ir.attachment record. """
+        self.ensure_one()
+
+        stream = Stream(
+            mimetype=self.mimetype,
+            download_name=self.name,
+            etag=self.checksum,
+            public=self.public,
+        )
+
+        if self.store_fname:
+            stream.type = 'path'
+            stream.path = werkzeug.security.safe_join(
+                os.path.abspath(config.filestore(request.db)),
+                self.store_fname
+            )
+            stat = os.stat(stream.path)
+            stream.last_modified = stat.st_mtime
+            stream.size = stat.st_size
+
+        elif self.db_datas:
+            stream.type = 'data'
+            stream.data = self.raw
+            stream.last_modified = self.write_date
+            stream.size = len(stream.data)
+
+        elif self.url:
+            # When the URL targets a file located in an addon, assume it
+            # is a path to the resource. It saves an indirection and
+            # stream the file right away.
+            static_path = root.get_static_file(
+                self.url,
+                host=request.httprequest.environ.get('HTTP_HOST', '')
+            )
+            if static_path:
+                stream = Stream.from_path(static_path, public=True)
+            else:
+                stream.type = 'url'
+                stream.url = self.url
+
+        else:
+            stream.type = 'data'
+            stream.data = b''
+            stream.size = 0
+
+        return stream

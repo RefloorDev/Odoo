@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import logging
 
-from odoo import api, fields, models, tools, _
+from odoo import api, fields, models, _, Command
 from odoo.exceptions import ValidationError
 from odoo.http import request
 
@@ -19,16 +18,10 @@ class ResUsers(models.Model):
         ('login_key', 'unique (login, website_id)', 'You can not have two users with the same login!'),
     ]
 
-    def _has_unsplash_key_rights(self):
-        self.ensure_one()
-        if self.has_group('website.group_website_designer'):
-            return True
-        return super(ResUsers, self)._has_unsplash_key_rights()
-
     @api.constrains('login', 'website_id')
     def _check_login(self):
         """ Do not allow two users with the same login without website """
-        self.flush(['login', 'website_id'])
+        self.flush_model(['login', 'website_id'])
         self.env.cr.execute(
             """SELECT login
                  FROM res_users
@@ -48,42 +41,63 @@ class ResUsers(models.Model):
         return super(ResUsers, self)._get_login_domain(login) + website.website_domain()
 
     @api.model
+    def _get_email_domain(self, email):
+        website = self.env['website'].get_current_website()
+        return super()._get_email_domain(email) + website.website_domain()
+
+    @api.model
+    def _get_login_order(self):
+        return 'website_id, ' + super(ResUsers, self)._get_login_order()
+
+    @api.model
     def _signup_create_user(self, values):
         current_website = self.env['website'].get_current_website()
+        # Note that for the moment, portal users can connect to all websites of
+        # all companies as long as the specific_user_account setting is not
+        # activated.
+        values['company_id'] = current_website.company_id.id
+        values['company_ids'] = [Command.link(current_website.company_id.id)]
         if request and current_website.specific_user_account:
-            values['company_id'] = current_website.company_id.id
-            values['company_ids'] = [(4, current_website.company_id.id)]
             values['website_id'] = current_website.id
         new_user = super(ResUsers, self)._signup_create_user(values)
         return new_user
 
     @api.model
     def _get_signup_invitation_scope(self):
-        current_website = self.env['website'].get_current_website()
+        current_website = self.env['website'].sudo().get_current_website()
         return current_website.auth_signup_uninvited or super(ResUsers, self)._get_signup_invitation_scope()
 
     @classmethod
-    def authenticate(cls, db, login, password, user_agent_env):
-        """ Override to link the logged in user's res.partner to website.visitor """
-        uid = super(ResUsers, cls).authenticate(db, login, password, user_agent_env)
-        if uid:
-            with cls.pool.cursor() as cr:
-                env = api.Environment(cr, uid, {})
-                visitor_sudo = env['website.visitor']._get_visitor_from_request()
-                if visitor_sudo:
-                    partner = env.user.partner_id
-                    partner_visitor = env['website.visitor'].with_context(active_test=False).sudo().search([('partner_id', '=', partner.id)])
-                    if partner_visitor and partner_visitor.id != visitor_sudo.id:
-                        # Link history to older Visitor and delete the newest
-                        visitor_sudo.website_track_ids.write({'visitor_id': partner_visitor.id})
-                        visitor_sudo.unlink()
-                        # If archived (most likely by the cron for inactivity reasons), reactivate the partner's visitor
-                        if not partner_visitor.active:
-                            partner_visitor.write({'active': True})
-                    else:
-                        vals = {
-                            'partner_id': partner.id,
-                            'name': partner.name
-                        }
-                        visitor_sudo.write(vals)
-        return uid
+    def authenticate(cls, db, credential, user_agent_env):
+        """ Override to link the logged in user's res.partner to website.visitor.
+        If a visitor already exists for that user, assign it data from the
+        current anonymous visitor (if exists).
+        Purpose is to try to aggregate as much sub-records (tracked pages,
+        leads, ...) as possible. """
+        visitor_pre_authenticate_sudo = None
+        if request and request.env:
+            visitor_pre_authenticate_sudo = request.env['website.visitor']._get_visitor_from_request()
+        auth_info = super().authenticate(db, credential, user_agent_env)
+        if auth_info.get('uid') and visitor_pre_authenticate_sudo:
+            env = api.Environment(request.env.cr, auth_info['uid'], {})
+            user_partner = env.user.partner_id
+            visitor_current_user_sudo = env['website.visitor'].sudo().search([
+                ('partner_id', '=', user_partner.id)
+            ], limit=1)
+            if visitor_current_user_sudo:
+                # A visitor exists for the logged in user, link public
+                # visitor records to it.
+                if visitor_pre_authenticate_sudo != visitor_current_user_sudo:
+                    visitor_pre_authenticate_sudo._merge_visitor(visitor_current_user_sudo)
+                visitor_current_user_sudo._update_visitor_last_visit()
+            else:
+                visitor_pre_authenticate_sudo.access_token = user_partner.id
+                visitor_pre_authenticate_sudo._update_visitor_last_visit()
+        return auth_info
+
+    @api.constrains('groups_id')
+    def _check_one_user_type(self):
+        super()._check_one_user_type()
+        internal_users = self.env.ref('base.group_user').users & self
+        if any(user.website_id for user in internal_users):
+            raise ValidationError(_("Remove website on related partner before they become internal user."))

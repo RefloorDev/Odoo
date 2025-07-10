@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-
         <record id="day_wise_report_form" model="ir.ui.view">
             <field name="name">day.wise.sync.status.report.form</field>
             <field name="model">otl.day.wise.sync.status.report</field>
@@ -17,8 +16,7 @@
                     </group>
                     <footer>
                         <button name="action_generate_day_wise_report" string="Generate Report" type="object" class="oe_highlight"/>
-                        <field name="report_data" readonly="1" attrs="{'invisible':[('report_data','=',False)]}"
-                               filename="name"/>
+                        <field name="report_data" readonly="1" invisible="report_data == False" filename="name"/>
                         <button string="Cancel" class="btn-secondary" special="cancel"/>
                     </footer>
                 </form>
@@ -35,7 +33,5 @@
         </record>
 
         <menuitem name="Daily Sync Analysis Report" parent="sale.menu_sale_report" id="menu_day_wise_report" action="action_day_wise_report"/>
-
-
     </data>
 </odoo>

@@ -1,386 +1,508 @@
-odoo.define('website_sale_tour.tour', function (require) {
-    'use strict';
+/** @odoo-module **/
 
-    var tour = require("web_tour.tour");
-    var rpc = require("web.rpc");
+    import { rpc } from "@web/core/network/rpc";
+    import { registry } from "@web/core/registry";
+    import * as tourUtils from "@website_sale/js/tours/tour_utils";
 
-    tour.register('website_sale_tour', {
-        test: true,
-        url: '/shop?search=Storage Box',
-    }, [
+    registry.category("web_tour.tours").add('website_sale_tour_1', {
+        checkDelay: 150,
+        url: '/shop?search=Storage Box Test',
+        steps: () => [
     // Testing b2c with Tax-Excluded Prices
     {
         content: "Open product page",
-        trigger: '.oe_product_cart a:contains("Storage Box")',
+        trigger: '.oe_product_cart a:contains("Storage Box Test")',
+        run: "click",
     },
     {
         content: "Add one more storage box",
         trigger: '.js_add_cart_json:eq(1)',
+        run: "click",
     },
     {
         content: "Check b2b Tax-Excluded Prices",
-        trigger: '.product_price .oe_price .oe_currency_value:containsExact(79.00)',
-        run: function () {}, // it's a check
+        trigger: ".product_price .oe_price .oe_currency_value:contains(/^79.00$/)",
     },
     {
         content: "Click on add to cart",
         trigger: '#add_to_cart',
+        run: "click",
     },
+        tourUtils.goToCart({quantity: 2}),
     {
-        content: "Check for 2 products in cart and proceed to checkout",
-        extra_trigger: '#cart_products tr:contains("Storage Box") input.js_quantity:propValue(2)',
+        content: "Check for 2 products in cart",
+        trigger:
+            '#cart_products div:has(a>h6:contains("Storage Box Test")) input.js_quantity:value(2)',
+    },
+    ...tourUtils.assertCartAmounts({
+        taxes: '23.70',
+        untaxed: '158.00',
+        total: '181.70',
+    }),
+    {
+        content: "Proceed to checkout",
         trigger: 'a[href*="/shop/checkout"]',
+        run: "click",
     },
     {
-        content: "Check Price b2b subtotal",
-        trigger: 'tr#order_total_untaxed .oe_currency_value:containsExact(158.00)',
-        run: function () {}, // it's a check
-    },
-    {
-        content: "Check Price b2b Sale Tax(15%)",
-        trigger: 'tr#order_total_taxes .oe_currency_value:containsExact(23.70)',
-        run: function () {}, // it's a check
-    },
-    {
-        content: "Check Price b2b Total amount",
-        trigger: 'tr#order_total .oe_currency_value:containsExact(181.70)',
-        run: function () {}, // it's a check
-    },
-    {
-        content: "Fulfill billing address form",
+        content: "Fulfill delivery address form",
         trigger: 'select[name="country_id"]',
-        run: function () {
-            $('input[name="name"]').val('abc');
-            $('input[name="phone"]').val('99999999');
-            $('input[name="email"]').val('abc@odoo.com');
-            $('input[name="street"]').val('SO1 Billing Street, 33');
-            $('input[name="city"]').val('SO1BillingCity');
-            $('#country_id option:eq(1)').attr('selected', true);
-        },
+        run: "selectByLabel Afghanistan",
     },
     {
-        content: "Shipping address is not same as billing address",
-        trigger: '#shipping_use_same',
+        trigger: `input[name="name"]`,
+        run: "edit abcd",
+    },
+    {
+        trigger: `input[name="phone"]`,
+        run: "edit 99999999",
+    },
+    {
+        trigger: `input[name="email"]`,
+        run: "edit abc@odoo.com",
+    },
+    {
+        trigger: `input[name="street"]`,
+        run: "edit SO1 Delivery Street, 33",
+    },
+    {
+        trigger: `input[name="city"]`,
+        run: "edit SO1DeliveryCity",
+    },
+    {
+        trigger: `input[name="zip"]`,
+        run: "edit 10000",
     },
     {
         content: "Click on next button",
-        trigger: '.oe_cart .btn:contains("Next")',
-    },
-    {
-        content: "Fulfill shipping address form",
-        trigger: 'select[name="country_id"]',
-        extra_trigger: 'h2:contains("Shipping Address")',
-        run: function () {
-            $('input[name="name"]').val('def');
-            $('input[name="phone"]').val('8888888888');
-            $('input[name="street"]').val('17, SO1 Shipping Road');
-            $('input[name="city"]').val('SO1ShippingCity');
-            $('#country_id option:eq(1)').attr('selected', true);
-        },
-    },
-    {
-        content: "Click on next button",
-        trigger: '.oe_cart .btn:contains("Next")',
-    },
-    {
-        content: "Check selected billing address is same as typed in previous step",
-        trigger: '#shipping_and_billing:contains(SO1 Billing Street, 33):contains(SO1BillingCity):contains(Afghanistan)',
-        run: function () {}, // it's a check
-    },
-    {
-        content: "Check selected shipping address is same as typed in previous step",
-        trigger: '#shipping_and_billing:contains(17, SO1 Shipping Road):contains(SO1ShippingCity):contains(Afghanistan)',
-        run: function () {}, // it's a check
+        trigger: '.oe_cart .btn:contains("Continue checkout")',
+        run: "click",
     },
     {
         content: "Click for edit address",
         trigger: 'a:contains("Edit") i',
+        run: "click",
+    },
+    {
+        content: "Billing address is not same as delivery address",
+        trigger: '#use_delivery_as_billing',
+        run: "click",
+    },
+    {
+        content: "Add a billing address",
+        trigger: '.all_billing a[href^="/shop/address"]:contains("Add address")',
+        run: "click",
+    },
+    {
+        trigger: 'h3:contains("Billing address")',
+    },
+    {
+        content: "Fulfill billing address form",
+        trigger: 'select[name="country_id"]',
+        run: "selectByLabel Afghanistan",
+    },
+    {
+        trigger: `input[name="name"]`,
+        run: "edit def",
+    },
+    {
+        trigger: `input[name="phone"]`,
+        run: "edit 8888888888",
+    },
+    {
+        trigger: `input[name="email"]`,
+        run: "edit abc@odoo.com",
+    },
+    {
+        trigger: `input[name="street"]`,
+        run: "edit 17, SO1 Billing Road",
+    },
+    {
+        trigger: `input[name="city"]`,
+        run: "edit SO1BillingCity",
+    },
+    {
+        trigger: `input[name="zip"]`,
+        run: "edit 10000",
+    },
+    {
+        content: "Click on next button",
+        trigger: '.oe_cart .btn:contains("Save address")',
+        run: "click",
+    },
+    {
+        content: "Check selected delivery address is same as typed in previous step",
+        trigger: '#delivery_address_row:contains(SO1 Delivery Street, 33):contains(SO1DeliveryCity):contains(Afghanistan)',
+    },
+    {
+        content: "Check selected billing address is same as typed in previous step",
+        trigger: '#billing_address_row:contains(17, SO1 Billing Road):contains(SO1BillingCity):contains(Afghanistan)',
+    },
+    {
+        content: "Click for edit address",
+        trigger: 'a:contains("Edit") i',
+        run: "click",
     },
     {
         content: "Click for edit billing address",
-        trigger: '.js_edit_address:first',
+        trigger: '.all_billing .js_edit_address:first',
+        run: "click",
+    },
+    {
+        trigger: 'h3:contains("Billing address")',
     },
     {
         content: "Change billing address form",
         trigger: 'select[name="country_id"]',
-        extra_trigger: 'h2:contains("Your Address")',
-        run: function () {
-            $('input[name="name"]').val('abcd');
-            $('input[name="phone"]').val('11111111');
-            $('input[name="street"]').val('SO1 Billing Street Edited, 33');
-            $('input[name="city"]').val('SO1BillingCityEdited');
-        },
+    },
+    {
+        trigger: `input[name="name"]`,
+        run: "edit abcd",
+    },
+    {
+        trigger: `input[name="phone"]`,
+        run: "edit 11111111",
+    },
+    {
+        trigger: `input[name="street"]`,
+        run: "edit SO1 Billing Street Edited, 33",
+    },
+    {
+        trigger: `input[name="city"]`,
+        run: "edit SO1BillingCityEdited",
     },
     {
         content: "Click on next button",
-        trigger: '.oe_cart .btn:contains("Next")',
+        trigger: '.oe_cart .btn:contains("Save address")',
+        run: "click",
     },
-    {
-        content: "Confirm Address",
-        trigger: 'a.btn:contains("Confirm")',
-    },
+        tourUtils.confirmOrder(),
     {
         content: "Check selected billing address is same as typed in previous step",
-        trigger: '#shipping_and_billing:contains(SO1 Billing Street Edited, 33):contains(SO1BillingCityEdited):contains(Afghanistan)',
-        run: function () {}, // it's a check
+        trigger: '#billing_address_row:contains(SO1 Billing Street Edited, 33):contains(SO1BillingCityEdited):contains(Afghanistan)',
     },
     {
         content: "Select `Wire Transfer` payment method",
-        trigger: '#payment_method label:contains("Wire Transfer")',
+        trigger: 'input[name="o_payment_radio"][data-payment-method-code="wire_transfer"]',
+        run: "click",
+    },
+    {
+        trigger:
+            'input[name="o_payment_radio"][data-payment-method-code="wire_transfer"]:checked',
     },
     {
         content: "Pay Now",
-        extra_trigger: '#payment_method label:contains("Wire Transfer") input:checked,#payment_method:not(:has("input:radio:visible"))',
-        trigger: 'button[id="o_payment_form_pay"]:visible:not(:disabled)',
+        trigger: 'button[name="o_payment_submit_button"]:not(:disabled)',
+        run: "click",
     },
     {
         content: "Sign up",
         trigger: '.oe_cart a:contains("Sign Up")',
+        run: "click",
+    },
+    {
+        trigger: `.oe_signup_form input[name="password"]`,
+        run: "edit 1admin@admin",
+    },
+    {
+        trigger: `.oe_signup_form input[name="confirm_password"]`,
+        run: "edit 1admin@admin",
     },
     {
         content: "Submit login",
-        trigger: '.oe_signup_form',
-        run: function () {
-            $('.oe_signup_form input[name="password"]').val("1admin@admin");
-            $('.oe_signup_form input[name="confirm_password"]').val("1admin@admin");
-            $('.oe_signup_form').submit();
-        },
+        trigger: `.oe_signup_form button[type="submit"]`,
+        run: "click",
     },
     {
         content: "See Quotations",
-        trigger: '.o_portal_docs a:contains("Quotations")',
+        trigger: '.o_portal_docs a:contains("Quotations to review")',
+        run: "click",
     },
     // Sign in as admin change config auth_signup -> b2b, sale_show_tax -> total and Logout
     {
+        trigger: ".o_header_standard:not(.o_transitioning)",
+    },
+    {
         content: "Open Dropdown for logout",
-        trigger: '#top_menu li.dropdown:visible a:contains("abcd")',
+        trigger: 'header#top li.dropdown:visible a:contains("abcd")',
+        run: "click",
     },
     {
         content: "Logout",
         trigger: '#o_logout:contains("Logout")',
+        run: "click",
     },
     {
         content: "Sign in as admin",
-        trigger: '#top_menu li a b:contains("Sign in")',
+        trigger: 'header a[href="/web/login"]',
+        run: "click",
     },
     {
-        content: "Submit login",
-        trigger: '.oe_login_form',
-        run: function () {
-            $('.oe_login_form input[name="login"]').val("admin");
-            $('.oe_login_form input[name="password"]').val("admin");
-            $('.oe_login_form input[name="redirect"]').val("/");
-            $('.oe_login_form').submit();
+        trigger: `.oe_login_form input[name="login"]`,
+        run: "edit admin",
+    },
+    {
+        trigger: `.oe_login_form input[name="password"]`,
+        run: "edit admin",
+    },
+    {
+        trigger: `.oe_login_form input[name="redirect"]:not(:visible)`,
+        run(helpers) {
+            this.anchor.value = "/";
         },
     },
     {
+        content: "Submit login",
+        trigger: `.oe_login_form button[type="submit"]`,
+        run: "click"
+    },
+    {
+        trigger: ".o_frontend_to_backend_nav", // Check if the user is connected
+    },
+    {
         content: "Configuration Settings for 'Tax Included' and sign up 'On Invitation'",
-        extra_trigger: '.o_connected_user #wrapwrap',
         trigger: '#wrapwrap',
         run: function () {
-            var def1 = rpc.query({
-                model: 'res.config.settings',
-                method: 'create',
+            var def1 = rpc(`/web/dataset/call_kw/res.config.settings/create`, {
+                model: "res.config.settings",
+                method: "create",
                 args: [{
                     'auth_signup_uninvited': 'b2b',
                     'show_line_subtotals_tax_selection': 'tax_included',
-                    'group_show_line_subtotals_tax_excluded': false,
-                    'group_show_line_subtotals_tax_included': true,
                 }],
+                kwargs: {},
             });
             var def2 = def1.then(function (resId) {
-                return rpc.query({
-                    model: 'res.config.settings',
-                    method: 'execute',
+                return rpc(`/web/dataset/call_kw/res.config.settings/execute`, {
+                    model: "res.config.settings",
+                    method: "execute",
                     args: [[resId]],
+                    kwargs: {},
                 });
             });
             def2.then(function () {
-                window.location.href = '/web/session/logout?redirect=/shop?search=Storage Box';
+                window.location.href = '/web/session/logout?redirect=/shop?search=Storage Box Test';
             });
         },
     },
     // Testing b2b with Tax-Included Prices
     {
         content: "Open product page",
-        trigger: '.oe_product_cart a:contains("Storage Box")',
+        trigger: '.oe_product_cart a:contains("Storage Box Test")',
+        run: "click",
     },
     {
-        content: "Add one more Storage Box",
+        content: "Add one more Storage Box Test",
         trigger: '.js_add_cart_json:eq(1)',
+        run: "click",
     },
     {
         content: "Check b2c Tax-Included Prices",
-        trigger: '.product_price .oe_price .oe_currency_value:containsExact(90.85)',
-        run: function () {}, // it's a check
+        trigger: ".product_price .oe_price .oe_currency_value:contains(/^90.85$/)",
     },
     {
         content: "Click on add to cart",
         trigger: '#add_to_cart',
+        run: "click",
+    },
+        tourUtils.goToCart({quantity: 2}),
+        {
+            content: "Check for 2 products in cart",
+            trigger:
+                '#cart_products div:has(a>h6:contains("Storage Box Test")) input.js_quantity:value(2)',
+        },
+        ...tourUtils.assertCartAmounts({
+            taxes: "23.70",
+            untaxed: "158.00",
+            total: "181.70",
+        }),
+        {
+            content: "Proceed to checkout",
+            trigger: 'a[href*="/shop/checkout"]',
+            run: "click",
+        },
+    {
+        content: "Click on Sign in Button",
+        trigger: `.oe_cart a:contains(Sign in)`,
+        run: "click",
     },
     {
-        content: "Check for 2 products in cart and proceed to checkout",
-        extra_trigger: '#cart_products tr:contains("Storage Box") input.js_quantity:propValue(2)',
-        trigger: 'a[href*="/shop/checkout"]',
+        trigger: `.oe_login_form input[name="login"]`,
+        run: "edit abc@odoo.com",
     },
     {
-        content: "Check Price b2c total",
-        trigger: 'tr#order_total_untaxed .oe_currency_value:containsExact(158.00)',
-        run: function () {}, // it's a check
-    },
-    {
-        content: "Check Price b2c Sale Tax(15%)",
-        trigger: 'tr#order_total_taxes .oe_currency_value:containsExact(23.70)',
-        run: function () {}, // it's a check
-    },
-    {
-        content: "Check Price b2c Total amount",
-        trigger: 'tr#order_total .oe_currency_value:containsExact(181.70)',
-        run: function () {}, // it's a check
-    },
-    {
-        content: "Click on Login Button",
-        trigger: '.oe_cart a.btn:contains("Log In")',
+        trigger: `.oe_login_form input[name="password"]`,
+        run: "edit 1admin@admin",
     },
     {
         content: "Submit login",
-        trigger: '.oe_login_form',
-        run: function () {
-            $('.oe_login_form input[name="login"]').val("abc@odoo.com");
-            $('.oe_login_form input[name="password"]').val("1admin@admin");
-            $('.oe_login_form').submit();
-        },
+        trigger: `.oe_login_form button[type="submit"]`,
+        run: "click",
     },
     {
-        content: "Add new shipping address",
-        trigger: '.one_kanban form[action^="/shop/address"] .btn',
+        content: "Add new delivery address",
+        trigger: '.all_delivery a[href^="/shop/address"]:contains("Add address")',
+        run: "click",
     },
     {
-        content: "Fulfill shipping address form",
+        content: "Fulfill delivery address form",
         trigger: 'select[name="country_id"]',
-        run: function () {
-            $('input[name="name"]').val('ghi');
-            $('input[name="phone"]').val('7777777777');
-            $('input[name="street"]').val('SO2New Shipping Street, 5');
-            $('input[name="city"]').val('SO2NewShipping');
-            $('#country_id option:eq(1)').attr('selected', true);
-        },
+        run: "selectByLabel Afghanistan",
+    },
+    {
+        trigger: `input[name="name"]`,
+        run: "edit ghi",
+    },
+    {
+        trigger: `input[name="phone"]`,
+        run: "edit 7777777777",
+    },
+    {
+        trigger: `input[name="street"]`,
+        run: "edit SO2New Delivery Street, 5",
+    },
+    {
+        trigger: `input[name="city"]`,
+        run: "edit SO2NewDelivery",
+    },
+    {
+        trigger: `input[name="zip"]`,
+        run: "edit 1200",
     },
     {
         content: "Click on next button",
-        trigger: '.oe_cart .btn:contains("Next")',
+        trigger: '.oe_cart .btn:contains("Save address")',
+        run: "click",
     },
     {
         content: "Select `Wire Transfer` payment method",
-        trigger: '#payment_method label:contains("Wire Transfer")',
+        trigger: 'input[name="o_payment_radio"][data-payment-method-code="wire_transfer"]',
+        run: "click",
+    },
+    {
+        trigger: 'input[name="o_payment_radio"][data-payment-method-code="wire_transfer"]:checked',
     },
     {
         content: "Pay Now",
-        extra_trigger: '#payment_method label:contains("Wire Transfer") input:checked,#payment_method:not(:has("input:radio:visible"))',
-        trigger: 'button[id="o_payment_form_pay"]:visible:not(:disabled)',
+        trigger: 'button[name="o_payment_submit_button"]:not(:disabled)',
+        run: "click",
+    },
+    {
+        trigger: '.oe_cart .oe_website_sale_tx_status',
     },
     {
         content: "Open Dropdown for See quotation",
-        extra_trigger: '.oe_cart .oe_website_sale_tx_status',
-        trigger: '#top_menu li.dropdown:visible a:contains("abc")',
+        trigger: 'header#top li.dropdown:visible a:contains("abc")',
+        run: "click",
+    },
+    {
+        trigger: "header#top li.dropdown .js_usermenu.show",
     },
     {
         content: "My account",
-        extra_trigger: '#top_menu li.dropdown .js_usermenu.show',
-        trigger: '#top_menu .dropdown-menu a[href="/my/home"]:visible',
-    },
-    {
-        content: "See Quotations",
-        trigger: '.o_portal_docs a:contains("Quotations") .badge:containsExact(2)',
+        trigger: 'header#top .dropdown-menu a[href="/my/home"]:visible',
+        run: "click",
     },
 
     // enable extra step on website checkout and check extra step on checkout process
     {
+        trigger: ".o_header_standard:not(.o_transitioning)",
+    },
+    {
         content: "Open Dropdown for logout",
-        trigger: '#top_menu li.dropdown:visible a:contains("abc")',
+        trigger: 'header#top li.dropdown:visible a:contains("abc")',
+        run: "click",
     },
     {
         content: "Logout",
         trigger: '#o_logout:contains("Logout")',
+        run: "click",
     },
     {
         content: "Sign in as admin",
-        trigger: '#top_menu li a b:contains("Sign in")',
+        trigger: 'header a[href="/web/login"]',
+        run: "click",
     },
     {
-        content: "Submit login",
-        trigger: '.oe_login_form',
-        run: function () {
-            $('.oe_login_form input[name="login"]').val("admin");
-            $('.oe_login_form input[name="password"]').val("admin");
-            $('.oe_login_form input[name="redirect"]').val("/shop/cart");
-            $('.oe_login_form').submit();
+        trigger: `.oe_login_form input[name="login"]`,
+        run: "edit admin",
+    },
+    {
+        trigger: `.oe_login_form input[name="password"]`,
+        run: "edit admin",
+    },
+    {
+        trigger: `.oe_login_form input[name="redirect"]:not(:visible)`,
+        run(helpers) {
+            this.anchor.value = "/shop/cart";
         },
     },
     {
-        content: "Open Customize menu",
-        trigger: '.o_menu_sections a:contains("Customize")',
-    },
+        content: "Submit login",
+        trigger: `.oe_login_form button[type="submit"]`,
+        run: "click",
+    }]});
+
+    registry.category("web_tour.tours").add('website_sale_tour_2', {
+        url: '/shop/cart',
+        checkDelay: 150,
+        steps: () => [
     {
-        content: "Enable Extra step",
-        trigger: 'a.dropdown-item label:contains("Extra Step Option")',
+        trigger: '.o_wizard:contains("Extra Info")',
     },
     {
         content: "Open Dropdown for logout",
-        extra_trigger: '.progress-wizard-step:contains("Extra Info")',
-        trigger: '#top_menu li.dropdown:visible a:contains("Mitchell Admin")',
+        trigger: 'header#top li.dropdown:visible a:contains("Mitchell Admin")',
+        run: "click",
     },
     {
         content: "Logout",
         trigger: '#o_logout:contains("Logout")',
+        run: "click",
     },
     {
         content: "Sign in as abc",
-        trigger: '#top_menu li a b:contains("Sign in")',
+        trigger: 'header a[href="/web/login"]',
+        run: "click",
     },
     {
-        content: "Submit login",
-        trigger: '.oe_login_form',
-        run: function () {
-            $('.oe_login_form input[name="login"]').val("abc@odoo.com");
-            $('.oe_login_form input[name="password"]').val("1admin@admin");
-            $('.oe_login_form input[name="redirect"]').val("/shop?search=Storage Box");
-            $('.oe_login_form').submit();
+        trigger: `.oe_login_form input[name="login"]`,
+        run: "edit abc@odoo.com",
+    },
+    {
+        trigger: `.oe_login_form input[name="password"]`,
+        run: "edit 1admin@admin",
+    },
+    {
+        trigger: `.oe_login_form input[name="redirect"]:not(:visible)`,
+        run(helpers) {
+            this.anchor.value = "/shop?search=Storage Box Test";
         },
     },
     {
+        content: "Submit login",
+        trigger: `.oe_login_form button[type="submit"]`,
+        run: "click",
+    },
+    {
         content: "Open product page",
-        trigger: '.oe_product_cart a:contains("Storage Box")',
+        trigger: '.oe_product_cart a:contains("Storage Box Test")',
+        run: "click",
     },
     {
         content: "Click on add to cart",
         trigger: '#add_to_cart',
+        run: "click",
     },
+        tourUtils.goToCart(),
+        tourUtils.goToCheckout(),
     {
-        content: "Proceed to checkout",
-        trigger: 'a[href*="/shop/checkout"]',
+        content: "Click on 'Continue checkout' button",
+        trigger: '.oe_cart .btn:contains("Continue checkout")',
+        run: "click",
     },
+    ...tourUtils.payWithTransfer(),
     {
-        content: "Click on next button",
-        trigger: '.oe_cart .btn:contains("Next")',
-    },
-    {
-        content: "Check selected billing address is same as typed in previous step",
-        trigger: '#shipping_and_billing:contains(SO1 Billing Street Edited, 33):contains(SO1BillingCityEdited):contains(Afghanistan)',
-        run: function () {}, // it's a check
-    },
-    {
-        content: "Check selected shipping address is same as typed in previous step",
-        trigger: '#shipping_and_billing:contains(SO2New Shipping Street, 5):contains(SO2NewShipping):contains(Afghanistan)',
-        run: function () {}, // it's a check
-    },
-    {
-        content: "Select `Wire Transfer` payment method",
-        trigger: '#payment_method label:contains("Wire Transfer")',
-    },
-    {
-        content: "Pay Now",
-        extra_trigger: '#payment_method label:contains("Wire Transfer") input:checked,#payment_method:not(:has("input:radio:visible"))',
-        trigger: 'button[id="o_payment_form_pay"]:visible',
-    }]);
-});
+        content: "Check payment status confirmation window",
+        trigger: ".oe_website_sale_tx_status[data-order-tracking-info]",
+    }]});

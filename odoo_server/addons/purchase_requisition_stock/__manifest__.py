@@ -4,19 +4,16 @@
 {
     'name': 'Purchase Requisition Stock',
     'version': '1.2',
-    'category': 'Operations/Purchase',
+    'category': 'Inventory/Purchase',
     'sequence': 70,
-    'summary': '',
-    'description': "",
     'depends': ['purchase_requisition', 'purchase_stock'],
-    'demo': [
-        'data/purchase_requisition_stock_demo.xml'
-        ],
     'data': [
         'security/ir.model.access.csv',
         'data/purchase_requisition_stock_data.xml',
+        'views/purchase_views.xml',
         'views/purchase_requisition_views.xml',
     ],
     'installable': True,
     'auto_install': True,
+    'license': 'LGPL-3',
 }

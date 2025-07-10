@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-
         <menuitem
             id="menu_hr_root"
             name="Employees"
             groups="group_hr_manager,group_hr_user,base.group_user"
             web_icon="hr,static/description/icon.png"
-            sequence="75"/>
+            sequence="185"/>
 
         <menuitem
             id="menu_hr_main"
@@ -31,7 +30,7 @@
 
         <menuitem
             id="menu_hr_employee"
-            name="Employee Directory"
+            name="Directory"
             action="hr_employee_public_action"
             parent="menu_hr_root"
             sequence="4"/>
@@ -40,6 +39,7 @@
             id="hr_menu_hr_reports"
             name="Reporting"
             parent="menu_hr_root"
+            groups="group_hr_user"
             sequence="95"/>
 
         <menuitem
@@ -53,59 +53,79 @@
             id="menu_human_resources_configuration"
             name="Configuration"
             parent="menu_hr_root"
-            groups="group_hr_manager"
+            groups="hr.group_hr_user"
             sequence="100"/>
 
             <menuitem
-                id="menu_view_hr_job"
-                action="action_hr_job"
+                id="menu_config_plan_plan"
+                name="Activity Plan"
+                action="mail_activity_plan_action"
                 parent="menu_human_resources_configuration"
-                sequence="1"/>
+                groups="group_hr_manager"
+                sequence="9"/>
 
             <menuitem
-                id="menu_human_resources_configuration_employee"
+                id="menu_config_employee"
                 name="Employee"
                 parent="menu_human_resources_configuration"
-                groups="base.group_no_one"
-                sequence="1"/>
-
-                <menuitem
-                    id="menu_view_employee_category_form"
-                    name="Tags"
-                    action="open_view_categ_form"
-                    parent="menu_human_resources_configuration_employee"
-                    groups="base.group_no_one"
-                    sequence="1"/>
+                groups="group_hr_user"
+                sequence="10"/>
 
             <menuitem
-                id="menu_hr_department_tree"
-                action="open_module_tree_department"
-                parent="menu_human_resources_configuration"
-                sequence="2"
+                id="menu_hr_department_kanban"
+                action="hr_department_kanban_action"
+                parent="menu_hr_root"
+                groups="base.group_user"/>
+
+            <menuitem
+                id="menu_hr_work_location_tree"
+                action="hr_work_location_action"
+                parent="menu_config_employee"
+                sequence="5"
                 groups="group_hr_user"/>
 
             <menuitem
-                id="menu_config_plan"
-                name="Activity Planning"
+                id="menu_resource_calendar_view"
+                action="resource.action_resource_calendar_form"
+                parent="menu_config_employee"
+                name="Working Schedules"
+                sequence="6"
+                groups="group_hr_user"/>
+
+            <menuitem
+                id="menu_hr_departure_reason_tree"
+                action="hr_departure_reason_action"
+                parent="menu_config_employee"
+                sequence="7"
+                groups="group_hr_user"/>
+
+            <menuitem
+                id="menu_view_employee_category_form"
+                name="Tags"
+                action="open_view_categ_form"
+                parent="menu_config_employee"
+                groups="base.group_no_one"
+                sequence="10"/>
+
+            <menuitem
+                id="menu_config_recruitment"
+                name="Recruitment"
                 parent="menu_human_resources_configuration"
-                groups="group_hr_manager"
-                sequence="100"/>
+                groups="group_hr_user"
+                sequence="20"/>
 
                 <menuitem
-                    id="menu_config_plan_types"
-                    name="Planning Types"
-                    action="hr_plan_activity_type_action"
-                    parent="menu_config_plan"
-                    groups="base.group_no_one"
-                    sequence="99"/>
+                    id="menu_view_hr_job"
+                    action="action_hr_job"
+                    parent="menu_config_recruitment"
+                    sequence="1"/>
 
                 <menuitem
-                    id="menu_config_plan_plan"
-                    name="Plans"
-                    action="hr_plan_action"
-                    parent="menu_config_plan"
-                    groups="group_hr_manager"
-                    sequence="100"/>
+                    id="menu_view_hr_contract_type"
+                    action="hr_contract_type_action"
+                    parent="menu_config_recruitment"
+                    sequence="2"
+                    groups="group_hr_user"/>
 
     </data>
 </odoo>

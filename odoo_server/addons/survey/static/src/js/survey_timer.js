@@ -1,45 +1,85 @@
-odoo.define('survey.timer', function (require) {
-'use strict';
+/** @odoo-module **/
 
-require('web.dom_ready');
+import { deserializeDateTime } from "@web/core/l10n/dates";
+import publicWidget from "@web/legacy/js/public/public_widget";
+const { DateTime } = luxon;
 
-if (!$('.js_survey_timer').length) {
-    return Promise.reject("DOM doesn't contain '.js_survey_timer'");
-}
+publicWidget.registry.SurveyTimerWidget = publicWidget.Widget.extend({
+    //--------------------------------------------------------------------------
+    // Widget
+    //--------------------------------------------------------------------------
 
-var $parent = $('.js_survey_timer');
-var timeLimitMinutes = parseInt($parent.data('time_limit_minutes'));
+    /**
+     * @override
+     */
+    init: function (parent, params) {
+        this._super.apply(this, arguments);
+        this.timer = params.timer;
+        this.timeLimitMinutes = params.timeLimitMinutes;
+        this.surveyTimerInterval = null;
+        this.timeDifference = null;
+        if (params.serverTime) {
+            this.timeDifference = DateTime.utc().diff(
+                deserializeDateTime(params.serverTime)
+            ).milliseconds;
+        }
+    },
 
-if (timeLimitMinutes <= 0) {
-    return Promise.reject("Timer is not positive");
-}
 
-var countDownDate = moment.utc($parent.data('timer')).add(timeLimitMinutes, 'minutes');
+    /**
+    * Two responsabilities : Validate that time limit is not exceeded and Run timer otherwise.
+    * If end-user's clock OR the system clock  is de-synchronized before the survey is started, we apply the
+    * difference in timer (if time difference is more than 5 seconds) so that we can
+    * display the 'absolute' counter
+    *
+    * @override
+    */
+    start: function () {
+        var self = this;
+        return this._super.apply(this, arguments).then(function () {
+            self.countDownDate = DateTime.fromISO(self.timer, { zone: "utc" }).plus({
+                minutes: self.timeLimitMinutes,
+            });
+            if (Math.abs(self.timeDifference) >= 5000) {
+                self.countDownDate = self.countDownDate.plus({ milliseconds: self.timeDifference });
+            }
+            if (self.timeLimitMinutes <= 0 || self.countDownDate.diff(DateTime.utc()).seconds < 0) {
+                self.trigger_up('time_up');
+            } else {
+                self._updateTimer();
+                self.surveyTimerInterval = setInterval(self._updateTimer.bind(self), 1000);
+            }
+        });
+    },
 
-if (countDownDate.diff(moment.utc(), 'seconds') < 0) {
-    return Promise.reject("Timer is already finished");
-}
+    // -------------------------------------------------------------------------
+    // Private
+    // -------------------------------------------------------------------------
 
-var formatTime = function (time) {
-    return time > 9 ? time : '0' + time;
-};
+    _formatTime: function (time) {
+        return time > 9 ? time : '0' + time;
+    },
 
-var $timer = $parent.find('.timer');
-var interval = null;
-var updateTimer = function () {
-    var timeLeft = countDownDate.diff(moment.utc(), 'seconds');
+    /**
+    * This function is responsible for the visual update of the timer DOM every second.
+    * When the time runs out, it triggers a 'time_up' event to notify the parent widget.
+    *
+    * We use a diff in millis and not a second, that we round to the nearest second.
+    * Indeed, a difference of 999 millis is interpreted as 0 second by moment, which is problematic
+    * for our use case.
+    */
+    _updateTimer: function () {
+        var timeLeft = Math.round(this.countDownDate.diff(DateTime.utc()).milliseconds / 1000);
 
-    if (timeLeft >= 0) {
-        var timeLeftMinutes = parseInt(timeLeft / 60);
-        var timeLeftSeconds = timeLeft - (timeLeftMinutes * 60);
-        $timer.html(formatTime(timeLeftMinutes) + ':' + formatTime(timeLeftSeconds));
-    } else {
-        clearInterval(interval);
-        $('.js_surveyform').submit();
-    }
-};
-
-updateTimer();
-interval = setInterval(updateTimer, 1000);
-
+        if (timeLeft >= 0) {
+            var timeLeftMinutes = parseInt(timeLeft / 60);
+            var timeLeftSeconds = timeLeft - (timeLeftMinutes * 60);
+            this.$el.text(this._formatTime(timeLeftMinutes) + ':' + this._formatTime(timeLeftSeconds));
+        } else {
+            clearInterval(this.surveyTimerInterval);
+            this.trigger_up('time_up');
+        }
+    },
 });
+
+export default publicWidget.registry.SurveyTimerWidget;

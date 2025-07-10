@@ -5,25 +5,15 @@
         <field name="model">pos.config</field>
         <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//button[@id='btn_use_employees']" position='replace'>
-                <div attrs="{'invisible': [('module_pos_hr', '=', False)]}">
-                    <span class="o_form_label oe_edit_only">Allowed Employees </span>
-                    <field name="employee_ids" widget="many2many_tags" 
-                    domain="[('company_id', '=', company_id)]"
-                    />
+            <xpath expr="//div[@id='warning_text_employees']" position='replace'>
+                <field name="company_id" invisible="1" />
+                <div class="row">
+                    <label for="basic_employee_ids" string="Basic rights" class="col-lg-5 o_light_label" />
+                    <field name="basic_employee_ids" widget="many2many_tags" placeholder="All Employees" domain="[('company_id', '=', company_id)]" />
                 </div>
-            </xpath>
-            <xpath expr="//div[@id='pricing']" position='inside'>
-                <div class="col-12 col-lg-6 o_setting_box price_control" title="Only users with Manager access rights for PoS app can modify the product prices on orders.">
-                    <div class="o_setting_left_pane">
-                        <field name="restrict_price_control"/>
-                    </div>
-                    <div class="o_setting_right_pane">
-                        <label for="restrict_price_control" string="Price Control"/>
-                        <div class="text-muted">
-                            Restrict price modification to managers
-                        </div>
-                    </div>
+                <div class="row">
+                    <label for="advanced_employee_ids" string="Advanced rights" class="col-lg-5 o_light_label" />
+                    <field name="advanced_employee_ids" widget="many2many_tags" placeholder="Select Employee(s)" domain="[('company_id', '=', company_id)]" />
                 </div>
             </xpath>
         </field>

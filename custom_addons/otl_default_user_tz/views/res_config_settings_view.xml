@@ -5,22 +5,10 @@
         <field name="model">res.config.settings</field>
         <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[@id='access_rights']" position="before">
-                <div class="col-12 col-lg-6 o_setting_box" title="Timezone will be set automatically for the newly created users.">
-                    <div class="o_setting_left_pane"></div>
-                    <div class="o_setting_right_pane">
-                        <label string="Default Timezone" for="default_tz"/>
-                        <div class="text-muted" id="msg_default_tz">
-                            Default Timezone to be set while creating New Partners &amp; Customers
-                        </div>
-                        <div class="content-group">
-                            <div class="mt16">
-                                <label for="default_tz" class="o_light_label"/>
-                                <field name="default_tz" class="oe_inline"/>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <xpath expr="//setting[@id='access_rights']" position="before">
+                <setting id="default_tz" string="Default Timezone" help=" Default Timezone to be set while creating New Partners &amp; Customers.">
+                    <field name="default_tz" options="{'no_create': True}"/>
+                </setting>
             </xpath>
         </field>
     </record>

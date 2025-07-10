@@ -1,45 +1,42 @@
-odoo.define('website.root', function (require) {
-'use strict';
+/** @odoo-module */
 
-var core = require('web.core');
-var Dialog = require('web.Dialog');
-var publicRootData = require('web.public.root');
-require("web.zoomodoo");
+import { loadJS } from "@web/core/assets";
+import { _t } from "@web/core/l10n/translation";
+import { user } from "@web/core/user";
+import { rpc } from "@web/core/network/rpc";
+import publicRootData from '@web/legacy/js/public/public_root';
+import "@website/libs/zoomodoo/zoomodoo";
+import { pick } from "@web/core/utils/objects";
 
-var _t = core._t;
+import { markup } from "@odoo/owl";
 
-var websiteRootRegistry = publicRootData.publicRootRegistry;
-
-var WebsiteRoot = publicRootData.PublicRoot.extend({
-    events: _.extend({}, publicRootData.PublicRoot.prototype.events || {}, {
+export const WebsiteRoot = publicRootData.PublicRoot.extend({
+    events: Object.assign({}, publicRootData.PublicRoot.prototype.events || {}, {
         'click .js_change_lang': '_onLangChangeClick',
         'click .js_publish_management .js_publish_btn': '_onPublishBtnClick',
-        'click .js_multi_website_switch': '_onWebsiteSwitch',
         'shown.bs.modal': '_onModalShown',
     }),
-    custom_events: _.extend({}, publicRootData.PublicRoot.prototype.custom_events || {}, {
+    custom_events: Object.assign({}, publicRootData.PublicRoot.prototype.custom_events || {}, {
+        'gmap_api_request': '_onGMapAPIRequest',
+        'gmap_api_key_request': '_onGMapAPIKeyRequest',
         'ready_to_clean_for_save': '_onWidgetsStopRequest',
-        seo_object_request: '_onSeoObjectRequest',
+        'seo_object_request': '_onSeoObjectRequest',
+        'will_remove_snippet': '_onWidgetsStopRequest',
     }),
 
     /**
      * @override
      */
+    init() {
+        this.isFullscreen = false;
+        this.notification = this.bindService("notification");
+        this.orm = this.bindService("orm");
+        return this._super(...arguments);
+    },
+    /**
+     * @override
+     */
     start: function () {
-        // Compatibility lang change ?
-        if (!this.$('.js_change_lang').length) {
-            var $links = this.$('ul.js_language_selector li a:not([data-oe-id])');
-            var m = $(_.min($links, function (l) {
-                return $(l).attr('href').length;
-            })).attr('href');
-            $links.each(function () {
-                var $link = $(this);
-                var t = $link.attr('href');
-                var l = (t === m) ? "default" : t.split('/')[1];
-                $link.data('lang', l).addClass('js_change_lang');
-            });
-        }
-
         // Enable magnify on zommable img
         this.$('.zoomable img[data-zoom]').zoomOdoo();
 
@@ -55,7 +52,7 @@ var WebsiteRoot = publicRootData.PublicRoot.extend({
      */
     _getContext: function (context) {
         var html = document.documentElement;
-        return _.extend({
+        return Object.assign({
             'website_id': html.getAttribute('data-website-id') | 0,
         }, this._super.apply(this, arguments));
     },
@@ -64,11 +61,24 @@ var WebsiteRoot = publicRootData.PublicRoot.extend({
      */
     _getExtraContext: function (context) {
         var html = document.documentElement;
-        return _.extend({
+        return Object.assign({
             'editable': !!(html.dataset.editable || $('[data-oe-model]').length), // temporary hack, this should be done in python
             'translatable': !!html.dataset.translatable,
             'edit_translations': !!html.dataset.edit_translations,
         }, this._super.apply(this, arguments));
+    },
+    /**
+     * @private
+     * @param {boolean} [refetch=false]
+     */
+    async _getGMapAPIKey(refetch) {
+        if (refetch || !this._gmapAPIKeyProm) {
+            this._gmapAPIKeyProm = new Promise(async resolve => {
+                const data = await rpc('/website/google_maps_api_key');
+                resolve(JSON.parse(data).google_maps_api_key || '');
+            });
+        }
+        return this._gmapAPIKeyProm;
     },
     /**
      * @override
@@ -76,11 +86,53 @@ var WebsiteRoot = publicRootData.PublicRoot.extend({
     _getPublicWidgetsRegistry: function (options) {
         var registry = this._super.apply(this, arguments);
         if (options.editableMode) {
-            return _.pick(registry, function (PublicWidget) {
+            const toPick = Object.keys(registry).filter((key) => {
+                const PublicWidget = registry[key];
                 return !PublicWidget.prototype.disabledInEditableMode;
             });
+            return pick(registry, ...toPick);
         }
         return registry;
+    },
+    /**
+     * @private
+     * @param {boolean} [editableMode=false]
+     * @param {boolean} [refetch=false]
+     */
+    async _loadGMapAPI(editableMode, refetch) {
+        // Note: only need refetch to reload a configured key and load the
+        // library. If the library was loaded with a correct key and that the
+        // key changes meanwhile... it will not work but we can agree the user
+        // can bother to reload the page at that moment.
+        if (refetch || !this._gmapAPILoading) {
+            this._gmapAPILoading = new Promise(async resolve => {
+                const key = await this._getGMapAPIKey(refetch);
+
+                window.odoo_gmap_api_post_load = (async function odoo_gmap_api_post_load() {
+                    await this._startWidgets($("section.s_google_map"), {editableMode: editableMode});
+                    resolve(key);
+                }).bind(this);
+
+                if (!key) {
+                    if (!editableMode && user.isAdmin) {
+                        const message = _t("Cannot load google map.");
+                        const urlTitle = _t("Check your configuration.");
+                        this.notification.add(
+                            markup(`<div>
+                                <span>${message}</span><br/>
+                                <a href="/odoo/action-website.action_website_configuration">${urlTitle}</a>
+                            </div>`),
+                            { type: 'warning', sticky: true }
+                        );
+                    }
+                    resolve(false);
+                    this._gmapAPILoading = false;
+                    return;
+                }
+                await loadJS(`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&callback=odoo_gmap_api_post_load&key=${encodeURIComponent(key)}`);
+            });
+        }
+        return this._gmapAPILoading;
     },
 
     //--------------------------------------------------------------------------
@@ -91,7 +143,7 @@ var WebsiteRoot = publicRootData.PublicRoot.extend({
      * @override
      */
     _onWidgetsStartRequest: function (ev) {
-        ev.data.options = _.clone(ev.data.options || {});
+        ev.data.options = Object.assign({}, ev.data.options || {});
         ev.data.options.editableMode = ev.data.editableMode;
         this._super.apply(this, arguments);
     },
@@ -101,15 +153,37 @@ var WebsiteRoot = publicRootData.PublicRoot.extend({
      */
     _onLangChangeClick: function (ev) {
         ev.preventDefault();
-
-        var $target = $(ev.target);
+        // In edit mode, the client action redirects the iframe to the correct
+        // location with the chosen language.
+        if (document.body.classList.contains('editor_enable')) {
+            return;
+        }
+        var $target = $(ev.currentTarget);
         // retrieve the hash before the redirect
         var redirect = {
-            lang: $target.data('url_code'),
+            lang: encodeURIComponent($target.data('url_code')),
             url: encodeURIComponent($target.attr('href').replace(/[&?]edit_translations[^&?]+/, '')),
             hash: encodeURIComponent(window.location.hash)
         };
-        window.location.href = _.str.sprintf("/website/lang/%(lang)s?r=%(url)s%(hash)s", redirect);
+        window.location.href = `/website/lang/${redirect.lang}?r=${redirect.url}${redirect.hash}`;
+    },
+    /**
+     * @private
+     * @param {OdooEvent} ev
+     */
+    async _onGMapAPIRequest(ev) {
+        ev.stopPropagation();
+        const apiKey = await this._loadGMapAPI(ev.data.editableMode, ev.data.refetch);
+        ev.data.onSuccess(apiKey);
+    },
+    /**
+     * @private
+     * @param {OdooEvent} ev
+     */
+    async _onGMapAPIKeyRequest(ev) {
+        ev.stopPropagation();
+        const apiKey = await this._getGMapAPIKey(ev.data.refetch);
+        ev.data.onSuccess(apiKey);
     },
     /**
     /**
@@ -147,49 +221,23 @@ var WebsiteRoot = publicRootData.PublicRoot.extend({
      */
     _onPublishBtnClick: function (ev) {
         ev.preventDefault();
-
-        var self = this;
-        var $data = $(ev.currentTarget).parents(".js_publish_management:first");
-        this._rpc({
-            route: $data.data('controller') || '/website/publish',
-            params: {
-                id: +$data.data('id'),
-                object: $data.data('object'),
-            },
-        })
-        .then(function (result) {
-            $data.toggleClass("css_unpublished css_published");
-            $data.find('input').prop("checked", result);
-            $data.parents("[data-publish]").attr("data-publish", +result ? 'on' : 'off');
-        })
-        .guardedCatch(function (err, data) {
-            data = data || {statusText: err.message.message};
-            return new Dialog(self, {
-                title: data.data ? data.data.arguments[0] : "",
-                $content: $('<div/>', {
-                    html: (data.data ? data.data.arguments[1] : data.statusText)
-                        + '<br/>'
-                        + _.str.sprintf(
-                            _t('It might be possible to edit the relevant items or fix the issue in <a href="%s">the classic Odoo interface</a>'),
-                            '/web#model=' + $data.data('object') + '&id=' + $data.data('id')
-                        ),
-                }),
-            }).open();
-        });
-    },
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onWebsiteSwitch: function (ev) {
-        var websiteId = ev.currentTarget.getAttribute('website-id');
-        var websiteDomain = ev.currentTarget.getAttribute('domain');
-        var url = window.location.href;
-        if (websiteDomain && window.location.hostname !== websiteDomain) {
-            var path = window.location.pathname + window.location.search + window.location.hash;
-            url = websiteDomain + path;
+        if (document.body.classList.contains('editor_enable')) {
+            return;
         }
-        window.location.href = $.param.querystring(url, {'fw': websiteId});
+
+        const publishEl = ev.currentTarget.closest(".js_publish_management");
+        this.orm.call(
+            publishEl.dataset.object,
+            "website_publish_button",
+            [[parseInt(publishEl.dataset.id, 10)]]
+        ).then(function (result) {
+            publishEl.classList.toggle("css_published", result);
+            publishEl.classList.toggle("css_unpublished", !result);
+            const itemEl = publishEl.closest("[data-publish]");
+            if (itemEl) {
+                itemEl.dataset.publish = result ? 'on' : 'off';
+            }
+        });
     },
     /**
      * @private
@@ -200,8 +248,6 @@ var WebsiteRoot = publicRootData.PublicRoot.extend({
     },
 });
 
-return {
+export default {
     WebsiteRoot: WebsiteRoot,
-    websiteRootRegistry: websiteRootRegistry,
 };
-});

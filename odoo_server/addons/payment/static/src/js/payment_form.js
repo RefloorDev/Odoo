@@ -1,564 +1,612 @@
-odoo.define('payment.payment_form', function (require) {
-"use strict";
+/** @odoo-module **/
 
-var core = require('web.core');
-var Dialog = require('web.Dialog');
-var publicWidget = require('web.public.widget');
-
-var _t = core._t;
+import { Component } from '@odoo/owl';
+import publicWidget from '@web/legacy/js/public/public_widget';
+import { browser } from '@web/core/browser/browser';
+import { ConfirmationDialog } from '@web/core/confirmation_dialog/confirmation_dialog';
+import { _t } from '@web/core/l10n/translation';
+import { renderToMarkup } from '@web/core/utils/render';
+import { rpc, RPCError } from '@web/core/network/rpc';
 
 publicWidget.registry.PaymentForm = publicWidget.Widget.extend({
-    selector: '.o_payment_form',
-    events: {
-        'submit': 'onSubmit',
-        'click #o_payment_form_pay': 'payEvent',
-        'click #o_payment_form_add_pm': 'addPmEvent',
-        'click button[name="delete_pm"]': 'deletePmEvent',
-        'click .o_payment_form_pay_icon_more': 'onClickMorePaymentIcon',
-        'click .o_payment_acquirer_select': 'radioClickEvent',
+    selector: '#o_payment_form',
+    events: Object.assign({}, publicWidget.Widget.prototype.events, {
+        'click [name="o_payment_radio"]': '_selectPaymentOption',
+        'click [name="o_payment_delete_token"]': '_fetchTokenData',
+        'click [name="o_payment_expand_button"]': '_hideExpandButton',
+        'click [name="o_payment_submit_button"]': '_submitForm',
+    }),
+
+    // #=== WIDGET LIFECYCLE ===#
+
+    /**
+     * @override
+     */
+    init() {
+        this._super(...arguments);
+        this.orm = this.bindService("orm");
     },
 
     /**
      * @override
      */
-    start: function () {
-        var self = this;
-        return this._super.apply(this, arguments).then(function () {
-            self.options = _.extend(self.$el.data(), self.options);
-            self.updateNewPaymentDisplayStatus();
-            $('[data-toggle="tooltip"]').tooltip();
-        });
-    },
+    async start() {
+        // Synchronously initialize paymentContext before any await.
+        this.paymentContext = {};
+        Object.assign(this.paymentContext, this.el.dataset);
 
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
+        await this._super(...arguments);
 
-    /**
-     * @private
-     * @param {string} title
-     * @param {string} message
-     */
-    displayError: function (title, message) {
-        var $checkedRadio = this.$('input[type="radio"]:checked'),
-            acquirerID = this.getAcquirerIdFromRadio($checkedRadio[0]);
-        var $acquirerForm;
-        if (this.isNewPaymentRadio($checkedRadio[0])) {
-            $acquirerForm = this.$('#o_payment_add_token_acq_' + acquirerID);
-        }
-        else if (this.isFormPaymentRadio($checkedRadio[0])) {
-            $acquirerForm = this.$('#o_payment_form_acq_' + acquirerID);
-        }
-
-        if ($checkedRadio.length === 0) {
-            return new Dialog(null, {
-                title: _t('Error: ') + _.str.escapeHTML(title),
-                size: 'medium',
-                $content: "<p>" + (_.str.escapeHTML(message) || "") + "</p>" ,
-                buttons: [
-                {text: _t('Ok'), close: true}]}).open();
+        // Expand the payment form of the selected payment option if there is only one.
+        const checkedRadio = document.querySelector('input[name="o_payment_radio"]:checked');
+        if (checkedRadio) {
+            await this._expandInlineForm(checkedRadio);
+            this._enableButton(false);
         } else {
-            // removed if exist error message
-            this.$('#payment_error').remove();
-            var messageResult = '<div class="alert alert-danger mb4" id="payment_error">';
-            if (title != '') {
-                messageResult = messageResult + '<b>' + _.str.escapeHTML(title) + ':</b></br>';
-            }
-            messageResult = messageResult + _.str.escapeHTML(message) + '</div>';
-            $acquirerForm.append(messageResult);
+            this._setPaymentFlow(); // Initialize the payment flow to let providers overwrite it.
         }
-    },
-    hideError: function() {
-        this.$('#payment_error').remove();
-    },
-    /**
-     * @private
-     * @param {DOMElement} element
-     */
-    getAcquirerIdFromRadio: function (element) {
-        return $(element).data('acquirer-id');
-    },
-    /**
-     * @private
-     * @param {jQuery} $form
-     */
-    getFormData: function ($form) {
-        var unindexed_array = $form.serializeArray();
-        var indexed_array = {};
 
-        $.map(unindexed_array, function (n, i) {
-            indexed_array[n.name] = n.value;
-        });
-        return indexed_array;
-    },
-    /**
-     * @private
-     * @param {DOMElement} element
-     */
-    isFormPaymentRadio: function (element) {
-        return $(element).data('form-payment') === 'True';
-    },
-    /**
-     * @private
-     * @param {DOMElement} element
-     */
-    isNewPaymentRadio: function (element) {
-        return $(element).data('s2s-payment') === 'True';
-    },
-    /**
-     * @private
-     */
-    updateNewPaymentDisplayStatus: function () {
-        var checked_radio = this.$('input[type="radio"]:checked');
-        // we hide all the acquirers form
-        this.$('[id*="o_payment_add_token_acq_"]').addClass('d-none');
-        this.$('[id*="o_payment_form_acq_"]').addClass('d-none');
-        if (checked_radio.length !== 1) {
-            return;
-        }
-        checked_radio = checked_radio[0];
-        var acquirer_id = this.getAcquirerIdFromRadio(checked_radio);
-
-        // if we clicked on an add new payment radio, display its form
-        if (this.isNewPaymentRadio(checked_radio)) {
-            this.$('#o_payment_add_token_acq_' + acquirer_id).removeClass('d-none');
-        }
-        else if (this.isFormPaymentRadio(checked_radio)) {
-            this.$('#o_payment_form_acq_' + acquirer_id).removeClass('d-none');
-        }
+        this.$('[data-bs-toggle="tooltip"]').tooltip();
     },
 
-    disableButton: function (button) {
-        $(button).attr('disabled', true);
-        $(button).children('.fa-lock').removeClass('fa-lock');
-        $(button).prepend('<span class="o_loader"><i class="fa fa-refresh fa-spin"></i>&nbsp;</span>');
-    },
-
-    enableButton: function (button) {
-        $(button).attr('disabled', false);
-        $(button).children('.fa').addClass('fa-lock');
-        $(button).find('span.o_loader').remove();
-    },
-    _parseError: function(e) { 
-        if (e.message.data.arguments[1]) {
-            return e.message.data.arguments[0] + e.message.data.arguments[1];
-        }
-        return e.message.data.arguments[0];
-    },
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    //--------------------------------------------------------------------------
+    // #=== EVENT HANDLERS ===#
 
     /**
+     * Open the inline form of the selected payment option, if any.
+     *
      * @private
      * @param {Event} ev
+     * @return {void}
      */
-    payEvent: function (ev) {
+    async _selectPaymentOption(ev) {
+        // Show the inputs in case they have been hidden.
+        this._showInputs();
+
+        // Disable the submit button while preparing the inline form.
+        this._disableButton();
+
+        // Unfold and prepare the inline form of the selected payment option.
+        const checkedRadio = ev.target;
+        await this._expandInlineForm(checkedRadio);
+
+        // Re-enable the submit button after the inline form has been prepared.
+        this._enableButton(false);
+    },
+
+    /**
+     * Fetch data relative to the documents linked to the token and delegate them to the token
+     * deletion confirmation dialog.
+     *
+     * @private
+     * @param {Event} ev
+     * @return {void}
+     */
+    _fetchTokenData(ev) {
         ev.preventDefault();
-        var form = this.el;
-        var checked_radio = this.$('input[type="radio"]:checked');
-        var self = this;
-        if (ev.type === 'submit') {
-            var button = $(ev.target).find('*[type="submit"]')[0]
-        } else {
-            var button = ev.target;
-        }
 
-        // first we check that the user has selected a payment method
-        if (checked_radio.length === 1) {
-            checked_radio = checked_radio[0];
-
-            // we retrieve all the input inside the acquirer form and 'serialize' them to an indexed array
-            var acquirer_id = this.getAcquirerIdFromRadio(checked_radio);
-            var acquirer_form = false;
-            if (this.isNewPaymentRadio(checked_radio)) {
-                acquirer_form = this.$('#o_payment_add_token_acq_' + acquirer_id);
+        const linkedRadio = document.getElementById(ev.currentTarget.dataset['linkedRadio']);
+        const tokenId = this._getPaymentOptionId(linkedRadio);
+        this.orm.call(
+            'payment.token',
+            'get_linked_records_info',
+            [tokenId],
+        ).then(linkedRecordsInfo => {
+            this._challengeTokenDeletion(tokenId, linkedRecordsInfo);
+        }).catch(error => {
+            if (error instanceof RPCError) {
+                this._displayErrorDialog(
+                    _t("Cannot delete payment method"), error.data.message
+                );
             } else {
-                acquirer_form = this.$('#o_payment_form_acq_' + acquirer_id);
+                return Promise.reject(error);
             }
-            var inputs_form = $('input', acquirer_form);
-            var ds = $('input[name="data_set"]', acquirer_form)[0];
-
-            // if the user is adding a new payment
-            if (this.isNewPaymentRadio(checked_radio)) {
-                if (this.options.partnerId === undefined) {
-                    console.warn('payment_form: unset partner_id when adding new token; things could go wrong');
-                }
-                var form_data = this.getFormData(inputs_form);
-                var wrong_input = false;
-
-                inputs_form.toArray().forEach(function (element) {
-                    //skip the check of non visible inputs
-                    if ($(element).attr('type') == 'hidden') {
-                        return true;
-                    }
-                    $(element).closest('div.form-group').removeClass('o_has_error').find('.form-control, .custom-select').removeClass('is-invalid');
-                    $(element).siblings( ".o_invalid_field" ).remove();
-                    //force check of forms validity (useful for Firefox that refill forms automatically on f5)
-                    $(element).trigger("focusout");
-                    if (element.dataset.isRequired && element.value.length === 0) {
-                            $(element).closest('div.form-group').addClass('o_has_error').find('.form-control, .custom-select').addClass('is-invalid');
-                            $(element).closest('div.form-group').append('<div style="color: red" class="o_invalid_field" aria-invalid="true">' + _.str.escapeHTML("The value is invalid.") + '</div>');
-                            wrong_input = true;
-                    }
-                    else if ($(element).closest('div.form-group').hasClass('o_has_error')) {
-                        wrong_input = true;
-                        $(element).closest('div.form-group').append('<div style="color: red" class="o_invalid_field" aria-invalid="true">' + _.str.escapeHTML("The value is invalid.") + '</div>');
-                    }
-                });
-
-                if (wrong_input) {
-                    return;
-                }
-
-                this.disableButton(button);
-                // do the call to the route stored in the 'data_set' input of the acquirer form, the data must be called 'create-route'
-                return this._rpc({
-                    route: ds.dataset.createRoute,
-                    params: form_data,
-                }).then(function (data) {
-                    // if the server has returned true
-                    if (data.result) {
-                        // and it need a 3DS authentication
-                        if (data['3d_secure'] !== false) {
-                            // then we display the 3DS page to the user
-                            $("body").html(data['3d_secure']);
-                        }
-                        else {
-                            checked_radio.value = data.id; // set the radio value to the new card id
-                            form.submit();
-                            return new Promise(function () {});
-                        }
-                    }
-                    // if the server has returned false, we display an error
-                    else {
-                        if (data.error) {
-                            self.displayError(
-                                '',
-                                data.error);
-                        } else { // if the server doesn't provide an error message
-                            self.displayError(
-                                _t('Server Error'),
-                                _t('e.g. Your credit card details are wrong. Please verify.'));
-                        }
-                    }
-                    // here we remove the 'processing' icon from the 'add a new payment' button
-                    self.enableButton(button);
-                }).guardedCatch(function (error) {
-                    error.event.preventDefault();
-                    // if the rpc fails, pretty obvious
-                    self.enableButton(button);
-
-                    self.displayError(
-                        _t('Server Error'),
-                        _t("We are not able to add your payment method at the moment.") +
-                            self._parseError(error)
-                    );
-                });
-            }
-            // if the user is going to pay with a form payment, then
-            else if (this.isFormPaymentRadio(checked_radio)) {
-                this.disableButton(button);
-                var $tx_url = this.$el.find('input[name="prepare_tx_url"]');
-                // if there's a prepare tx url set
-                if ($tx_url.length === 1) {
-                    // if the user wants to save his credit card info
-                    var form_save_token = acquirer_form.find('input[name="o_payment_form_save_token"]').prop('checked');
-                    // then we call the route to prepare the transaction
-                    return this._rpc({
-                        route: $tx_url[0].value,
-                        params: {
-                            'acquirer_id': parseInt(acquirer_id),
-                            'save_token': form_save_token,
-                            'access_token': self.options.accessToken,
-                            'success_url': self.options.successUrl,
-                            'error_url': self.options.errorUrl,
-                            'callback_method': self.options.callbackMethod,
-                            'order_id': self.options.orderId,
-                        },
-                    }).then(function (result) {
-                        if (result) {
-                            // if the server sent us the html form, we create a form element
-                            var newForm = document.createElement('form');
-                            newForm.setAttribute("method", "post"); // set it to post
-                            newForm.setAttribute("provider", checked_radio.dataset.provider);
-                            newForm.hidden = true; // hide it
-                            newForm.innerHTML = result; // put the html sent by the server inside the form
-                            var action_url = $(newForm).find('input[name="data_set"]').data('actionUrl');
-                            newForm.setAttribute("action", action_url); // set the action url
-                            $(document.getElementsByTagName('body')[0]).append(newForm); // append the form to the body
-                            $(newForm).find('input[data-remove-me]').remove(); // remove all the input that should be removed
-                            if(action_url) {
-                                newForm.submit(); // and finally submit the form
-                                return new Promise(function () {});
-                            }
-                        }
-                        else {
-                            self.displayError(
-                                _t('Server Error'),
-                                _t("We are not able to redirect you to the payment form.")
-                            );
-                            self.enableButton(button);
-                        }
-                    }).guardedCatch(function (error) {
-                        error.event.preventDefault();
-                        self.displayError(
-                            _t('Server Error'),
-                            _t("We are not able to redirect you to the payment form.") + " " +
-                                self._parseError(error)
-                        );
-                    });
-                }
-                else {
-                    // we append the form to the body and send it.
-                    this.displayError(
-                        _t("Cannot setup the payment"),
-                        _t("We're unable to process your payment.")
-                    );
-                    self.enableButton(button);
-                }
-            }
-            else {  // if the user is using an old payment then we just submit the form
-                this.disableButton(button);
-                form.submit();
-                return new Promise(function () {});
-            }
-        }
-        else {
-            this.displayError(
-                _t('No payment method selected'),
-                _t('Please select a payment method.')
-            );
-            this.enableButton(button);
-        }
-    },
-    /**
-     * Called when clicking on the button to add a new payment method.
-     *
-     * @private
-     * @param {Event} ev
-     */
-    addPmEvent: function (ev) {
-        ev.stopPropagation();
-        ev.preventDefault();
-        var checked_radio = this.$('input[type="radio"]:checked');
-        var self = this;
-        if (ev.type === 'submit') {
-            var button = $(ev.target).find('*[type="submit"]')[0]
-        } else {
-            var button = ev.target;
-        }
-
-        // we check if the user has selected a 'add a new payment' option
-        if (checked_radio.length === 1 && this.isNewPaymentRadio(checked_radio[0])) {
-            // we retrieve which acquirer is used
-            checked_radio = checked_radio[0];
-            var acquirer_id = this.getAcquirerIdFromRadio(checked_radio);
-            var acquirer_form = this.$('#o_payment_add_token_acq_' + acquirer_id);
-            // we retrieve all the input inside the acquirer form and 'serialize' them to an indexed array
-            var inputs_form = $('input', acquirer_form);
-            var form_data = this.getFormData(inputs_form);
-            var ds = $('input[name="data_set"]', acquirer_form)[0];
-            var wrong_input = false;
-
-            inputs_form.toArray().forEach(function (element) {
-                //skip the check of non visible inputs
-                if ($(element).attr('type') == 'hidden') {
-                    return true;
-                }
-                $(element).closest('div.form-group').removeClass('o_has_error').find('.form-control, .custom-select').removeClass('is-invalid');
-                $(element).siblings( ".o_invalid_field" ).remove();
-                //force check of forms validity (useful for Firefox that refill forms automatically on f5)
-                $(element).trigger("focusout");
-                if (element.dataset.isRequired && element.value.length === 0) {
-                        $(element).closest('div.form-group').addClass('o_has_error').find('.form-control, .custom-select').addClass('is-invalid');
-                        var message = '<div style="color: red" class="o_invalid_field" aria-invalid="true">' + _.str.escapeHTML("The value is invalid.") + '</div>';
-                        $(element).closest('div.form-group').append(message);
-                        wrong_input = true;
-                }
-                else if ($(element).closest('div.form-group').hasClass('o_has_error')) {
-                    wrong_input = true;
-                    var message = '<div style="color: red" class="o_invalid_field" aria-invalid="true">' + _.str.escapeHTML("The value is invalid.") + '</div>';
-                    $(element).closest('div.form-group').append(message);
-                }
-            });
-
-            if (wrong_input) {
-                return;
-            }
-            // We add a 'processing' icon into the 'add a new payment' button
-            $(button).attr('disabled', true);
-            $(button).children('.fa-plus-circle').removeClass('fa-plus-circle');
-            $(button).prepend('<span class="o_loader"><i class="fa fa-refresh fa-spin"></i>&nbsp;</span>');
-
-            // do the call to the route stored in the 'data_set' input of the acquirer form, the data must be called 'create-route'
-            this._rpc({
-                route: ds.dataset.createRoute,
-                params: form_data,
-            }).then(function (data) {
-                // if the server has returned true
-                if (data.result) {
-                    // and it need a 3DS authentication
-                    if (data['3d_secure'] !== false) {
-                        // then we display the 3DS page to the user
-                        $("body").html(data['3d_secure']);
-                    }
-                    // if it doesn't require 3DS
-                    else {
-                        // we just go to the return_url or reload the page
-                        if (form_data.return_url) {
-                            window.location = form_data.return_url;
-                        }
-                        else {
-                            window.location.reload();
-                        }
-                    }
-                }
-                // if the server has returned false, we display an error
-                else {
-                    if (data.error) {
-                        self.displayError(
-                            '',
-                            data.error);
-                    } else { // if the server doesn't provide an error message
-                        self.displayError(
-                            _t('Server Error'),
-                            _t('e.g. Your credit card details are wrong. Please verify.'));
-                    }
-                }
-                // here we remove the 'processing' icon from the 'add a new payment' button
-                $(button).attr('disabled', false);
-                $(button).children('.fa').addClass('fa-plus-circle');
-                $(button).find('span.o_loader').remove();
-            }).guardedCatch(function (error) {
-                error.event.preventDefault();
-                // if the rpc fails, pretty obvious
-                $(button).attr('disabled', false);
-                $(button).children('.fa').addClass('fa-plus-circle');
-                $(button).find('span.o_loader').remove();
-
-                self.displayError(
-                    _t('Server error'),
-                    _t("We are not able to add your payment method at the moment.</p>") +
-                        self._parseError(error)
-                );
-            });
-        }
-        else {
-            this.displayError(
-                _t('No payment method selected'),
-                _t('Please select the option to add a new payment method.')
-            );
-        }
-    },
-    /**
-     * Called when submitting the form (e.g. through the Return key).
-     * We need to check whether we are paying or adding a new pm and dispatch
-     * to the correct method.
-     *
-     * @private
-     * @param {Event} ev
-     */
-    onSubmit: function(ev) {
-        ev.stopPropagation();
-        ev.preventDefault();
-        var button = $(ev.target).find('*[type="submit"]')[0]
-        if (button.id === 'o_payment_form_pay') {
-            return this.payEvent(ev);
-        } else if (button.id === 'o_payment_form_add_pm') {
-            return this.addPmEvent(ev);
-        }
-        return;
-    },
-    /**
-     * Called when clicking on a button to delete a payment method.
-     *
-     * @private
-     * @param {Event} ev
-     */
-    deletePmEvent: function (ev) {
-        ev.stopPropagation();
-        ev.preventDefault();
-        var self = this;
-        var pm_id = parseInt(ev.target.value);
-
-        var tokenDelete = function () {
-            self._rpc({
-                model: 'payment.token',
-                method: 'unlink',
-                args: [pm_id],
-            }).then(function (result) {
-                if (result === true) {
-                    ev.target.closest('div').remove();
-                }
-            }, function () {
-                self.displayError(
-                    _t('Server Error'),
-                    _t("We are not able to delete your payment method at the moment.")
-                );
-            });
-        };
-
-        this._rpc({
-            model: 'payment.token',
-            method: 'get_linked_records',
-            args: [pm_id],
-        }).then(function (result) {
-            if (result[pm_id].length > 0) {
-                // if there's records linked to this payment method
-                var content = '';
-                result[pm_id].forEach(function (sub) {
-                    content += '<p><a href="' + sub.url + '" title="' + sub.description + '">' + sub.name + '</a><p/>';
-                });
-
-                content = $('<div>').html(_t('<p>This card is currently linked to the following records:<p/>') + content);
-                // Then we display the list of the records and ask the user if he really want to remove the payment method.
-                new Dialog(self, {
-                    title: _t('Warning!'),
-                    size: 'medium',
-                    $content: content,
-                    buttons: [
-                    {text: _t('Confirm Deletion'), classes: 'btn-primary', close: true, click: tokenDelete},
-                    {text: _t('Cancel'), close: true}]
-                }).open();
-            }
-            else {
-                // if there's no records linked to this payment method, then we delete it
-                tokenDelete();
-            }
-        }, function (err, event) {
-            self.displayError(
-                _t('Server Error'),
-                _t("We are not able to delete your payment method at the moment.") + err.data.message
-            );
         });
     },
+
     /**
-     * Called when clicking on 'and more' to show more payment icon.
+     * Hide the button to expand the payment methods section once it has been clicked.
      *
      * @private
      * @param {Event} ev
+     * @return {void}
      */
-    onClickMorePaymentIcon: function (ev) {
-        ev.preventDefault();
+    _hideExpandButton(ev) {
+        ev.target.classList.add('d-none');
+    },
+
+    /**
+     * Update the payment context with the selected payment option and initiate its payment flow.
+     *
+     * @private
+     * @param {Event} ev
+     * @return {void}
+     */
+    async _submitForm(ev) {
         ev.stopPropagation();
-        var $listItems = $(ev.currentTarget).parents('ul').children('li');
-        var $moreItem = $(ev.currentTarget).parents('li');
-        $listItems.removeClass('d-none');
-        $moreItem.addClass('d-none');
+        ev.preventDefault();
+
+        const checkedRadio = this.el.querySelector('input[name="o_payment_radio"]:checked');
+
+        // Block the entire UI to prevent fiddling with other widgets.
+        this._disableButton(true);
+
+        // Initiate the payment flow of the selected payment option.
+        const flow = this.paymentContext.flow = this._getPaymentFlow(checkedRadio);
+        const paymentOptionId = this.paymentContext.paymentOptionId = this._getPaymentOptionId(
+            checkedRadio
+        );
+        if (flow === 'token' && this.paymentContext['assignTokenRoute']) { // Assign token flow.
+            await this._assignToken(paymentOptionId);
+        } else { // Both tokens and payment methods must process a payment operation.
+            const providerCode = this.paymentContext.providerCode = this._getProviderCode(
+                checkedRadio
+            );
+            const pmCode = this.paymentContext.paymentMethodCode = this._getPaymentMethodCode(
+                checkedRadio
+            );
+            this.paymentContext.providerId = this._getProviderId(checkedRadio);
+            if (this._getPaymentOptionType(checkedRadio) === 'token') {
+                this.paymentContext.tokenId = paymentOptionId;
+            } else { // 'payment_method'
+                this.paymentContext.paymentMethodId = paymentOptionId;
+            }
+            const inlineForm = this._getInlineForm(checkedRadio);
+            this.paymentContext.tokenizationRequested = inlineForm?.querySelector(
+                '[name="o_payment_tokenize_checkbox"]'
+            )?.checked ?? this.paymentContext['mode'] === 'validation';
+            await this._initiatePaymentFlow(providerCode, paymentOptionId, pmCode, flow);
+        }
     },
+
+    // #=== DOM MANIPULATION ===#
+
     /**
-     * Called when clicking on a radio button.
+     * Check if the submit button can be enabled and do it if so.
      *
      * @private
-     * @param {Event} ev
+     * @param {boolean} unblockUI - Whether the UI should also be unblocked.
+     * @return {void}
      */
-    radioClickEvent: function (ev) {
-        // radio button checked when we click on entire zone(body) of the payment acquirer
-        $(ev.currentTarget).find('input[type="radio"]').prop("checked", true);
-        this.updateNewPaymentDisplayStatus();
+    _enableButton(unblockUI = true) {
+        Component.env.bus.trigger('enablePaymentButton');
+        if (unblockUI) {
+            this.call('ui', 'unblock');
+        }
     },
+
+    /**
+     * Disable the submit button.
+     *
+     * @private
+     * @param {boolean} blockUI - Whether the UI should also be blocked.
+     * @return {void}
+     */
+    _disableButton(blockUI = false) {
+        Component.env.bus.trigger('disablePaymentButton');
+        if (blockUI) {
+            this.call('ui', 'block');
+        }
+    },
+
+    /**
+     * Show the tokenization checkbox, its label, and the submit button.
+     *
+     * @private
+     * @return {void}
+     */
+    _showInputs() {
+        // Show the tokenization checkbox and its label.
+        const tokenizeContainer = this.el.querySelector('[name="o_payment_tokenize_container"]');
+        tokenizeContainer?.classList.remove('d-none');
+
+        // Show the submit button.
+        Component.env.bus.trigger('showPaymentButton');
+    },
+
+    /**
+     * Hide the tokenization checkbox, its label, and the submit button.
+     *
+     * The inputs should typically be hidden when the customer has to perform additional actions in
+     * the inline form. All inputs are automatically shown again when the customer selects another
+     * payment option.
+     *
+     * @private
+     * @return {void}
+     */
+    _hideInputs() {
+        // Hide the tokenization checkbox and its label.
+        const tokenizeContainer = this.el.querySelector('[name="o_payment_tokenize_container"]');
+        tokenizeContainer?.classList.add('d-none');
+
+        // Hide the submit button.
+        Component.env.bus.trigger('hidePaymentButton');
+    },
+
+    /**
+     * Open the inline form of the selected payment option and collapse the others.
+     *
+     * @private
+     * @param {HTMLInputElement} radio - The radio button linked to the payment option.
+     * @return {void}
+     */
+    async _expandInlineForm(radio) {
+        this._collapseInlineForms(); // Collapse previously opened inline forms.
+        this._setPaymentFlow(); // Reset the payment flow to let providers overwrite it.
+
+        // Prepare the inline form of the selected payment option.
+        const providerId = this._getProviderId(radio);
+        const providerCode = this._getProviderCode(radio);
+        const paymentOptionId = this._getPaymentOptionId(radio);
+        const paymentMethodCode = this._getPaymentMethodCode(radio);
+        const flow = this._getPaymentFlow(radio);
+        await this._prepareInlineForm(
+            providerId, providerCode, paymentOptionId, paymentMethodCode, flow
+        );
+
+        // Display the prepared inline form if it is not empty.
+        const inlineForm = this._getInlineForm(radio);
+        if (inlineForm && inlineForm.children.length > 0) {
+            inlineForm.classList.remove('d-none');
+        }
+    },
+
+    /**
+     * Prepare the provider-specific inline form of the selected payment option.
+     *
+     * For a provider to manage an inline form, it must override this method and render the content
+     * of the form.
+     *
+     * @private
+     * @param {number} providerId - The id of the selected payment option's provider.
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {string} flow - The online payment flow of the selected payment option.
+     * @return {void}
+     */
+    async _prepareInlineForm(providerId, providerCode, paymentOptionId, paymentMethodCode, flow) {},
+
+    /**
+     * Collapse all inline forms of the current widget.
+     *
+     * @private
+     * @return {void}
+     */
+    _collapseInlineForms() {
+        this.el.querySelectorAll('[name="o_payment_inline_form"]').forEach(inlineForm => {
+            inlineForm.classList.add('d-none');
+        });
+    },
+
+    /**
+     * Display an error dialog.
+     *
+     * @private
+     * @param {string} title - The title of the dialog.
+     * @param {string} errorMessage - The error message.
+     * @return {void}
+     */
+    _displayErrorDialog(title, errorMessage = '') {
+        this.call('dialog', 'add', ConfirmationDialog, { title: title, body: errorMessage || "" });
+    },
+
+    /**
+     * Display the token deletion confirmation dialog.
+     *
+     * @private
+     * @param {number} tokenId - The id of the token whose deletion was requested.
+     * @param {object} linkedRecordsInfo - The data relative to the documents linked to the token.
+     * @return {void}
+     */
+    _challengeTokenDeletion(tokenId, linkedRecordsInfo) {
+        const body = renderToMarkup('payment.deleteTokenDialog', { linkedRecordsInfo });
+        this.call('dialog', 'add', ConfirmationDialog, {
+            title: _t("Warning!"),
+            body,
+            confirmLabel: _t("Confirm Deletion"),
+            confirm: () => this._archiveToken(tokenId),
+            cancel: () => {},
+        });
+    },
+
+    // #=== PAYMENT FLOW ===#
+
+    /**
+     * Set the payment flow for the selected payment option.
+     *
+     * For a provider to manage direct payments, it must call this method and set the payment flow
+     * when its payment option is selected.
+     *
+     * @private
+     * @param {string} flow - The flow for the selected payment option. Either 'redirect', 'direct',
+     *                        or 'token'
+     * @return {void}
+     */
+    _setPaymentFlow(flow = 'redirect') {
+        if (['redirect', 'direct', 'token'].includes(flow)) {
+            this.paymentContext.flow = flow;
+        } else {
+            console.warn(`The value ${flow} is not a supported flow. Falling back to redirect.`);
+            this.paymentContext.flow = 'redirect';
+        }
+    },
+
+    /**
+     * Assign the selected token to a document through the `assignTokenRoute`.
+     *
+     * @private
+     * @param {number} tokenId - The id of the token to assign.
+     * @return {void}
+     */
+    async _assignToken(tokenId) {
+        rpc(this.paymentContext['assignTokenRoute'], {
+            'token_id': tokenId,
+            'access_token': this.paymentContext['accessToken'],
+        }).then(() => {
+            window.location = this.paymentContext['landingRoute'];
+        }).catch(error => {
+            if (error instanceof RPCError) {
+                this._displayErrorDialog(_t("Cannot save payment method"), error.data.message);
+                this._enableButton(); // The button has been disabled before initiating the flow.
+            } else {
+                return Promise.reject(error);
+            }
+        });
+    },
+
+    /**
+     * Make an RPC to initiate the payment flow by creating a new transaction.
+     *
+     * For a provider to do pre-processing work (e.g., perform checks on the form inputs), or to
+     * process the payment flow in its own terms (e.g., re-schedule the RPC to the transaction
+     * route), it must override this method.
+     *
+     * To alter the flow-specific processing, it is advised to override `_processRedirectFlow`,
+     * `_processDirectFlow`, or `_processTokenFlow` instead.
+     *
+     * @private
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {string} flow - The payment flow of the selected payment option.
+     * @return {void}
+     */
+    async _initiatePaymentFlow(providerCode, paymentOptionId, paymentMethodCode, flow) {
+        // Create a transaction and retrieve its processing values.
+        await rpc(
+            this.paymentContext['transactionRoute'],
+            this._prepareTransactionRouteParams(),
+        ).then(processingValues => {
+            if (flow === 'redirect') {
+                this._processRedirectFlow(
+                    providerCode, paymentOptionId, paymentMethodCode, processingValues
+                );
+            } else if (flow === 'direct') {
+                this._processDirectFlow(
+                    providerCode, paymentOptionId, paymentMethodCode, processingValues
+                );
+            } else if (flow === 'token') {
+                this._processTokenFlow(
+                    providerCode, paymentOptionId, paymentMethodCode, processingValues
+                );
+            }
+        }).catch(error => {
+            if (error instanceof RPCError) {
+                this._displayErrorDialog(_t("Payment processing failed"), error.data.message);
+                this._enableButton(); // The button has been disabled before initiating the flow.
+            }
+            return Promise.reject(error);
+        });
+    },
+
+    /**
+     * Prepare the params for the RPC to the transaction route.
+     *
+     * @private
+     * @return {object} The transaction route params.
+     */
+    _prepareTransactionRouteParams() {
+        let transactionRouteParams = {
+            'provider_id': this.paymentContext.providerId,
+            'payment_method_id': this.paymentContext.paymentMethodId ?? null,
+            'token_id': this.paymentContext.tokenId ?? null,
+            'amount': this.paymentContext['amount'] !== undefined
+                ? parseFloat(this.paymentContext['amount']) : null,
+            'flow': this.paymentContext['flow'],
+            'tokenization_requested': this.paymentContext['tokenizationRequested'],
+            'landing_route': this.paymentContext['landingRoute'],
+            'is_validation': this.paymentContext['mode'] === 'validation',
+            'access_token': this.paymentContext['accessToken'],
+            'csrf_token': odoo.csrf_token,
+        };
+        // Generic payment flows (i.e., that are not attached to a document) require extra params.
+        if (this.paymentContext['transactionRoute'] === '/payment/transaction') {
+            Object.assign(transactionRouteParams, {
+                'currency_id': this.paymentContext['currencyId']
+                    ? parseInt(this.paymentContext['currencyId']) : null,
+                'partner_id': parseInt(this.paymentContext['partnerId']),
+                'reference_prefix': this.paymentContext['referencePrefix']?.toString(),
+            });
+        }
+        return transactionRouteParams;
+    },
+
+    /**
+     * Redirect the customer by submitting the redirect form included in the processing values.
+     *
+     * @private
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {object} processingValues - The processing values of the transaction.
+     * @return {void}
+     */
+    _processRedirectFlow(providerCode, paymentOptionId, paymentMethodCode, processingValues) {
+        // Create and configure the form element with the content rendered by the server.
+        const div = document.createElement('div');
+        div.innerHTML = processingValues['redirect_form_html'];
+        const redirectForm = div.querySelector('form');
+        redirectForm.setAttribute('id', 'o_payment_redirect_form');
+        redirectForm.setAttribute('target', '_top');  // Ensures redirections when in an iframe.
+
+        // Submit the form.
+        document.body.appendChild(redirectForm);
+        redirectForm.submit();
+    },
+
+   /**
+     * Process the provider-specific implementation of the direct payment flow.
+     *
+     * @private
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {object} processingValues - The processing values of the transaction.
+     * @return {void}
+     */
+    _processDirectFlow(providerCode, paymentOptionId, paymentMethodCode, processingValues) {},
+
+    /**
+     * Redirect the customer to the status route.
+     *
+     * @private
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {object} processingValues - The processing values of the transaction.
+     * @return {void}
+     */
+    _processTokenFlow(providerCode, paymentOptionId, paymentMethodCode, processingValues) {
+        // The flow is already completed as payments by tokens are immediately processed.
+        window.location = '/payment/status';
+    },
+
+    /**
+     * Archive the provided token.
+     *
+     * @private
+     * @param {number} tokenId - The id of the token whose deletion was requested.
+     * @return {void}
+     */
+    _archiveToken(tokenId) {
+        rpc('/payment/archive_token', {
+            'token_id': tokenId,
+        }).then(() => {
+            browser.location.reload();
+        }).catch(error => {
+            if (error instanceof RPCError) {
+                this._displayErrorDialog(
+                    _t("Cannot delete payment method"), error.data.message
+                );
+            } else {
+                return Promise.reject(error);
+            }
+        });
+    },
+
+    // #=== GETTERS ===#
+
+    /**
+     * Determine and return the inline form of the selected payment option.
+     *
+     * @private
+     * @param {HTMLInputElement} radio - The radio button linked to the payment option.
+     * @return {Element | null} The inline form of the selected payment option, if any.
+     */
+    _getInlineForm(radio) {
+        const inlineFormContainer = radio.closest('[name="o_payment_option"]');
+        return inlineFormContainer?.querySelector('[name="o_payment_inline_form"]');
+    },
+
+    /**
+     * Determine and return the payment flow of the selected payment option.
+     *
+     * As some providers implement both direct payments and the payment with redirection flow, we
+     * cannot infer it from the radio button only. The radio button indicates only whether the
+     * payment option is a token. If not, the payment context is looked up to determine whether the
+     * flow is 'direct' or 'redirect'.
+     *
+     * @private
+     * @param {HTMLInputElement} radio - The radio button linked to the payment option.
+     * @return {string} The flow of the selected payment option: 'redirect', 'direct' or 'token'.
+     */
+    _getPaymentFlow(radio) {
+        // The flow is read from the payment context too in case it was forced in a custom implem.
+        if (this._getPaymentOptionType(radio) === 'token' || this.paymentContext.flow === 'token') {
+            return 'token';
+        } else if (this.paymentContext.flow === 'redirect') {
+            return 'redirect';
+        } else {
+            return 'direct';
+        }
+    },
+
+    /**
+     * Determine and return the code of the selected payment method.
+     *
+     * @private
+     * @param {HTMLElement} radio - The radio button linked to the payment method.
+     * @return {string} The code of the selected payment method.
+     */
+    _getPaymentMethodCode(radio) {
+        return radio.dataset['paymentMethodCode'];
+    },
+
+    /**
+     * Determine and return the id of the selected payment option.
+     *
+     * @private
+     * @param {HTMLElement} radio - The radio button linked to the payment option.
+     * @return {number} The id of the selected payment option.
+     */
+    _getPaymentOptionId(radio) {
+        return Number(radio.dataset['paymentOptionId']);
+    },
+
+    /**
+     * Determine and return the type of the selected payment option.
+     *
+     * @private
+     * @param {HTMLElement} radio - The radio button linked to the payment option.
+     * @return {string} The type of the selected payment option: 'token' or 'payment_method'.
+     */
+    _getPaymentOptionType(radio) {
+        return radio.dataset['paymentOptionType'];
+    },
+
+    /**
+     * Determine and return the id of the provider of the selected payment option.
+     *
+     * @private
+     * @param {HTMLElement} radio - The radio button linked to the payment option.
+     * @return {number} The id of the provider of the selected payment option.
+     */
+    _getProviderId(radio) {
+        return Number(radio.dataset['providerId']);
+    },
+
+    /**
+     * Determine and return the code of the provider of the selected payment option.
+     *
+     * @private
+     * @param {HTMLElement} radio - The radio button linked to the payment option.
+     * @return {string} The code of the provider of the selected payment option.
+     */
+    _getProviderCode(radio) {
+        return radio.dataset['providerCode'];
+    },
+
+    /**
+     * Determine and return the state of the provider of the selected payment option.
+     *
+     * @private
+     * @param {HTMLElement} radio - The radio button linked to the payment option.
+     * @return {string} The state of the provider of the selected payment option.
+     */
+    _getProviderState(radio) {
+        return radio.dataset['providerState'];
+    },
+
 });
-return publicWidget.registry.PaymentForm;
-});
+
+export default publicWidget.registry.PaymentForm;

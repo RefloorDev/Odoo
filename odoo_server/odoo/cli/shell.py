@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-
-from __future__ import print_function
 import code
 import logging
 import os
 import signal
 import sys
+import threading
+from pathlib import Path
 
 import odoo
+from odoo.modules.registry import Registry
 from odoo.tools import config
 from . import Command
 
@@ -56,7 +56,8 @@ class Shell(Command):
     supported_shells = ['ipython', 'ptpython', 'bpython', 'python']
 
     def init(self, args):
-        config.parse_config(args)
+        config.parser.prog = f'{Path(sys.argv[0]).name} {self.name}'
+        config.parse_config(args, setup_logging=True)
         odoo.cli.server.report_configuration()
         odoo.service.server.start(preload=[], stop=True)
         signal.signal(signal.SIGINT, raise_keyboard_interrupt)
@@ -106,19 +107,19 @@ class Shell(Command):
             'openerp': odoo,
             'odoo': odoo,
         }
-        with odoo.api.Environment.manage():
-            if dbname:
-                registry = odoo.registry(dbname)
-                with registry.cursor() as cr:
-                    uid = odoo.SUPERUSER_ID
-                    ctx = odoo.api.Environment(cr, uid, {})['res.users'].context_get()
-                    env = odoo.api.Environment(cr, uid, ctx)
-                    local_vars['env'] = env
-                    local_vars['self'] = env.user
-                    self.console(local_vars)
-                    cr.rollback()
-            else:
+        if dbname:
+            threading.current_thread().dbname = dbname
+            registry = Registry(dbname)
+            with registry.cursor() as cr:
+                uid = odoo.SUPERUSER_ID
+                ctx = odoo.api.Environment(cr, uid, {})['res.users'].context_get()
+                env = odoo.api.Environment(cr, uid, ctx)
+                local_vars['env'] = env
+                local_vars['self'] = env.user
                 self.console(local_vars)
+                cr.rollback()
+        else:
+            self.console(local_vars)
 
     def run(self, args):
         self.init(args)

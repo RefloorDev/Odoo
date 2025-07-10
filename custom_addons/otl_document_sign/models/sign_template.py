@@ -75,7 +75,7 @@ class SignTemplate(models.Model):
         datas = dataURL[dataURL.find(',')+1:]
 
         try:
-            file_pdf = PdfFileReader(io.BytesIO(base64.b64decode(datas)), strict=False, overwriteWarnings=False)
+            file_pdf = PdfFileReader(io.BytesIO(base64.b64decode(datas)), strict=False)
         except Exception as e:
             raise UserError(_("This file cannot be read. Is it a valid PDF?"))
         file_type = mimetype.replace('application/', '').replace(';base64', '')
@@ -142,6 +142,35 @@ class SignTemplate(models.Model):
             "views": [[False, 'kanban'],[False, "form"]],
             "res_id": self.id,
         }
+
+    def action_sign_document_send_request(self):
+        
+        self.ensure_one()
+        # Dynamically set the selection for the resource_reference field in the wizard
+        selection = []
+        if self.model_id:
+            selection = [(self.model_id.model, self.model_id.name)]
+        return {
+            'name': _("Send Request"),
+            'type': 'ir.actions.act_window',
+            'res_model': 'otl_document_sign.send.request',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+            'default_template_id': self.id,
+            'default_attachment_id': self.attachment_id.id,
+            'default_name': self.attachment_id.name,
+            'default_model_id': self.model_id.id,
+            'resource_reference_selection': selection,  # Pass selection in context
+            },
+        }
+
+    @api.model
+    def selection_target_model(self, model_id):
+        model = self.env['ir.model'].browse(model_id)
+        if model and model.exists():
+            return [[model.model, model.name]];
+        return []
 
 class SignTemplateTag(models.Model):
 

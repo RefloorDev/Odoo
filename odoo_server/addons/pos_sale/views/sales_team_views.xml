@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="point_of_sale.view_pos_session_search"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='config_id']" position="after">
-                <field name="crm_team_id" kanban_view_ref="%(sales_team.crm_team_view_kanban)s"/>
+                <field name="crm_team_id" context="{'kanban_view_ref': 'sales_team.crm_team_view_kanban'}"/>
             </xpath>
         </field>
     </record>
@@ -15,7 +15,7 @@
         <field name="name">Open Sessions</field>
         <field name="binding_model_id" ref="sales_team.model_crm_team"/>
         <field name="res_model">pos.session</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="context">{'search_default_open_sessions': True, 'search_default_crm_team_id': active_id}</field>
     </record>
 
@@ -25,28 +25,25 @@
         <field name="inherit_id" ref="point_of_sale.view_pos_config_search"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
-                <field name="crm_team_id" kanban_view_ref="%(sales_team.crm_team_view_kanban)s"/>
+                <field name="crm_team_id" context="{'kanban_view_ref': 'sales_team.crm_team_view_kanban'}"/>
             </xpath>
         </field>
     </record>
 
-    <record id="crm_team_salesteams_view_kanban_inherit_pos_sale" model="ir.ui.view"> 
-        <field name="name">crm.team.kanban</field>
+    <record id="crm_team_view_kanban_dashboard" model="ir.ui.view"> 
+        <field name="name">crm.team.view.kanban.dashboard.inherit.pos</field>
         <field name="model">crm.team</field>
-        <field name="inherit_id" ref="sales_team.crm_team_salesteams_view_kanban"/>
-        <field name="groups_id" eval="[(4, ref('point_of_sale.group_pos_user'))]"/>
+        <field name="inherit_id" ref="sales_team.crm_team_view_kanban_dashboard"/>
         <field name="arch" type="xml">
         <data>
             <xpath expr="//t[@name='first_options']" position="before">
-                <div class="row" t-if="record.pos_sessions_open_count.raw_value">
-                    <div class="col-8">
-                        <a name="%(pos_session_action_from_crm_team)d" type="action">
-                            <field name="pos_sessions_open_count"/>
-                            <t t-if="record.pos_sessions_open_count.raw_value == 1">Session Running</t>
-                            <t t-else="">Sessions Running</t>
-                        </a>
-                    </div>
-                    <div class="col-4 text-right">
+                <div class="row" groups="point_of_sale.group_pos_user">
+                    <a class="col-8" name="%(pos_session_action_from_crm_team)d" type="action">
+                        <field class="me-1" name="pos_sessions_open_count"/>
+                        <t t-if="record.pos_sessions_open_count.raw_value == 1">Session Running</t>
+                        <t t-else="">Sessions Running</t>
+                    </a>
+                    <div class="col-4 text-end">
                         <field name="pos_order_amount_total" widget="monetary"/>
                     </div>
                 </div>

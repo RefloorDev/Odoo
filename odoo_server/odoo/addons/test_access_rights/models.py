@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import fields, models
+from odoo import api, fields, models
 
 class SomeObj(models.Model):
     _name = 'test_access_right.some_obj'
@@ -9,12 +9,14 @@ class SomeObj(models.Model):
 
     val = fields.Integer()
     categ_id = fields.Many2one('test_access_right.obj_categ')
+    parent_id = fields.Many2one('test_access_right.some_obj')
     company_id = fields.Many2one('res.company')
     forbidden = fields.Integer(
-        groups='test_access_rights.test_group,!base.group_no_one,base.group_user,!base.group_public',
+        groups='test_access_rights.test_group,base.group_portal',
         default=5
     )
     forbidden2 = fields.Integer(groups='test_access_rights.test_group')
+    forbidden3 = fields.Integer(groups=fields.NO_ACCESS)
 
 class Container(models.Model):
     _name = 'test_access_right.container'
@@ -22,13 +24,19 @@ class Container(models.Model):
 
     some_ids = fields.Many2many('test_access_right.some_obj', 'test_access_right_rel', 'container_id', 'some_id')
 
-class Parent(models.Model):
-    _name = 'test_access_right.parent'
+class Inherits(models.Model):
+    _name = 'test_access_right.inherits'
     _description = 'Object for testing related access rights'
 
-    _inherits = {'test_access_right.some_obj': 'obj_id'}
+    _inherits = {'test_access_right.some_obj': 'some_id'}
 
-    obj_id = fields.Many2one('test_access_right.some_obj', required=True, ondelete='restrict')
+    some_id = fields.Many2one('test_access_right.some_obj', required=True, ondelete='restrict')
+
+class Child(models.Model):
+    _name = 'test_access_right.child'
+    _description = 'Object for testing company ir rule'
+
+    parent_id = fields.Many2one('test_access_right.some_obj')
 
 class ObjCateg(models.Model):
     _name = 'test_access_right.obj_categ'
@@ -36,10 +44,11 @@ class ObjCateg(models.Model):
 
     name = fields.Char(required=True)
 
-    def search(self, args, **kwargs):
+    @api.model
+    def search_fetch(self, domain, field_names, offset=0, limit=None, order=None):
         if self.env.context.get('only_media'):
-            args += [('name', '=', 'Media')]
-        return super(ObjCateg, self).search(args, **kwargs)
+            domain += [('name', '=', 'Media')]
+        return super().search_fetch(domain, field_names, offset, limit, order)
 
 
 class FakeTicket(models.Model):

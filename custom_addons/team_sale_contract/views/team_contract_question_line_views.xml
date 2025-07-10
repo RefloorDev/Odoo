@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="team_contract_question_line_form_view" model="ir.ui.view">
+            <field name="name">team.contract.question.line.form.view</field>
+            <field name="model">team.contract.question.line</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="question_id"/>
+                                <field name="room_name"/>
+                                <field name="company_id"/>
+                                <field name="order_id"/>
+                                <field name="room_measurement_id"/>
+                                <field name="calculate_order_wise"/>
+                            </group>
+                            <group>
+                                <field name="room_id"/>
+                                <field name="floor_id"/>
+                                <field name="answer_data"/>
+                                <field name="appointment_id"/>
+                                <field name="extra_price"/>
+                                <field name="amount_included"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="answers_page" string="Answers">
+                                <field name="answers">
+                                    <list>
+                                        <field name="answer"/>
+                                        <field name="question_id" column_invisible="1"/>
+                                    </list>
+                                    <form>
+                                        <group>
+                                            <field name="answer"/>
+                                            <field name="question_id" invisible="1"/>
+                                        </group>
+                                    </form>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="team_contract_question_line_list_view" model="ir.ui.view">
+            <field name="name">team.contract.question.line.list.view</field>
+            <field name="model">team.contract.question.line</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="name"/>
+                    <field name="question_id"/>
+                    <field name="room_name"/>
+                    <field name="company_id"/>
+                    <field name="order_id"/>
+                    <field name="room_measurement_id"/>
+                    <field name="calculate_order_wise"/>
+                    <field name="room_id"/>
+                    <field name="floor_id"/>
+                    <field name="answer_data"/>
+                    <field name="appointment_id"/>
+                    <field name="extra_price"/>
+                    <field name="amount_included"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="team_contract_question_line_action_window" model="ir.actions.act_window">
+            <field name="name">Appointment Questionnaires</field>
+            <field name="res_model">team.contract.question.line</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem name="Appointment Questionnaires" parent="sale.menu_sale_config" id="menu_act_appointment_questionnaires" action="team_contract_question_line_action_window"/>
+    </data>
+</odoo>

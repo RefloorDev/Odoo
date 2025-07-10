@@ -1,0 +1,32 @@
+<t t-name="otl_document_sign.KanbanButtons" owl="1">
+    <t t-if="showCustomCard">
+        <div class="d-flex">
+            <field name="display_name" class="fw-bold fs-5"/>
+        </div>
+        <div>
+            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+        </div>
+        <div class="row mt-2">
+            <div>
+                <i class="fa fa-calendar" role="img" aria-label="Created" title="Created"/>
+                <span class="mx-1"></span>
+                <field name="create_date"/>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-12 d-flex gap-2">
+                <t t-foreach="buttons" t-as="btn" t-key="btn.label">
+                    <button
+                        t-att-class="btn.class + ' btn-sm'"
+                        t-on-click="btn.onClick"
+                        type="button">
+                        <t t-esc="btn.label"/>
+                    </button>
+                </t>
+            </div>
+        </div>
+    </t>
+    <t t-else="">
+        <t t-call="kanban.card"/>
+    </t>
+</t>

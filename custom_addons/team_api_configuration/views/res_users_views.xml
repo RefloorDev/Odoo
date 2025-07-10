@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
 	<!-- Inherited Res Users Form View -->
     <record id="view_res_users_forms_inherit1122" model="ir.ui.view">
         <field name="name">res.users.form.inherit</field>
@@ -16,5 +15,4 @@
             </xpath>
         </field>
     </record>
-
 </odoo>

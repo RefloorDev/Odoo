@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
- <data noupdate="1">
+    <data noupdate="1">
         <record id="product_payment" model="product.product">
             <field name="name">Payment</field>
             <field name="type">service</field>
@@ -9,54 +9,52 @@
             <field name="default_code">payment</field>
         </record>
 
-     <record id="additional_cost" model="product.product">
+        <record id="additional_cost" model="product.product">
             <field name="name">Additional Cost</field>
             <field name="type">service</field>
             <field name="sale_ok">True</field>
             <field name="purchase_ok">False</field>
             <field name="default_code">additional</field>
-     </record>
+        </record>
 
-      <record id="admin_fee" model="product.product">
+        <record id="admin_fee" model="product.product">
             <field name="name">Admin Fee</field>
             <field name="type">service</field>
             <field name="sale_ok">True</field>
             <field name="purchase_ok">False</field>
             <field name="default_code">admin_fee</field>
-     </record>
+        </record>
 
-     <record id="adjustment_cost" model="product.product">
+        <record id="adjustment_cost" model="product.product">
             <field name="name">Adjustment Cost</field>
             <field name="type">service</field>
             <field name="sale_ok">True</field>
             <field name="purchase_ok">False</field>
             <field name="default_code">adjustment</field>
-     </record>
+        </record>
 
-     <record id="monthly_promo" model="product.product">
+        <record id="monthly_promo" model="product.product">
             <field name="name">Monthly Promo</field>
             <field name="type">service</field>
             <field name="sale_ok">True</field>
             <field name="purchase_ok">False</field>
             <field name="default_code">monthly promo</field>
-     </record>
+        </record>
 
-     <record id="quote_round_off" model="product.product">
+        <record id="quote_round_off" model="product.product">
             <field name="name">Round Off Price</field>
             <field name="type">service</field>
             <field name="sale_ok">True</field>
             <field name="purchase_ok">False</field>
             <field name="default_code">round off</field>
-     </record>
+        </record>
 
-     <record id="quote_promotion_discount" model="product.product">
+        <record id="quote_promotion_discount" model="product.product">
             <field name="name">Promotion Discount</field>
             <field name="type">service</field>
             <field name="sale_ok">True</field>
             <field name="purchase_ok">False</field>
             <field name="default_code">promotion</field>
-     </record>
-
- </data>
-
+        </record>
+    </data>
 </odoo>

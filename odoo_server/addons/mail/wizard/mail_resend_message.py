@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models, _
+from odoo import api, fields, models, _, Command
 from odoo.exceptions import UserError
 
 
@@ -12,15 +12,20 @@ class MailResendMessage(models.TransientModel):
     mail_message_id = fields.Many2one('mail.message', 'Message', readonly=True)
     partner_ids = fields.One2many('mail.resend.partner', 'resend_wizard_id', string='Recipients')
     notification_ids = fields.Many2many('mail.notification', string='Notifications', readonly=True)
-    has_cancel = fields.Boolean(compute='_compute_has_cancel')
+    can_cancel = fields.Boolean(compute='_compute_can_cancel')
+    can_resend = fields.Boolean(compute='_compute_can_resend')
     partner_readonly = fields.Boolean(compute='_compute_partner_readonly')
 
     @api.depends("partner_ids")
-    def _compute_has_cancel(self):
-        self.has_cancel = self.partner_ids.filtered(lambda p: not p.resend)
+    def _compute_can_cancel(self):
+        self.can_cancel = self.partner_ids.filtered(lambda p: not p.resend)
+
+    @api.depends('partner_ids.resend')
+    def _compute_can_resend(self):
+        self.can_resend = any([partner.resend for partner in self.partner_ids])
 
     def _compute_partner_readonly(self):
-        self.partner_readonly = not self.env['res.partner'].check_access_rights('write', raise_exception=False)
+        self.partner_readonly = not self.env['res.partner'].has_access('write')
 
     @api.model
     def default_get(self, fields):
@@ -29,22 +34,25 @@ class MailResendMessage(models.TransientModel):
         if message_id:
             mail_message_id = self.env['mail.message'].browse(message_id)
             notification_ids = mail_message_id.notification_ids.filtered(lambda notif: notif.notification_type == 'email' and notif.notification_status in ('exception', 'bounce'))
-            partner_ids = [(0, 0, {
-                "partner_id": notif.res_partner_id.id,
-                "name": notif.res_partner_id.name,
-                "email": notif.res_partner_id.email,
+            partner_values = [({
+                "notification_id": notif.id,
                 "resend": True,
                 "message": notif.format_failure_reason(),
             }) for notif in notification_ids]
-            has_user = any([notif.res_partner_id.user_ids for notif in notification_ids])
+
+            # mail.resend.partner need to exist to be able to execute an action
+            partner_ids = self.env['mail.resend.partner'].create(partner_values).ids
+            partner_commands = [Command.link(partner_id) for partner_id in partner_ids]
+
+            has_user = any(notif.res_partner_id.user_ids for notif in notification_ids)
             if has_user:
-                partner_readonly = not self.env['res.users'].check_access_rights('write', raise_exception=False)
+                partner_readonly = not self.env['res.users'].has_access('write')
             else:
-                partner_readonly = not self.env['res.partner'].check_access_rights('write', raise_exception=False)
+                partner_readonly = not self.env['res.partner'].has_access('write')
             rec['partner_readonly'] = partner_readonly
-            rec['notification_ids'] = [(6, 0, notification_ids.ids)]
+            rec['notification_ids'] = [Command.set(notification_ids.ids)]
             rec['mail_message_id'] = mail_message_id.id
-            rec['partner_ids'] = partner_ids
+            rec['partner_ids'] = partner_commands
         else:
             raise UserError(_('No message_id found in context'))
         return rec
@@ -55,44 +63,76 @@ class MailResendMessage(models.TransientModel):
         for wizard in self:
             "If a partner disappeared from partner list, we cancel the notification"
             to_cancel = wizard.partner_ids.filtered(lambda p: not p.resend).mapped("partner_id")
-            to_send = wizard.partner_ids.filtered(lambda p: p.resend).mapped("partner_id")
+            to_send = wizard.partner_ids.filtered(lambda p: p.resend)
             notif_to_cancel = wizard.notification_ids.filtered(lambda notif: notif.notification_type == 'email' and notif.res_partner_id in to_cancel and notif.notification_status in ('exception', 'bounce'))
             notif_to_cancel.sudo().write({'notification_status': 'canceled'})
             if to_send:
-                message = wizard.mail_message_id
-                record = self.env[message.model].browse(message.res_id) if message.is_thread_message() else self.env['mail.thread']
-
-                email_partners_data = []
-                for pid, cid, active, pshare, ctype, notif, groups in self.env['mail.followers']._get_recipient_data(None, 'comment', False, pids=to_send.ids):
-                    if pid and notif == 'email' or not notif:
-                        pdata = {'id': pid, 'share': pshare, 'active': active, 'notif': 'email', 'groups': groups or []}
-                        if not pshare and notif:  # has an user and is not shared, is therefore user
-                            email_partners_data.append(dict(pdata, type='user'))
-                        elif pshare and notif:  # has an user and is shared, is therefore portal
-                            email_partners_data.append(dict(pdata, type='portal'))
-                        else:  # has no user, is therefore customer
-                            email_partners_data.append(dict(pdata, type='customer'))
-
-                record._notify_record_by_email(message, {'partners': email_partners_data}, check_existing=True, send_after_commit=False)
-
-            self.mail_message_id._notify_mail_failure_update()
+                # this will update the notification already
+                to_send.action_resend()
+            else:
+                self.mail_message_id._notify_message_notification_update()
         return {'type': 'ir.actions.act_window_close'}
 
     def cancel_mail_action(self):
         for wizard in self:
             for notif in wizard.notification_ids:
                 notif.filtered(lambda notif: notif.notification_type == 'email' and notif.notification_status in ('exception', 'bounce')).sudo().write({'notification_status': 'canceled'})
-            wizard.mail_message_id._notify_mail_failure_update()
+            wizard.mail_message_id._notify_message_notification_update()
         return {'type': 'ir.actions.act_window_close'}
 
 
 class PartnerResend(models.TransientModel):
     _name = 'mail.resend.partner'
-    _description = 'Partner with additionnal information for mail resend'
+    _description = 'Partner with additional information for mail resend'
 
-    partner_id = fields.Many2one('res.partner', string='Partner', required=True, ondelete='cascade')
-    name = fields.Char(related="partner_id.name", related_sudo=False, readonly=False)
-    email = fields.Char(related="partner_id.email", related_sudo=False, readonly=False)
-    resend = fields.Boolean(string="Send Again", default=True)
+    notification_id = fields.Many2one('mail.notification', string='Notification', required=True, ondelete='cascade')
+    partner_id = fields.Many2one('res.partner', string='Partner', related='notification_id.res_partner_id')
+    name = fields.Char(related='partner_id.name', string='Recipient Name', related_sudo=False, readonly=False)
+    email = fields.Char(related='partner_id.email', string='Email Address', related_sudo=False, readonly=False)
+    failure_reason = fields.Text('Failure Reason', related='notification_id.failure_reason')
+    resend = fields.Boolean(string='Try Again', default=True)
     resend_wizard_id = fields.Many2one('mail.resend.message', string="Resend wizard")
-    message = fields.Char(string="Help message")
+    message = fields.Char(string='Error message')
+    partner_readonly = fields.Boolean('Partner Readonly', related='resend_wizard_id.partner_readonly')
+
+    def action_open_record(self):
+        self.ensure_one()
+        message = self.notification_id.mail_message_id
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': message.model,
+            'res_id': message.res_id,
+            'view_ids': [(False, 'form')],
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    def action_open_resend_partner(self):
+        self.ensure_one()
+        action = self.env['ir.actions.act_window']._for_xml_id('mail.mail_resend_partner_action')
+        action['res_id'] = self.id
+        return action
+
+    def action_resend(self):
+        message = self.resend_wizard_id.mail_message_id
+        if len(message) != 1:
+            raise UserError(_('All partners must belong to the same message'))
+
+        recipients_data = self.env['mail.followers']._get_recipient_data(None, 'comment', False, pids=self.partner_id.ids)
+        email_partners_data = [
+            pdata
+            for pid, pdata in recipients_data[0].items()
+            if pid and pdata.get('notif', 'email') == 'email'
+        ]
+
+        record = self.env[message.model].browse(message.res_id) if message.is_thread_message() else self.env['mail.thread']
+        record._notify_thread_by_email(
+            message, email_partners_data,
+            resend_existing=True,
+            send_after_commit=False
+        )
+
+        message._notify_message_notification_update()
+
+        if len(self) == 1:
+            return self.action_open_record()

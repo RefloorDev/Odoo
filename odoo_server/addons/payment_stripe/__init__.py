@@ -1,7 +1,14 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from . import models
 from . import controllers
-from odoo.addons.payment.models.payment_acquirer import create_missing_journal_for_acquirers
+from . import models
 
+import odoo.addons.payment as payment  # prevent circular import error with payment
+
+
+def post_init_hook(env):
+    payment.setup_provider(env, 'stripe')
+
+
+def uninstall_hook(env):
+    payment.reset_payment_provider(env, 'stripe')

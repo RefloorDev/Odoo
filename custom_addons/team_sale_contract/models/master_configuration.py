@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
-
 from odoo import models, fields, api, _
 from datetime import datetime
 from odoo.osv import expression
 from odoo.exceptions import ValidationError
-from odoo.addons.resource.models.resource import float_to_time
+# from odoo.addons.resource.models.resource import float_to_time
+from odoo.addons.resource.models.utils import float_to_time
 import pytz
 from google.oauth2 import service_account
 from google.cloud import storage
@@ -50,8 +49,6 @@ class DeliveryOptionLine(models.Model):
 
     name = fields.Char('Delivery Options', required=True)
     molding_type_id = fields.Many2one('team.floor.molding', 'Molding Type', ondelete='cascade')
-
-
 
 class ResCompany(models.Model):
     _inherit = 'res.company'
@@ -173,9 +170,9 @@ class ResCompany(models.Model):
     @api.model
     def cron_upload_attachments_to_cloud_storage(self):
         google_auth_attachment_id = self.env['ir.config_parameter'].sudo().get_param(
-                    'google_auth_attachment_id') or False
+                    'team_sale_contract.google_auth_attachment_id') or False
         google_bucket_name = self.env['ir.config_parameter'].sudo().get_param(
-                    'google_bucket_name') or ''
+                    'team_sale_contract.google_bucket_name') or ''
         signature_path = '{date}/{appointment}/Sign'
         snapshot_path = '{date}/{appointment}/Snapshot'
         document_path = '{date}/{appointment}/Documents'
@@ -309,11 +306,27 @@ class LocationEntityKeyLine(models.Model):
 
 class FloorColor(models.Model):
     _name = 'floor.color'
+    _description = "Floor Color"
 
-    name = fields.Char('Name')
+    name = fields.Char('Color')
     product_line = fields.Char('Product Line')
     thumb_nail = fields.Char('Thumb Nail')
     url = fields.Char('URL')
+    active = fields.Boolean('Active', default=True)
+    color_up_charge_price = fields.Float('Color Up Charge Price')
+    display_name_in_app = fields.Char(string="Display Name in App")
+    in_stock = fields.Boolean('Stock Available', default=False)
+    glue_down = fields.Boolean('Is Glue Down', default=False)
+    special_order = fields.Boolean('Special Order', default=False)
+    office_location_ids = fields.Many2many('otl.office.location', string='Market Segments Where Out Of Stock')
+
+
+class FloorColorLine(models.Model):
+    _name = 'floor.color.line'
+    _description = "Floor Color Line"
+
+    floor_color_id = fields.Many2one('floor.color', string='Floor Color', ondelete='cascade')
+    product_id = fields.Many2one('product.product', string='Product', ondelete='restrict')
 
 
 class TeamRoomRoom(models.Model):
@@ -453,7 +466,7 @@ class PaymentDownPayment(models.Model):
     _name = 'team.payment.percentage'
     _description = "Down Payment Percentage"
 
-    name = fields.Char(strinng='Name', required=True)
+    name = fields.Char(string='Name', required=True)
     percentage = fields.Float(string="Percentage", required=True)
 
 
@@ -508,6 +521,7 @@ class ProductProduct(models.Model):
     display_name_in_app = fields.Char(string="Display Name in App")
     color_attachment_id = fields.Many2one('ir.attachment', string='Color Attachment Ref', copy=False)
     in_stock = fields.Boolean('Stock Available', default=False)
+    glue_down = fields.Boolean('Is Glue Down', default=False)
     special_order = fields.Boolean('Special Order', default=False)
     office_location_ids = fields.Many2many('otl.office.location', string='Market Segments Where Out Of Stock')
 
@@ -629,6 +643,7 @@ class OfficeLocation(models.Model):
     active = fields.Boolean('Active', default=True)
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     special_price_line = fields.One2many('otl.product.special.price', 'office_location_id', 'Special Price')
+    enable_destination_selection = fields.Boolean('Enable Destination Selection', default=False)
 
     _sql_constraints = [
         ('name_company_uniq', 'unique (name,company_id)', 'The name of materials must be unique per company!')
@@ -798,5 +813,54 @@ class FinanceChecklistItems(models.Model):
     _sql_constraints = [
         ('name_company_uniq', 'unique (name,company_id)', 'Reason must be unique per company!')
     ]
+
+
+class QuestionnaireCalcLogic(models.Model):
+    _name = 'otl.questionnaire.calc.logic'
+    _description = "Questionnaire Auto Answer Calculation Logic"
+
+    name = fields.Char('Name', required=True)
+    type = fields.Selection([('glue_down', 'Glue Down')], string='Logic Type', required=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True,
+                                 default=lambda self: self.env.company.id)
+    active = fields.Boolean("Active", default=True)
+    logic_line = fields.One2many('otl.questionnaire.calc.logic.line', 'questionnaire_calc_logic_id', string='Logic Line')
+
+    _sql_constraints = [
+        ('name_company_uniq', 'unique (name,company_id)', 'Name must be unique per company!'),
+        ('type_company_uniq', 'unique (name,company_id)', 'Logic Type must be unique per company!'),
+    ]
+
+
+class QuestionnaireCalcLogicLine(models.Model):
+    _name = 'otl.questionnaire.calc.logic.line'
+    _description = "Questionnaire Auto Answer Calculation Logic Line"
+
+    questionnaire_calc_logic_id = fields.Many2one('otl.questionnaire.calc.logic', string='Calculation Logic', required=True, ondelete='cascade')
+    question_id = fields.Many2one('team.quote.question', string='Question', required=True)
+    excluded_question_ids = fields.Many2many('team.quote.question', string='Excluded Questions', help='Avoid auto calculation if these questionnaires already answered.')
+    code = fields.Text(string='Execution Code', required=True)
+
+
+
+class DestinationLocation(models.Model):
+    _name = 'otl.destination.selection'
+    _description = "Destination Selection"
+    _order = 'sequence asc'
+
+    name = fields.Char('Destination Name', required=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True,
+                                 default=lambda self: self.env.company.id)
+    active = fields.Boolean("Active", default=True)
+    terms_and_conditions = fields.Text("Terms and Conditions")
+    sequence = fields.Integer('Priority',
+                              help="Give to the more specialized category, a higher priority to have them in top of the list.",
+                              default=10)
+
+    _sql_constraints = [
+        ('name_company_uniq', 'unique (name,company_id)', 'Destination must be unique per company!')
+    ]
+
+
 
 

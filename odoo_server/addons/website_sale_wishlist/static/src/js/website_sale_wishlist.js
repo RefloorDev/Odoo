@@ -1,9 +1,9 @@
-odoo.define('website_sale_wishlist.wishlist', function (require) {
-"use strict";
+/** @odoo-module **/
 
-var publicWidget = require('web.public.widget');
-var wSaleUtils = require('website_sale.utils');
-var VariantMixin = require('sale.VariantMixin');
+import publicWidget from "@web/legacy/js/public/public_widget";
+import wSaleUtils from "@website_sale/js/website_sale_utils";
+import VariantMixin from "@website_sale/js/sale_variant_mixin";
+import { rpc, RPCError } from "@web/core/network/rpc";
 
 // VariantMixin events are overridden on purpose here
 // to avoid registering them more than once since they are already registered
@@ -24,7 +24,7 @@ publicWidget.registry.ProductWishlist = publicWidget.Widget.extend(VariantMixin,
      */
     init: function (parent) {
         this._super.apply(this, arguments);
-        this.wishlistProductIDs = [];
+        this.wishlistProductIDs = JSON.parse(sessionStorage.getItem('website_sale_wishlist_product_ids') || '[]');
     },
     /**
      * Gets the current wishlist items.
@@ -35,13 +35,16 @@ publicWidget.registry.ProductWishlist = publicWidget.Widget.extend(VariantMixin,
     willStart: function () {
         var self = this;
         var def = this._super.apply(this, arguments);
+        var wishDef;
+        if (this.wishlistProductIDs.length != +$('header#top .my_wish_quantity').text()) {
+            wishDef = $.get('/shop/wishlist', {
+                count: 1,
+            }).then(function (res) {
+                self.wishlistProductIDs = JSON.parse(res);
+                sessionStorage.setItem('website_sale_wishlist_product_ids', res);
+            });
 
-        var wishDef = $.get('/shop/wishlist', {
-            count: 1,
-        }).then(function (res) {
-            self.wishlistProductIDs = JSON.parse(res);
-        });
-
+        }
         return Promise.all([def, wishDef]);
     },
     /**
@@ -75,11 +78,7 @@ publicWidget.registry.ProductWishlist = publicWidget.Widget.extend(VariantMixin,
         var self = this;
         var productID = $el.data('product-product-id');
         if ($el.hasClass('o_add_wishlist_dyn')) {
-            productID = $el.parent().find('.product_id').val();
-            if (!productID) { // case List View Variants
-                productID = $el.parent().find('input:checked').first().val();
-            }
-            productID = parseInt(productID, 10);
+            productID = parseInt($el.closest('.js_product').find('.product_id:checked').val());;
         }
         var $form = $el.closest('form');
         var templateId = $form.find('.product_template_id').val();
@@ -92,41 +91,53 @@ publicWidget.registry.ProductWishlist = publicWidget.Widget.extend(VariantMixin,
             $el.closest('form'),
             productID,
             templateId,
-            false
         );
 
         productReady.then(function (productId) {
             productId = parseInt(productId, 10);
 
-            if (productId && !_.contains(self.wishlistProductIDs, productId)) {
-                return self._rpc({
-                    route: '/shop/wishlist/add',
-                    params: {
-                        product_id: productId,
-                    },
+            if (productId && !self.wishlistProductIDs.includes(productId)) {
+                return rpc('/shop/wishlist/add', {
+                    product_id: productId,
                 }).then(function () {
-                    var $navButton = wSaleUtils.getNavBarButton('.o_wsale_my_wish');
+                    var $navButton = $('header .o_wsale_my_wish').first();
                     self.wishlistProductIDs.push(productId);
+                    sessionStorage.setItem('website_sale_wishlist_product_ids', JSON.stringify(self.wishlistProductIDs));
                     self._updateWishlistView();
                     wSaleUtils.animateClone($navButton, $el.closest('form'), 25, 40);
-                }).guardedCatch(function () {
+                    // It might happen that `onChangeVariant` is called at the same time as this function.
+                    // In this case we need to set the button to disabled again.
+                    // Do this only if the productID is still the same.
+                    let currentProductId = $el.data('product-product-id');
+                    if ($el.hasClass('o_add_wishlist_dyn')) {
+                        currentProductId = parseInt($el.closest('.js_product').find('.product_id:checked').val());
+                    }
+                    if (productId === currentProductId) {
+                        $el.prop("disabled", true).addClass('disabled');
+                    }
+                }).catch(function (e) {
                     $el.prop("disabled", false).removeClass('disabled');
+                    if (!(e instanceof RPCError)) {
+                        return Promise.reject(e);
+                    }
                 });
             }
-        }).guardedCatch(function () {
+        }).catch(function (e) {
             $el.prop("disabled", false).removeClass('disabled');
+            if (!(e instanceof RPCError)) {
+                return Promise.reject(e);
+            }
         });
     },
     /**
      * @private
      */
     _updateWishlistView: function () {
-        if (this.wishlistProductIDs.length > 0) {
-            $('.o_wsale_my_wish').show();
-            $('.my_wish_quantity').text(this.wishlistProductIDs.length);
-        } else {
-            $('.o_wsale_my_wish').hide();
+        const $wishButton = $('.o_wsale_my_wish');
+        if ($wishButton.hasClass('o_wsale_my_wish_hide_empty')) {
+            $wishButton.toggleClass('d-none', !this.wishlistProductIDs.length);
         }
+        $wishButton.find('.my_wish_quantity').text(this.wishlistProductIDs.length);
     },
     /**
      * @private
@@ -137,13 +148,12 @@ publicWidget.registry.ProductWishlist = publicWidget.Widget.extend(VariantMixin,
         var product = tr.data('product-id');
         var self = this;
 
-        this._rpc({
-            route: '/shop/wishlist/remove/' + wish,
-        }).then(function () {
+        rpc('/shop/wishlist/remove/' + wish).then(function () {
             $(tr).hide();
         });
 
-        this.wishlistProductIDs = _.without(this.wishlistProductIDs, product);
+        this.wishlistProductIDs = this.wishlistProductIDs.filter((p) => p !== product);
+        sessionStorage.setItem('website_sale_wishlist_product_ids', JSON.stringify(this.wishlistProductIDs));
         if (this.wishlistProductIDs.length === 0) {
             if (deferred_redirect) {
                 deferred_redirect.then(function () {
@@ -157,11 +167,9 @@ publicWidget.registry.ProductWishlist = publicWidget.Widget.extend(VariantMixin,
      * @private
      */
     _addOrMoveWish: function (e) {
-        var $navButton = wSaleUtils.getNavBarButton('.o_wsale_my_cart');
         var tr = $(e.currentTarget).parents('tr');
         var product = tr.data('product-id');
         $('.o_wsale_my_cart').removeClass('d-none');
-        wSaleUtils.animateClone($navButton, tr, 25, 40);
 
         if ($('#b2b_wish').is(':checked')) {
             return this._addToCart(product, tr.find('add_qty').val() || 1);
@@ -174,24 +182,34 @@ publicWidget.registry.ProductWishlist = publicWidget.Widget.extend(VariantMixin,
     /**
      * @private
      */
-    _addToCart: function (productID, qty_id) {
-        return this._rpc({
-            route: "/shop/cart/update_json",
-            params: {
-                product_id: parseInt(productID, 10),
-                add_qty: parseInt(qty_id, 10),
-                display: false,
-            },
-        }).then(function (resp) {
-            if (resp.warning) {
-                if (! $('#data_warning').length) {
-                    $('.wishlist-section').prepend('<div class="mt16 alert alert-danger alert-dismissable" role="alert" id="data_warning"></div>');
-                }
-                var cart_alert = $('.wishlist-section').parent().find('#data_warning');
-                cart_alert.html('<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button> ' + resp.warning);
-            }
-            $('.my_cart_quantity').html(resp.cart_quantity || '<i class="fa fa-warning" /> ');
+    _addToCart: function (productID, qty) {
+        const $tr = this.$(`tr[data-product-id="${productID}"]`);
+        const productTrackingInfo = $tr.data('product-tracking-info');
+        if (productTrackingInfo) {
+            productTrackingInfo.quantity = parseFloat(qty);
+            $tr.trigger('add_to_cart_event', [productTrackingInfo]);
+        }
+        const callService = this.call.bind(this)
+        return rpc("/shop/cart/update_json", {
+            ...this._getCartUpdateJsonParams(productID, qty),
+            display: false,
+        }).then(function (data) {
+            wSaleUtils.updateCartNavBar(data);
+            wSaleUtils.showCartNotification(callService, data.notification_info);
         });
+    },
+    /**
+     * Get the cart update params.
+     *
+     * @param {string} productId
+     * @param {string} qty
+     */
+    _getCartUpdateJsonParams(productId, qty) {
+        return {
+            product_id: parseInt(productId, 10),
+            add_qty: parseInt(qty, 10),
+            display: false,
+        };
     },
     /**
      * @private
@@ -231,7 +249,7 @@ publicWidget.registry.ProductWishlist = publicWidget.Widget.extend(VariantMixin,
         var $input = $(ev.target);
         var $parent = $input.closest('.js_product');
         var $el = $parent.find("[data-action='o_wishlist']");
-        if (!_.contains(this.wishlistProductIDs, parseInt($input.val(), 10))) {
+        if (!this.wishlistProductIDs.includes(parseInt($input.val(), 10))) {
             $el.prop("disabled", false).removeClass('disabled').removeAttr('disabled');
         } else {
             $el.prop("disabled", true).addClass('disabled').attr('disabled', 'disabled');
@@ -246,7 +264,7 @@ publicWidget.registry.ProductWishlist = publicWidget.Widget.extend(VariantMixin,
         var productID = ev.currentTarget.value;
         var $el = $(ev.target).closest('.js_add_cart_variants').find("[data-action='o_wishlist']");
 
-        if (!_.contains(this.wishlistProductIDs, parseInt(productID, 10))) {
+        if (!this.wishlistProductIDs.includes(parseInt(productID, 10))) {
             $el.prop("disabled", false).removeClass('disabled').removeAttr('disabled');
         } else {
             $el.prop("disabled", true).addClass('disabled').attr('disabled', 'disabled');
@@ -265,11 +283,14 @@ publicWidget.registry.ProductWishlist = publicWidget.Widget.extend(VariantMixin,
      * @param {Event} ev
      */
     _onClickWishAdd: function (ev) {
+        if (ev.currentTarget.classList.contains('disabled')) {
+            ev.preventDefault();
+            return;
+        }
         var self = this;
         this.$('.wishlist-section .o_wish_add').addClass('disabled');
         this._addOrMoveWish(ev).then(function () {
             self.$('.wishlist-section .o_wish_add').removeClass('disabled');
         });
     },
-});
 });

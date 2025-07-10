@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo.tests.common import SavepointCase
+from odoo.addons.mail.tests.common import mail_new_test_user
+from odoo.tests import Form, TransactionCase
 from odoo.exceptions import AccessError, UserError
 
 
-class TestEditableQuant(SavepointCase):
+class TestEditableQuant(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super(TestEditableQuant, cls).setUpClass()
@@ -17,17 +18,17 @@ class TestEditableQuant(SavepointCase):
         Location = cls.env['stock.location']
         cls.product = Product.create({
             'name': 'Product A',
-            'type': 'product',
+            'is_storable': True,
             'categ_id': cls.env.ref('product.product_category_all').id,
         })
         cls.product2 = Product.create({
             'name': 'Product B',
-            'type': 'product',
+            'is_storable': True,
             'categ_id': cls.env.ref('product.product_category_all').id,
         })
         cls.product_tracked_sn = Product.create({
             'name': 'Product tracked by SN',
-            'type': 'product',
+            'is_storable': True,
             'tracking': 'serial',
             'categ_id': cls.env.ref('product.product_category_all').id,
         })
@@ -62,7 +63,7 @@ class TestEditableQuant(SavepointCase):
             'product_id': self.product.id,
             'location_id': self.stock.id,
             'inventory_quantity': 24
-        })
+        }).action_apply_inventory()
         quants = self.env['stock.quant'].search([
             ('product_id', '=', self.product.id),
             ('quantity', '>', 0),
@@ -99,6 +100,7 @@ class TestEditableQuant(SavepointCase):
             'location_id': self.room1.id,
             'inventory_quantity': 24,
         })
+        second_quant.action_apply_inventory()
         quants = self.env['stock.quant'].search([
             ('product_id', '=', self.product.id),
             ('quantity', '>', 0),
@@ -114,10 +116,10 @@ class TestEditableQuant(SavepointCase):
         self.assertEqual(len(stock_move), 1)
 
     def test_create_quant_3(self):
-        """ Try to create a quant with `inventory_quantity` but not in inventory mode.
-        Creates two quants not in inventory mode:
+        """ Try to create a quant with `inventory_quantity` but without applying it.
+        Creates two quants:
           - One with `quantity` (this one must be OK)
-          - One with `inventory_quantity` (this one must be null)
+          - One with `inventory_quantity` (this one will have null quantity)
         """
         valid_quant = self.env['stock.quant'].create({
             'product_id': self.product.id,
@@ -151,6 +153,7 @@ class TestEditableQuant(SavepointCase):
             'location_id': self.room1.id,
             'inventory_quantity': 20,
         })
+        inventoried_quant.action_apply_inventory()
         with self.assertRaises(UserError):
             invalid_quant = self.env['stock.quant'].with_context(inventory_mode=True).create({
                 'product_id': self.product.id,
@@ -170,6 +173,7 @@ class TestEditableQuant(SavepointCase):
             'quantity': 12,
         })
         quant.inventory_quantity = 24
+        quant.action_apply_inventory()
         self.assertEqual(quant.quantity, 24)
         stock_move = self.env['stock.move'].search([
             ('product_id', '=', self.product.id),
@@ -186,6 +190,7 @@ class TestEditableQuant(SavepointCase):
             'quantity': 12,
         })
         quant.inventory_quantity = 8
+        quant.action_apply_inventory()
         self.assertEqual(quant.quantity, 8)
         stock_move = self.env['stock.move'].search([
             ('product_id', '=', self.product.id),
@@ -197,12 +202,13 @@ class TestEditableQuant(SavepointCase):
         """ Try to edit a record without the inventory mode.
         Must raise an error.
         """
-        self.demo_user = self.env['res.users'].with_context({'no_reset_password': True, 'mail_create_nosubscribe': True}).create({
-            'name': 'Pauline Poivraisselle',
-            'login': 'pauline',
-            'email': 'p.p@example.com',
-            'groups_id': [(6, 0, [self.env.ref('base.group_user').id])]
-        })
+        self.demo_user = mail_new_test_user(
+            self.env,
+            name='Pauline Poivraisselle',
+            login='pauline',
+            email='p.p@example.com',
+            groups='base.group_user',
+        )
         user_admin = self.env.ref('base.user_admin')
         quant = self.Quant.create({
             'product_id': self.product.id,
@@ -217,4 +223,106 @@ class TestEditableQuant(SavepointCase):
 
         # Try to write on quant with permission
         quant.with_user(user_admin).write({'inventory_quantity': 8})
+        quant.action_apply_inventory()
         self.assertEqual(quant.quantity, 8)
+
+    def test_edit_quant_4(self):
+        """ Update the quantity with the inventory report mode """
+        default_wh = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
+        default_stock_location = default_wh.lot_stock_id
+        quant = self.Quant.create({
+            'product_id': self.product.id,
+            'location_id': default_stock_location.id,
+            'inventory_quantity': 100,
+        })
+        quant.action_apply_inventory()
+        self.assertEqual(self.product.qty_available, 100)
+        quant.with_context(inventory_report_mode=True).inventory_quantity_auto_apply = 75
+        self.assertEqual(self.product.qty_available, 75)
+        quant.with_context(inventory_report_mode=True).inventory_quantity_auto_apply = 75
+        self.assertEqual(self.product.qty_available, 75)
+        smls = self.env['stock.move.line'].search([('product_id', '=', self.product.id)])
+        self.assertRecordValues(smls, [
+            {'quantity': 100},
+            {'quantity': 25},
+        ])
+
+    def test_edit_quant_5(self):
+        """ Create a quant with inventory mode and check that the inventory adjustment reason
+            is used as a reference in the `stock.move` """
+        default_wh = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
+        default_stock_location = default_wh.lot_stock_id
+        quant = self.Quant.create({
+            'product_id': self.product.id,
+            'location_id': default_stock_location.id,
+            'inventory_quantity': 1,
+        })
+        form_wizard = Form(self.env['stock.inventory.adjustment.name'].with_context(
+            default_quant_ids=quant.ids
+        ))
+        form_wizard.inventory_adjustment_name = "Inventory Adjustment - Test"
+        form_wizard.save().action_apply()
+        self.assertTrue(self.env['stock.move'].search([('reference', '=', 'Inventory Adjustment - Test')], limit=1))
+
+    def test_sn_warning(self):
+        """ Checks that a warning is given when reusing an existing SN
+        in inventory mode.
+        """
+
+        sn1 = self.env['stock.lot'].create({
+            'name': 'serial1',
+            'product_id': self.product_tracked_sn.id,
+        })
+
+        self.Quant.create({
+            'product_id': self.product_tracked_sn.id,
+            'location_id': self.room1.id,
+            'inventory_quantity': 1,
+            'lot_id': sn1.id
+        }).action_apply_inventory()
+
+        dupe_sn = self.Quant.create({
+            'product_id': self.product_tracked_sn.id,
+            'location_id': self.room2.id,
+            'inventory_quantity': 1,
+            'lot_id': sn1.id
+        })
+        dupe_sn.action_apply_inventory()
+        warning = False
+        warning = dupe_sn._onchange_serial_number()
+        self.assertTrue(warning, 'Reuse of existing serial number not detected')
+        self.assertEqual(list(warning.keys())[0], 'warning', 'Warning message was not returned')
+
+    def test_revert_inventory_adjustment(self):
+        """Try to revert inventory adjustment"""
+        default_wh = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
+        default_stock_location = default_wh.lot_stock_id
+        quant = self.Quant.create({
+            'product_id': self.product.id,
+            'location_id': default_stock_location.id,
+            'inventory_quantity': 0.4,
+        })
+        quant.action_apply_inventory()
+        move_lines = self.env['stock.move.line'].search([('product_id', '=', self.product.id), ('is_inventory', '=', True)])
+        self.assertEqual(len(move_lines), 1, "One inventory adjustment move lines should have been created")
+        self.assertEqual(self.product.qty_available, 0.4, "Before revert inventory adjustment qty is 0.4")
+        move_lines.action_revert_inventory()
+        self.assertEqual(self.product.qty_available, 0, "After revert inventory adjustment qty is not zero")
+
+    def test_multi_revert_inventory_adjustment(self):
+        """Try to revert inventory adjustment with multiple lines"""
+        default_wh = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
+        default_stock_location = default_wh.lot_stock_id
+        quant = self.Quant.create({
+            'product_id': self.product.id,
+            'location_id': default_stock_location.id,
+            'inventory_quantity': 100,
+        })
+        quant.action_apply_inventory()
+        quant.inventory_quantity = 150
+        quant.action_apply_inventory()
+        move_lines = self.env['stock.move.line'].search([('product_id', '=', self.product.id), ('is_inventory', '=', True)])
+        self.assertEqual(self.product.qty_available, 150, "Before revert multi inventory adjustment qty is 150")
+        self.assertEqual(len(move_lines), 2, "Two inventory adjustment move lines should have been created")
+        move_lines.action_revert_inventory()
+        self.assertEqual(self.product.qty_available, 0, "After revert multi inventory adjustment qty is not zero")

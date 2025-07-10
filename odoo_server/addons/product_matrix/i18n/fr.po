@@ -3,26 +3,35 @@
 # 	* product_matrix
 # 
 # Translators:
-# thomas quertinmont <tqu@odoo.com>, 2019
-# Martin Trigaux, 2019
-# Frédéric LIETART <stuff@tifred.fr>, 2019
-# Olivier Lenoir <olivier.lenoir@free.fr>, 2019
-# Eloïse Stilmant <est@odoo.com>, 2019
-# Cécile Collart <cco@odoo.com>, 2020
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 13.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-07 07:13+0000\n"
-"PO-Revision-Date: 2019-08-26 09:13+0000\n"
-"Last-Translator: Cécile Collart <cco@odoo.com>, 2020\n"
-"Language-Team: French (https://www.transifex.com/odoo/teams/41243/fr/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Wil Odoo, 2024\n"
+"Language-Team: French (https://app.transifex.com/odoo/teams/41243/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: fr\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
+
+#. module: product_matrix
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid ""
+"<small>Switch to the \"else\" condition of this block to view or edit the "
+"table.</small>"
+msgstr ""
+"<small>Passez à la condition \"else\" de ce bloc pour visualiser ou modifier"
+" le tableau.</small>"
+
+#. module: product_matrix
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid "<strong>Product matrix block</strong>"
+msgstr "<strong>Bloc de matrice de produits</strong>"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_color_1
@@ -30,25 +39,32 @@ msgid "Blue"
 msgstr "Bleu"
 
 #. module: product_matrix
-#. openerp-web
-#: code:addons/product_matrix/static/src/js/section_and_note_widget.js:0
-#, python-format
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid "Cell name"
+msgstr "Nom de la cellule"
+
+#. module: product_matrix
+#. odoo-javascript
+#: code:addons/product_matrix/static/src/xml/product_matrix_dialog.xml:0
 msgid "Choose Product Variants"
-msgstr "Choisissez des variantes de l'article"
+msgstr "Choisissez des variantes de produit"
 
 #. module: product_matrix
-#. openerp-web
-#: code:addons/product_matrix/static/src/js/section_and_note_widget.js:0
-#, python-format
-msgid "Close"
-msgstr "Fermer"
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid "Column name"
+msgstr "Nom de la colonne"
 
 #. module: product_matrix
-#. openerp-web
-#: code:addons/product_matrix/static/src/js/section_and_note_widget.js:0
-#, python-format
+#. odoo-javascript
+#: code:addons/product_matrix/static/src/xml/product_matrix_dialog.xml:0
 msgid "Confirm"
 msgstr "Confirmer"
+
+#. module: product_matrix
+#. odoo-javascript
+#: code:addons/product_matrix/static/src/xml/product_matrix_dialog.xml:0
+msgid "Discard"
+msgstr "Ignorer"
 
 #. module: product_matrix
 #: model:product.attribute,name:product_matrix.product_attribute_gender
@@ -63,12 +79,11 @@ msgstr "Hommes"
 #. module: product_matrix
 #: model:product.template,name:product_matrix.matrix_product_template_shirt
 msgid "My Company Tshirt (GRID)"
-msgstr "Le t-shirt de ma compagnie (GRID)"
+msgstr "Le t-shirt de ma société (GRID)"
 
 #. module: product_matrix
-#. openerp-web
+#. odoo-javascript
 #: code:addons/product_matrix/static/src/xml/product_matrix.xml:0
-#, python-format
 msgid "Not available"
 msgstr "Pas disponible"
 
@@ -79,8 +94,8 @@ msgstr "Rose"
 
 #. module: product_matrix
 #: model:ir.model,name:product_matrix.model_product_template
-msgid "Product Template"
-msgstr "Modèle d'article"
+msgid "Product"
+msgstr "Produit"
 
 #. module: product_matrix
 #: model:ir.model,name:product_matrix.model_product_template_attribute_value
@@ -95,7 +110,7 @@ msgstr "Arc-en-ciel"
 #. module: product_matrix
 #: model:product.template,description_sale:product_matrix.matrix_product_template_shirt
 msgid "Show your company love around you =)."
-msgstr ""
+msgstr "Montrez l'amour de votre entreprise autour de vous =)"
 
 #. module: product_matrix
 #: model:product.attribute,name:product_matrix.product_attribute_size
@@ -103,9 +118,18 @@ msgid "Size"
 msgstr "Taille"
 
 #. module: product_matrix
-#: model:product.template,uom_name:product_matrix.matrix_product_template_shirt
-msgid "Units"
-msgstr "Unités"
+#: model_terms:ir.ui.view,arch_db:product_matrix.matrix
+msgid ""
+"The matrix of product variants of this order will be displayed here, if "
+"there are any."
+msgstr ""
+"La matrice des variantes de produits de cette commande sera affichée ici, "
+"s'il y en a."
+
+#. module: product_matrix
+#: model_terms:ir.ui.view,arch_db:product_matrix.extra_price
+msgid "Variant price"
+msgstr "Prix de la variante"
 
 #. module: product_matrix
 #: model:product.attribute.value,name:product_matrix.product_attribute_value_w

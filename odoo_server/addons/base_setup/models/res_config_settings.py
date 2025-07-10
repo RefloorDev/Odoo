@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models, _
+from odoo.exceptions import UserError
 
 
 class ResConfigSettings(models.TransientModel):
@@ -10,38 +11,42 @@ class ResConfigSettings(models.TransientModel):
 
     company_id = fields.Many2one('res.company', string='Company', required=True,
         default=lambda self: self.env.company)
+    is_root_company = fields.Boolean(compute='_compute_is_root_company')
     user_default_rights = fields.Boolean(
         "Default Access Rights",
         config_parameter='base_setup.default_user_rights')
-    external_email_server_default = fields.Boolean(
-        "External Email Servers",
-        config_parameter='base_setup.default_external_email_server')
     module_base_import = fields.Boolean("Allow users to import data from CSV/XLS/XLSX/ODS files")
     module_google_calendar = fields.Boolean(
         string='Allow the users to synchronize their calendar  with Google Calendar')
-    module_google_drive = fields.Boolean("Attach Google documents to any record")
-    module_google_spreadsheet = fields.Boolean("Google Spreadsheet")
+    module_microsoft_calendar = fields.Boolean(
+        string='Allow the users to synchronize their calendar with Outlook Calendar')
+    module_mail_plugin = fields.Boolean(
+        string='Allow integration with the mail plugins'
+    )
     module_auth_oauth = fields.Boolean("Use external authentication providers (OAuth)")
     module_auth_ldap = fields.Boolean("LDAP Authentication")
-    module_base_gengo = fields.Boolean("Translate Your Website with Gengo")
-    module_inter_company_rules = fields.Boolean("Manage Inter Company")
-    module_pad = fields.Boolean("Collaborative Pads")
-    module_voip = fields.Boolean("Asterisk (VoIP)")
+    module_account_inter_company_rules = fields.Boolean("Manage Inter Company")
+    module_voip = fields.Boolean("VoIP")
     module_web_unsplash = fields.Boolean("Unsplash Image Library")
+    module_sms = fields.Boolean("SMS")
     module_partner_autocomplete = fields.Boolean("Partner Autocomplete")
     module_base_geolocalize = fields.Boolean("GeoLocalize")
-    report_footer = fields.Text(related="company_id.report_footer", string='Custom Report Footer', help="Footer text displayed at the bottom of all reports.", readonly=False)
+    module_google_recaptcha = fields.Boolean("reCAPTCHA")
+    module_website_cf_turnstile = fields.Boolean("Cloudflare Turnstile")
+    report_footer = fields.Html(related="company_id.report_footer", string='Custom Report Footer', help="Footer text displayed at the bottom of all reports.", readonly=False)
     group_multi_currency = fields.Boolean(string='Multi-Currencies',
             implied_group='base.group_multi_currency',
             help="Allows to work in a multi currency environment")
-    paperformat_id = fields.Many2one(related="company_id.paperformat_id", string='Paper format', readonly=False)
-    external_report_layout_id = fields.Many2one(related="company_id.external_report_layout_id", readonly=False)
+    external_report_layout_id = fields.Many2one(related="company_id.external_report_layout_id")
     show_effect = fields.Boolean(string="Show Effect", config_parameter='base_setup.show_effect')
     company_count = fields.Integer('Number of Companies', compute="_compute_company_count")
     active_user_count = fields.Integer('Number of Active Users', compute="_compute_active_user_count")
     language_count = fields.Integer('Number of Languages', compute="_compute_language_count")
     company_name = fields.Char(related="company_id.display_name", string="Company Name")
     company_informations = fields.Text(compute="_compute_company_informations")
+    company_country_code = fields.Char(related="company_id.country_id.code", string="Company Country Code", readonly=True)
+    profiling_enabled_until = fields.Datetime("Profiling enabled until", config_parameter='base.profiling_enabled_until')
+    module_product_images = fields.Boolean("Get product pictures using barcode")
 
     def open_company(self):
         return {
@@ -51,14 +56,14 @@ class ResConfigSettings(models.TransientModel):
             'res_model': 'res.company',
             'res_id': self.env.company.id,
             'target': 'current',
-            'context': {
-                'form_view_initial_mode': 'edit',
-            },
         }
 
     def open_default_user(self):
-        action = self.env.ref('base.action_res_users').read()[0]
-        action['res_id'] = self.env.ref('base.default_user').id
+        action = self.env["ir.actions.actions"]._for_xml_id("base.action_res_users")
+        if self.env.ref('base.default_user', raise_if_not_found=False):
+            action['res_id'] = self.env.ref('base.default_user').id
+        else:
+            raise UserError(_("Default User Template not found."))
         action['views'] = [[self.env.ref('base.view_users_form').id, 'form']]
         return action
 
@@ -107,7 +112,14 @@ class ResConfigSettings(models.TransientModel):
         informations += '%s\n' % self.company_id.city if self.company_id.city else ''
         informations += '%s\n' % self.company_id.state_id.display_name if self.company_id.state_id else ''
         informations += '%s' % self.company_id.country_id.display_name if self.company_id.country_id else ''
-        informations += '\nVAT: %s' % self.company_id.vat if self.company_id.vat else ''
+        vat_display = self.company_id.country_id.vat_label or _('VAT')
+        vat_display = '\n' + vat_display + ': '
+        informations += '%s %s' % (vat_display, self.company_id.vat) if self.company_id.vat else ''
 
         for record in self:
             record.company_informations = informations
+
+    @api.depends('company_id')
+    def _compute_is_root_company(self):
+        for record in self:
+            record.is_root_company = not record.company_id.parent_id

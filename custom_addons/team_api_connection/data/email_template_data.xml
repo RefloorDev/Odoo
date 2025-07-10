@@ -51,7 +51,7 @@
     </p>
 </div>
             </field>
-            <field name="user_signature" eval="False"/>
+            <!-- <field name="user_signature" eval="False"/> -->
             <field name="auto_delete" eval="False"/>
         </record>
 
@@ -98,7 +98,7 @@
     </p>
 </div>
             </field>
-            <field name="user_signature" eval="False"/>
+            <!-- <field name="user_signature" eval="False"/> -->
             <field name="auto_delete" eval="False"/>
         </record>
     </data>

@@ -3,17 +3,19 @@
 # 	* hr_gamification
 # 
 # Translators:
-# aleksandar ivanov, 2020
-# Maria Boyadjieva <marabo2000@gmail.com>, 2020
+# Petko Karamotchev, 2024
+# Ивайло Малинов <iv.malinov@gmail.com>, 2024
+# aleksandar ivanov, 2024
+# Maria Boyadjieva <marabo2000@gmail.com>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.4\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-12 11:32+0000\n"
-"PO-Revision-Date: 2019-08-26 09:10+0000\n"
-"Last-Translator: Maria Boyadjieva <marabo2000@gmail.com>, 2020\n"
-"Language-Team: Bulgarian (https://www.transifex.com/odoo/teams/41243/bg/)\n"
+"POT-Creation-Date: 2024-09-26 08:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Maria Boyadjieva <marabo2000@gmail.com>, 2024\n"
+"Language-Team: Bulgarian (https://app.transifex.com/odoo/teams/41243/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -74,12 +76,12 @@ msgstr "Значки, пряко свързани със служителя"
 #. module: hr_gamification
 #: model:ir.model,name:hr_gamification.model_hr_employee_base
 msgid "Basic Employee"
-msgstr ""
+msgstr "Основен служител"
 
 #. module: hr_gamification
 #: model_terms:ir.ui.view,arch_db:hr_gamification.view_badge_wizard_reward
 msgid "Cancel"
-msgstr "Отменете"
+msgstr "Отказ"
 
 #. module: hr_gamification
 #: model:ir.actions.act_window,name:hr_gamification.challenge_list_action2
@@ -192,11 +194,6 @@ msgid "Received Badges"
 msgstr "Получени значки"
 
 #. module: hr_gamification
-#: model:ir.model.fields,help:hr_gamification.field_gamification_badge_user_wizard__user_id
-msgid "Related user name for the resource to manage its access."
-msgstr "Име на свързан потребител, който управлява достъпа до този ресурс."
-
-#. module: hr_gamification
 #: model:ir.actions.act_window,name:hr_gamification.action_reward_wizard
 #: model_terms:ir.ui.view,arch_db:hr_gamification.view_badge_wizard_reward
 msgid "Reward Employee"
@@ -208,20 +205,16 @@ msgid "Reward Employee with"
 msgstr "Наградете служител с"
 
 #. module: hr_gamification
-#: code:addons/hr_gamification/models/gamification.py:18
-#, python-format
+#. odoo-python
+#: code:addons/hr_gamification/models/gamification.py:0
 msgid "The selected employee does not correspond to the selected user."
 msgstr "Избраният служител не отговаря на избрания потребител."
 
 #. module: hr_gamification
+#: model:ir.model,name:hr_gamification.model_res_users
 #: model:ir.model.fields,field_description:hr_gamification.field_gamification_badge_user_wizard__user_id
 msgid "User"
 msgstr "Потребител"
-
-#. module: hr_gamification
-#: model:ir.model,name:hr_gamification.model_res_users
-msgid "Users"
-msgstr "Потребители"
 
 #. module: hr_gamification
 #: model_terms:ir.ui.view,arch_db:hr_gamification.view_badge_wizard_reward
@@ -229,16 +222,10 @@ msgid "What are you thankful for?"
 msgstr "За какво си благодарен/а?"
 
 #. module: hr_gamification
-#: code:addons/hr_gamification/wizard/gamification_badge_user_wizard.py:22
-#, python-format
+#. odoo-python
+#: code:addons/hr_gamification/wizard/gamification_badge_user_wizard.py:0
 msgid "You can not send a badge to yourself."
 msgstr ""
-
-#. module: hr_gamification
-#: code:addons/hr_gamification/wizard/gamification_badge_user_wizard.py:19
-#, python-format
-msgid "You can send badges only to employees linked to a user."
-msgstr "Можете да изпращате значки само на служители, свързани с потребител."
 
 #. module: hr_gamification
 #: model_terms:ir.ui.view,arch_db:hr_gamification.hr_employee_public_view_form

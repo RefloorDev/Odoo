@@ -1,38 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
-        <template id="stripe_form">
-            <input type="hidden" name="data_set" t-att-data-action-url="tx_url" data-remove-me=""/>
-            <input type='hidden' name='session_id' t-att-value='session_id'/>
-            <input type="hidden" name="stripe_key" t-att-value="acquirer.stripe_publishable_key"/>
-            <script type="text/javascript">
-                odoo.define(function (require) {
-                    var ajax = require('web.ajax');
-                    ajax.loadJS("/payment_stripe/static/src/js/stripe.js");
-                });
-            </script>
-        </template>
 
-        <template id="stripe_s2s_form">
-            <input type="hidden" name="data_set" value="/payment/stripe/s2s/create_json_3ds"/>
-            <input type="hidden" name="acquirer_id" t-att-value="id"/>
-            <input type="hidden" name="stripe_publishable_key" t-att-value="acq.sudo().stripe_publishable_key"/>
-            <input type="hidden" name="currency_id" t-att-value="currency_id"/>
-            <input t-if="return_url" type="hidden" name="return_url" t-att-value="return_url"/>
-            <input t-if="partner_id" type="hidden" name="partner_id" t-att-value="partner_id"/>
-            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-            <div id="payment-form">
-                <div id="card-element" class="m-3"/>
-                <div id="card-errors" class="m-3 text-danger"/>
-            </div>
-        </template>
+    <template id="inline_form">
+        <t t-set="inline_form_values"
+           t-value="provider_sudo._stripe_get_inline_form_values(
+                        amount,
+                        currency,
+                        partner_id,
+                        mode == 'validation',
+                        payment_method_sudo=pm_sudo,
+                        sale_order_id=sale_order_id,
+                    )"
+        />
+        <div name="o_stripe_element_container"
+             t-att-data-stripe-inline-form-values="inline_form_values"
+        />
+    </template>
 
-        <template id="assets_frontend" inherit_id="web.assets_frontend">
-            <xpath expr="script[last()]" position="after">
-                <script type="text/javascript" src="/payment_stripe/static/src/js/payment_form.js"></script>
-                <script type="text/javascript" src="/payment_stripe/static/src/js/payment_processing.js"></script>
+    <template id="express_checkout_form">
+        <div name="o_express_checkout_container"
+             t-attf-id="o_stripe_express_checkout_container_{{provider_sudo.id}}"
+             t-att-data-provider-id="provider_sudo.id"
+             t-att-data-provider-code="provider_sudo.code"
+             t-att-data-stripe-publishable-key="provider_sudo._stripe_get_publishable_key()"
+             t-att-data-country-code="provider_sudo._stripe_get_country(provider_sudo.company_id.country_id.code)"
+             class="w-100 mt-2"
+        />
+    </template>
 
-            </xpath>
-        </template>
-    </data>
 </odoo>

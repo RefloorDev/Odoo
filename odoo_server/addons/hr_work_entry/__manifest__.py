@@ -6,7 +6,6 @@
     'category': 'Human Resources/Employees',
     'sequence': 39,
     'summary': 'Manage work entries',
-    'description': "",
     'installable': True,
     'depends': [
         'hr',
@@ -16,8 +15,13 @@
         'security/ir.model.access.csv',
         'data/hr_work_entry_data.xml',
         'views/hr_work_entry_views.xml',
+        'views/hr_employee_views.xml',
+        'views/resource_calendar_views.xml',
     ],
-    'qweb': [
-        "static/src/xml/work_entry_templates.xml",
-    ],
+    'assets': {
+        'web.assets_backend': [
+            'hr_work_entry/static/**/*',
+        ],
+    },
+    'license': 'LGPL-3',
 }

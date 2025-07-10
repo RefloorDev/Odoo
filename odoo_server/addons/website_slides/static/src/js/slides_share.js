@@ -1,102 +1,61 @@
-odoo.define('website_slides.slides_share', function (require) {
-'use strict';
+/** @odoo-module **/
 
-var publicWidget = require('web.public.widget');
-require('website_slides.slides');
+import publicWidget from '@web/legacy/js/public/public_widget';
+import { SlideShareDialog } from './public/components/slide_share_dialog/slide_share_dialog';
+import { browser } from '@web/core/browser/browser';
 
-var ShareMail = publicWidget.Widget.extend({
-    events: {
-        'click button': '_sendMail',
-    },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * @private
-     */
-    _sendMail: function () {
-        var self = this;
-        var input = this.$('input');
-        var slideID = this.$('button').data('slide-id');
-        if (input.val() && input[0].checkValidity()) {
-            this.$el.removeClass('o_has_error').find('.form-control, .custom-select').removeClass('is-invalid');
-            this._rpc({
-                route: '/slides/slide/send_share_email',
-                params: {
-                    slide_id: slideID,
-                    email: input.val(),
-                },
-            }).then(function () {
-                self.$el.html($('<div class="alert alert-info" role="alert"><strong>Thank you!</strong> Mail has been sent.</div>'));
-            });
-        } else {
-            this.$el.addClass('o_has_error').find('.form-control, .custom-select').addClass('is-invalid');
-            input.focus();
-        }
-    },
-});
 
 publicWidget.registry.websiteSlidesShare = publicWidget.Widget.extend({
     selector: '#wrapwrap',
     events: {
-        'click a.o_wslides_js_social_share': '_onSlidesSocialShare',
-        'click .o_clipboard_button': '_onShareLinkCopy',
+        'click .o_wslides_share': '_onClickShareSlide',
     },
 
-    /**
-     * @override
-     * @param {Object} parent
-     */
-    start: function (parent) {
-        var defs = [this._super.apply(this, arguments)];
-        defs.push(new ShareMail(this).attachTo($('.oe_slide_js_share_email')));
-
-        return Promise.all(defs);
+    getDocumentMaxPage() {
+        const iframe = document.querySelector("iframe.o_wslides_iframe_viewer");
+        const iframeDocument = iframe.contentWindow.document;
+        return parseInt(iframeDocument.querySelector("#page_count").innerText);
     },
 
     //--------------------------------------------------------------------------
     // Handlers
     //--------------------------------------------------------------------------
 
-    /**
-     * @override
-     * @param {Object} ev
-     */
-    _onSlidesSocialShare: function (ev) {
+    _onClickShareSlide: function (ev) {
+        ev.stopPropagation();
         ev.preventDefault();
-        var popUpURL = $(ev.currentTarget).attr('href');
-        var popUp = window.open(popUpURL, 'Share Dialog', 'width=626,height=436');
-        $(window).on('focus', function () {
-            if (popUp.closed) {
-                $(window).off('focus');
-            }
+        const data = ev.currentTarget.dataset;
+        this.call("dialog", "add", SlideShareDialog, {
+            category: data.category,
+            documentMaxPage: data.category == 'document' && this.getDocumentMaxPage(),
+            emailSharing: data.emailSharing === 'True',
+            embedCode: data.embedCode,
+            id: parseInt(data.id),
+            isChannel: data.isChannel === 'True',
+            name: data.name,
+            url: data.url,
         });
+    },
+});
+
+publicWidget.registry.websiteSlidesEmbedShare = publicWidget.Widget.extend({
+    selector: '.oe_slide_js_embed_code_widget',
+    events: {
+        'click .o_embed_clipboard_button': '_onShareLinkCopy',
     },
 
-    _onShareLinkCopy: function (ev) {
+    _onShareLinkCopy: async function (ev) {
         ev.preventDefault();
-        var $clipboardBtn = this.$('.o_clipboard_button');
-        $clipboardBtn.tooltip({title: "Copied !", trigger: "manual", placement: "bottom"});
-        var self = this;
-        var clipboard = new ClipboardJS('.o_clipboard_button', {
-            target: function () {
-                return self.$('.o_wslides_js_share_link')[0];
-            },
-            container: this.el
-        });
-        clipboard.on('success', function () {
-            clipboard.destroy();
-            $clipboardBtn.tooltip('show');
-            _.delay(function () {
-                $clipboardBtn.tooltip("hide");
-            }, 800);
-        });
-        clipboard.on('error', function (e) {
-            console.log(e);
-            clipboard.destroy();
-        })
+        const $clipboardBtn = $(ev.currentTarget);
+        $clipboardBtn.tooltip({title: "Copied!", trigger: "manual", placement: "bottom"});
+        var share_embed_el = this.$('#wslides_share_embed_id_' + $clipboardBtn[0].id.split('id_')[1]);
+        await browser.navigator.clipboard.writeText(share_embed_el.val() || '');
+        $clipboardBtn.tooltip('show');
+        setTimeout(function () {
+            $clipboardBtn.tooltip("hide");
+        }, 800);
     },
 });
-});
+
+export const WebsiteSlidesShare = publicWidget.registry.websiteSlidesShare;
+export const WebsiteSlidesEmbedShare = publicWidget.registry.websiteSlidesEmbedShare;

@@ -6,10 +6,9 @@ import logging
 import os
 import re
 
-from functools import partial
 from lxml import etree
 from odoo import tools
-from odoo.tools.safe_eval import safe_eval
+from odoo.osv.expression import DOMAIN_OPERATORS
 
 _logger = logging.getLogger(__name__)
 
@@ -17,146 +16,270 @@ _logger = logging.getLogger(__name__)
 _validators = collections.defaultdict(list)
 _relaxng_cache = {}
 
-# attributes in views that may contain references to field names
-ATTRS_WITH_FIELD_NAMES = {
-    'context',
-    'domain',
-    'decoration-bf',
-    'decoration-it',
-    'decoration-danger',
-    'decoration-info',
-    'decoration-muted',
-    'decoration-primary',
-    'decoration-success',
-    'decoration-warning',
-}
-
 READONLY = re.compile(r"\breadonly\b")
 
-
-def _get_attrs_symbols():
-    """ Return a set of predefined symbols for evaluating attrs. """
-    return {
-        'True', 'False', 'None',    # those are identifiers in Python 2.7
-        'self',
-        'parent',
-        'id',
-        'uid',
-        'context',
-        'context_today',
-        'active_id',
-        'active_ids',
-        'allowed_company_ids',
-        'current_company_id',
-        'active_model',
-        'time',
-        'datetime',
-        'relativedelta',
-        'current_date',
-        'abs',
-        'len',
-        'bool',
-        'float',
-        'str',
-        'unicode',
-    }
+# predefined symbols for evaluating attributes (invisible, readonly...)
+IGNORED_IN_EXPRESSION = {
+    'True', 'False', 'None',    # those are identifiers in Python 2.7
+    'self',
+    'uid',
+    'context',
+    'context_today',
+    'allowed_company_ids',
+    'current_company_id',
+    'time',
+    'datetime',
+    'relativedelta',
+    'current_date',
+    'today',
+    'now',
+    'abs',
+    'len',
+    'bool',
+    'float',
+    'str',
+    'unicode',
+    'set',
+}
 
 
-def _view_is_editable(node):
-    """ Return whether the node is an editable view. """
-    return node.tag == 'form' or node.tag == 'tree' and node.get('editable')
+def get_domain_value_names(domain):
+    """ Return all field name used by this domain
+    eg: [
+            ('id', 'in', [1, 2, 3]),
+            ('field_a', 'in', parent.truc),
+            ('field_b', 'in', context.get('b')),
+            (1, '=', 1),
+            bool(context.get('c')),
+        ]
+        returns {'id', 'field_a', 'field_b'}, {'parent', 'parent.truc', 'context'}
 
-
-def field_is_editable(field, node):
-    """ Return whether a field is editable (not always readonly). """
-    return (
-        (not field.readonly or READONLY.search(str(field.states or ""))) and
-        (node.get('readonly') != "1" or READONLY.search(node.get('attrs') or ""))
-    )
-
-
-def get_attrs_field_names(env, arch, model, editable):
-    """ Retrieve the field names appearing in context, domain and attrs, and
-        return a list of triples ``(field_name, attr_name, attr_value)``.
+    :param domain: list(tuple) or str
+    :return: set(str), set(str)
     """
-    VIEW_TYPES = {item[0] for item in type(env['ir.ui.view']).type.selection}
-    symbols = _get_attrs_symbols() | {None}
-    result = []
+    contextual_values = set()
+    field_names = set()
 
-    def get_name(node):
-        """ return the name from an AST node, or None """
-        if isinstance(node, ast.Name):
-            return node.id
+    try:
+        if isinstance(domain, list):
+            for leaf in domain:
+                if leaf in DOMAIN_OPERATORS or leaf in (True, False):
+                    # "&", "|", "!", True, False
+                    continue
+                left, _operator, _right = leaf
+                if isinstance(left, str):
+                    field_names.add(left)
+                elif left not in (1, 0):
+                    # deprecate: True leaf and False leaf
+                    raise ValueError()
 
-    def get_subname(get, node):
-        """ return the subfield name from an AST node, or None """
-        if isinstance(node, ast.Attribute) and get(node.value) == 'parent':
-            return node.attr
+        elif isinstance(domain, str):
+            def extract_from_domain(ast_domain):
+                if isinstance(ast_domain, ast.IfExp):
+                    # [] if condition else []
+                    extract_from_domain(ast_domain.body)
+                    extract_from_domain(ast_domain.orelse)
+                    return
+                if isinstance(ast_domain, ast.BoolOp):
+                    # condition and []
+                    # this formating don't check returned domain syntax
+                    for value in ast_domain.values:
+                        if isinstance(value, (ast.List, ast.IfExp, ast.BoolOp, ast.BinOp)):
+                            extract_from_domain(value)
+                        else:
+                            contextual_values.update(_get_expression_contextual_values(value))
+                    return
+                if isinstance(ast_domain, ast.BinOp):
+                    # [] + []
+                    # this formating don't check returned domain syntax
+                    if isinstance(ast_domain.left, (ast.List, ast.IfExp, ast.BoolOp, ast.BinOp)):
+                        extract_from_domain(ast_domain.left)
+                    else:
+                        contextual_values.update(_get_expression_contextual_values(ast_domain.left))
 
-    def process_expr(expr, get, key, val):
-        """ parse `expr` and collect triples """
-        for node in ast.walk(ast.parse(expr.strip(), mode='eval')):
-            name = get(node)
-            if name not in symbols:
-                result.append((name, key, val))
+                    if isinstance(ast_domain.right, (ast.List, ast.IfExp, ast.BoolOp, ast.BinOp)):
+                        extract_from_domain(ast_domain.right)
+                    else:
+                        contextual_values.update(_get_expression_contextual_values(ast_domain.right))
+                    return
+                for ast_item in ast_domain.elts:
+                    if isinstance(ast_item, ast.Constant):
+                        # "&", "|", "!", True, False
+                        if ast_item.value not in DOMAIN_OPERATORS and ast_item.value not in (True, False):
+                            raise ValueError()
+                    elif isinstance(ast_item, (ast.List, ast.Tuple)):
+                        left, _operator, right = ast_item.elts
+                        contextual_values.update(_get_expression_contextual_values(right))
+                        if isinstance(left, ast.Constant) and isinstance(left.value, str):
+                            field_names.add(left.value)
+                        elif isinstance(left, ast.Constant) and left.value in (1, 0):
+                            # deprecate: True leaf (1, '=', 1) and False leaf (0, '=', 1)
+                            pass
+                        elif isinstance(right, ast.Constant) and right.value == 1:
+                            # deprecate: True/False leaf (py expression, '=', 1)
+                            contextual_values.update(_get_expression_contextual_values(left))
+                        else:
+                            raise ValueError()
+                    else:
+                        raise ValueError()
 
-    def process_attrs(expr, get, key, val):
-        """ parse `expr` and collect field names in lhs of conditions. """
-        for domain in safe_eval(expr).values():
-            if not isinstance(domain, list):
-                continue
-            for arg in domain:
-                if isinstance(arg, (tuple, list)):
-                    process_expr(str(arg[0]), get, key, expr)
+            expr = domain.strip()
+            item_ast = ast.parse(f"({expr})", mode='eval').body
+            if isinstance(item_ast, ast.Name):
+                # domain="other_field_domain"
+                contextual_values.update(_get_expression_contextual_values(item_ast))
+            else:
+                extract_from_domain(item_ast)
 
-    def process(node, model, editable, get=get_name):
-        """ traverse `node` and collect triples """
-        if node.tag in VIEW_TYPES:
-            # determine whether this view is editable
-            editable = editable and _view_is_editable(node)
-        elif node.tag in ('field', 'groupby'):
-            # determine whether the field is editable
-            field = model._fields.get(node.get('name'))
-            if field:
-                editable = editable and field_is_editable(field, node)
+    except ValueError:
+        raise ValueError("Wrong domain formatting.") from None
 
-        for key, val in node.items():
-            if not val:
-                continue
-            if key in ATTRS_WITH_FIELD_NAMES:
-                process_expr(val, get, key, val)
-            elif key == 'attrs':
-                process_attrs(val, get, key, val)
+    value_names = set()
+    for name in contextual_values:
+        if name == 'parent':
+            continue
+        root = name.split('.')[0]
+        if root not in IGNORED_IN_EXPRESSION:
+            value_names.add(name if root == 'parent' else root)
+    return field_names, value_names
 
-        if node.tag in ('field', 'groupby') and field and field.relational:
-            if editable and not node.get('domain'):
-                domain = field._description_domain(env)
-                # process the field's domain as if it was in the view
-                if isinstance(domain, str):
-                    process_expr(domain, get, 'domain', domain)
-            # retrieve subfields of 'parent'
-            model = env[field.comodel_name]
-            get = partial(get_subname, get)
 
-        for child in node:
-            if node.tag == 'search' and child.tag == 'searchpanel':
-                # searchpanel part has to be validated independently
-                continue
-            process(child, model, editable, get)
+def _get_expression_contextual_values(item_ast):
+    """ Return all contextual value this ast
 
-    process(arch, model, editable)
-    return result
+    eg: ast from '''(
+            id in [1, 2, 3]
+            and field_a in parent.truc
+            and field_b in context.get('b')
+            or (
+                True
+                and bool(context.get('c'))
+            )
+        )
+        returns {'parent', 'parent.truc', 'context', 'bool'}
+
+    :param item_ast: ast
+    :return: set(str)
+    """
+
+    if isinstance(item_ast, ast.Constant):
+        return set()
+    if isinstance(item_ast, (ast.List, ast.Tuple)):
+        values = set()
+        for item in item_ast.elts:
+            values |= _get_expression_contextual_values(item)
+        return values
+    if isinstance(item_ast, ast.Name):
+        return {item_ast.id}
+    if isinstance(item_ast, ast.Attribute):
+        values = _get_expression_contextual_values(item_ast.value)
+        if len(values) == 1:
+            path = sorted(list(values)).pop()
+            values = {f"{path}.{item_ast.attr}"}
+            return values
+        return values
+    if isinstance(item_ast, ast.Index): # deprecated python ast class for Subscript key
+        return _get_expression_contextual_values(item_ast.value)
+    if isinstance(item_ast, ast.Subscript):
+        values = _get_expression_contextual_values(item_ast.value)
+        values |= _get_expression_contextual_values(item_ast.slice)
+        return values
+    if isinstance(item_ast, ast.Compare):
+        values = _get_expression_contextual_values(item_ast.left)
+        for sub_ast in item_ast.comparators:
+            values |= _get_expression_contextual_values(sub_ast)
+        return values
+    if isinstance(item_ast, ast.BinOp):
+        values = _get_expression_contextual_values(item_ast.left)
+        values |= _get_expression_contextual_values(item_ast.right)
+        return values
+    if isinstance(item_ast, ast.BoolOp):
+        values = set()
+        for ast_value in item_ast.values:
+            values |= _get_expression_contextual_values(ast_value)
+        return values
+    if isinstance(item_ast, ast.UnaryOp):
+        return _get_expression_contextual_values(item_ast.operand)
+    if isinstance(item_ast, ast.Call):
+        values = _get_expression_contextual_values(item_ast.func)
+        for ast_arg in item_ast.args:
+            values |= _get_expression_contextual_values(ast_arg)
+        return values
+    if isinstance(item_ast, ast.IfExp):
+        values = _get_expression_contextual_values(item_ast.test)
+        values |= _get_expression_contextual_values(item_ast.body)
+        values |= _get_expression_contextual_values(item_ast.orelse)
+        return values
+    if isinstance(item_ast, ast.Dict):
+        values = set()
+        for item in item_ast.keys:
+            values |= _get_expression_contextual_values(item)
+        for item in item_ast.values:
+            values |= _get_expression_contextual_values(item)
+        return values
+
+    raise ValueError(f"Undefined item {item_ast!r}.")
+
+
+def get_expression_field_names(expression):
+    """ Return all field name used by this expression
+
+    eg: expression = '''(
+            id in [1, 2, 3]
+            and field_a in parent.truc.id
+            and field_b in context.get('b')
+            or (True and bool(context.get('c')))
+        )
+        returns {'parent', 'parent.truc', 'parent.truc.id', 'context', 'context.get'}
+
+    :param expression: str
+    :param ignored: set contains the value name to ignore.
+                    Add '.' to ignore attributes (eg: {'parent.'} will
+                    ignore 'parent.truc' and 'parent.truc.id')
+    :return: set(str)
+    """
+    if not expression:
+        return set()
+    item_ast = ast.parse(expression.strip(), mode='eval').body
+    contextual_values = _get_expression_contextual_values(item_ast)
+
+    value_names = set()
+    for name in contextual_values:
+        if name == 'parent':
+            continue
+        root = name.split('.')[0]
+        if root not in IGNORED_IN_EXPRESSION:
+            value_names.add(name if root == 'parent' else root)
+
+    return value_names
+
+
+def get_dict_asts(expr):
+    """ Check that the given string or AST node represents a dict expression
+    where all keys are string literals, and return it as a dict mapping string
+    keys to the AST of values.
+    """
+    if isinstance(expr, str):
+        expr = ast.parse(expr.strip(), mode='eval').body
+
+    if not isinstance(expr, ast.Dict):
+        raise ValueError("Non-dict expression")
+    if not all((isinstance(key, ast.Constant) and isinstance(key.value, str)) for key in expr.keys):
+        raise ValueError("Non-string literal dict key")
+    return {key.value: val for key, val in zip(expr.keys, expr.values)}
+
+
+def _check(condition, explanation):
+    if not condition:
+        raise ValueError("Expression is not a valid domain: %s" % explanation)
 
 
 def valid_view(arch, **kwargs):
     for pred in _validators[arch.tag]:
         check = pred(arch, **kwargs)
         if not check:
-            _logger.error("Invalid XML: %s", pred.__doc__)
-            return False
-        if check == "Warning":
             _logger.warning("Invalid XML: %s", pred.__doc__)
-            return "Warning"
+            return False
     return True
 
 
@@ -183,281 +306,12 @@ def relaxng(view_type):
     return _relaxng_cache[view_type]
 
 
-@validate('calendar', 'diagram', 'graph', 'pivot', 'search', 'tree', 'activity')
+@validate('calendar', 'graph', 'pivot', 'search', 'list', 'activity')
 def schema_valid(arch, **kwargs):
     """ Get RNG validator and validate RNG file."""
     validator = relaxng(arch.tag)
     if validator and not validator.validate(arch):
-        result = True
         for error in validator.error_log:
-            _logger.error(tools.ustr(error))
-            result = False
-        return result
-    return True
-
-
-@validate('search')
-def valid_searchpanel(arch, **kwargs):
-    """ There must be at most one ``searchpanel`` node in search view archs. """
-    return len(arch.xpath('/search/searchpanel')) <= 1
-
-
-@validate('search')
-def valid_searchpanel_domain_select(arch, **kwargs):
-    """ In the searchpanel, the attribute ``domain`` can only be used on ``field`` nodes with
-        ``select`` attribute set to ``multi``. """
-    for child in arch.xpath('/search/searchpanel/field'):
-        if child.get('domain') and child.get('select') != 'multi':
-            return False
-    return True
-
-
-@validate('search')
-def valid_searchpanel_domain_fields(arch, **kwargs):
-    """ In the searchpanel, fields used in the ``domain`` attribute must be present inside the
-        ``searchpanel`` node with ``select`` attribute not set to ``multi``. """
-    searchpanel = arch.xpath('/search/searchpanel')
-    if searchpanel:
-        env = kwargs['env']
-        model = kwargs['model']
-        attrs_fields = [r[0] for r in get_attrs_field_names(env, searchpanel[0], env[model], False)]
-        non_multi_fields = [
-            c.get('name') for c in arch.xpath('/search/searchpanel/field')
-            if c.get('select') != 'multi'
-        ]
-        return len(set(attrs_fields) - set(non_multi_fields)) == 0
-    return True
-
-
-@validate('form')
-def valid_page_in_book(arch, **kwargs):
-    """A `page` node must be below a `notebook` node."""
-    return not arch.xpath('//page[not(ancestor::notebook)]')
-
-
-@validate('graph')
-def valid_field_in_graph(arch, **kwargs):
-    """ Children of ``graph`` can only be ``field`` """
-    return all(
-        child.tag == 'field'
-        for child in arch.xpath('/graph/*')
-    )
-
-
-@validate('tree')
-def valid_field_in_tree(arch, **kwargs):
-    """ Children of ``tree`` view must be ``field`` or ``button`` or ``control`` or ``groupby``."""
-    return all(
-        child.tag in ('field', 'button', 'control', 'groupby')
-        for child in arch.xpath('/tree/*')
-    )
-
-
-@validate('form', 'graph', 'tree', 'activity')
-def valid_att_in_field(arch, **kwargs):
-    """ ``field`` nodes must all have a ``@name`` """
-    return not arch.xpath('//field[not(@name)]')
-
-
-@validate('form')
-def valid_att_in_label(arch, **kwargs):
-    """ ``label`` nodes must have a ``@for`` """
-    return not arch.xpath('//label[not(@for) and not(descendant::input)]')
-
-
-@validate('form')
-def valid_att_in_form(arch, **kwargs):
-    return True
-
-
-@validate('form')
-def valid_type_in_colspan(arch, **kwargs):
-    """A `colspan` attribute must be an `integer` type."""
-    return all(
-        attrib.isdigit()
-        for attrib in arch.xpath('//@colspan')
-    )
-
-
-@validate('form')
-def valid_type_in_col(arch, **kwargs):
-    """A `col` attribute must be an `integer` type."""
-    return all(
-        attrib.isdigit()
-        for attrib in arch.xpath('//@col')
-    )
-
-
-@validate('calendar', 'diagram', 'form', 'graph', 'kanban', 'pivot', 'search', 'tree', 'activity')
-def valid_alternative_image_text(arch, **kwargs):
-    """An `img` tag must have an alt value."""
-    if arch.xpath('//img[not(@alt or @t-att-alt or @t-attf-alt)]'):
-        return "Warning"
-    return True
-
-
-@validate('calendar', 'diagram', 'form', 'graph', 'kanban', 'pivot', 'search', 'tree', 'activity')
-def valid_simili_button(arch, **kwargs):
-    """A simili button must be tagged with "role='button'"."""
-    # Select elements with class 'btn'
-    xpath = '//a[contains(concat(" ", @class), " btn")'
-    xpath += ' or contains(concat(" ", @t-att-class), " btn")'
-    xpath += ' or contains(concat(" ", @t-attf-class), " btn")]'
-    xpath += '[not(@role="button")]'
-    if arch.xpath(xpath):
-        return "Warning"
-    return True
-
-
-@validate('calendar', 'diagram', 'form', 'graph', 'kanban', 'pivot', 'search', 'tree', 'activity')
-def valid_simili_dropdown(arch, **kwargs):
-    """A simili dropdown must be tagged with "role='menu'"."""
-    xpath = '//*[contains(concat(" ", @class, " "), " dropdown-menu ")'
-    xpath += ' or contains(concat(" ", @t-att-class, " "), " dropdown-menu ")'
-    xpath += ' or contains(concat(" ", @t-attf-class, " "), " dropdown-menu ")]'
-    xpath += '[not(@role="menu")]'
-    if arch.xpath(xpath):
-        return "Warning"
-    return True
-
-
-@validate('calendar', 'diagram', 'form', 'graph', 'kanban', 'pivot', 'search', 'tree', 'activity')
-def valid_simili_progressbar(arch, **kwargs):
-    """A simili progressbar must be tagged with "role='progressbar'" and have
-    aria-valuenow, aria-valuemin and aria-valuemax attributes."""
-    # Select elements with class 'btn'
-    xpath = '//*[contains(concat(" ", @class, " "), " o_progressbar ")'
-    xpath += ' or contains(concat(" ", @t-att-class, " "), " o_progressbar ")'
-    xpath += ' or contains(concat(" ", @t-attf-class, " "), " o_progressbar ")]'
-    xpath += '[not(self::progress)]'
-    xpath += '[not(@role="progressbar")]'
-    xpath += '[not(@aria-valuenow or @t-att-aria-valuenow or @t-attf-aria-valuenow)]'
-    xpath += '[not(@aria-valuemin or @t-att-aria-valuemin or @t-attf-aria-valuemin)]'
-    xpath += '[not(@aria-valuemax or @t-att-aria-valuemax or @t-attf-aria-valuemax)]'
-    if arch.xpath(xpath):
-        return "Warning"
-    return True
-
-
-@validate('calendar', 'diagram', 'form', 'graph', 'kanban', 'pivot', 'search', 'tree', 'activity')
-def valid_dialog(arch, **kwargs):
-    """A dialog must use role="dialog" and its header, body and footer contents must use <header/>, <main/> and <footer/>."""
-    # Select elements with class 'btn'
-    xpath = '//*[contains(concat(" ", @class, " "), " modal ")'
-    xpath += ' or contains(concat(" ", @t-att-class, " "), " modal ")'
-    xpath += ' or contains(concat(" ", @t-attf-class, " "), " modal ")]'
-    xpath += '[not(@role="dialog")]'
-    if arch.xpath(xpath):
-        return "Warning"
-
-    xpath = '//*[contains(concat(" ", @class, " "), " modal-header ")'
-    xpath += ' or contains(concat(" ", @t-att-class, " "), " modal-header ")'
-    xpath += ' or contains(concat(" ", @t-attf-class, " "), " modal-header ")]'
-    xpath += '[not(self::header)]'
-    if arch.xpath(xpath):
-        return "Warning"
-
-    xpath = '//*[contains(concat(" ", @class, " "), " modal-body ")'
-    xpath += ' or contains(concat(" ", @t-att-class, " "), " modal-body ")'
-    xpath += ' or contains(concat(" ", @t-attf-class, " "), " modal-body ")]'
-    xpath += '[not(self::main)]'
-    if arch.xpath(xpath):
-        return "Warning"
-
-    xpath = '//*[contains(concat(" ", @class, " "), " modal-footer ")'
-    xpath += ' or contains(concat(" ", @t-att-class, " "), " modal-footer ")'
-    xpath += ' or contains(concat(" ", @t-attf-class, " "), " modal-footer ")]'
-    xpath += '[not(self::footer)]'
-    if arch.xpath(xpath):
-        return "Warning"
-    return True
-
-
-@validate('calendar', 'diagram', 'form', 'graph', 'kanban', 'pivot', 'search', 'tree', 'activity')
-def valid_simili_tabpanel(arch, **kwargs):
-    """A tab panel with tab-pane class must have role="tabpanel"."""
-    # Select elements with class 'btn'
-    xpath = '//*[contains(concat(" ", @class, " "), " tab-pane ")'
-    xpath += ' or contains(concat(" ", @t-att-class, " "), " tab-pane ")'
-    xpath += ' or contains(concat(" ", @t-attf-class, " "), " tab-pane ")]'
-    xpath += '[not(@role="tabpanel")]'
-    if arch.xpath(xpath):
-        return "Warning"
-    return True
-
-
-@validate('calendar', 'diagram', 'form', 'graph', 'kanban', 'pivot', 'search', 'tree', 'activity')
-def valid_simili_tab(arch, **kwargs):
-    """A tab link must have role="tab", a link to an id (without #) by aria-controls."""
-    # Select elements with class 'btn'
-    xpath = '//*[@data-toggle="tab"]'
-    xpath += '[not(@role="tab")'
-    xpath += 'or not(@aria-controls or @t-att-aria-controls or @t-attf-aria-controls)'
-    xpath += 'or contains(@aria-controls, "#") or contains(@t-att-aria-controls, "#")]'
-    if arch.xpath(xpath):
-        return "Warning"
-    return True
-
-
-@validate('calendar', 'diagram', 'form', 'graph', 'kanban', 'pivot', 'search', 'tree', 'activity')
-def valid_simili_tablist(arch, **kwargs):
-    """A tab list with class nav-tabs must have role="tablist"."""
-    # Select elements with class 'btn'
-    xpath = '//*[contains(concat(" ", @class, " "), " nav-tabs ")'
-    xpath += ' or contains(concat(" ", @t-att-class, " "), " nav-tabs ")'
-    xpath += ' or contains(concat(" ", @t-attf-class, " "), " nav-tabs ")]'
-    xpath += '[not(@role="tablist")]'
-    if arch.xpath(xpath):
-        return "Warning"
-    return True
-
-
-@validate('calendar', 'diagram', 'form', 'graph', 'kanban', 'pivot', 'search', 'tree', 'activity')
-def valid_focusable_button(arch, **kwargs):
-    """A simili button must be with a `button`, an `input` (with type `button`, `submit` or `reset`) or a `a` tag."""
-    xpath = '//*[contains(concat(" ", @class), " btn")'
-    xpath += ' or contains(concat(" ", @t-att-class), " btn")'
-    xpath += ' or contains(concat(" ", @t-attf-class), " btn")]'
-    xpath += '[not(self::a)]'
-    xpath += '[not(self::button)]'
-    xpath += '[not(self::select)]'
-    xpath += '[not(self::input[@type="button"])]'
-    xpath += '[not(self::input[@type="submit"])]'
-    xpath += '[not(self::input[@type="reset"])]'
-    xpath += '[not(contains(@class, "btn-group"))]'
-    xpath += '[not(contains(@t-att-class, "btn-group"))]'
-    xpath += '[not(contains(@t-attf-class, "btn-group"))]'
-    xpath += '[not(contains(@class, "btn-toolbar"))]'
-    xpath += '[not(contains(@t-att-class, "btn-toolbar"))]'
-    xpath += '[not(contains(@t-attf-class, "btn-toolbar"))]'
-    xpath += '[not(contains(@class, "btn-ship"))]'
-    xpath += '[not(contains(@t-att-class, "btn-ship"))]'
-    xpath += '[not(contains(@t-attf-class, "btn-ship"))]'
-    if arch.xpath(xpath):
-        return "Warning"
-    return True
-
-
-@validate('calendar', 'diagram', 'form', 'graph', 'kanban', 'pivot', 'search', 'tree', 'activity')
-def valid_prohibited_none_role(arch, **kwargs):
-    """A role can't be `none` or `presentation`. All your elements must be accessible with screen readers, describe it."""
-    xpath = '//*[@role="none" or @role="presentation"]'
-    if arch.xpath(xpath):
-        return "Warning"
-    return True
-
-
-@validate('calendar', 'diagram', 'form', 'graph', 'kanban', 'pivot', 'search', 'tree', 'activity')
-def valid_alerts(arch, **kwargs):
-    """An alert (class alert-*) must have an alert, alertdialog or status role. Please use alert and alertdialog only for what expects to stop any activity to be read immediatly."""
-    xpath = '//*[contains(concat(" ", @class), " alert-")'
-    xpath += ' or contains(concat(" ", @t-att-class), " alert-")'
-    xpath += ' or contains(concat(" ", @t-attf-class), " alert-")]'
-    xpath += '[not(contains(@class, "alert-link") or contains(@t-att-class, "alert-link")'
-    xpath += ' or contains(@t-attf-class, "alert-link"))]'
-    xpath += '[not(@role="alert")]'
-    xpath += '[not(@role="alertdialog")]'
-    xpath += '[not(@role="status")]'
-    if arch.xpath(xpath):
-        return "Warning"
+            _logger.warning("%s", error)
+        return False
     return True

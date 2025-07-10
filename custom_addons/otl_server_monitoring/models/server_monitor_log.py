@@ -1,7 +1,4 @@
-# Copyright (C) 2024 One Team US LLC
-# <https://www.oneteam.us>
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-
+# -*- coding: utf-8 -*-
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
 import os
@@ -41,18 +38,17 @@ class ServerMonitorLog(models.Model):
     disk_usage_line = fields.One2many('otl.server.disk.usage.line', 'monitor_log_id', string='Disk Usage Line')
     memory_usage = fields.Float('Memory Usage', compute='_compute_memory_usage', store=True)
     disk_usage = fields.Float('Disk Usage', compute='_compute_disk_usage', store=True)
-
-    @api.model
-    def create(self, vals):
-        if vals.get('name', '/') == '/':
-            seq_date = None
-            if 'date' in vals:
-                seq_date = fields.Datetime.context_timestamp(self,
-                                                             fields.Datetime.to_datetime(vals['date']))
-            vals['name'] = self.env['ir.sequence'].next_by_code('server.monitor.log',
-                                                                    sequence_date=seq_date) or _('/')
-
-        return super(ServerMonitorLog, self).create(vals)
+    
+    @api.model_create_multi
+    def create(self, vals_list):
+        ir_sequence_obj = self.env['ir.sequence']
+        for vals in vals_list:
+            if vals.get('name', '/') == '/':
+                seq_date = None
+                if 'date' in vals:
+                    seq_date = fields.Datetime.context_timestamp(self, fields.Datetime.to_datetime(vals['date']))
+                vals['name'] = ir_sequence_obj.next_by_code('server.monitor.log', sequence_date=seq_date) or _('/')
+        return super(ServerMonitorLog, self).create(vals_list)
 
     def read_json_lines(self, file_path):
         result= []

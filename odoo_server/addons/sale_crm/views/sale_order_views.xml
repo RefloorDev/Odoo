@@ -4,7 +4,7 @@
     <record id="sale_action_quotations_new" model="ir.actions.act_window">
         <field name="name">Quotation</field>
         <field name="res_model">sale.order</field>
-        <field name="view_mode">form,tree,graph</field>
+        <field name="view_mode">form,list,graph</field>
         <field name="domain">[('opportunity_id', '=', active_id)]</field>
         <field name="context">{'search_default_opportunity_id': active_id, 'default_opportunity_id': active_id}</field>
     </record>
@@ -14,30 +14,16 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//group[@name='technical']" position="inside">
-                <field name="opportunity_id" help="Log in the chatter from which opportunity the order originates" groups="base.group_no_one"/>
-            </xpath>
-        </field>
-    </record>
-
-    <record id="view_quotation_tree" model="ir.ui.view">
-        <field name="name">sale.order.tree.inherit.sale.crm</field>
-        <field name="model">sale.order</field>
-        <field name="inherit_id" ref="sale.view_quotation_tree"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='invoice_status']" position="after">
-                <field name="tag_ids" optional="hide" widget="many2many_tags"/>
-            </xpath>
-        </field>
-    </record>
-
-    <record id="view_order_tree" model="ir.ui.view">
-        <field name="name">sale.order.tree.inherit.sale.crm</field>
-        <field name="model">sale.order</field>
-        <field name="inherit_id" ref="sale.view_order_tree"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='invoice_status']" position="after">
-                <field name="tag_ids" optional="hide" widget="many2many_tags"/>
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="opportunity_id" context="{
+                    'default_campaign_id': campaign_id,
+                    'default_company_id': company_id,
+                    'default_medium_id': medium_id,
+                    'default_partner_id': partner_id,
+                    'default_source_id': source_id,
+                    'default_tag_ids': tag_ids,
+                    'default_type': 'opportunity',
+                }"/>
             </xpath>
         </field>
     </record>

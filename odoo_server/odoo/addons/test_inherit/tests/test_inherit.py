@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from odoo.addons.base.tests.common import TransactionCaseWithUserDemo
 from odoo.tests import common
 
 class test_inherits(common.TransactionCase):
@@ -10,6 +11,11 @@ class test_inherits(common.TransactionCase):
         daughter = self.env['test.inherit.daughter']
 
         self.assertEqual(daughter._inherits, {'test.inherit.mother': 'template_id'})
+
+        # the field supporting the inheritance should be auto_join
+        field = daughter._fields['template_id']
+        self.assertTrue(field.delegate)
+        self.assertTrue(field.auto_join, "delegate fields should be auto_join")
 
     def test_10_access_from_child_to_parent_model(self):
         """ check whether added field in model is accessible from children models (_inherits) """
@@ -58,7 +64,7 @@ class test_inherits(common.TransactionCase):
         field = mother._fields['surname']
 
         # the field dependencies are added
-        self.assertItemsEqual(field.depends, ['name', 'field_in_mother'])
+        self.assertItemsEqual(self.registry.field_depends[field], ['name', 'field_in_mother'])
 
     def test_40_selection_extension(self):
         """ check that attribute selection_add=... extends selection on fields. """
@@ -68,10 +74,20 @@ class test_inherits(common.TransactionCase):
         self.assertEqual(mother._fields['state'].selection,
                          [('a', 'A'), ('d', 'D'), ('b', 'B'), ('c', 'C')])
 
+    def test_41_selection_extension(self):
+        """ check that attribute selection_add=... extends selection on fields. """
+        model = self.env['test_new_api.selection']
+        field = model._fields['other']
+        self.assertIsInstance(field.selection, str)
+        self.assertEqual(field._description_selection(self.env), [('baz', 'Baz')])
+
+
+class test_inherits_demo(TransactionCaseWithUserDemo):
+
     def test_50_search_one2many(self):
         """ check search on one2many field based on inherited many2one field. """
         # create a daughter record attached to partner Demo
-        partner_demo = self.env.ref('base.partner_demo')
+        partner_demo = self.partner_demo
         daughter = self.env['test.inherit.daughter'].create({'partner_id': partner_demo.id})
         self.assertEqual(daughter.partner_id, partner_demo)
         self.assertIn(daughter, partner_demo.daughter_ids)
@@ -157,4 +173,3 @@ class TestXMLIDS(common.TransactionCase):
         self.assertCountEqual(xml_ids.get(baz.id), [
             'test_inherit.selection__test_new_api_selection__state__baz',
         ])
-

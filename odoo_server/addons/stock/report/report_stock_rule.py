@@ -11,6 +11,10 @@ class ReportStockRule(models.AbstractModel):
 
     @api.model
     def _get_report_values(self, docids, data=None):
+        # Overriding data values here since used also in _get_routes.
+        data['product_id'] = data.get('product_id', docids)
+        data['warehouse_ids'] = data.get('warehouse_ids', [])
+
         product = self.env['product.product'].browse(data['product_id'])
         warehouses = self.env['stock.warehouse'].browse(data['warehouse_ids'])
 
@@ -65,6 +69,7 @@ class ReportStockRule(models.AbstractModel):
             'locations': locations,
             'header_lines': header_lines,
             'route_lines': route_lines,
+            'is_rtl': self.env['res.lang']._lang_get(self.env.user.lang).direction == 'rtl',
         }
 
     @api.model
@@ -82,7 +87,8 @@ class ReportStockRule(models.AbstractModel):
     @api.model
     def _get_rule_loc(self, rule, product):
         rule.ensure_one()
-        return {'rule': rule, 'source': rule.location_src_id, 'destination': rule.location_id}
+        destination = rule.location_dest_id if rule.action != "pull" else rule.picking_type_id.default_location_dest_id
+        return {'rule': rule, 'source': rule.location_src_id, 'destination': destination}
 
     @api.model
     def _sort_locations(self, rules_and_loc, warehouses):
@@ -96,7 +102,7 @@ class ReportStockRule(models.AbstractModel):
         ordered_locations = self.env['stock.location']
         locations = all_locations.filtered(lambda l: l.usage in ('supplier', 'production'))
         for warehouse_id in warehouses:
-            all_warehouse_locations = all_locations.filtered(lambda l: l.get_warehouse() == warehouse_id)
+            all_warehouse_locations = all_locations.filtered(lambda l: l.warehouse_id == warehouse_id)
             starting_rules = [d for d in rules_and_loc if d['source'] not in all_warehouse_locations]
             if starting_rules:
                 start_locations = self.env['stock.location'].concat(*([r['destination'] for r in starting_rules]))
@@ -116,7 +122,7 @@ class ReportStockRule(models.AbstractModel):
     def _sort_locations_by_warehouse(self, rules_and_loc, used_rules, start_locations, ordered_locations, warehouse_id):
         """ We order locations by putting first the locations that are not the destination of others and do it recursively.
         """
-        start_locations = start_locations.filtered(lambda l: l.get_warehouse() == warehouse_id)
+        start_locations = start_locations.filtered(lambda l: l.warehouse_id == warehouse_id)
         ordered_locations |= start_locations
         rules_start = []
         for rule in rules_and_loc:

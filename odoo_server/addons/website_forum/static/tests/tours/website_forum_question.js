@@ -1,53 +1,106 @@
-odoo.define('website_forum.tour_forum_question', function (require) {
-    'use strict';
+/** @odoo-module **/
 
-    var tour = require("web_tour.tour");
+import { registry } from "@web/core/registry";
 
-    tour.register('forum_question', {
-        test: true,
-        url: '/forum/help-1',
-    }, [{
+registry.category("web_tour.tours").add('forum_question', {
+    url: '/forum/help-1',
+    steps: () => [
+    {
         content: "Ask the question in this forum by clicking on the button.",
-        trigger: '.o_forum_ask_btn',
+        trigger: '.o_wforum_ask_btn',
+        run: "click",
     }, {
         content: "Give your question content.",
         trigger: 'input[name=post_name]',
-        run: 'text First Question Title',
-    }, {
+        run: "edit First Question Title",
+    },
+    {
+        trigger: "#wrap:not(:has(input[name=post_name]:value('')))",
+    },
+    {
         content: "Put your question here.",
-        extra_trigger: "#wrap:not(:has(input[name=post_name]:propValue('')))",
         trigger: '.note-editable p',
-        run: 'text First Question',
-    }, {
+        run: "editor First Question <p>code here</p>",
+    },
+    {
+        trigger: ".note-editable:not(:has(br))",
+    },
+    {
         content: "Insert tags related to your question.",
-        extra_trigger: '.note-editable:not(:has(br))',
-        trigger: '.select2-choices',
-        run: 'text Tag',
-    }, {
+        trigger: '.o_select_menu_toggler',
+        run: 'click',
+    },
+    {
+        trigger: '.o_popover input.o_select_menu_sticky',
+        run: 'edit Tag',
+    },
+    {
+        trigger: "#wrap:not(:has(.o_popover input.o_select_menu_sticky:not(:contains(''))))",
+    },
+    {
         content: "Click to post your question.",
-        extra_trigger: "#wrap:not(:has(input[id=s2id_autogen2]:propValue('')))",
-        trigger: 'button:contains("Post Your Question")',
+        trigger: 'button:contains("Post")',
+        run: "click",
     }, {
         content: "This page contain new created question.",
-        extra_trigger: '#wrap:has(".fa-star")',
-        trigger: 'button[data-dismiss="modal"]',
-    }, {
+        trigger: '#wrap:has(.fa-star)',
+    },
+    {
+        trigger: ".o_wforum_question:contains(marc demo)",
+    },
+    {
+        content: "Close modal once modal animation is done.",
+        trigger: ".modal.modal_shown.show:contains(thanks for posting!) button.btn-close",
+        run: "click",
+    },
+    {
+        content: "Check that the code still exists as it was written.",
+        trigger: 'div.o_wforum_post_content:contains("First Question <p>code here</p>")',
+    },
+    {
+        content: "Open dropdown to edit the post",
+        trigger: '.o_wforum_question a#dropdownMenuLink',
+        run: "click",
+    },
+    {
+        content: "Click on edit",
+        trigger: '.o_wforum_question button:contains("Edit")',
+        run: "click",
+    },
+    {
+        content: "Check that the content is the same",
+        trigger: 'div.odoo-editor-editable p:contains("First Question <p>code here</p>")',
+    },
+    {
+        content: "Save changes",
+        trigger: 'button:contains("Save Changes")',
+        run: "click",
+    },
+    {
+        trigger: "a:contains(\"Reply\").collapsed",
+        content: "Click to reply.",
+        tooltipPosition: "bottom",
+        run: "click",
+    },
+    {
         content: "Put your answer here.",
         trigger: '.note-editable p',
-        run: 'text First Answer',
-    }, {
+        run: "editor First Answer",
+    },
+    {
+        trigger: ".note-editable:not(:has(br))",
+    },
+    {
         content: "Click to post your answer.",
-        extra_trigger: '.note-editable:not(:has(br))',
         trigger: 'button:contains("Post Answer")',
-    }, {
-        content: "This page contain new created question and its answer.",
-        extra_trigger: '#wrap:has(".o_wforum_validate_toggler")',
-        trigger: 'button[data-dismiss="modal"]',
-    }, {
-        content: "Click here to accept this answer.",
-        trigger: '.o_wforum_validate_toggler[data-karma="20"]:first',
+        run: "click",
+    },
+    {
+        content: "Close modal once modal animation is done.",
+        trigger: ".modal .modal-header button.btn-close",
+        run: "click",
     }, {
         content: "Congratulations! You just created and post your first question and answer.",
-        trigger: '#wrap:has(".o_wforum_answer_correct")',
-    }]);
+        trigger: '.o_wforum_validate_toggler',
+    }]
 });

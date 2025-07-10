@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-
         <record id="view_contract_room_measurement_line_form" model="ir.ui.view">
             <field name="name">team.contract.room.measurement.line.form</field>
             <field name="model">team.contract.room.measurement.line</field>
@@ -10,7 +9,7 @@
                     <sheet>
                         <group col="4">
                             <field name="room_id" options="{'no_open':True,'no_create': True}"/>
-                            <field name="custom_room_name" string="Room Name" attrs="{'invisible': [('custom_room_measured', '!=', True)]}"/>
+                            <field name="custom_room_name" string="Room Name" invisible="custom_room_measured != True"/>
                             <field name="custom_room_measured" invisible="1"/>
                             <field name="adjusted_area" string="Room Area"/>
                             <field name="color_up_charge_price"/>
@@ -27,7 +26,7 @@
                             <field name="material_comments"/>
                             <field name="molding_type_id" options="{'no_open':True,'no_create': True}"/>
                         </group>
-                        <group attrs="{'invisible': [('shape_image_id', '=', False)]}">
+                        <group invisible="shape_image_id == False">
                             <group>
                                 <field name="shape_image" widget="image" class="oe_avatar" options="{'image_preview': 'image_128'}"/>
                             </group>
@@ -35,11 +34,11 @@
                         </group>
                         <group string="Transitions">
                             <field name="transition_line_id" readonly="1">
-                                <tree editable="bottom">
+                                <list editable="bottom">
                                     <field name="name"/>
                                     <field name="transition_width"/>
                                     <field name="transition_height"/>
-                                </tree>
+                                </list>
                                 <form>
                                     <group>
                                         <group>
@@ -53,7 +52,7 @@
                                 </form>
                             </field>
                         </group>
-                        <group string="Room Images" attrs="{'invisible': [('attachment_ids', '=', False)]}">
+                        <group string="Room Images" invisible="attachment_ids == False">
                             <field nolabel="1" name="attachment_ids">
                                 <kanban>
                                     <field name="mimetype"/>
@@ -63,7 +62,7 @@
                                     <field name="name"/>
                                     <field name="id"/>
                                     <templates>
-                                        <t t-name="kanban-box">
+                                        <t t-name="card">
                                             <div class="oe_kanban_global_area oe_kanban_global_click o_kanban_attachment">
                                                 <div class="o_kanban_image">
                                                     <div class="o_kanban_image_wrapper">
@@ -86,7 +85,7 @@
                                 </kanban>
                             </field>
                         </group>
-                        <group string="Anomaly Images" attrs="{'invisible': [('protrusion_image_ids', '=', False)]}">
+                        <group string="Anomaly Images" invisible="protrusion_image_ids == False">
                             <field nolabel="1" name="protrusion_image_ids">
                                 <kanban>
                                     <field name="mimetype"/>
@@ -137,9 +136,9 @@
                             <field name="question_id" options="{'no_open':True,'no_create': True}" required="1"/>
                             <field name="appointment_id" options="{'no_open':True,'no_create': True}"/>
                             <field name="answers">
-                                <tree editable="bottom">
+                                <list editable="bottom">
                                     <field name="answer"/>
-                                </tree>
+                                </list>
                             </field>
                         </group>
                     </sheet>
@@ -161,13 +160,13 @@
                         <button name="generate_link" string="Share" type="object" class="oe_highlight" invisible="1"/>
                     </xpath>
                     <xpath expr="//field[@name='payment_term_id']" position="after">
-                        <field name="floor_type" string="Product Plan" required="0" domain="[('improveit_product_id', '!=', False)]"  options="{'no_open':True,'no_create': True}"/>
-                        <field name="link_to_share" widget="url" readonly="1" attrs="{'invisible': [('link_to_share', '=', False)]}"/>
-                        <field name="appointment_id" readonly="1" attrs="{'invisible': [('appointment_id', '=', False)]}"/>
-                        <field name="quote_id" readonly="1" attrs="{'invisible': [('quote_id', '=', False)]}"/>
-                        <field name="excluded_quote_id" readonly="1" attrs="{'invisible': [('excluded_quote_id', '=', False)]}"/>
-                        <field name="special_price_id" readonly="1" attrs="{'invisible': [('special_price_id', '=', False)]}"/>
-                        <field name="stair_special_price_id" readonly="1" attrs="{'invisible': [('stair_special_price_id', '=', False)]}"/>
+                        <field name="floor_type" string="Product Plan" required="0" domain="[('improveit_product_id', '!=', False)]" options="{'no_open':True,'no_create': True}"/>
+                        <field name="link_to_share" widget="url" readonly="1" invisible="link_to_share == False"/>
+                        <field name="appointment_id" readonly="1" invisible="appointment_id == False"/>
+                        <field name="quote_id" readonly="1" invisible="quote_id == False"/>
+                        <field name="excluded_quote_id" readonly="1" invisible="excluded_quote_id == False"/>
+                        <field name="special_price_id" readonly="1" invisible="special_price_id == False"/>
+                        <field name="stair_special_price_id" readonly="1" invisible="stair_special_price_id == False"/>
                         <field name="min_sale_price" readonly="1" groups="base.group_no_one"/>
                     </xpath>
                     <page name="optional_products" position="attributes">
@@ -182,21 +181,20 @@
                     <field name="payment_term_id" position="attributes">
                         <attribute name="invisible">1</attribute>
                     </field>
-                    <field name="amount_tax" position="after">
+                    <field name="tax_totals" position="before">
                         <field name="amount_total_not_rounded" widget='monetary' options="{'currency_field': 'currency_id'}"/>
                     </field>
                     <xpath expr="//page[1]" position="after">
                         <page string="Contract Questions" name="contract_questions">
-                            <field name="contract_question_line" widget="one2many_list" mode="tree,kanban"
-                                   attrs="{'readonly': [('state', 'not in', ('draft'))]}">
-                                <tree>
+                            <field name="contract_question_line" widget="one2many_list" mode="list,kanban" readonly="state not in ('draft')">
+                                <list>
                                     <field name="room_id" options="{'no_open':True,'no_create': True}"/>
                                     <field name="room_name"/>
                                     <field name="question_id" options="{'no_open':True,'no_create': True}"/>
                                     <field name="answer_data"/>
                                     <field name="extra_price" sum="Total"/>
-                                    <field name="appointment_id" invisible="1"/>
-                                </tree>
+                                    <field name="appointment_id" column_invisible="1"/>
+                                </list>
                                 <kanban class="o_kanban_mobile">
                                     <field name="name"/>
                                     <field name="room_id"/>
@@ -238,27 +236,26 @@
                                         <field name="room_name"/>
                                         <field name="extra_price"/>
                                         <field name="answers">
-                                            <tree editable="bottom">
+                                            <list editable="bottom">
                                                 <field name="answer"/>
-                                            </tree>
+                                            </list>
                                         </field>
                                     </group>
                                 </form>
                             </field>
                         </page>
                         <page string="Room Measurements" name="room_measurements">
-                            <field name="room_measurement_line" widget="one2many_list" mode="tree,kanban"
-                                   attrs="{'readonly': [('state', 'not in', ('draft'))]}">
-                                <tree>
+                            <field name="room_measurement_line" widget="one2many_list" mode="list,kanban" readonly="state not in ('draft')">
+                                <list>
                                     <field name="room_id" options="{'no_open':True,'no_create': True}"/>
                                     <field name="custom_room_name" string="Room Name"/>
-                                    <field name="custom_room_measured" invisible="1"/>
-                                    <field name="appointment_id" invisible="1"/>
+                                    <field name="custom_room_measured" column_invisible="1"/>
+                                    <field name="appointment_id" column_invisible="1"/>
                                     <field name="adjusted_area"  string="Room Area"/>
                                     <field name="room_perimeter"/>
                                     <field name="color_up_charge_total" sum="Total"/>
                                     <field name="exclude_from_calculation"/>
-                                </tree>
+                                </list>
                                 <kanban class="o_kanban_mobile">
                                     <field name="room_id"/>
                                     <field name="adjusted_area"/>
@@ -294,13 +291,12 @@
                             </group>
                         </page>
                         <page string="Room Transitions" name="room_transitions" invisible="1">
-                            <field name="room_transition_line" widget="one2many_list" mode="tree,kanban"
-                                   attrs="{'readonly': [('state', 'not in', ('draft'))]}">
-                                <tree editable="bottom">
+                            <field name="room_transition_line" widget="one2many_list" mode="list,kanban" readonly="state not in ('draft')">
+                                <list editable="bottom">
                                     <field name="room_id" options="{'no_open':True,'no_create': True}"/>
                                     <field name="name"/>
                                     <field name="transition_width"/>
-                                </tree>
+                                </list>
                                 <kanban class="o_kanban_mobile">
                                     <field name="name"/>
                                     <field name="room_id"/>
@@ -380,9 +376,9 @@
                         </page>
                         <page string="Progressive Discount History">
                             <group>
-                                <field name="discount_history_line" nolabel="1" widget="one2many_list" mode="tree,kanban"
+                                <field name="discount_history_line" nolabel="1" widget="one2many_list" mode="list,kanban"
                                    readonly="1">
-                                    <tree editable="bottom" string="Discount History">
+                                    <list editable="bottom" string="Discount History">
                                         <field name="name"/>
                                         <field name="type"/>
                                         <field name="promo_type"/>
@@ -390,7 +386,7 @@
                                         <field name="excluded_amount_discount"/>
                                         <field name="discount_amount"/>
                                         <field name="sale_price"/>
-                                    </tree>
+                                    </list>
                                     <form string="Discount History">
                                         <group col="4">
                                             <field name="name"/>
@@ -406,14 +402,14 @@
                             </group>
                         </page>
                         <page string="Installation Dates">
-                            <field name="available_installation_line" nolabel="1" widget="one2many_list" mode="tree,kanban"
+                            <field name="available_installation_line" nolabel="1" widget="one2many_list" mode="list,kanban"
                                    readonly="1">
-                                <tree editable="bottom" string="Installation Dates">
+                                <list editable="bottom" string="Installation Dates">
                                     <field name="crew_id"/>
                                     <field name="start_date"/>
                                     <field name="end_date"/>
                                     <field name="selected"/>
-                                </tree>
+                                </list>
                                 <form string="Installation Dates">
                                     <group>
                                         <group>
@@ -423,57 +419,57 @@
                                         </group>
                                         <group>
                                             <field name="end_date"/>
-                                            <field name="project_i360_id" attrs="{'invisible':[('project_i360_id', '=', False)]}"/>
-                                            <field name="project_activity_i360_id" attrs="{'invisible':[('project_activity_i360_id', '=', False)]}"/>
+                                            <field name="project_i360_id" invisible="project_i360_id == False"/>
+                                            <field name="project_activity_i360_id" invisible="project_activity_i360_id == False"/>
                                         </group>
                                     </group>
                                 </form>
                             </field>
                         </page>
-                        <page string="Payment Info" name="payment_transaction" attrs="{'invisible': [('state', 'not in', ['sale', 'done'])]}">
+                        <page string="Payment Info" name="payment_transaction" invisible="state not in ('sale', 'done')">
                             <group>
                                 <group string="Down Payment">
-                                    <field name="promotion_code_id" readonly="1"/>
-                                    <field name="stair_calc_based_on" readonly="1"/>
-                                    <field name="calc_based_on" readonly="1"/>
-                                    <field name="msrp_amount" readonly="1"/>
-                                    <field name="additional_cost" readonly="1"/>
-                                    <field name="one_year_price" readonly="1"/>
-                                    <field name="excluded_amount_promotion" readonly="1"/>
-                                    <field name="savings_amount" readonly="1"/>
-                                    <field name="final_sale_price" readonly="1"/>
-                                    <field name="payment_method" readonly="1"/>
-                                    <field name="check_number" password="True" attrs="{'invisible': [('payment_method', '!=', 'check')]}" readonly="1"/>
-                                    <field name="check_account_number" password="True" attrs="{'invisible': [('payment_method', '!=', 'check')]}" readonly="1"/>
-                                    <field name="check_routing_number" password="True" attrs="{'invisible': [('payment_method', '!=', 'check')]}" readonly="1"/>
-                                    <field name="down_payment_amount" readonly="1" />
+                                    <field name="promotion_code_id" readonly="1" force_save="1"/>
+                                    <field name="stair_calc_based_on" readonly="1" force_save="1"/>
+                                    <field name="calc_based_on" readonly="1" force_save="1"/>
+                                    <field name="msrp_amount" readonly="1" force_save="1"/>
+                                    <field name="additional_cost" readonly="1" force_save="1"/>
+                                    <field name="one_year_price" readonly="1" force_save="1"/>
+                                    <field name="excluded_amount_promotion" readonly="1" force_save="1"/>
+                                    <field name="savings_amount" readonly="1" force_save="1"/>
+                                    <field name="final_sale_price" readonly="1" force_save="1"/>
+                                    <field name="payment_method" readonly="1" force_save="1"/>
+                                    <field name="check_number" password="True" invisible="payment_method != 'check'" readonly="1" force_save="1"/>
+                                    <field name="check_account_number" password="True" invisible="payment_method != 'check'" readonly="1" force_save="1"/>
+                                    <field name="check_routing_number" password="True" invisible="payment_method != 'check'" readonly="1" force_save="1"/>
+                                    <field name="down_payment_amount" readonly="1" force_save="1"/>
                                 </group>
                                 <group string="Balance Due">
-                                    <field name="balance_payment_method" readonly="1"/>
-                                    <field name="balance_amount" readonly="1"/>
-                                    <field name="deposit_amount" invisible="1"/>
-                                    <field name="grand_amount_total" string="Sold Amount" readonly="1"/>
+                                    <field name="balance_payment_method" readonly="1" force_save="1"/>
+                                    <field name="balance_amount" readonly="1" force_save="1"/>
+                                    <field name="deposit_amount" invisible="1" force_save="1"/>
+                                    <field name="grand_amount_total" string="Sold Amount" readonly="1" force_save="1"/>
                                 </group>
                                 <group string="Finance">
-                                    <field name="finance_option_id" readonly="1"/>
-                                    <field name="finance_amount" readonly="1"/>
+                                    <field name="finance_option_id" readonly="1" force_save="1"/>
+                                    <field name="finance_amount" readonly="1" force_save="1"/>
                                 </group>
                                 <group>
-                                    <field name="monthly_promo" readonly="1"/>
-                                    <field name="discount" invisible="1"/>
-                                    <field name="adjustment" invisible="1"/>
-                                    <field name="recision_date" readonly="1"/>
-                                    <field name="cards" invisible="1"/>
+                                    <field name="monthly_promo" readonly="1" force_save="1"/>
+                                    <field name="discount" invisible="1" force_save="1"/>
+                                    <field name="adjustment" invisible="1" force_save="1"/>
+                                    <field name="recision_date" readonly="1" force_save="1"/>
+                                    <field name="cards" invisible="1" force_save="1"/>
                                 </group>
-                                <group string="Transaction Log" attrs="{'invisible': [('cards', '!=', True)]}">
-                                    <field name="card_transaction_log_line" nolabel="1" readonly="1">
-                                        <tree string="Transaction Log">
+                                <group string="Transaction Log" invisible="cards != True">
+                                    <field name="card_transaction_log_line" nolabel="1" readonly="1" force_save="1">
+                                        <list string="Transaction Log">
                                             <field name="name"/>
                                             <field name="state"/>
                                             <field name="message"/>
                                             <field name="error_code"/>
                                             <field name="void_transaction"/>
-                                        </tree>
+                                        </list>
                                     </field>
                                 </group>
                             </group>

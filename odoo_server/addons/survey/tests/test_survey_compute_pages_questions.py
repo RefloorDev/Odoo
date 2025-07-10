@@ -4,36 +4,37 @@
 from odoo.addons.survey.tests import common
 
 
-class TestSurveyComputePagesQuestions(common.SurveyCase):
+class TestSurveyComputePagesQuestions(common.TestSurveyCommon):
     def test_compute_pages_questions(self):
-        with self.with_user(self.survey_manager):
+        with self.with_user('survey_manager'):
             survey = self.env['survey.survey'].create({
                 'title': 'Test compute survey',
-                'state': 'open',
             })
 
             page_0 = self.env['survey.question'].create({
                 'is_page': True,
+                'question_type': False,
                 'sequence': 1,
                 'title': 'P1',
                 'survey_id': survey.id
             })
-            page0_q0 = self._add_question(page_0, 'Q1', 'free_text', survey_id=survey.id)
-            page0_q1 = self._add_question(page_0, 'Q2', 'free_text', survey_id=survey.id)
-            page0_q2 = self._add_question(page_0, 'Q3', 'free_text', survey_id=survey.id)
-            page0_q3 = self._add_question(page_0, 'Q4', 'free_text', survey_id=survey.id)
-            page0_q4 = self._add_question(page_0, 'Q5', 'free_text', survey_id=survey.id)
+            page0_q0 = self._add_question(page_0, 'Q1', 'text_box', survey_id=survey.id)
+            page0_q1 = self._add_question(page_0, 'Q2', 'text_box', survey_id=survey.id)
+            page0_q2 = self._add_question(page_0, 'Q3', 'text_box', survey_id=survey.id)
+            page0_q3 = self._add_question(page_0, 'Q4', 'text_box', survey_id=survey.id)
+            page0_q4 = self._add_question(page_0, 'Q5', 'text_box', survey_id=survey.id)
 
             page_1 = self.env['survey.question'].create({
                 'is_page': True,
+                'question_type': False,
                 'sequence': 7,
                 'title': 'P2',
                 'survey_id': survey.id,
             })
-            page1_q0 = self._add_question(page_1, 'Q6', 'free_text', survey_id=survey.id)
-            page1_q1 = self._add_question(page_1, 'Q7', 'free_text', survey_id=survey.id)
-            page1_q2 = self._add_question(page_1, 'Q8', 'free_text', survey_id=survey.id)
-            page1_q3 = self._add_question(page_1, 'Q9', 'free_text', survey_id=survey.id)
+            page1_q0 = self._add_question(page_1, 'Q6', 'text_box', survey_id=survey.id)
+            page1_q1 = self._add_question(page_1, 'Q7', 'text_box', survey_id=survey.id)
+            page1_q2 = self._add_question(page_1, 'Q8', 'text_box', survey_id=survey.id)
+            page1_q3 = self._add_question(page_1, 'Q9', 'text_box', survey_id=survey.id)
 
         self.assertEqual(len(survey.page_ids), 2, "Survey should have 2 pages")
         self.assertIn(page_0, survey.page_ids, "Page 1 should be contained in survey's page_ids")

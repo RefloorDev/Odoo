@@ -1,39 +1,41 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from functools import partial
-
-from odoo import http
-from odoo.tools import formatLang
 from odoo.exceptions import AccessError, MissingError
-from odoo.http import request
-from odoo.addons.sale.controllers.portal import CustomerPortal
+from odoo.http import request, route
+
+from odoo.addons.sale.controllers import portal
 
 
-class CustomerPortal(CustomerPortal):
+class CustomerPortal(portal.CustomerPortal):
 
-    @http.route(['/my/orders/<int:order_id>/update_line'], type='json', auth="public", website=True)
-    def update(self, line_id, remove=False, unlink=False, order_id=None, access_token=None, **post):
-        values = self.update_line_dict(line_id, remove, unlink, order_id, access_token, **post)
-        if values:
-            return [values['order_line_product_uom_qty'], values['order_amount_total']]
-        return values
+    @route(['/my/orders/<int:order_id>/update_line_dict'], type='json', auth="public", website=True)
+    def portal_quote_option_update(self, order_id, line_id, access_token=None, remove=False, unlink=False, input_quantity=False, **kwargs):
+        """ Update the quantity or Remove an optional SOline from a SO.
 
-    @http.route(['/my/orders/<int:order_id>/update_line_dict'], type='json', auth="public", website=True)
-    def update_line_dict(self, line_id, remove=False, unlink=False, order_id=None, access_token=None, input_quantity=False, **kwargs):
+        :param int order_id: `sale.order` id
+        :param int line_id: `sale.order.line` id
+        :param str access_token: portal access_token of the specified order
+        :param bool remove: if true, 1 unit will be removed from the line
+        :param bool unlink: if true, the option will be removed from the SO
+        :param float input_quantity: if specified, will be set as new line qty
+        :param dict kwargs: unused parameters
+        """
         try:
             order_sudo = self._document_check_access('sale.order', order_id, access_token=access_token)
         except (AccessError, MissingError):
             return request.redirect('/my')
 
-        if order_sudo.state not in ('draft', 'sent'):
+        # Redundant with can be edited on portal for line, ask sales if can rbe removed
+        if not order_sudo._can_be_edited_on_portal():
             return False
-        order_line = request.env['sale.order.line'].sudo().browse(int(line_id))
-        if order_line.order_id != order_sudo:
+
+        order_line = request.env['sale.order.line'].sudo().browse(int(line_id)).exists()
+        if not order_line or order_line.order_id != order_sudo:
             return False
-        if unlink:
-            order_line.unlink()
-            return False  # return False to reload the page, the line must move back to options and the JS doesn't handle it
+
+        if not order_line._can_be_edited_on_portal():
+            # Do not allow updating non-optional products from a quotation
+            return False
 
         if input_quantity is not False:
             quantity = input_quantity
@@ -41,30 +43,20 @@ class CustomerPortal(CustomerPortal):
             number = -1 if remove else 1
             quantity = order_line.product_uom_qty + number
 
-        if quantity < 0:
-            quantity = 0.0
-        order_line.write({'product_uom_qty': quantity})
-        currency = order_sudo.currency_id
-        format_price = partial(formatLang, request.env, digits=currency.decimal_places)
+        if unlink or quantity <= 0:
+            order_line.unlink()
+        else:
+            order_line.product_uom_qty = quantity
 
-        results = {
-            'order_line_product_uom_qty': str(quantity),
-            'order_line_price_total': format_price(order_line.price_total),
-            'order_line_price_subtotal': format_price(order_line.price_subtotal),
-            'order_amount_total': format_price(order_sudo.amount_total),
-            'order_amount_untaxed': format_price(order_sudo.amount_untaxed),
-            'order_amount_tax': format_price(order_sudo.amount_tax),
-            'order_amount_undiscounted': format_price(order_sudo.amount_undiscounted),
-        }
-        try:
-            results['order_totals_table'] = request.env['ir.ui.view'].render_template('sale.sale_order_portal_content_totals_table', {'sale_order': order_sudo})
-        except ValueError:
-            pass
+    @route(["/my/orders/<int:order_id>/add_option/<int:option_id>"], type='json', auth="public", website=True)
+    def portal_quote_add_option(self, order_id, option_id, access_token=None, **kwargs):
+        """ Add the specified option to the specified order.
 
-        return results
-
-    @http.route(["/my/orders/<int:order_id>/add_option/<int:option_id>"], type='http', auth="public", website=True)
-    def add(self, order_id, option_id, access_token=None, **post):
+        :param int order_id: `sale.order` id
+        :param int option_id: `sale.order.option` id
+        :param str access_token: portal access_token of the specified order
+        :param dict kwargs: unused parameters
+        """
         try:
             order_sudo = self._document_check_access('sale.order', order_id, access_token=access_token)
         except (AccessError, MissingError):
@@ -76,5 +68,3 @@ class CustomerPortal(CustomerPortal):
             return request.redirect(order_sudo.get_portal_url())
 
         option_sudo.add_option_to_order()
-
-        return request.redirect(option_sudo.order_id.get_portal_url(anchor='details'))

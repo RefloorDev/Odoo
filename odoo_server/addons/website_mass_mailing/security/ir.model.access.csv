@@ -1,2 +1,2 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_mass_mailing_popup,website.mail.popup,model_website_mass_mailing_popup,mass_mailing.group_mass_mailing_user,1,1,1,1
+access_mailing_list_website_designer,access_mailing_list_website_designer,mass_mailing.model_mailing_list,website.group_website_designer,1,0,0,0

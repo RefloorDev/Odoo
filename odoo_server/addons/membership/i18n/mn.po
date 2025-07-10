@@ -3,19 +3,21 @@
 # 	* membership
 # 
 # Translators:
-# Baskhuu Lodoikhuu <baskhuujacara@gmail.com>, 2019
-# Martin Trigaux, 2019
-# Khishigbat Ganbold <khishigbat@asterisk-tech.mn>, 2019
-# nurbakhit nurka <nurbakhit@bumanit.mn>, 2019
+# Bayarkhuu Bataa, 2024
+# Batmunkh Ganbat <batmunkh2522@gmail.com>, 2024
+# nurbakhit nurka <nurbakhit@bumanit.mn>, 2024
+# Uuganbayar Batbaatar <uuganaaub33@gmail.com>, 2024
+# Baskhuu Lodoikhuu <baskhuujacara@gmail.com>, 2024
+# Martin Trigaux, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:11+0000\n"
-"Last-Translator: nurbakhit nurka <nurbakhit@bumanit.mn>, 2019\n"
-"Language-Team: Mongolian (https://www.transifex.com/odoo/teams/41243/mn/)\n"
+"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Martin Trigaux, 2024\n"
+"Language-Team: Mongolian (https://app.transifex.com/odoo/teams/41243/mn/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -144,11 +146,6 @@ msgid "Company"
 msgstr "Компани"
 
 #. module: membership
-#: model:ir.model.fields,help:membership.field_membership_membership_line__company_id
-msgid "Company related to this journal"
-msgstr "Энэ журналын холбогдох компани"
-
-#. module: membership
 #: model:ir.ui.menu,name:membership.menu_marketing_config_association
 msgid "Configuration"
 msgstr "Тохиргоо"
@@ -157,11 +154,6 @@ msgstr "Тохиргоо"
 #: model:ir.model,name:membership.model_res_partner
 msgid "Contact"
 msgstr "Харилцах хаяг"
-
-#. module: membership
-#: model_terms:ir.ui.view,arch_db:membership.view_partner_tree
-msgid "Contacts"
-msgstr "Харилцагч"
 
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_membership_invoice__create_uid
@@ -190,7 +182,7 @@ msgstr "Гишүүнчлэлийн Идэвхтэй Төлөв"
 #. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.view_res_partner_member_filter
 msgid "Customers"
-msgstr "Захиалагчид"
+msgstr "Үйлчлүүлэгчид"
 
 #. module: membership
 #: model:ir.model.fields,help:membership.field_product_product__membership_date_from
@@ -243,19 +235,14 @@ msgid "End Membership Date"
 msgstr "Гишүүнчлэлийн дуусах огноо"
 
 #. module: membership
-#: model:ir.model.fields,help:membership.field_report_membership__date_to
-msgid "End membership date"
-msgstr "Гишүүнчлэл дуусах огноо"
-
-#. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.view_res_partner_member_filter
 msgid "Ending Date Of Membership"
 msgstr ""
 
 #. module: membership
 #: model:ir.model.constraint,message:membership.constraint_product_template_membership_date_greater
-msgid "Error ! Ending Date cannot be set before Beginning Date."
-msgstr "Алдаа ! Дуусах огноо нь эхлэх огнооноос өмнө байж болохгүй."
+msgid "Error! Ending Date cannot be set before Beginning Date."
+msgstr ""
 
 #. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_search
@@ -274,7 +261,7 @@ msgstr "Чөлөөт гишүүн"
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_membership_membership_line__date_from
 msgid "From"
-msgstr "Хаанаас"
+msgstr "Эхлэх"
 
 #. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_search
@@ -372,20 +359,13 @@ msgstr ""
 
 #. module: membership
 #: model:ir.model,name:membership.model_account_move
-msgid "Journal Entries"
+msgid "Journal Entry"
 msgstr "Ажил гүйлгээ"
 
 #. module: membership
 #: model:ir.model,name:membership.model_account_move_line
 msgid "Journal Item"
 msgstr "Журналын бичилт"
-
-#. module: membership
-#: model:ir.model.fields,field_description:membership.field_membership_invoice____last_update
-#: model:ir.model.fields,field_description:membership.field_membership_membership_line____last_update
-#: model:ir.model.fields,field_description:membership.field_report_membership____last_update
-msgid "Last Modified on"
-msgstr "Сүүлд зассан огноо"
 
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_membership_invoice__write_uid
@@ -430,6 +410,7 @@ msgstr "Гишүүдийн Шинжилгээ"
 #: model:ir.model.fields,field_description:membership.field_product_template__membership
 #: model:ir.model.fields,field_description:membership.field_res_partner__member_lines
 #: model:ir.model.fields,field_description:membership.field_res_users__member_lines
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
 #: model_terms:ir.ui.view,arch_db:membership.view_partner_form
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_graph1
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_pivot
@@ -477,7 +458,7 @@ msgstr "Гишүүнчлэлийн нэхэмжлэл"
 #. module: membership
 #: model:ir.model,name:membership.model_membership_membership_line
 msgid "Membership Line"
-msgstr ""
+msgstr "Гишүүнчлэлийн шугам"
 
 #. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.view_res_partner_member_filter
@@ -493,6 +474,7 @@ msgstr "Гишүүнчлэлийн бараа"
 
 #. module: membership
 #: model:ir.actions.act_window,name:membership.action_membership_products
+#: model:ir.ui.menu,name:membership.menu_membership_products
 #: model_terms:ir.ui.view,arch_db:membership.membership_product_search_form_view
 msgid "Membership Products"
 msgstr "Гишүүнчлэлийн бараанууд"
@@ -523,8 +505,6 @@ msgstr "Гишүүнчлэлийн бараа"
 
 #. module: membership
 #: model:ir.actions.server,name:membership.ir_cron_update_membership_ir_actions_server
-#: model:ir.cron,cron_name:membership.ir_cron_update_membership
-#: model:ir.cron,name:membership.ir_cron_update_membership
 msgid "Membership: update memberships"
 msgstr ""
 
@@ -537,6 +517,11 @@ msgstr "Гишүүнчлэлүүд"
 #: model_terms:ir.ui.view,arch_db:membership.view_report_membership_search
 msgid "Month"
 msgstr "Сар"
+
+#. module: membership
+#: model_terms:ir.actions.act_window,help:membership.action_report_membership_tree
+msgid "No data yet!"
+msgstr "Одоогоор мэдээлэл алга!"
 
 #. module: membership
 #: model:ir.model.fields.selection,name:membership.selection__membership_membership_line__state__none
@@ -572,14 +557,14 @@ msgid "Partner"
 msgstr "Харилцагч"
 
 #. module: membership
+#. odoo-python
 #: code:addons/membership/models/partner.py:0
-#, python-format
 msgid "Partner doesn't have an address to make the invoice."
 msgstr "Харилцагч нэхэмлжлэх хаяг байхгүй байна."
 
 #. module: membership
+#. odoo-python
 #: code:addons/membership/models/partner.py:0
-#, python-format
 msgid "Partner is a free Member."
 msgstr "Харилцагч нь төлбөргүй гишүүн."
 
@@ -590,8 +575,13 @@ msgstr "Хүлээгдэж байгаа дүн"
 
 #. module: membership
 #: model:ir.model,name:membership.model_product_template
-msgid "Product Template"
-msgstr "Барааны загвар"
+msgid "Product"
+msgstr "Бараа"
+
+#. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.membership_products_form
+msgid "Product Name"
+msgstr "Барааны нэр"
 
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_report_membership__quantity
@@ -634,14 +624,29 @@ msgid "Starting Date Of Membership"
 msgstr "Гишүүнчлэлийн эхлэх огноо"
 
 #. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
+msgid "Sum of # Invoiced"
+msgstr ""
+
+#. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
+msgid "Sum of # Paid"
+msgstr ""
+
+#. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
+msgid "Sum of Earned Amount"
+msgstr ""
+
+#. module: membership
+#: model_terms:ir.ui.view,arch_db:membership.report_membership_view_tree
+msgid "Sum of Quantity"
+msgstr ""
+
+#. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.membership_products_form
 msgid "Taxes"
 msgstr "Татвар"
-
-#. module: membership
-#: model:ir.model.fields,help:membership.field_membership_membership_line__account_invoice_id
-msgid "The move of this entry line."
-msgstr "Журналын бичилтийн харьяалагдах ажил гүйлгээ"
 
 #. module: membership
 #: model:ir.model.fields,help:membership.field_res_partner__membership_amount
@@ -667,7 +672,7 @@ msgstr "Энэ нь хүлээгдэж буй нэхэмжилсэн баган�
 #. module: membership
 #: model:ir.model.fields,field_description:membership.field_membership_membership_line__date_to
 msgid "To"
-msgstr "Хүртэл"
+msgstr "Дуусах"
 
 #. module: membership
 #: model_terms:ir.ui.view,arch_db:membership.view_res_partner_member_filter
@@ -682,7 +687,7 @@ msgid "Waiting Member"
 msgstr "Хүлээж байгаа гишүүн"
 
 #. module: membership
+#. odoo-python
 #: code:addons/membership/models/partner.py:0
-#, python-format
 msgid "You cannot create recursive associated members."
 msgstr ""

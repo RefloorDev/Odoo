@@ -1,8 +1,8 @@
-odoo.define('sale.SalePortalSidebar', function (require) {
-'use strict';
+/** @odoo-module **/
 
-var publicWidget = require('web.public.widget');
-var PortalSidebar = require('portal.PortalSidebar');
+import publicWidget from "@web/legacy/js/public/public_widget";
+import PortalSidebar from "@portal/js/portal_sidebar";
+import { uniqueId } from "@web/core/utils/functions";
 
 publicWidget.registry.SalePortalSidebar = PortalSidebar.extend({
     selector: '.o_portal_sale_sidebar',
@@ -24,10 +24,11 @@ publicWidget.registry.SalePortalSidebar = PortalSidebar.extend({
         this._setElementId($spyWatcheElement);
         // Nav Menu ScrollSpy
         this._generateMenu();
-        // After singature, automatically open the popup for payment
-        if ($.bbq.getState('allow_payment') === 'yes' && this.$('#o_sale_portal_paynow').length) {
-            this.$('#o_sale_portal_paynow').trigger('click');
-            $.bbq.removeState('allow_payment');
+        // After signature, automatically open the popup for payment
+        const searchParams = new URLSearchParams(window.location.search.substring(1));
+        const payNowButton = this.$('#o_sale_portal_paynow')
+        if (searchParams.get("allow_payment") === "yes" && payNowButton) {
+            payNowButton[0].click();
         }
         return def;
     },
@@ -45,7 +46,7 @@ publicWidget.registry.SalePortalSidebar = PortalSidebar.extend({
      *
      */
     _setElementId: function (prefix, $el) {
-        var id = _.uniqueId(prefix);
+        var id = uniqueId(prefix);
         this.spyWatched.find($el).attr('id', id);
         return id;
     },
@@ -62,7 +63,7 @@ publicWidget.registry.SalePortalSidebar = PortalSidebar.extend({
             $bsSidenav = this.$el.find('.bs-sidenav');
 
         $("#quote_content [id^=quote_header_], #quote_content [id^=quote_]", this.spyWatched).attr("id", "");
-        _.each(this.spyWatched.find("#quote_content h2, #quote_content h3"), function (el) {
+        this.spyWatched.find("#quote_content h2, #quote_content h3").toArray().forEach((el) => {
             var id, text;
             switch (el.tagName.toLowerCase()) {
                 case "h2":
@@ -71,7 +72,7 @@ publicWidget.registry.SalePortalSidebar = PortalSidebar.extend({
                     if (!text) {
                         break;
                     }
-                    lastLI = $("<li class='nav-item'>").append($('<a class="nav-link" style="max-width: 200px;" href="#' + id + '"/>').text(text)).appendTo($bsSidenav);
+                    lastLI = $("<li class='nav-item'>").append($('<a class="nav-link p-0" href="#' + id + '"/>').text(text)).appendTo($bsSidenav);
                     lastUL = false;
                     break;
                 case "h3":
@@ -84,11 +85,13 @@ publicWidget.registry.SalePortalSidebar = PortalSidebar.extend({
                         if (!lastUL) {
                             lastUL = $("<ul class='nav flex-column'>").appendTo(lastLI);
                         }
-                        $("<li class='nav-item'>").append($('<a class="nav-link" style="max-width: 200px;" href="#' + id + '"/>').text(text)).appendTo(lastUL);
+                        $("<li class='nav-item'>").append($('<a class="nav-link p-0" href="#' + id + '"/>').text(text)).appendTo(lastUL);
                     }
                     break;
             }
+            el.setAttribute('data-anchor', true);
         });
+        this.trigger_up('widgets_start_request', {$target: $bsSidenav});
     },
     /**
      * extract text of menu title for sidebar
@@ -100,16 +103,19 @@ publicWidget.registry.SalePortalSidebar = PortalSidebar.extend({
     _extractText: function ($node) {
         var self = this;
         var rawText = [];
-        _.each($node.contents(), function (el) {
+        $node.contents().toArray().forEach((el) => {
             var current = $(el);
             if ($.trim(current.text())) {
                 var tagName = current.prop("tagName");
-                if (_.isUndefined(tagName) || (!_.isUndefined(tagName) && _.contains(self.authorizedTextTag, tagName.toLowerCase()))) {
+                if (
+                    typeof tagName === "undefined" ||
+                    (typeof tagName !== "undefined" &&
+                        self.authorizedTextTag.includes(tagName.toLowerCase()))
+                ) {
                     rawText.push($.trim(current.text()));
                 }
             }
         });
         return rawText.join(' ');
     },
-});
 });

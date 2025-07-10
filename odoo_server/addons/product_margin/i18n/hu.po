@@ -3,20 +3,22 @@
 # 	* product_margin
 # 
 # Translators:
-# Martin Trigaux, 2019
-# krnkris, 2019
-# gezza <geza.nagy@oregional.hu>, 2019
-# Kovács Tibor <kovika@gmail.com>, 2019
-# Ákos Nagy <akos.nagy@oregional.hu>, 2019
+# Ákos Nagy <akos.nagy@oregional.hu>, 2024
+# Tamás Dombos, 2024
+# Kovács Tibor <kovika@gmail.com>, 2024
+# Tamás Németh <ntomasz81@gmail.com>, 2024
+# krnkris, 2024
+# Martin Trigaux, 2024
+# gezza <geza.nagy@oregional.hu>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:16+0000\n"
-"PO-Revision-Date: 2019-08-26 09:13+0000\n"
-"Last-Translator: Ákos Nagy <akos.nagy@oregional.hu>, 2019\n"
-"Language-Team: Hungarian (https://www.transifex.com/odoo/teams/41243/hu/)\n"
+"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: gezza <geza.nagy@oregional.hu>, 2024\n"
+"Language-Team: Hungarian (https://app.transifex.com/odoo/teams/41243/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -50,8 +52,8 @@ msgstr "Átl. ár vevői számlán."
 
 #. module: product_margin
 #: model:ir.model.fields,help:product_margin.field_product_product__purchase_avg_price
-msgid "Avg. Price in Vendor Bills "
-msgstr "Átl. ár szállítói számlán."
+msgid "Avg. Price in Vendor Bills"
+msgstr ""
 
 #. module: product_margin
 #: model:ir.model.fields,field_description:product_margin.field_product_product__purchase_avg_price
@@ -71,7 +73,7 @@ msgstr "Átlagos egységár"
 #. module: product_margin
 #: model_terms:ir.ui.view,arch_db:product_margin.product_margin_form_view
 msgid "Cancel"
-msgstr "Mégse"
+msgstr "Visszavonás"
 
 #. module: product_margin
 #: model_terms:ir.ui.view,arch_db:product_margin.view_product_margin_form
@@ -132,7 +134,7 @@ msgstr "Elvárt árrés * 100 / Elvárt értékesítés"
 #. module: product_margin
 #: model:ir.model.fields,field_description:product_margin.field_product_margin__from_date
 msgid "From"
-msgstr "Kezdő dátum"
+msgstr "Forrás"
 
 #. module: product_margin
 #: model_terms:ir.ui.view,arch_db:product_margin.product_margin_form_view
@@ -142,18 +144,13 @@ msgstr "Általános információk"
 #. module: product_margin
 #: model:ir.model.fields,field_description:product_margin.field_product_margin__id
 msgid "ID"
-msgstr "Azonosító"
+msgstr "ID"
 
 #. module: product_margin
 #: model:ir.model.fields,field_description:product_margin.field_product_margin__invoice_state
 #: model:ir.model.fields,field_description:product_margin.field_product_product__invoice_state
 msgid "Invoice State"
 msgstr "Számla állapota"
-
-#. module: product_margin
-#: model:ir.model.fields,field_description:product_margin.field_product_margin____last_update
-msgid "Last Modified on"
-msgstr "Legutóbb frissítve"
 
 #. module: product_margin
 #: model:ir.model.fields,field_description:product_margin.field_product_margin__write_uid
@@ -163,7 +160,7 @@ msgstr "Frissítette"
 #. module: product_margin
 #: model:ir.model.fields,field_description:product_margin.field_product_margin__write_date
 msgid "Last Updated on"
-msgstr "Frissítve "
+msgstr "Frissítve"
 
 #. module: product_margin
 #: model:ir.model.fields,field_description:product_margin.field_product_product__date_from
@@ -208,25 +205,25 @@ msgid "Paid"
 msgstr "Kifizetve"
 
 #. module: product_margin
-#: model:ir.model,name:product_margin.model_product_product
-msgid "Product"
-msgstr "Termék"
-
-#. module: product_margin
 #: model:ir.model,name:product_margin.model_product_margin
 msgid "Product Margin"
 msgstr "Termék árrés"
 
 #. module: product_margin
+#. odoo-python
 #: code:addons/product_margin/wizard/product_margin.py:0
 #: model:ir.actions.act_window,name:product_margin.product_margin_act_window
 #: model:ir.ui.menu,name:product_margin.menu_action_product_margin
 #: model_terms:ir.ui.view,arch_db:product_margin.view_product_margin_form
 #: model_terms:ir.ui.view,arch_db:product_margin.view_product_margin_graph
 #: model_terms:ir.ui.view,arch_db:product_margin.view_product_margin_tree
-#, python-format
 msgid "Product Margins"
 msgstr "Termék árrések"
+
+#. module: product_margin
+#: model:ir.model,name:product_margin.model_product_product
+msgid "Product Variant"
+msgstr "Termékváltozat"
 
 #. module: product_margin
 #: model_terms:ir.ui.view,arch_db:product_margin.product_margin_form_view
@@ -246,7 +243,7 @@ msgstr "Beszerzések"
 #. module: product_margin
 #: model_terms:ir.ui.view,arch_db:product_margin.view_product_margin_form
 msgid "Sales"
-msgstr "Értékesítések"
+msgstr "Értékesítés"
 
 #. module: product_margin
 #: model:ir.model.fields,field_description:product_margin.field_product_product__sales_gap
@@ -301,7 +298,7 @@ msgstr "Összes mennyiség szállítói számlákban"
 #. module: product_margin
 #: model:ir.model.fields,field_description:product_margin.field_product_margin__to_date
 msgid "To"
-msgstr "Eddig"
+msgstr "Cél"
 
 #. module: product_margin
 #: model:ir.model.fields,field_description:product_margin.field_product_product__total_cost
@@ -333,5 +330,5 @@ msgstr "Forgalom"
 
 #. module: product_margin
 #: model:ir.model.fields,help:product_margin.field_product_product__total_margin
-msgid "Turnover - Standard price"
-msgstr "Forgalom - Alapár"
+msgid "Turnover - Total cost"
+msgstr ""

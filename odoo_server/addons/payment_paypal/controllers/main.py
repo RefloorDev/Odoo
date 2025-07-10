@@ -1,114 +1,141 @@
-# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
 import logging
 import pprint
 
-import requests
-import werkzeug
-from werkzeug import urls
+from werkzeug.exceptions import Forbidden
 
-from odoo import http
-from odoo.addons.payment.models.payment_acquirer import ValidationError
+from odoo import _, http
+from odoo.exceptions import ValidationError
 from odoo.http import request
+
+from odoo.addons.payment import utils as payment_utils
+from odoo.addons.payment_paypal import const
+
 
 _logger = logging.getLogger(__name__)
 
 
 class PaypalController(http.Controller):
-    _notify_url = '/payment/paypal/ipn/'
-    _return_url = '/payment/paypal/dpn/'
-    _cancel_url = '/payment/paypal/cancel/'
+    _complete_url = '/payment/paypal/complete_order'
+    _webhook_url = '/payment/paypal/webhook/'
 
-    def _parse_pdt_response(self, response):
-        """ Parse a text response for a PDT verification.
+    @http.route(_complete_url, type='json', auth='public', methods=['POST'])
+    def paypal_complete_order(self, provider_id, order_id, reference=None):
+        """ Make a capture request and handle the notification data.
 
-            :param str response: text response, structured in the following way:
-                STATUS\nkey1=value1\nkey2=value2...\n
-             or STATUS\nError message...\n
-            :rtype tuple(str, dict)
-            :return: tuple containing the STATUS str and the key/value pairs
-                     parsed as a dict
+        :param int provider_id: The provider handling the transaction, as a `payment.provider` id.
+        :param string order_id: The order id provided by PayPal to identify the order.
+        :param str reference: The reference of the transaction used to generate idempotency key.
+        :return: None
         """
-        lines = [line for line in response.split('\n') if line]
-        status = lines.pop(0)
-
-        pdt_post = {}
-        for line in lines:
-            split = line.split('=', 1)
-            if len(split) == 2:
-                pdt_post[split[0]] = urls.url_unquote_plus(split[1])
-            else:
-                _logger.warning('Paypal: error processing pdt response: %s', line)
-
-        return status, pdt_post
-
-    def paypal_validate_data(self, **post):
-        """ Paypal IPN: three steps validation to ensure data correctness
-
-         - step 1: return an empty HTTP 200 response -> will be done at the end
-           by returning ''
-         - step 2: POST the complete, unaltered message back to Paypal (preceded
-           by cmd=_notify-validate or _notify-synch for PDT), with same encoding
-         - step 3: paypal send either VERIFIED or INVALID (single word) for IPN
-                   or SUCCESS or FAIL (+ data) for PDT
-
-        Once data is validated, process it. """
-        res = False
-        post['cmd'] = '_notify-validate'
-        reference = post.get('item_number')
-        tx = None
+        provider_sudo = request.env['payment.provider'].browse(provider_id).sudo()
+        idempotency_key = None
         if reference:
-            tx = request.env['payment.transaction'].sudo().search([('reference', '=', reference)])
-        paypal_url = tx.acquirer_id.paypal_get_form_action_url()
-        pdt_request = bool(post.get('amt'))  # check for specific pdt param
-        if pdt_request:
-            # this means we are in PDT instead of DPN like before
-            # fetch the PDT token
-            post['at'] = tx and tx.acquirer_id.paypal_pdt_token or ''
-            post['cmd'] = '_notify-synch'  # command is different in PDT than IPN/DPN
-        urequest = requests.post(paypal_url, post)
-        urequest.raise_for_status()
-        resp = urequest.text
-        if pdt_request:
-            resp, post = self._parse_pdt_response(resp)
-        if resp in ['VERIFIED', 'SUCCESS']:
-            _logger.info('Paypal: validated data')
-            res = request.env['payment.transaction'].sudo().form_feedback(post, 'paypal')
-            if not res and tx:
-                tx._set_transaction_error('Validation error occured. Please contact your administrator.')
-        elif resp in ['INVALID', 'FAIL']:
-            _logger.warning('Paypal: answered INVALID/FAIL on data verification')
-            if tx:
-                tx._set_transaction_error('Invalid response from Paypal. Please contact your administrator.')
+            tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
+                'paypal', {'reference_id': reference}
+            )
+            idempotency_key = payment_utils.generate_idempotency_key(
+                tx_sudo, scope='payment_request_controller'
+            )
+        response = provider_sudo._paypal_make_request(
+            f'/v2/checkout/orders/{order_id}/capture', idempotency_key=idempotency_key
+        )
+        normalized_response = self._normalize_paypal_data(response)
+        tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
+            'paypal', normalized_response
+        )
+        tx_sudo._handle_notification_data('paypal', normalized_response)
+
+    @http.route(_webhook_url, type='http', auth='public', methods=['POST'], csrf=False)
+    def paypal_webhook(self):
+        """ Process the notification data sent by PayPal to the webhook.
+
+        See https://developer.paypal.com/docs/api/webhooks/v1/.
+
+        :return: An empty string to acknowledge the notification.
+        :rtype: str
+        """
+        data = request.get_json_data()
+        if data.get('event_type') in const.HANDLED_WEBHOOK_EVENTS:
+            normalized_data = self._normalize_paypal_data(
+                data.get('resource'), from_webhook=True
+            )
+            _logger.info("Notification received from PayPal with data:\n%s", pprint.pformat(data))
+            try:
+                # Check the origin and integrity of the notification.
+                tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
+                    'paypal', normalized_data
+                )
+                self._verify_notification_origin(data, tx_sudo)
+
+                # Handle the notification data.
+                tx_sudo._handle_notification_data('paypal', normalized_data)
+            except ValidationError:  # Acknowledge the notification to avoid getting spammed.
+                _logger.warning(
+                    "Unable to handle the notification data; skipping to acknowledge.",
+                    exc_info=True,
+                )
+        return request.make_json_response('')
+
+    def _normalize_paypal_data(self, data, from_webhook=False):
+        """ Normalize the payment data received from PayPal.
+
+        The payment data received from PayPal has a different format depending on whether the data
+        come from the payment request response, or from the webhook.
+
+        :param dict data: The data to normalize.
+        :param bool from_webhook: Whether the data come from the webhook.
+        :return: The normalized data.
+        :rtype: dict
+        """
+        purchase_unit = data['purchase_units'][0]
+        result = {
+            'payment_source': data['payment_source'].keys(),
+            'reference_id': purchase_unit.get('reference_id')
+        }
+        if from_webhook:
+            result.update({
+                **purchase_unit,
+                'txn_type': data.get('intent'),
+                'id': data.get('id'),
+                'status': data.get('status'),
+            })
         else:
-            _logger.warning('Paypal: unrecognized paypal answer, received %s instead of VERIFIED/SUCCESS or INVALID/FAIL (validation: %s)' % (resp, 'PDT' if pdt_request else 'IPN/DPN'))
-            if tx:
-                tx._set_transaction_error('Unrecognized error from Paypal. Please contact your administrator.')
-        return res
+            if captured := purchase_unit.get('payments', {}).get('captures'):
+                result.update({
+                    **captured[0],
+                    'txn_type': 'CAPTURE',
+                })
+            else:
+                raise ValidationError("PayPal: " + _("Invalid response format, can't normalize."))
+        return result
 
-    @http.route('/payment/paypal/ipn/', type='http', auth='public', methods=['POST'], csrf=False)
-    def paypal_ipn(self, **post):
-        """ Paypal IPN. """
-        _logger.info('Beginning Paypal IPN form_feedback with post data %s', pprint.pformat(post))  # debug
-        try:
-            self.paypal_validate_data(**post)
-        except ValidationError:
-            _logger.exception('Unable to validate the Paypal payment')
-        return ''
+    def _verify_notification_origin(self, notification_data, tx_sudo):
+        """ Check that the notification was sent by PayPal.
 
-    @http.route('/payment/paypal/dpn', type='http', auth="public", methods=['POST', 'GET'], csrf=False)
-    def paypal_dpn(self, **post):
-        """ Paypal DPN """
-        _logger.info('Beginning Paypal DPN form_feedback with post data %s', pprint.pformat(post))  # debug
-        try:
-            res = self.paypal_validate_data(**post)
-        except ValidationError:
-            _logger.exception('Unable to validate the Paypal payment')
-        return werkzeug.utils.redirect('/payment/process')
+        See https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post.
 
-    @http.route('/payment/paypal/cancel', type='http', auth="public", csrf=False)
-    def paypal_cancel(self, **post):
-        """ When the user cancels its Paypal payment: GET on this route """
-        _logger.info('Beginning Paypal cancel with post data %s', pprint.pformat(post))  # debug
-        return werkzeug.utils.redirect('/payment/process')
+        :param dict notification_data: The notification data
+        :param recordset tx_sudo: The sudoed transaction referenced in the notification data, as a
+                                  `payment.transaction` record
+        :return: None
+        :raise Forbidden: If the notification origin can't be verified.
+        """
+        headers = request.httprequest.headers
+        data = json.dumps({
+            'transmission_id': headers.get('PAYPAL-TRANSMISSION-ID'),
+            'transmission_time': headers.get('PAYPAL-TRANSMISSION-TIME'),
+            'cert_url': headers.get('PAYPAL-CERT-URL'),
+            'auth_algo': headers.get('PAYPAL-AUTH-ALGO'),
+            'transmission_sig': headers.get('PAYPAL-TRANSMISSION-SIG'),
+            'webhook_id': tx_sudo.provider_id.paypal_webhook_id,
+            'webhook_event': notification_data,
+        })
+        verification = tx_sudo.provider_id._paypal_make_request(
+            '/v1/notifications/verify-webhook-signature', data=data
+        )
+        if verification.get('verification_status') != 'SUCCESS':
+            _logger.warning("Received notification that was not verified by PayPal.")
+            raise Forbidden()

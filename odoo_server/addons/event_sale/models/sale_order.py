@@ -1,107 +1,94 @@
-# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models
+from werkzeug.urls import url_encode, url_join
+
+from odoo import fields, models, _
+from odoo.exceptions import ValidationError
+from odoo.osv import expression
 
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"
 
-    def _action_confirm(self):
-        res = super(SaleOrder, self)._action_confirm()
-        for so in self:
-            # confirm registration if it was free (otherwise it will be confirmed once invoice fully paid)
-            so.order_line._update_registrations(confirm=so.amount_total == 0, cancel_to_draft=False)
-        return res
+    attendee_count = fields.Integer('Attendee Count', compute='_compute_attendee_count')
+
+    def write(self, vals):
+        """ Synchronize partner from SO to registrations. This is done notably
+        in website_sale controller shop/address that updates customer, but not
+        only. """
+        result = super(SaleOrder, self).write(vals)
+        if any(line.service_tracking == 'event' for line in self.order_line) and vals.get('partner_id'):
+            registrations_toupdate = self.env['event.registration'].sudo().search([('sale_order_id', 'in', self.ids)])
+            registrations_toupdate.write({'partner_id': vals['partner_id']})
+        return result
 
     def action_confirm(self):
+        unconfirmed_registrations = self.order_line.registration_ids.filtered(
+            lambda reg: reg.state in ["draft", "cancel"]
+        )
         res = super(SaleOrder, self).action_confirm()
+        unconfirmed_registrations._update_mail_schedulers()
+
         for so in self:
-            if any(so.order_line.filtered(lambda line: line.event_id)):
-                return self.env['ir.actions.act_window'] \
-                    .with_context(default_sale_order_id=so.id) \
-                    .for_xml_id('event_sale', 'action_sale_order_event_registration')
+            if not any(line.service_tracking == 'event' for line in so.order_line):
+                continue
+            so_lines_missing_events = so.order_line.filtered(lambda line: line.service_tracking == 'event' and not line.event_id)
+            if so_lines_missing_events:
+                so_lines_descriptions = "".join(f"\n- {so_line_description.name}" for so_line_description in so_lines_missing_events)
+                raise ValidationError(_("Please make sure all your event related lines are configured before confirming this order:%s", so_lines_descriptions))
+            # Initialize registrations
+            so.order_line._init_registrations()
+            if len(self) == 1:
+                return self.env['ir.actions.act_window'].with_context(
+                    default_sale_order_id=so.id
+                )._for_xml_id('event_sale.action_sale_order_event_registration')
         return res
 
+    def action_view_attendee_list(self):
+        action = self.env["ir.actions.actions"]._for_xml_id("event.event_registration_action_tree")
+        action['domain'] = [('sale_order_id', 'in', self.ids)]
+        return action
 
-class SaleOrderLine(models.Model):
+    def _compute_attendee_count(self):
+        sale_orders_data = self.env['event.registration']._read_group(
+            [('sale_order_id', 'in', self.ids),
+             ('state', '!=', 'cancel')],
+            ['sale_order_id'], ['__count'],
+        )
+        attendee_count_data = {
+            sale_order.id: count for sale_order, count in sale_orders_data
+        }
+        for sale_order in self:
+            sale_order.attendee_count = attendee_count_data.get(sale_order.id, 0)
 
-    _inherit = 'sale.order.line'
+    def _get_product_catalog_domain(self):
+        """Override of `_get_product_catalog_domain` to extend the domain.
 
-    event_id = fields.Many2one('event.event', string='Event',
-       help="Choose an event and it will automatically create a registration for this event.")
-    event_ticket_id = fields.Many2one('event.event.ticket', string='Event Ticket', help="Choose "
-        "an event ticket and it will automatically create a registration for this event ticket.")
-    event_ok = fields.Boolean(related='product_id.event_ok', readonly=True)
-
-    def _update_registrations(self, confirm=True, cancel_to_draft=False, registration_data=None):
-        """ Create or update registrations linked to a sales order line. A sale
-        order line has a product_uom_qty attribute that will be the number of
-        registrations linked to this line. This method update existing registrations
-        and create new one for missing one. """
-        Registration = self.env['event.registration'].sudo()
-        registrations = Registration.search([('sale_order_line_id', 'in', self.ids)])
-        for so_line in self.filtered('event_id'):
-            existing_registrations = registrations.filtered(lambda self: self.sale_order_line_id.id == so_line.id)
-            if confirm:
-                existing_registrations.filtered(lambda self: self.state not in ['open', 'cancel']).confirm_registration()
-            if cancel_to_draft:
-                existing_registrations.filtered(lambda self: self.state == 'cancel').do_draft()
-
-            for count in range(int(so_line.product_uom_qty) - len(existing_registrations)):
-                registration = {}
-                if registration_data:
-                    registration = registration_data.pop()
-                # TDE CHECK: auto confirmation
-                registration['sale_order_line_id'] = so_line
-                Registration.with_context(registration_force_draft=True).create(
-                    Registration._prepare_attendee_values(registration))
-        return True
-
-    @api.onchange('product_id')
-    def _onchange_product_id(self):
-        # We reset the event when keeping it would lead to an inconstitent state.
-        # We need to do it this way because the only relation between the product and the event is through the corresponding tickets.
-        if self.event_id and (not self.product_id or self.product_id.id not in self.event_id.mapped('event_ticket_ids.product_id.id')):
-            self.event_id = None
-
-    @api.onchange('event_id')
-    def _onchange_event_id(self):
-        # We reset the ticket when keeping it would lead to an inconstitent state.
-        if self.event_ticket_id and (not self.event_id or self.event_id != self.event_ticket_id.event_id):
-            self.event_ticket_id = None
-
-    @api.onchange('product_uom', 'product_uom_qty')
-    def product_uom_change(self):
-        if not self.event_ticket_id:
-            super(SaleOrderLine, self).product_uom_change()
-
-    @api.onchange('event_ticket_id')
-    def _onchange_event_ticket_id(self):
-        # we call this to force update the default name
-        self.product_id_change()
-
-    def get_sale_order_line_multiline_description_sale(self, product):
-        """ We override this method because we decided that:
-                The default description of a sales order line containing a ticket must be different than the default description when no ticket is present.
-                So in that case we use the description computed from the ticket, instead of the description computed from the product.
-                We need this override to be defined here in sales order line (and not in product) because here is the only place where the event_ticket_id is referenced.
+        :returns: A list of tuples that represents a domain.
+        :rtype: list
         """
-        if self.event_ticket_id:
-            ticket = self.event_ticket_id.with_context(
-                lang=self.order_id.partner_id.lang,
-            )
+        domain = super()._get_product_catalog_domain()
+        return expression.AND([domain, [('service_tracking', '!=', 'event')]])
 
-            return ticket.get_ticket_multiline_description_sale() + self._get_sale_order_line_multiline_description_variants()
-        else:
-            return super(SaleOrderLine, self).get_sale_order_line_multiline_description_sale(product)
+    def _notify_get_recipients_groups(self, message, model_description, msg_vals=None):
+        groups = super()._notify_get_recipients_groups(message, model_description, msg_vals)
+        if not self or self.state != 'sale' or not self.order_line.registration_ids:
+            return groups
 
-    def _get_display_price(self, product):
-        if self.event_ticket_id and self.event_id:
-            company = self.event_id.company_id or self.env.company.id
-            currency = company.currency_id
-            return currency._convert(
-                self.event_ticket_id.price, self.order_id.currency_id,
-                self.order_id.company_id or self.env.company.id,
-                self.order_id.date_order or fields.Date.today())
-        else:
-            return super()._get_display_price(product)
+        customer_portal_group = next((group for group in groups if group[0] == 'portal_customer'), None)
+        if not customer_portal_group:
+            return groups
+
+        if customer_portal_group[2]['has_button_access']:
+            actions_opt = customer_portal_group[2].setdefault('actions', [])
+            has_single_event = len(self.order_line.event_id) == 1
+            registrations = self.order_line.registration_ids
+            for event, event_registrations in registrations.grouped('event_id').items():
+                actions_opt.append({
+                    'url': url_join(event.get_base_url(), f'/event/{event.id}/my_tickets?' + url_encode({
+                        'registration_ids': str(event_registrations.ids),
+                        'tickets_hash': event._get_tickets_access_hash(event_registrations.ids),
+                    })),
+                    'title': _("Get Your Tickets") if has_single_event else _("%(event_name)s - Tickets", event_name=event.name)
+                })
+        return groups

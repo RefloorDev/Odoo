@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models
-from odoo.addons.base.models.res_partner import WARNING_MESSAGE, WARNING_HELP
+from odoo.addons.base.models.res_partner import WARNING_HELP, WARNING_MESSAGE
 
 
 class Partner(models.Model):
@@ -20,3 +20,9 @@ class Partner(models.Model):
     picking_warn = fields.Selection(WARNING_MESSAGE, 'Stock Picking', help=WARNING_HELP, default='no-message')
     picking_warn_msg = fields.Text('Message for Stock Picking')
 
+    def action_view_stock_lots(self):
+        action = self.env['ir.actions.act_window']._for_xml_id('stock.action_lot_report')
+        all_child = self.with_context(active_test=False).search([('id', 'child_of', self.ids)])
+        action["domain"] = [("partner_id", "in", all_child.ids)]
+        action["context"] = {'search_default_filter_not_has_return': True}
+        return action

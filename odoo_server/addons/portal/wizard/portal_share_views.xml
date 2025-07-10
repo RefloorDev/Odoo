@@ -5,21 +5,17 @@
         <field name="model">portal.share</field>
         <field name="arch" type="xml">
             <form string="Share Document">
-                <p class="alert alert-warning" attrs="{'invisible': [('access_warning', '=', '')]}" role="alert"><field name="access_warning"/></p>
+                <p class="alert alert-warning" invisible="access_warning == ''" role="alert"><field name="access_warning"/></p>
                 <group name="share_link">
                     <field name="res_model" invisible="1"/>
                     <field name="res_id" invisible="1"/>
                     <field name="share_link" widget="CopyClipboardChar" options="{'string': 'Copy Link'}"/>
-                </group>
-                <group>
                     <field name="partner_ids" widget="many2many_tags_email" placeholder="Add contacts to share the document..."/>
-                </group>
-                <group>
                     <field name="note" placeholder="Add a note"/>
                 </group>
                 <footer>
-                    <button string="Send" name="action_send_mail" attrs="{'invisible': [('access_warning', '!=', '')]}" type="object" class="btn-primary"/>
-                    <button string="Cancel" class="btn-default" special="cancel" />
+                    <button string="Send" name="action_send_mail" invisible="access_warning != ''" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancel" class="btn-default" special="cancel" data-hotkey="x" />
                 </footer>
             </form>
         </field>
@@ -30,6 +26,7 @@
         <field name="res_model">portal.share</field>
         <field name="binding_model_id" ref="model_portal_share"/>
         <field name="view_mode">form</field>
+        <field name="context">{'dialog_size': 'medium'}</field>
         <field name="target">new</field>
     </record>
 </odoo>

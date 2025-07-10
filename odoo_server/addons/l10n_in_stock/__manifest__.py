@@ -5,7 +5,7 @@
     'name': 'Indian - Stock Report(GST)',
     'version': '1.0',
     'description': """GST Stock Report""",
-    'category': 'Accounting/Accounting',
+    'category': 'Accounting/Localizations',
     'depends': [
         'l10n_in',
         'stock',
@@ -17,6 +17,6 @@
         'data/product_demo.xml',
     ],
     'installable': True,
-    'application': False,
     'auto_install': True,
+    'license': 'LGPL-3',
 }

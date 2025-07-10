@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo.exceptions import UserError, ValidationError
-from odoo.tests.common import Form, SavepointCase
+from odoo import Command
+from odoo.exceptions import ValidationError
+from odoo.tests import TransactionCase
 
 
-class StockGenerate(SavepointCase):
+class StockGenerateCommon(TransactionCase):
     @classmethod
     def setUpClass(cls):
-        super(StockGenerate, cls).setUpClass()
+        super().setUpClass()
+        cls.env.ref('base.group_user').write({'implied_ids': [(4, cls.env.ref('stock.group_production_lot').id)]})
         Product = cls.env['product.product']
         cls.product_serial = Product.create({
             'name': 'Tracked by SN',
-            'type': 'product',
+            'is_storable': True,
             'tracking': 'serial',
         })
         cls.uom_unit = cls.env.ref('uom.product_uom_unit')
@@ -32,26 +34,29 @@ class StockGenerate(SavepointCase):
             'location_id': cls.warehouse.lot_stock_id.id,
         })
 
-        cls.Wizard = cls.env['stock.assign.serial']
-
-    def get_new_move(self, nbre_of_lines):
-        move_lines_val = []
-        for i in range(nbre_of_lines):
-            move_lines_val.append({
-                'product_id': self.product_serial.id,
+    def get_new_move(self, nbre_of_lines=0, product=False):
+        product = product or self.product_serial
+        move_lines_vals = [Command.create({
+                'product_id': product.id,
                 'product_uom_id': self.uom_unit.id,
-                'product_uom_qty': 1,
+                'quantity': 1,
                 'location_id': self.location.id,
-                'location_dest_id': self.location_dest.id
-            })
+                'location_dest_id': self.location_dest.id,
+            }) for i in range(nbre_of_lines)]
         return self.env['stock.move'].create({
             'name': 'Move Test',
-            'product_id': self.product_serial.id,
+            'product_id': product.id,
             'product_uom': self.uom_unit.id,
             'location_id': self.location.id,
             'location_dest_id': self.location_dest.id,
-            'move_line_ids': [(0, 0, line_vals) for line_vals in move_lines_val]
+            'move_line_ids': move_lines_vals,
         })
+
+    def assert_move_line_vals_values(self, line_vals_list, checked_vals_list):
+        self.assertEqual(len(line_vals_list), len(checked_vals_list))
+        for (line_vals, checked_vals) in zip(line_vals_list, checked_vals_list):
+            for checked_field in checked_vals:
+                self.assertEqual(line_vals[checked_field], checked_vals[checked_field])
 
     def test_generate_01_sn(self):
         """ Creates a move with 5 move lines, then asks for generates 5 Serial
@@ -60,27 +65,17 @@ class StockGenerate(SavepointCase):
         """
         nbre_of_lines = 5
         move = self.get_new_move(nbre_of_lines)
+        move._do_unreserve()
+        move._generate_serial_numbers('001', nbre_of_lines)
 
-        form_wizard = Form(self.env['stock.assign.serial'].with_context(
-            default_move_id=move.id,
-            default_next_serial_number='001',
-            default_next_serial_count=nbre_of_lines,
-        ))
-        wiz = form_wizard.save()
-        self.assertEqual(len(move.move_line_ids), nbre_of_lines)
-        wiz.generate_serial_numbers()
         # Checks new move lines have the right SN
         generated_numbers = ['001', '002', '003', '004', '005']
-        self.assertEqual(len(move.move_line_ids), nbre_of_lines + len(generated_numbers))
-        for move_line in move.move_line_nosuggest_ids:
-            # For a product tracked by SN, the `qty_done` is set on 1 when
+        self.assertEqual(len(move.move_line_ids), len(generated_numbers))
+        for move_line in move.move_line_ids:
+            # For a product tracked by SN, the `quantity` is set on 1 when
             # `lot_name` is set.
-            self.assertEqual(move_line.qty_done, 1)
+            self.assertEqual(move_line.quantity, 1)
             self.assertEqual(move_line.lot_name, generated_numbers.pop(0))
-        # Checks pre-generated move lines didn't change
-        for move_line in (move.move_line_ids - move.move_line_nosuggest_ids):
-            self.assertEqual(move_line.qty_done, 0)
-            self.assertEqual(move_line.lot_name, False)
 
     def test_generate_02_prefix_suffix(self):
         """ Generates some Serial Numbers and checks the prefix and/or suffix
@@ -89,22 +84,17 @@ class StockGenerate(SavepointCase):
         nbre_of_lines = 10
         # Case #1: Prefix, no suffix
         move = self.get_new_move(nbre_of_lines)
-        form_wizard = Form(self.env['stock.assign.serial'].with_context(
-            default_move_id=move.id,
-            default_next_serial_number='bilou-87',
-            default_next_serial_count=nbre_of_lines,
-        ))
-        wiz = form_wizard.save()
-        wiz.generate_serial_numbers()
+        move._do_unreserve()
+        move._generate_serial_numbers('bilou-87', nbre_of_lines)
         # Checks all move lines have the right SN
         generated_numbers = [
             'bilou-87', 'bilou-88', 'bilou-89', 'bilou-90', 'bilou-91',
             'bilou-92', 'bilou-93', 'bilou-94', 'bilou-95', 'bilou-96'
         ]
-        for move_line in move.move_line_nosuggest_ids:
-            # For a product tracked by SN, the `qty_done` is set on 1 when
+        for move_line in move.move_line_ids:
+            # For a product tracked by SN, the `quantity` is set on 1 when
             # `lot_name` is set.
-            self.assertEqual(move_line.qty_done, 1)
+            self.assertEqual(move_line.quantity, 1)
             self.assertEqual(
                 move_line.lot_name,
                 generated_numbers.pop(0)
@@ -112,22 +102,17 @@ class StockGenerate(SavepointCase):
 
         # Case #2: No prefix, suffix
         move = self.get_new_move(nbre_of_lines)
-        form_wizard = Form(self.env['stock.assign.serial'].with_context(
-            default_move_id=move.id,
-            default_next_serial_number='005-ccc',
-            default_next_serial_count=nbre_of_lines,
-        ))
-        wiz = form_wizard.save()
-        wiz.generate_serial_numbers()
+        move._do_unreserve()
+        move._generate_serial_numbers('005-ccc', nbre_of_lines)
         # Checks all move lines have the right SN
         generated_numbers = [
             '005-ccc', '006-ccc', '007-ccc', '008-ccc', '009-ccc',
             '010-ccc', '011-ccc', '012-ccc', '013-ccc', '014-ccc'
         ]
-        for move_line in move.move_line_nosuggest_ids:
-            # For a product tracked by SN, the `qty_done` is set on 1 when
+        for move_line in move.move_line_ids:
+            # For a product tracked by SN, the `quantity` is set on 1 when
             # `lot_name` is set.
-            self.assertEqual(move_line.qty_done, 1)
+            self.assertEqual(move_line.quantity, 1)
             self.assertEqual(
                 move_line.lot_name,
                 generated_numbers.pop(0)
@@ -135,13 +120,7 @@ class StockGenerate(SavepointCase):
 
         # Case #3: Prefix + suffix
         move = self.get_new_move(nbre_of_lines)
-        form_wizard = Form(self.env['stock.assign.serial'].with_context(
-            default_move_id=move.id,
-            default_next_serial_number='alpha-012-345-beta',
-            default_next_serial_count=nbre_of_lines,
-        ))
-        wiz = form_wizard.save()
-        wiz.generate_serial_numbers()
+        move._generate_serial_numbers('alpha-012-345-beta', nbre_of_lines)
         # Checks all move lines have the right SN
         generated_numbers = [
             'alpha-012-345-beta', 'alpha-012-346-beta', 'alpha-012-347-beta',
@@ -149,10 +128,29 @@ class StockGenerate(SavepointCase):
             'alpha-012-351-beta', 'alpha-012-352-beta', 'alpha-012-353-beta',
             'alpha-012-354-beta'
         ]
-        for move_line in move.move_line_nosuggest_ids:
-            # For a product tracked by SN, the `qty_done` is set on 1 when
+        for move_line in move.move_line_ids:
+            # For a product tracked by SN, the `quantity` is set on 1 when
             # `lot_name` is set.
-            self.assertEqual(move_line.qty_done, 1)
+            self.assertEqual(move_line.quantity, 1)
+            self.assertEqual(
+                move_line.lot_name,
+                generated_numbers.pop(0)
+            )
+
+        # Case #4: Prefix + suffix, identical number pattern
+        move = self.get_new_move(nbre_of_lines)
+        move._generate_serial_numbers('BAV023B00001S00001', nbre_of_lines)
+        # Checks all move lines have the right SN
+        generated_numbers = [
+            'BAV023B00001S00001', 'BAV023B00001S00002', 'BAV023B00001S00003',
+            'BAV023B00001S00004', 'BAV023B00001S00005', 'BAV023B00001S00006',
+            'BAV023B00001S00007', 'BAV023B00001S00008', 'BAV023B00001S00009',
+            'BAV023B00001S00010'
+        ]
+        for move_line in move.move_line_ids:
+            # For a product tracked by SN, the `quantity` is set on 1 when
+            # `lot_name` is set.
+            self.assertEqual(move_line.quantity, 1)
             self.assertEqual(
                 move_line.lot_name,
                 generated_numbers.pop(0)
@@ -162,18 +160,12 @@ class StockGenerate(SavepointCase):
         """ Tries to generate some SN but with invalid initial number.
         """
         move = self.get_new_move(3)
-        form_wizard = Form(self.env['stock.assign.serial'].with_context(
-            default_move_id=move.id,
-            default_next_serial_number='code-xxx',
-        ))
-        wiz = form_wizard.save()
-        with self.assertRaises(UserError):
-            wiz.generate_serial_numbers()
-
-        form_wizard.next_serial_count = 0
         # Must raise an exception because `next_serial_count` must be greater than 0.
         with self.assertRaises(ValidationError):
-            form_wizard.save()
+            move._generate_serial_numbers('code-xxx', 0)
+
+        move._generate_serial_numbers('code-xxx', 3)
+        self.assertEqual(move.move_line_ids.mapped('lot_name'), ["code-xxx0", "code-xxx1", "code-xxx2"])
 
     def test_generate_04_generate_in_multiple_time(self):
         """ Generates a Serial Number for each move lines (except the last one)
@@ -182,25 +174,12 @@ class StockGenerate(SavepointCase):
         """
         nbre_of_lines = 10
         move = self.get_new_move(nbre_of_lines)
-
-        form_wizard = Form(self.env['stock.assign.serial'].with_context(
-            default_move_id=move.id,
-        ))
-        # First assignment
-        form_wizard.next_serial_count = 3
-        form_wizard.next_serial_number = '001'
-        wiz = form_wizard.save()
-        wiz.generate_serial_numbers()
+        move._do_unreserve()
+        move._generate_serial_numbers('001', 3)
         # Second assignment
-        form_wizard.next_serial_count = 2
-        form_wizard.next_serial_number = 'bilou-64'
-        wiz = form_wizard.save()
-        wiz.generate_serial_numbers()
+        move._generate_serial_numbers('bilou-64', 2)
         # Third assignment
-        form_wizard.next_serial_count = 4
-        form_wizard.next_serial_number = 'ro-1337-bot'
-        wiz = form_wizard.save()
-        wiz.generate_serial_numbers()
+        move._generate_serial_numbers('ro-1337-bot', 4)
 
         # Checks all move lines have the right SN
         generated_numbers = [
@@ -211,13 +190,12 @@ class StockGenerate(SavepointCase):
             # Correspond to the third assignment
             'ro-1337-bot', 'ro-1338-bot', 'ro-1339-bot', 'ro-1340-bot',
         ]
-        self.assertEqual(len(move.move_line_ids), nbre_of_lines + len(generated_numbers))
-        self.assertEqual(len(move.move_line_nosuggest_ids), len(generated_numbers))
-        for move_line in move.move_line_nosuggest_ids:
-            self.assertEqual(move_line.qty_done, 1)
+        self.assertEqual(len(move.move_line_ids), len(generated_numbers))
+        for move_line in move.move_line_ids:
+            self.assertEqual(move_line.quantity, 1)
             self.assertEqual(move_line.lot_name, generated_numbers.pop(0))
-        for move_line in (move.move_line_ids - move.move_line_nosuggest_ids):
-            self.assertEqual(move_line.qty_done, 0)
+        for move_line in (move.move_line_ids - move.move_line_ids):
+            self.assertEqual(move_line.quantity, 0)
             self.assertEqual(move_line.lot_name, False)
 
     def test_generate_with_putaway(self):
@@ -233,16 +211,10 @@ class StockGenerate(SavepointCase):
 
         # Checks a first time without putaway...
         move = self.get_new_move(nbre_of_lines)
-        form_wizard = Form(self.env['stock.assign.serial'].with_context(
-            default_move_id=move.id,
-        ))
-        form_wizard.next_serial_count = nbre_of_lines
-        form_wizard.next_serial_number = '001'
-        wiz = form_wizard.save()
-        wiz.generate_serial_numbers()
+        move._generate_serial_numbers('001', nbre_of_lines)
 
-        for move_line in move.move_line_nosuggest_ids:
-            self.assertEqual(move_line.qty_done, 1)
+        for move_line in move.move_line_ids:
+            self.assertEqual(move_line.quantity, 1)
             # The location dest must be the default one.
             self.assertEqual(move_line.location_dest_id.id, self.location_dest.id)
 
@@ -250,7 +222,7 @@ class StockGenerate(SavepointCase):
         grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
         self.env.user.write({'groups_id': [(4, grp_multi_loc.id)]})
         # Creates a putaway rule
-        putaway_product = self.env['stock.putaway.rule'].create({
+        self.env['stock.putaway.rule'].create({
             'product_id': self.product_serial.id,
             'location_in_id': self.location_dest.id,
             'location_out_id': shelf_location.id,
@@ -258,95 +230,196 @@ class StockGenerate(SavepointCase):
 
         # Checks now with putaway...
         move = self.get_new_move(nbre_of_lines)
-        form_wizard = Form(self.env['stock.assign.serial'].with_context(
-            default_move_id=move.id,
-        ))
-        form_wizard.next_serial_count = nbre_of_lines
-        form_wizard.next_serial_number = '001'
-        wiz = form_wizard.save()
-        wiz.generate_serial_numbers()
+        move._do_unreserve()
+        move._generate_serial_numbers('001', nbre_of_lines)
 
-        for move_line in move.move_line_nosuggest_ids:
-            self.assertEqual(move_line.qty_done, 1)
+        for move_line in move.move_line_ids:
+            self.assertEqual(move_line.quantity, 1)
             # The location dest must be now the one from the putaway.
             self.assertEqual(move_line.location_dest_id.id, shelf_location.id)
-    def test_set_multiple_lot_name_01(self):
-        """ Sets five SN in one time in stock move view form, then checks move
-        has five new move lines with the right `lot_name`.
+
+    def test_generate_with_putaway_02(self):
         """
-        nbre_of_lines = 10
-        picking_type = self.env['stock.picking.type'].search([
-            ('use_create_lots', '=', True),
-            ('warehouse_id', '=', self.warehouse.id)
-        ])
-        move = self.get_new_move(nbre_of_lines)
-        move.picking_type_id = picking_type
-        # We must begin with a move with 10 move lines.
-        self.assertEqual(len(move.move_line_ids), nbre_of_lines)
-
-        value_list = [
-            'abc-235',
-            'abc-237',
-            'abc-238',
-            'abc-282',
-            'abc-301',
-        ]
-        values = '\n'.join(value_list)
-
-        move_form = Form(move, view='stock.view_stock_move_nosuggest_operations')
-        with move_form.move_line_nosuggest_ids.new() as line:
-            line.lot_name = values
-        move = move_form.save()
-
-        # After we set multiple SN, we must have now 15 move lines.
-        self.assertEqual(len(move.move_line_ids), nbre_of_lines + len(value_list))
-        # Then we look each SN name is correct.
-        for move_line in move.move_line_nosuggest_ids:
-            self.assertEqual(move_line.lot_name, value_list.pop(0))
-        for move_line in (move.move_line_ids - move.move_line_nosuggest_ids):
-            self.assertEqual(move_line.lot_name, False)
-
-    def test_set_multiple_lot_name_02_empty_values(self):
-        """ Sets multiple values with some empty lines in one time, then checks
-        we haven't create useless move line and all move line's `lot_name` have
-        been correctly set.
+        Suppose a tracked-by-USN product P
+        Sub locations in WH/Stock + Storage Category
+        The Storage Category adds a capacity constraint (max 1 x P / Location)
+        - Plan a receipt with 2 x P
+        - Receive 4 x P
+        -> The test ensures that the destination locations are correct
         """
-        nbre_of_lines = 5
-        picking_type = self.env['stock.picking.type'].search([
-            ('use_create_lots', '=', True),
-            ('warehouse_id', '=', self.warehouse.id)
+        stock_location = self.warehouse.lot_stock_id
+        self.env.user.write({'groups_id': [(4, self.env.ref('stock.group_stock_multi_locations').id)]})
+
+        # max 1 x product_serial
+        stor_category = self.env['stock.storage.category'].create({
+            'name': 'Super Storage Category',
+            'product_capacity_ids': [(0, 0, {
+                'product_id': self.product_serial.id,
+                'quantity': 1,
+            })]
+        })
+
+        # 5 sub locations with the storage category
+        # (the last one should never be used)
+        sub_loc_01, sub_loc_02, sub_loc_03, sub_loc_04, dummy = self.env['stock.location'].create([{
+            'name': 'Sub Location %s' % i,
+            'usage': 'internal',
+            'location_id': stock_location.id,
+            'storage_category_id': stor_category.id,
+        } for i in [1, 2, 3, 4, 5]])
+
+        self.env['stock.putaway.rule'].create({
+            'location_in_id': stock_location.id,
+            'location_out_id': stock_location.id,
+            'product_id': self.product_serial.id,
+            'storage_category_id': stor_category.id,
+            'sublocation': 'closest_location',
+        })
+
+        # Receive 1 x P
+        receipt_picking = self.env['stock.picking'].create({
+            'picking_type_id': self.warehouse.in_type_id.id,
+            'location_id': self.env.ref('stock.stock_location_suppliers').id,
+            'location_dest_id': stock_location.id,
+            'state': 'draft',
+        })
+        move = self.env['stock.move'].create({
+            'name': self.product_serial.name,
+            'product_id': self.product_serial.id,
+            'product_uom': self.product_serial.uom_id.id,
+            'product_uom_qty': 2.0,
+            'picking_id': receipt_picking.id,
+            'location_id': receipt_picking.location_id.id,
+            'location_dest_id': receipt_picking.location_dest_id.id,
+        })
+        receipt_picking.action_confirm()
+
+        self.assertEqual(move.move_line_ids[0].location_dest_id, sub_loc_01)
+        self.assertEqual(move.move_line_ids[1].location_dest_id, sub_loc_02)
+
+        move._generate_serial_numbers('001', 4)
+
+        self.assertRecordValues(move.move_line_ids, [
+            {'quantity': 1, 'lot_name': '001', 'location_dest_id': sub_loc_01.id},
+            {'quantity': 1, 'lot_name': '002', 'location_dest_id': sub_loc_02.id},
+            {'quantity': 1, 'lot_name': '003', 'location_dest_id': sub_loc_03.id},
+            {'quantity': 1, 'lot_name': '004', 'location_dest_id': sub_loc_04.id},
         ])
-        move = self.get_new_move(nbre_of_lines)
-        move.picking_type_id = picking_type
-        # We must begin with a move with five move lines.
-        self.assertEqual(len(move.move_line_ids), nbre_of_lines)
 
-        value_list = [
-            '',
-            'abc-235',
-            '',
-            'abc-237',
-            '',
-            '',
-            'abc-238',
-            'abc-282',
-            'abc-301',
-            '',
-        ]
-        values = '\n'.join(value_list)
+    def test_receipt_import_lots(self):
+        """ This test ensure that with use_existing_lots is True on the picking type, the 'Import Serial/lots'
+        action generate new lots or use existing lots that are available.
+        It also tests that lot_id is set instead of lot_name so that the frontend correctly
+        shows the lots in the lot column.
+        """
+        product_lot = self.env['product.product'].create({
+            'name': 'Tracked by Lots',
+            'is_storable': True,
+            'tracking': 'lot',
+        })
+        abc_lot_id = self.env['stock.lot'].create({
+            'product_id': product_lot.id,
+            'name': 'abc',
+        })
+        self.warehouse.in_type_id.use_existing_lots = True
+        receipt_picking = self.env['stock.picking'].create({
+            'picking_type_id': self.warehouse.in_type_id.id,
+            'location_id': self.env.ref('stock.stock_location_suppliers').id,
+            'location_dest_id': self.warehouse.lot_stock_id.id,
+            'state': 'draft',
+        })
+        self.env['stock.move'].create({
+            'name': product_lot.name,
+            'product_id': product_lot.id,
+            'product_uom': product_lot.uom_id.id,
+            'product_uom_qty': 5.0,
+            'picking_id': receipt_picking.id,
+            'location_id': receipt_picking.location_id.id,
+            'location_dest_id': receipt_picking.location_dest_id.id,
+        })
+        action_context = {
+            'default_company_id': self.env.company.id,
+            'default_picking_id': receipt_picking.id,
+            'default_picking_type_id': self.warehouse.in_type_id.id,
+            'default_location_id': receipt_picking.location_id.id,
+            'default_location_dest_id': receipt_picking.location_dest_id.id,
+            'default_product_id': product_lot.id,
+            'default_tracking': 'lot',
+        }
+        move_line_vals = self.env['stock.move'].action_generate_lot_line_vals(
+            action_context, 'import', None, 0, 'abc;4\ndef'
+        )
+        def_lot_id = self.env['stock.lot'].search([('name', '=', 'def'), ('product_id', '=', product_lot.id)])
+        self.assert_move_line_vals_values(move_line_vals, [
+            {'quantity': 4, 'lot_id': {'id': abc_lot_id.id, 'display_name': 'abc'}},
+            {'quantity': 1, 'lot_id': {'id': def_lot_id.id, 'display_name': 'def'}},
+        ])
 
-        # Checks we have more values than move lines.
-        self.assertTrue(len(move.move_line_ids) < len(value_list))
-        move_form = Form(move, view='stock.view_stock_move_nosuggest_operations')
-        with move_form.move_line_nosuggest_ids.new() as line:
-            line.lot_name = values
-        move = move_form.save()
+    def test_receipt_generate_serial_numbers(self):
+        """ This test ensures that with use_existing_lots is True on the picking type, the 'Generate Serial/Lots'
+        action and 'Assign Serial Numbers' action generate new serials and use existing serials that are available.
+        It also tests that lot_id is set instead of lot_name so that the frontend correctly
+        shows the lots in the lot column.
+        """
+        product_lot = self.env['product.product'].create({
+            'name': 'Tracked by Lots',
+            'is_storable': True,
+            'tracking': 'serial',
+        })
+        sn_t1_01 = self.env['stock.lot'].create({'product_id': product_lot.id, 'name': 'sn-t1-01'})
+        sn_t1_02 = self.env['stock.lot'].create({'product_id': product_lot.id, 'name': 'sn-t1-02'})
 
-        filtered_value_list = list(filter(lambda line: len(line), value_list))
-        # After we set multiple SN, we must have a line for each value.
-        self.assertEqual(len(move.move_line_ids), nbre_of_lines + len(filtered_value_list))
-        # Then we look each SN name is correct.
-        for move_line in move.move_line_nosuggest_ids:
-            self.assertEqual(move_line.lot_name, filtered_value_list.pop(0))
-        for move_line in (move.move_line_ids - move.move_line_nosuggest_ids):
-            self.assertEqual(move_line.lot_name, False)
+        self.warehouse.in_type_id.use_existing_lots = True
+        receipt_picking = self.env['stock.picking'].create({
+            'picking_type_id': self.warehouse.in_type_id.id,
+            'location_id': self.env.ref('stock.stock_location_suppliers').id,
+            'location_dest_id': self.warehouse.lot_stock_id.id,
+            'state': 'draft',
+        })
+        move = self.env['stock.move'].create({
+            'name': product_lot.name,
+            'product_id': product_lot.id,
+            'product_uom': product_lot.uom_id.id,
+            'product_uom_qty': 5.0,
+            'picking_id': receipt_picking.id,
+            'location_id': receipt_picking.location_id.id,
+            'location_dest_id': receipt_picking.location_dest_id.id,
+        })
+
+        # Test 'Generate Serial/Lots' action, from the detailed operations view
+        action_context = {
+            'default_company_id': self.env.company.id,
+            'default_picking_id': receipt_picking.id,
+            'default_picking_type_id': self.warehouse.in_type_id.id,
+            'default_location_id': receipt_picking.location_id.id,
+            'default_location_dest_id': receipt_picking.location_dest_id.id,
+            'default_product_id': product_lot.id,
+            'default_tracking': 'serial',
+        }
+        move_line_vals = self.env['stock.move'].action_generate_lot_line_vals(
+            action_context, 'generate', 'sn-t1-01', 5, False
+        )
+        sn_t1_03, sn_t1_04, sn_t1_05 = self.env['stock.lot'].search(
+            [('name', 'in', ['sn-t1-03', 'sn-t1-04', 'sn-t1-05']), ('product_id', '=', product_lot.id)]
+        )
+        self.assert_move_line_vals_values(move_line_vals, [
+            {'quantity': 1, 'lot_id': {'id': sn_t1_01.id, 'display_name': 'sn-t1-01'}},
+            {'quantity': 1, 'lot_id': {'id': sn_t1_02.id, 'display_name': 'sn-t1-02'}},
+            {'quantity': 1, 'lot_id': {'id': sn_t1_03.id, 'display_name': 'sn-t1-03'}},
+            {'quantity': 1, 'lot_id': {'id': sn_t1_04.id, 'display_name': 'sn-t1-04'}},
+            {'quantity': 1, 'lot_id': {'id': sn_t1_05.id, 'display_name': 'sn-t1-05'}},
+        ])
+
+        # Test 'Assign Serial Numbers' action from the operation tree view
+        move._generate_serial_numbers('sn-t2-01', 5)
+        sn_t2_01, sn_t2_02, sn_t2_03, sn_t2_04, sn_t2_05 = self.env['stock.lot'].search([
+            ('name', 'in', ['sn-t2-01', 'sn-t2-02', 'sn-t2-03', 'sn-t2-04', 'sn-t2-05']),
+            ('product_id', '=', product_lot.id),
+        ])
+        self.assertRecordValues(move.move_line_ids, [
+            {'quantity': 1, 'lot_id': sn_t2_01.id},
+            {'quantity': 1, 'lot_id': sn_t2_02.id},
+            {'quantity': 1, 'lot_id': sn_t2_03.id},
+            {'quantity': 1, 'lot_id': sn_t2_04.id},
+            {'quantity': 1, 'lot_id': sn_t2_05.id},
+        ])

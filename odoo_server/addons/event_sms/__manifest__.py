@@ -9,13 +9,15 @@
     'depends': ['event', 'sms'],
     'data': [
         'data/sms_data.xml',
-        'views/event_views.xml',
-        'views/event_mail_views.xml',
         'security/ir.model.access.csv',
         'security/sms_security.xml',
     ],
-    'demo': [
-    ],
     'installable': True,
-    'auto_install': True
+    'auto_install': True,
+    'assets': {
+        'web.assets_backend': [
+            'event_sms/static/src/template_reference_field/*',
+        ],
+    },
+    'license': 'LGPL-3',
 }

@@ -13,8 +13,10 @@ from datetime import datetime,timedelta,date
 
 from odoo import http, _
 from odoo.http import request
-from odoo.addons.web.controllers.main import content_disposition
-from odoo.addons.iap.models.iap import InsufficientCreditError
+# from odoo.addons.web.controllers.main import content_disposition
+from odoo.http import Controller, request, route, content_disposition
+# from odoo.addons.iap.models.iap import InsufficientCreditError
+from odoo.addons.iap.tools.iap_tools import InsufficientCreditError
 
 _logger = logging.getLogger()
 
@@ -201,7 +203,7 @@ class Sign(http.Controller):
         password = http.request.params['password']
         template_id = request_item.sign_request_id.template_id
 
-        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(template_id.attachment_id.datas)), strict=False, overwriteWarnings=False)
+        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(template_id.attachment_id.datas)), strict=False)
         if old_pdf.isEncrypted and not old_pdf.decrypt(password):
             values['error'] = _("Wrong password")
             return http.request.render('otl_document_sign.encrypted_ask_password', values)
@@ -322,7 +324,7 @@ class Sign(http.Controller):
             return False
         template_id = request_item.sign_request_id.template_id
 
-        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(template_id.attachment_id.datas)), strict=False, overwriteWarnings=False)
+        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(template_id.attachment_id.datas)), strict=False)
         if old_pdf.isEncrypted and not old_pdf.decrypt(password):
             return False
 
@@ -342,7 +344,7 @@ class Sign(http.Controller):
             return False
         template_id = request_item.sign_request_id.template_id
 
-        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(template_id.attachment_id.datas)), strict=False, overwriteWarnings=False)
+        old_pdf = PdfFileReader(io.BytesIO(base64.b64decode(template_id.attachment_id.datas)), strict=False)
         return True if old_pdf.isEncrypted else False
 
     @http.route(['/sign/save_location/<int:id>/<token>'], type='json', auth='public')

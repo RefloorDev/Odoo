@@ -3,22 +3,27 @@
 # 	* sale_crm
 # 
 # Translators:
-# kalatchev, 2020
-# Martin Trigaux, 2020
-# Boris Stefanov <borkata@gmail.com>, 2020
-# Rosen Vladimirov <vladimirov.rosen@gmail.com>, 2020
-# Ivan Ivanov, 2020
-# aleksandar ivanov, 2020
-# Maria Boyadjieva <marabo2000@gmail.com>, 2020
+# Ивайло Малинов <iv.malinov@gmail.com>, 2024
+# Igor Sheludko <igor.sheludko@gmail.com>, 2024
+# Ivan Ivanov, 2024
+# Boris Stefanov <borkata@gmail.com>, 2024
+# kalatchev, 2024
+# aleksandar ivanov, 2024
+# Martin Trigaux, 2024
+# Maria Boyadjieva <marabo2000@gmail.com>, 2024
+# Rumena Georgieva <rumena.georgieva@gmail.com>, 2024
+# Rosen Vladimirov <vladimirov.rosen@gmail.com>, 2024
+# Petko Karamotchev, 2024
+# Emil Krastev, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~12.5\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-26 08:17+0000\n"
-"PO-Revision-Date: 2019-08-26 09:14+0000\n"
-"Last-Translator: Maria Boyadjieva <marabo2000@gmail.com>, 2020\n"
-"Language-Team: Bulgarian (https://www.transifex.com/odoo/teams/41243/bg/)\n"
+"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"PO-Revision-Date: 2024-09-25 09:41+0000\n"
+"Last-Translator: Emil Krastev, 2024\n"
+"Language-Team: Bulgarian (https://app.transifex.com/odoo/teams/41243/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -33,21 +38,31 @@ msgstr "<span class=\"o_stat_text\"> Поръчки</span>"
 #. module: sale_crm
 #: model:ir.model.fields,field_description:sale_crm.field_crm_quotation_partner__lead_id
 msgid "Associated Lead"
-msgstr ""
+msgstr "Свързан потенциален клиент"
 
 #. module: sale_crm
 #: model_terms:ir.ui.view,arch_db:sale_crm.crm_quotation_partner_view_form
 msgid "Cancel"
-msgstr "Отменете"
+msgstr "Отказ"
 
 #. module: sale_crm
 #: model_terms:ir.ui.view,arch_db:sale_crm.crm_quotation_partner_view_form
 msgid "Confirm"
-msgstr "Потвърдете"
+msgstr "Потвърждение"
+
+#. module: sale_crm
+#: model:ir.model.fields.selection,name:sale_crm.selection__crm_quotation_partner__action__create
+msgid "Create a new customer"
+msgstr "Създайте нов клиент"
 
 #. module: sale_crm
 #: model:ir.model,name:sale_crm.model_crm_quotation_partner
 msgid "Create new or use existing Customer on new Quotation"
+msgstr ""
+
+#. module: sale_crm
+#: model_terms:ir.ui.view,arch_db:sale_crm.crm_case_form_view_oppor
+msgid "Create new quotation"
 msgstr ""
 
 #. module: sale_crm
@@ -58,7 +73,7 @@ msgstr "Създаден от"
 #. module: sale_crm
 #: model:ir.model.fields,field_description:sale_crm.field_crm_quotation_partner__create_date
 msgid "Created on"
-msgstr "Създаден на"
+msgstr "Създадено на"
 
 #. module: sale_crm
 #: model:ir.model.fields,field_description:sale_crm.field_crm_quotation_partner__partner_id
@@ -68,22 +83,28 @@ msgstr "Клиент"
 #. module: sale_crm
 #: model:ir.model.fields,field_description:sale_crm.field_crm_quotation_partner__display_name
 msgid "Display Name"
-msgstr "Покажете име"
+msgstr "Име за показване"
+
+#. module: sale_crm
+#: model:ir.model.fields.selection,name:sale_crm.selection__crm_quotation_partner__action__nothing
+msgid "Do not link to a customer"
+msgstr "Не се свързвайте с клиент"
+
+#. module: sale_crm
+#. odoo-python
+#: code:addons/sale_crm/models/crm_lead.py:0
+msgid "Expected revenue has been updated based on the linked Sales Orders."
+msgstr ""
 
 #. module: sale_crm
 #: model:ir.model.fields,field_description:sale_crm.field_crm_quotation_partner__id
 msgid "ID"
-msgstr "ИН"
+msgstr "ID"
 
 #. module: sale_crm
 #: model:ir.model.fields,field_description:sale_crm.field_res_users__target_sales_invoiced
 msgid "Invoiced in Sales Orders Target"
 msgstr ""
-
-#. module: sale_crm
-#: model:ir.model.fields,field_description:sale_crm.field_crm_quotation_partner____last_update
-msgid "Last Modified on"
-msgstr "Последно коригирано на"
 
 #. module: sale_crm
 #: model:ir.model.fields,field_description:sale_crm.field_crm_quotation_partner__write_uid
@@ -101,9 +122,9 @@ msgid "Lead/Opportunity"
 msgstr "Лийд / Възможност"
 
 #. module: sale_crm
-#: model_terms:ir.ui.view,arch_db:sale_crm.sale_view_inherit123
-msgid "Log in the chatter from which opportunity the order originates"
-msgstr "Регистрирайте се в чатъра, от чиято възможност произтича поръчката"
+#: model:ir.model.fields.selection,name:sale_crm.selection__crm_quotation_partner__action__exist
+msgid "Link to an existing customer"
+msgstr "Линк към съществуващ клиент"
 
 #. module: sale_crm
 #: model:ir.ui.menu,name:sale_crm.sale_order_menu_quotations_crm
@@ -153,15 +174,20 @@ msgid "Quotations"
 msgstr "Оферти"
 
 #. module: sale_crm
+#: model_terms:ir.ui.view,arch_db:sale_crm.crm_lead_merge_summary_inherit_sale_crm
+msgid "Sale Orders"
+msgstr "Поръчки за продажба"
+
+#. module: sale_crm
+#. odoo-python
 #: code:addons/sale_crm/models/crm_team.py:0
-#, python-format
 msgid "Sales Analysis"
 msgstr "Анализ на продажби"
 
 #. module: sale_crm
 #: model:ir.model,name:sale_crm.model_sale_order
 msgid "Sales Order"
-msgstr "Поръчка за продажби"
+msgstr "Поръчка"
 
 #. module: sale_crm
 #: model:ir.model,name:sale_crm.model_crm_team
@@ -169,8 +195,8 @@ msgid "Sales Team"
 msgstr "Търговски отдел"
 
 #. module: sale_crm
+#. odoo-python
 #: code:addons/sale_crm/models/crm_team.py:0
-#, python-format
 msgid "Sales: Untaxed Total"
 msgstr "Продажби: Неоценено общо"
 
@@ -180,22 +206,17 @@ msgid "Sum of Orders"
 msgstr "Сума на поръчки"
 
 #. module: sale_crm
-#: model:ir.model.fields,field_description:sale_crm.field_sale_order__tag_ids
-msgid "Tags"
-msgstr "Маркери"
-
-#. module: sale_crm
 #: model:ir.model.fields,help:sale_crm.field_crm_lead__sale_amount_total
 msgid "Untaxed Total of Confirmed Orders"
-msgstr ""
+msgstr "Общо необлагаема сума на потвърдените поръчки"
 
 #. module: sale_crm
 #: model:ir.model,name:sale_crm.model_res_users
-msgid "Users"
-msgstr "Потребители"
+msgid "User"
+msgstr "Потребител"
 
 #. module: sale_crm
+#. odoo-python
 #: code:addons/sale_crm/wizard/crm_opportunity_to_quotation.py:0
-#, python-format
 msgid "You can only apply this action from a lead."
 msgstr ""
