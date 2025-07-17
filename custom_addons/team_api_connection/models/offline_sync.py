@@ -2024,7 +2024,6 @@ class TeamCustomerAppointment(models.Model):
                                 if response_result.get('duplicate', '') == 'true':
                                     _logger.info('-------Sync Aborting due to Duplicate Quote - %s, Response: %s' % (
                                     sale_order.id, response_result))
-                                    return True
                             else:
                                 sync_log.create({
                                     'appointment_id': appointment.id,
@@ -3074,7 +3073,7 @@ class TeamCustomerAppointment(models.Model):
                 result.update({
                     'data': api_response.get('crews', [])
                 })
-            except ApiException as e:
+            except Exception as e:
                 error_content = e.body and eval(e.body) or {}
                 error_message = "Error occurred while searching available dates."
                 if error_content and error_content.get('message', ""):
