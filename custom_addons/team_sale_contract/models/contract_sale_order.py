@@ -2470,7 +2470,7 @@ class SaleOrder(models.Model):
                     "QuoteID": sale_order.excluded_quote_id or '',
                     "MoldingType": room_line.molding_type_id and room_line.molding_type_id.name or "",
                     "Comments": comments,
-                    "MiscellaneousChargeComments": misc_charge_comments,
+                    # "MiscellaneousChargeComments": misc_charge_comments,
                     "DeliveryOption": room_line.delivery_option or ""
                 }
                 if stair_product:

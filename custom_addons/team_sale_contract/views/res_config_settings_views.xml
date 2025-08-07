@@ -83,6 +83,9 @@
                     <setting id="destination_selection_consent_message" string="Destination Selection Consent Message" help="Enter consent message to display in destination motivation page in salesapp.">
                         <field name="destination_selection_consent_message"/>
                     </setting>
+                    <setting id="address_visible_time_limit" string="Maximum Allowed Time Limit to Show Full Address Prior to Appointment" help="Time limit to show full address of an appointment prior to appointment time.">
+                        <field name="address_visible_time_limit"/>
+                    </setting>
                 </block>
                 <block title="Google API Configuration" id="sale_other_data_id_setting">
                     <setting id="google_auth_attachment_id" string="Auth File" help="File for Google service authentication for cloud storage">
