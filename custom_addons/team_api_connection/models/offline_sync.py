@@ -413,6 +413,7 @@ class ResUsers(models.Model):
             'max_stair_width': float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.max_stair_width')) or 0,
             'min_down_payment_amount': float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.min_down_payment_amount')) or 0.0,
             'destination_selection_consent_message': str(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.destination_selection_consent_message')) or '',
+            'address_visible_time_limit': int(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.address_visible_time_limit')) or 0,
         })
         # except:
         #     result = {
