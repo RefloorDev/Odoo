@@ -494,6 +494,7 @@ class SaleOrder(models.Model):
     synced_to_cloud_storage = fields.Boolean('Synced Files to Cloud Storage', default=False)
     i360_sync_stopped_manually = fields.Boolean('i360 Sync Stopped Manually', default=False, copy=False)
     discount_history_sync_i360_ref = fields.Char('Synced Discount i360 Ref', default=False, copy=False)
+    pay_later = fields.Boolean('Do Payment Later', default=False)
 
 
     def write(self, vals):

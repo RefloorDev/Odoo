@@ -91,6 +91,7 @@ class TeamQuoteQuestion(models.Model):
     applicable_current_surface = fields.Char('Applicable Current Surface')
     exclude_from_promotion = fields.Boolean('Exclude From Promotion', default=False)
     calculate_order_wise = fields.Boolean("Calculate Based on Order", default=False, help='If checked, amount should calculate based on total order not based on room.')
+    mandatory_for_current_surface_concrete = fields.Boolean("Mandatory When Current Surface is Concrete", default=False)
 
     _sql_constraints = [
         ('positive_len_min', 'CHECK (validation_length_min >= 0)', 'A length must be positive!'),

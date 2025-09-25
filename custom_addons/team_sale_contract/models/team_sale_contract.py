@@ -71,6 +71,35 @@ class TeamContractQuestions(models.Model):
                 amount_included = question.amount_included or 0
                 if question.code == 'RemoveCurrentCovering':
                     if answer_data == 'Yes':
+                        stair_room = False
+                        stair_count = 0
+                        stair_width = 0
+                        stair_cover_riser = ''
+                        if record.room_id.product_category_id.name.upper() == 'VINYL STAIRS':
+                            stair_room = True
+                        if stair_room:
+                            stair_count_line = self.search([
+                                ('appointment_id', '=', record.appointment_id.id),
+                                ('room_measurement_id', '=', record.room_measurement_id.id),
+                                ('question_id.code', '=', 'StairCount')
+                            ], limit=1)
+                            if stair_count_line:
+                                stair_count = float(stair_count_line.answer_data)
+                            stair_cover_riser_line = self.search([
+                                ('appointment_id', '=', record.appointment_id.id),
+                                ('room_measurement_id', '=', record.room_measurement_id.id),
+                                ('question_id.code', '=', 'StairCoverRisers')
+                            ], limit=1)
+                            if stair_cover_riser_line:
+                                stair_cover_riser = str(stair_cover_riser_line.answer_data)
+                            stair_width_line = self.search([
+                                ('appointment_id', '=', record.appointment_id.id),
+                                ('room_measurement_id', '=', record.room_measurement_id.id),
+                                ('question_id.code', '=', 'StairWidth')
+                            ], limit=1)
+                            if stair_width_line:
+                                stair_width = float(stair_width_line.answer_data)
+
                         covering_question = self.search([
                             ('appointment_id', '=', record.appointment_id.id),
                             ('room_measurement_id', '=', record.room_measurement_id.id),
@@ -82,7 +111,13 @@ class TeamContractQuestions(models.Model):
                                 answer_line = covering_question.question_id.labels_ids.filtered(lambda x: x.value == covering_question_answer)
                                 if answer_line and answer_line.answer_score:
                                     amount = answer_line.answer_score
-                                room_area = record.room_measurement_id.adjusted_area or 0
+                                if stair_room:
+                                    if stair_cover_riser == 'Yes':
+                                        room_area = stair_width * stair_count * 2.25
+                                    else:
+                                        room_area = stair_width * stair_count * 1.25
+                                else:
+                                    room_area = record.room_measurement_id.adjusted_area or 0
                                 net_room_area = (room_area - amount_included) > 0 and room_area - amount_included or 0
                                 extra_price = net_room_area * float(amount)
                 else:
@@ -126,6 +161,7 @@ class TeamContractQuestions(models.Model):
                     if answer_line and answer_line.answer_score:
                         stair_count_line = self.search([
                             ('appointment_id', '=', record.appointment_id.id),
+                            ('room_measurement_id', '=', record.room_measurement_id.id),
                             ('question_id.code', '=', 'StairCount')
                         ], limit=1)
                         if stair_count_line:
