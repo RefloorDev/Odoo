@@ -1346,6 +1346,7 @@ class APIHomes(API_Homes):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', False)
+        app_version = params.get('app_version', '')
         if not token:
             _logger.info("------------Token Missing in main get_appointments api------------------")
             return json.dumps({'result': 'Failed', 'message': 'Empty token.'})
@@ -1378,6 +1379,10 @@ class APIHomes(API_Homes):
                 })
                 _logger.info('appointment_sync_api_queue Data - Added--:%s' % (
                     self.appointment_sync_api_queue))
+            if app_version:
+                app_version_result = request.env['res.users'].sudo().check_sales_app_version(app_version)
+                if app_version_result.get('result') == 'Failed':
+                    return json.dumps(app_version_result)
             appointment_data = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
                                                  'action_get_appointment_data', [int(uid)])
 

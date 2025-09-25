@@ -172,6 +172,9 @@ class API_Homes(http.Controller):
                     })
                     return result
                 _logger.info(f"Authentication - authenticate_user -odoo - user : {username} ; success")
+                app_version_result = request.env['res.users'].sudo().check_sales_app_version(user_values.get('app_version', ''))
+                if app_version_result.get('result') == 'Failed':
+                    return app_version_result
                 # token = token_hex(32)
                 token = ''
                 payload = {

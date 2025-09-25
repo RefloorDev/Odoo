@@ -443,6 +443,7 @@
                                     <field name="check_account_number" password="True" invisible="payment_method != 'check'" readonly="1" force_save="1"/>
                                     <field name="check_routing_number" password="True" invisible="payment_method != 'check'" readonly="1" force_save="1"/>
                                     <field name="down_payment_amount" readonly="1" force_save="1"/>
+                                    <field name="pay_later" readonly="1"/>
                                 </group>
                                 <group string="Balance Due">
                                     <field name="balance_payment_method" readonly="1" force_save="1"/>
