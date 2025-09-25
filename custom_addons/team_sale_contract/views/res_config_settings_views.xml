@@ -86,6 +86,9 @@
                     <setting id="address_visible_time_limit" string="Maximum Allowed Time Limit to Show Full Address Prior to Appointment" help="Time limit to show full address of an appointment prior to appointment time.">
                         <field name="address_visible_time_limit"/>
                     </setting>
+                    <setting id="version_mismatch_message" string="Version Mismatch Message" help="Message to display in App when salesperson is not using latest version.">
+                        <field name="version_mismatch_message"/>
+                    </setting>
                 </block>
                 <block title="Google API Configuration" id="sale_other_data_id_setting">
                     <setting id="google_auth_attachment_id" string="Auth File" help="File for Google service authentication for cloud storage">

@@ -73,6 +73,31 @@ class ResUsers(models.Model):
     _inherit = 'res.users'
 
     @api.model
+    def check_sales_app_version(self, app_version_name):
+        version_obj = self.env['otl.sales.app.version']
+        app_version = version_obj.search([('name', '=', app_version_name)], limit=1)
+        if not app_version:
+            return {
+                'result': 'Failed',
+                'message': 'No matching app version was found in the system.',
+            }
+        else:
+            current_date = fields.Date.today()
+            latest_app_version = version_obj.search([('date', '<=', current_date), ('date', '>', app_version.date)], limit=1)
+            if latest_app_version:
+                return {
+                    'result': 'Failed',
+                    'message': str(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.version_mismatch_message')) or '',
+                    'force_logout': 1
+                }
+        return {
+            'result': 'Success',
+        }
+
+
+
+
+    @api.model
     def action_get_appointment_sync_status(self, user_id=None):
         result = {
             'result': 'Success',
@@ -562,7 +587,10 @@ class ResUsers(models.Model):
                                 except Exception as e:
                                     appointment_obj = False
                                     _logger.error('Following Error is occurred while creating appointment: %s'%e)
-                                    continue
+                                    return {
+                                        'result': 'Failed',
+                                        'message': 'Following Error is occurred while creating appointment: %s'%e
+                                    }
                                 if appointment_obj:
                                     try:
                                         appointment_obj.geo_localize()
@@ -721,7 +749,8 @@ class TeamQuoteQuestion(models.Model):
                 'applicable_current_surface': question.applicable_current_surface or '',
                 'quote_label': quote_label,
                 'applicable_to': applicable_to,
-                'applicable_rooms': applicable_rooms_list
+                'applicable_rooms': applicable_rooms_list,
+                'mandatory_for_current_surface_concrete': question.mandatory_for_current_surface_concrete or False,
             })
         return questionnaire_list
 
@@ -3760,7 +3789,7 @@ class TeamCustomerAppointment(models.Model):
 class SaleOrder(models.Model):
     _inherit='sale.order'
 
-    def prepare_authcapture_payment_values(self, acquirer, order, data):
+    def prepare_authcapture_payment_values(self, acquirer, order, data, transaction_type="authCaptureTransaction"):
         partner = order.partner_id
         first_name = partner.name or ''
         last_name = ''
@@ -3780,7 +3809,7 @@ class SaleOrder(models.Model):
                 },
                 "refId": order.name,
                 "transactionRequest": {
-                    "transactionType": "authCaptureTransaction",
+                    "transactionType": transaction_type,
                     "amount": str(data.get('amount', 0)),
                     "payment": {
                         "creditCard": {
@@ -3836,7 +3865,12 @@ class SaleOrder(models.Model):
             transaction = AuthorizeAPICustom(acquirer)
             if order.authorize_transaction_id:
                 transaction.void(order.authorize_transaction_id or '')
-            values = self.prepare_authcapture_payment_values(acquirer, order, data)
+            transaction_type = "authCaptureTransaction"
+            transaction_type_to_log = "authcapture"
+            if data.get('pay_later', 0):
+                transaction_type = "authOnlyTransaction"
+                transaction_type_to_log = "authorize"
+            values = self.prepare_authcapture_payment_values(acquirer, order, data, transaction_type)
             response = transaction._authorize_request_custom(values)
             if response and response.get('err_code'):
                 self.env['otl.card.transaction.log'].create({
@@ -3845,7 +3879,7 @@ class SaleOrder(models.Model):
                     'error_code': response.get('err_code', ''),
                     'message': response.get('error_text', ''),
                     'state': 'failed',
-                    'type': 'authcapture',
+                    'type': transaction_type_to_log,
                 })
                 self.env.cr.commit()
                 return {
@@ -3878,7 +3912,7 @@ class SaleOrder(models.Model):
                 'name': transaction_ref,
                 'message': response.get('transactionResponse', {}).get('messages')[0].get('description'),
                 'state': 'success',
-                'type': 'authcapture',
+                'type': transaction_type_to_log,
             })
             self.env.cr.commit()
             return {
@@ -3905,7 +3939,8 @@ class SaleOrder(models.Model):
                 'state': 'sale',
                 'date_order': order.appointment_id.completed_date,
                 'write_uid': self.env.user.id,
-                'write_date': datetime.now().replace(tzinfo=pytz.utc)
+                'write_date': datetime.now().replace(tzinfo=pytz.utc),
+                'pay_later': data.get('pay_later', 0) == 1 and True or False,
             })
             if order.invoice_ids:
                 _logger.info("------Payment Already Done------------")
@@ -3962,12 +3997,15 @@ class SaleOrder(models.Model):
                         'card_type': existing_card_type
                     })
                     if not order.card_transaction_log_line.filtered(lambda x: x.name == existing_auth_transaction_id):
+                        transaction_type_to_log = "authcapture"
+                        if order.pay_later:
+                            transaction_type_to_log = "authorize"
                         self.env['otl.card.transaction.log'].create({
                             'sale_order_id': order.id,
                             'name': existing_auth_transaction_id,
                             'message': '',
                             'state': 'success',
-                            'type': 'authcapture',
+                            'type': transaction_type_to_log,
                         })
 
                 else:
@@ -4023,6 +4061,7 @@ class SaleOrder(models.Model):
                         'cc_cvc': cardpin,
                         'cc_holder_name': card_holder_name,
                         'amount': order.down_payment_amount,
+                        'pay_later': data.get('pay_later', 0),
                     }
                     payment_status = order.action_authcapture_payment(payment_data)
                     if payment_status['result'] == 'Success':
