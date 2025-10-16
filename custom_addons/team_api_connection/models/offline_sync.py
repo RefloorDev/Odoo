@@ -2631,7 +2631,15 @@ class TeamCustomerAppointment(models.Model):
                                 retry_order_creation = True
                             elif order.payment_method in ['credit_card', 'debit_card'] and down_payment_amount and order.card_transaction_log_line.filtered(lambda x: x.state == 'success') and order.payment_method != payment_method:
                                 retry_order_creation = True
-                        if (operation_mode == 'online' or invoice_created or retry_order_creation) and not existing_auth_transaction_id:
+                            elif order.payment_method in ['credit_card', 'debit_card'] and down_payment_amount and order.card_transaction_log_line.filtered(lambda x: x.state == 'success') and order.payment_method == payment_method and down_payment_amount == order.down_payment_amount:
+                                return {
+                                    'message': 'Order details are already updated successfully.',
+                                    'result': 'Success',
+                                    'payment_status': 'Success',
+                                    'payment_message': "Payment is already processed.",
+                                }
+       
+                        if (operation_mode == 'online' or (invoice_created and retry_order_creation)) and not existing_auth_transaction_id:
                             valid_transactions_lines = appointment.card_transaction_log_line.filtered(lambda x:x.state == 'success' and not x.void_transaction)
                             for line in valid_transactions_lines:
                                 authorize_transaction_id = line.name or ''
@@ -5124,4 +5132,5 @@ class VersatileCreditApplication(models.Model):
                 "credit_application_id": credit_application.id
             }
         return result
+
 
