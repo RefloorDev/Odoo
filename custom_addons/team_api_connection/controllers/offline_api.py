@@ -1357,7 +1357,7 @@ class APIHomes(API_Homes):
         if not password:
             _logger.info("------------password missing in main get_appointments api-------------------")
             return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
-        status, message = self.action_verify_token(uid, token)
+        status, message = self.action_verify_token(uid, token, token_mandatory=True)
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
@@ -2077,7 +2077,7 @@ class APIHomes(API_Homes):
         if not password:
             _logger.info("------------password missing in main check_auto_logout api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
-        status, message = self.action_verify_token(uid, token)
+        status, message = self.action_verify_token(uid, token, token_mandatory=True)
         if status:
             result = models.execute_kw(DB, int(uid), password, 'res.users', 'action_check_auto_logout', [])
         else:
