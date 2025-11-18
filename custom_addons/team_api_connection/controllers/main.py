@@ -239,7 +239,7 @@ class API_Homes(http.Controller):
     #     _logger.info("------------Authentication result-------------------" + str(result))
     #     return json.dumps(result)
 
-    def action_verify_token(self, uid, token):
+    def action_verify_token(self, uid, token, token_mandatory=False):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         result_duplicate = {'result': 'AuthFailed',
                             'message': 'You have been logged into another device using the same account. Please login again.', 'token': 1}
@@ -261,7 +261,11 @@ class API_Homes(http.Controller):
                 _logger.info("User Id(after function).......:" + str(user_result))
                 token_status = user_result.get('token_status', 'different')
                 if user_result.get('user_exists', False) and token_status == 'empty':
-                    return False, result_auth_failed
+                    # no need to return False if token is not available in the respective user account
+                    if token_mandatory:
+                        return False, result_auth_failed
+                    else:
+                        return True, True
                 elif user_result.get('user_exists', False) and token_status == 'same':
                     _logger.info("------------Token Verified---------------")
                     return True, True
