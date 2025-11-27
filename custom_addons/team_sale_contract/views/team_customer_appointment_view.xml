@@ -252,6 +252,24 @@
                                 </form>
                             </field>
                         </page>
+                        <page string="Sales App Live Screen Log" invisible="app_live_screen_log_line == False">
+                            <field name="app_live_screen_log_line" readonly="1">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="screen_entry_date"/>
+                                </list>
+                                <form string="Sync Log">
+                                    <group>
+                                        <group>
+                                            <field name="name"/>
+                                        </group>
+                                        <group>
+                                            <field name="screen_entry_date"/>
+                                        </group>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
                         <page string="Card Transaction History" invisible="transaction_log_exists != True">
                             <field name="transaction_log_exists" invisible="1"/>
                             <group>
