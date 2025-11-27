@@ -227,6 +227,7 @@ class TeamCustomerAppointment(models.Model):
     app_sync_log_line = fields.One2many('otl.app.appointment.sync.log', 'appointment_id', string='SalesApp Sync Log')
     api_sync_log_line = fields.One2many('otl.api.sync.log', 'appointment_id', string='API Log')
     app_screen_log_line = fields.One2many('otl.app.screen.log', 'appointment_id', string='Screen Completion Time')
+    app_live_screen_log_line = fields.One2many('otl.app.live.screen.log', 'appointment_id', string='Live Screen Entry Log')
     sale_order_exists = fields.Boolean('Exist Sale Order', compute='_compute_sale_order_exists')
     state_code = fields.Char('State Code')
     co_applicant_state_code = fields.Char('Co-Applicant State Code')
@@ -431,4 +432,16 @@ class AppScreenLog(models.Model):
     appointment_id = fields.Many2one('team.customer.appointment', 'Appointment')
     user_id = fields.Many2one('res.users', 'User', default=lambda self: self.env.uid)
     name = fields.Char('Screen Name')
+
+
+class AppLiveScreenLog(models.Model):
+    _name = 'otl.app.live.screen.log'
+    _description = "App Live Screen Log"
+    _order = "screen_entry_date desc"
+
+    screen_entry_date = fields.Datetime('Screen Entry Date', default=fields.Datetime.now)
+    appointment_id = fields.Many2one('team.customer.appointment', 'Appointment')
+    user_id = fields.Many2one('res.users', 'User', default=lambda self: self.env.uid)
+    name = fields.Char('Screen Name')
+    synced_to_i360 = fields.Boolean('Synced To i360')
 

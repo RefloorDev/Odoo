@@ -129,3 +129,10 @@ access_location_entity_key_line_manager,location.entity.key.line.manager,model_o
 
 access_otl_day_wise_sync_status_report_all,access.otl.day.wise.sync.status.report.all,model_otl_day_wise_sync_status_report,,1,1,1,1
 access_otl_generate_token_all,access.otl.generate.token.all,model_otl_generate_token,,1,1,1,1
+
+access_app_live_screen_log_user,otl.app.live.screen.log.user,model_otl_app_live_screen_log,base.group_user,1,0,0,0
+access_app_live_screen_log_manager,otl.app.live.screen.log.manager,model_otl_app_live_screen_log,sales_team.group_sale_salesman,1,1,1,1
+
+access_finance_provider_user,otl.finance.provider.user,model_otl_finance_provider,base.group_user,1,0,0,0
+access_finance_provider_manager,otl.finance.provider.manager,model_otl_finance_provider,sales_team.group_sale_salesman,1,1,1,1
+

@@ -1362,6 +1362,8 @@
                             <group>
                                 <field name="sequence"/>
                                 <field name="reference_id"/>
+                                <field name="applicable_type"/>
+                                <field name="applicable_finance_providers" widget="many2many_tags" options="{'no_create': True}" invisible="applicable_type != 'finance'" required="applicable_type == 'finance'"/>
                                 <field name="company_id" groups="base.group_multi_company"/>
                                 <field name="active" invisible="1"/>
                             </group>
@@ -1378,6 +1380,8 @@
                 <list>
                     <field name="sequence" widget='handle'/>
                     <field name="name"/>
+                    <field name="applicable_type"/>
+                    <field name="applicable_finance_providers" required="1" widget="many2many_tags"/>
                     <field name="company_id" groups="base.group_multi_company"/>
                 </list>
             </field>
@@ -1400,6 +1404,63 @@
               parent="measurement_conf_root"
               action="finance_checklist_items_action"
               sequence="60"/>
+
+    <record id="finance_provider_form" model="ir.ui.view">
+            <field name="name">otl.finance.provider.form</field>
+            <field name="model">otl.finance.provider</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active == True"/>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="code"/>
+                            </group>
+                            <group>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="finance_provider_tree" model="ir.ui.view">
+            <field name="name">finance.provider.tree</field>
+            <field name="model">otl.finance.provider</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="finance_provider_action" model="ir.actions.act_window">
+        <field name="name">Finance Providers</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">otl.finance.provider</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create!
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="finance_provider_menu"
+              name="Finance Providers"
+              parent="measurement_conf_root"
+              action="finance_provider_action"
+              sequence="55"/>
 
     <record id="questionnaire_calc_logic_form" model="ir.ui.view">
             <field name="name">otl.questionnaire.calc.logic.form</field>

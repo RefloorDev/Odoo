@@ -60,6 +60,7 @@ class APIHomes(API_Homes):
         self.update_manual_arrival_date_api_queue = dict()
         self.send_review_link_api_queue = dict()
         self.get_appointment_current_status_api_queue = dict()
+        self.update_live_screen_log_api_queue = dict()
         self.get_credit_application_status_api_queue = dict()
         self.initiate_i360_sync_api_queue = dict()
         self.image_sync_api_queue = dict()
@@ -2820,3 +2821,98 @@ class APIHomes(API_Homes):
             _logger.info('get_appointment_current_status_api_queue Data - Ending--:%s' % (
                 self.get_appointment_current_status_api_queue))
         return json.dumps(result)
+
+
+    @route('/api/<version>/update_live_screen_log', type='http', auth="none", methods=['POST'], csrf=False,
+           allow_none=True, )
+    def action_update_live_screen_log(self, version='v1', **kwargs):
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
+        params = request.params.copy()
+        token = ''
+        access_token = request.httprequest.headers.get('Authorization')
+        if not access_token:
+            _logger.error("update_live_screen_log - Empty access_token")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'})
+        if access_token.startswith('Bearer '):
+            token = access_token[7:]
+        appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
+        network_strength = params.get('network_strength', '')
+        screen_entry_date = params.get('screen_entry_date', '')
+        screen_name = params.get('screen_name', '')
+        timezone = params.get('timezone', 'EST')
+        _logger.info("------------update_live_screen_log params: %s------------------" % params)
+        result = {}
+        if not token:
+            _logger.info("------------Token Missing in update_live_screen_log------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password = self.get_credentials(token)
+        if not uid:
+            _logger.info("------------uid missing in update_live_screen_log-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info("------------password missing in update_live_screen_log-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not screen_entry_date:
+            _logger.info("------------screen_entry_date missing in update_live_screen_log-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Screen Entry Date is missing'})
+        if not screen_name:
+            _logger.info("------------screen_name missing in update_live_screen_log-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Screen Name is missing'})
+
+        status, message = self.action_verify_token(uid, token)
+        # enable_api_queue_system = eval(
+        #     str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        if status:
+            if version == 'v1':
+                data = {
+                    'appointment_id': int(appointment_id),
+                    'user_id': int(uid),
+                    'screen_entry_date': screen_entry_date,
+                    'screen_name': screen_name,
+                    'timezone': timezone,
+                }
+                if enable_api_queue_system:
+                    _logger.info('update_live_screen_log_api_queue Data - Starting--:%s - Appointment ID: %s' % (
+                        self.update_live_screen_log_api_queue, appointment_id))
+                    time = datetime.now()
+                    if appointment_id in self.update_live_screen_log_api_queue:
+                        queue_time = self.update_live_screen_log_api_queue.get(appointment_id, {})
+                        time_difference = (time - queue_time).total_seconds()
+                        if int(time_difference) < 20:
+                            _logger.info(
+                                'update_live_screen_log_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
+                                    self.update_live_screen_log_api_queue, appointment_id))
+                            result = {'override_json_result': 1, 'result': 'Failed',
+                                      'message': 'Execution is already in progress'}
+                            request.env['otl.api.sync.log'].sudo().create_api_log(
+                                '/api/%s/update_live_screen_log' % (version), data, uid,
+                                result, network_strength)
+                            return json.dumps(result)
+                    self.update_live_screen_log_api_queue.update({
+                        appointment_id: time
+                    })
+                    _logger.info('update_live_screen_log_api_queue Data - Added--:%s' % (
+                        self.update_live_screen_log_api_queue))
+
+                result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                                           'action_update_live_screen_log',
+                                           [data])
+            else:
+                result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
+        else:
+            result = message
+        request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_live_screen_log' % (version),
+                                                              params, uid,
+                                                              result, network_strength)
+        result.update({'override_json_result': 1})
+        if enable_api_queue_system:
+            self.update_live_screen_log_api_queue.pop(appointment_id, '')
+            _logger.info('update_live_screen_log_api_queue Data - Ending--:%s' % (
+                self.update_live_screen_log_api_queue))
+        return json.dumps(result)
+

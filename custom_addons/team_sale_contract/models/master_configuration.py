@@ -798,6 +798,19 @@ class InstallationCrew(models.Model):
     improveit_id = fields.Char('Improveit Reference ID')
 
 
+class FinanceProvider(models.Model):
+    _name = 'otl.finance.provider'
+    _description = 'Finance Provider'
+    _order = 'name asc'
+
+    name = fields.Char('Provider Name', required=True)
+    code = fields.Char('Provider Code', required=True)
+    active = fields.Boolean("Active", default=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True,
+                                 default=lambda self: self.env.company.id)
+
+
+
 class FinanceChecklistItems(models.Model):
     _name = 'otl.finance.checklist.items'
     _description = "Finance and Order Checklist Items"
@@ -809,6 +822,9 @@ class FinanceChecklistItems(models.Model):
     reference_id = fields.Char("i360 Reference ID")
     sequence = fields.Integer('Priority',
                               help="Give to the more specialized category, a higher priority to have them in top of the list.", default = 10)
+    applicable_finance_providers = fields.Many2many('otl.finance.provider', string='Applicable Finance Provider')
+    applicable_type = fields.Selection([('all', 'All'), ('non_finance', 'Non Finance'), ('finance', 'Finance')], string='Applicable Type', default='all')
+
 
     _sql_constraints = [
         ('name_company_uniq', 'unique (name,company_id)', 'Reason must be unique per company!')
