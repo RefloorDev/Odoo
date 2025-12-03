@@ -382,6 +382,7 @@ class APISyncLog(models.Model):
     name = fields.Char('API')
     network_strength = fields.Char('Upload Network Strength')
 
+    @api.model
     def create_api_log(self, url, data, uid, result, network_strength=''):
         appointment_id = data.get('appointment_id', False)
         sale_order_id = data.get('sale_order_id', False)
