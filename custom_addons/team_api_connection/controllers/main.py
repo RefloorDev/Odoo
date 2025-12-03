@@ -152,7 +152,7 @@ class API_Homes(http.Controller):
         return user_id, password, base_url, db
 
     def get_url(self):
-        url = request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        url = request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.api_base_url')
         if url[-1] == '/':
             return url[:-1]
         else:
