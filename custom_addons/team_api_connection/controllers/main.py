@@ -142,12 +142,21 @@ class API_Homes(http.Controller):
 
         values = self.token_extract(token)
         if values == {}:
-            return False, False
+            return False, False, URL, DB
         user_id = values.get('user_id', False)
         password = values.get('password', False)
+        base_url = values.get('base_url', URL)
+        db = values.get('db', DB)
         if user_id:
             user_id = int(user_id)
-        return user_id, password
+        return user_id, password, base_url, db
+
+    def get_url(self):
+        url = request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        if url[-1] == '/':
+            return url[:-1]
+        else:
+            return url
 
     def authenticate_user(self, username, password, user_values={}, restrict_multi_login=0):
         _logger.info(f"Authentication - authenticate_user -odoo - user : {username}")
@@ -181,6 +190,8 @@ class API_Homes(http.Controller):
                     'user_id': uid,
                     'password': password,
                     'datetime':str(fields.Datetime.now()),
+                    'db': request.session.db,
+                    'base_url': self.get_url(),
                 }
                 token = JWT_ENCODE(payload, JWT_SECRET, JWT_ALGORITHM)
                 token = self.reverse(token.decode("utf-8"))
