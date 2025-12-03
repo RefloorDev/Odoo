@@ -41,7 +41,7 @@ from odoo.addons.team_api_connection.controllers.main import API_Homes
 # models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
 
 # At top of file where ServerProxy is first created:
-models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL), allow_none=True)
+# models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL), allow_none=True)
 common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(URL), allow_none=True)
 
 import logging
@@ -102,7 +102,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in main logout_from_device api------------------")
             return json.dumps({'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main logout_from_device api-------------------")
             return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
@@ -111,7 +111,8 @@ class APIHomes(API_Homes):
             return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         if status:
-            result = models.execute_kw(DB, int(uid), password, 'res.users', 'action_logout_from_device', [int(uid)])
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+            result = models.execute_kw(db, int(uid), password, 'res.users', 'action_logout_from_device', [int(uid)])
             request.env['res.users'].action_log_user_authentication(uid, 'logout', token)
         else:
             result = message
@@ -1306,14 +1307,13 @@ class APIHomes(API_Homes):
 
             @apiSampleRequest off
         """
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', False)
         app_version = params.get('app_version', '')
         if not token:
             _logger.info("------------Token Missing in main get_master_data api------------------")
             return json.dumps({'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main get_master_data api-------------------")
             return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
@@ -1322,9 +1322,10 @@ class APIHomes(API_Homes):
             return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         if status:
-            result = models.execute_kw(DB, int(uid), password, 'res.users', 'get_master_data_contents', [{'app_version': app_version}])
-            stair_width_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_width_id', [{}])
-            get_stair_cover_risers_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_cover_risers', [{}])
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+            result = models.execute_kw(db, int(uid), password, 'res.users', 'get_master_data_contents', [{'app_version': app_version}])
+            stair_width_data = models.execute_kw(db, int(uid), password, 'res.users', 'get_stair_width_id', [{}])
+            get_stair_cover_risers_data = models.execute_kw(db, int(uid), password, 'res.users', 'get_stair_cover_risers', [{}])
             questionnaires = result.get('questionnaires', [])
             stair_width_id = stair_width_data.get('stair_width_id')
             stair_cover_risers_id = get_stair_cover_risers_data.get('stair_cover_risers')
@@ -1344,14 +1345,13 @@ class APIHomes(API_Homes):
 
     @route('/api/get_appointments', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True)
     def get_appointments(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', False)
         app_version = params.get('app_version', '')
         if not token:
             _logger.info("------------Token Missing in main get_appointments api------------------")
             return json.dumps({'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main get_appointments api-------------------")
             return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
@@ -1384,7 +1384,8 @@ class APIHomes(API_Homes):
                 app_version_result = request.env['res.users'].sudo().check_sales_app_version(app_version)
                 if app_version_result.get('result') == 'Failed':
                     return json.dumps(app_version_result)
-            appointment_data = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+            appointment_data = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                                  'action_get_appointment_data', [int(uid)])
 
             if appointment_data.get('result', '') == 'Failed':
@@ -1406,7 +1407,6 @@ class APIHomes(API_Homes):
 
     @route('/api/update_customer_and_room_information', type='json', auth="none", methods=['POST'], csrf=False)
     def update_customer_and_room_information(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         # params = request.jsonrequest.copy()
         params = request.httprequest.get_json()
         token = params.get('token', False)
@@ -1415,7 +1415,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in main update_customer_and_room_information api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main update_customer_and_room_information api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
@@ -1424,7 +1424,8 @@ class APIHomes(API_Homes):
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         if status:
-            appointment_data = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+            appointment_data = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                                  'action_update_customer_and_room_information', [data])
 
             result = appointment_data
@@ -1436,8 +1437,6 @@ class APIHomes(API_Homes):
 
     @route('/api/update_contract_information', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True)
     def update_contract_information(self, **kwargs):
-        # models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL), allow_none=True)
         # params = request.jsonrequest.copy()
         params = request.httprequest.get_json()
         token = params.get('token', False)
@@ -1446,7 +1445,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in main update_contract_information api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main update_contract_information api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
@@ -1455,7 +1454,8 @@ class APIHomes(API_Homes):
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         if status:
-            payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+            payment_data_result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                                     'action_update_contract_information', [data])
 
             result = payment_data_result
@@ -1468,7 +1468,6 @@ class APIHomes(API_Homes):
 
     @route('/api/upload_images', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def upload_images(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', '')
         appointment_id = params.get('appointment_id', 0) and int(params.get('appointment_id', 0)) or 0
@@ -1488,7 +1487,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in add_screenshots------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in add_screenshots-------------------")
             return json.dumps(
@@ -1500,6 +1499,7 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
             if enable_api_queue_system:
                 _logger.info('image_sync_api_queue Data - Starting--:%s - Appointment ID: %s, Image: %s' % (
@@ -1518,8 +1518,19 @@ class APIHomes(API_Homes):
                             self.image_sync_api_queue, appointment_id, image_name))
                         result = {'override_json_result': 1, 'result': 'Failed',
                                   'message': 'Execution is already in progress'}
-                        request.env['otl.api.sync.log'].sudo().create_api_log('/api/upload_images', {'appointment_id': appointment_id}, uid, result, network_strength)
-                        return json.dumps(result)
+                        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                        try:
+                            if models:
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                  ['/api/upload_images', params, uid,
+                                                   result, network_strength])
+                            else:
+                                request.env['otl.api.sync.log'].sudo().create_api_log(
+                                    '/api/upload_images', params, uid,
+                                    result, network_strength)
+                        except Exception as e:
+                            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
                 self.image_sync_api_queue[appointment_id].update({
                     image_name: time
                 })
@@ -1536,7 +1547,7 @@ class APIHomes(API_Homes):
                     'appointment_id': appointment_id,
                     'image_type': image_type,
                 })
-                data = models.execute_kw(DB, uid, password, 'ir.attachment', 'action_upload_images',
+                data = models.execute_kw(db, uid, password, 'ir.attachment', 'action_upload_images',
                                          [file_data])
             if data:
                 image_id = data[0].get('attachment_id', False)
@@ -1558,12 +1569,24 @@ class APIHomes(API_Homes):
                             'room_name': room_name,
                             'data_completed': data_completed,
                         }
-                        result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment', 'action_link_uploaded_image',
-                                                   [image_vals])
+                        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+                        result = models.execute_kw(db, int(uid), password, 'team.customer.appointment', 'action_link_uploaded_image',
+                                                   [ ])
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/upload_images', {'appointment_id': appointment_id}, uid,
-                                                              result, network_strength)
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/upload_images', params, uid,
+                                   result, network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/upload_images', params, uid,
+                    result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
         result.update({'override_json_result': 1})
         if enable_api_queue_system and appointment_id and self.image_sync_api_queue.get(appointment_id, False):
             self.image_sync_api_queue[appointment_id].pop(image_name, {})
@@ -1574,7 +1597,6 @@ class APIHomes(API_Homes):
 
     @route('/api/generate_contract_document', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def generate_contract_document(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', '')
         contract_plumbing_option_1 = params.get('contract_plumbing_option_1', 0) and int(params.get('contract_plumbing_option_1', 0)) or 0
@@ -1599,7 +1621,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in generate_contract_document------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in generate_contract_document-------------------")
             return json.dumps(
@@ -1611,6 +1633,7 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         data = {}
         if status:
             data = {
@@ -1635,23 +1658,43 @@ class APIHomes(API_Homes):
                             self.generate_contract_document_api_queue, appointment_id))
                         result = {'override_json_result': 1, 'result': 'Failed',
                                   'message': 'Execution is already in progress'}
-                        request.env['otl.api.sync.log'].sudo().create_api_log(
-                            '/api/generate_contract_document', data, uid,
-                            result, network_strength)
+                        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                        try:
+                            if models:
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                  ['/api/generate_contract_document', data, uid,
+                                                   result, network_strength])
+                            else:
+                                request.env['otl.api.sync.log'].sudo().create_api_log(
+                                    '/api/generate_contract_document', data, uid,
+                                    result, network_strength)
+                        except Exception as e:
+                            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
                         return json.dumps(result)
                 self.generate_contract_document_api_queue.update({
                     appointment_id: time
                 })
                 _logger.info('generate_contract_document_api_queue Data - Added--:%s' % (
                     self.generate_contract_document_api_queue))
-
-            result = models.execute_kw(DB, int(uid), password, 'sale.order', 'action_generate_contract_document',
+            result = models.execute_kw(db, int(uid), password, 'sale.order', 'action_generate_contract_document',
                                        [data])
         else:
             result = message
         if data:
-            request.env['otl.api.sync.log'].sudo().create_api_log('/api/generate_contract_document', data, uid,
-                                                              result, network_strength)
+            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+            try:
+                if models:
+                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                      ['/api/generate_contract_document', data, uid,
+                                       result, network_strength])
+                else:
+                    request.env['otl.api.sync.log'].sudo().create_api_log(
+                        '/api/generate_contract_document', data, uid,
+                        result, network_strength)
+            except Exception as e:
+                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.generate_contract_document_api_queue.pop(appointment_id, '')
@@ -1661,7 +1704,6 @@ class APIHomes(API_Homes):
 
     @route('/api/initiate_sync_to_i360', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def initiate_sync_to_i360(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', '')
         appointment_id = params.get('appointment_id', 0) and int(params.get('appointment_id', 0)) or 0
@@ -1671,7 +1713,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in initiate_sync_to_i360------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in initiate_sync_to_i360-------------------")
             return json.dumps(
@@ -1687,7 +1729,8 @@ class APIHomes(API_Homes):
                 'appointment_id': appointment_id,
                 'sync_delay': sync_delay,
             }
-            result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+            result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                        'action_initiate_sync_to_i360',
                                        [data])
         else:
@@ -1701,7 +1744,6 @@ class APIHomes(API_Homes):
 
     @route('/api/initiate_sync_to_i360_json', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def initiate_sync_to_i360_json(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         # params = request.jsonrequest.copy()
         params = request.httprequest.get_json()
         token = params.get('token', '')
@@ -1712,7 +1754,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in initiate_sync_to_i360_json------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in initiate_sync_to_i360_json-------------------")
             return json.dumps(
@@ -1724,6 +1766,7 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
             if enable_api_queue_system:
                 if data.get('appointment_id', 0):
@@ -1739,9 +1782,19 @@ class APIHomes(API_Homes):
                                 self.initiate_i360_sync_api_queue, data.get('appointment_id', 0)))
                             result = {'override_json_result': 1, 'result': 'Failed',
                                       'message': 'Execution is already in progress'}
-                            request.env['otl.api.sync.log'].sudo().create_api_log(
-                                '/api/initiate_sync_to_i360_json', data, uid,
-                                result, network_strength)
+                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                            try:
+                                if models:
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                      ['/api/initiate_sync_to_i360_json', data, uid,
+                                                       result, network_strength])
+                                else:
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(
+                                        '/api/initiate_sync_to_i360_json', data, uid,
+                                        result, network_strength)
+                            except Exception as e:
+                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
                             return json.dumps(result)
                     self.initiate_i360_sync_api_queue.update({
                         appointment_id: time
@@ -1753,13 +1806,24 @@ class APIHomes(API_Homes):
                         "------------Appointment ID missing in create_order_and_update_measurements_encoded api-------------------")
                     return json.dumps(
                         {'override_json_result': 1, 'result': 'Failed', 'message': 'Appointment ID is missing'})
-            result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+            result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                        'action_initiate_sync_to_i360',
                                        [data])
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/initiate_sync_to_i360_json', data, uid,
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/initiate_sync_to_i360_json', data, uid,
+                                                              result, network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/initiate_sync_to_i360_json', data, uid,
                                                               result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
         result.update({'override_json_result': 1})
         if enable_api_queue_system and appointment_id:
             self.initiate_i360_sync_api_queue.pop(appointment_id, '')
@@ -1769,7 +1833,6 @@ class APIHomes(API_Homes):
 
     @route('/api/update_sync_log', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def update_sync_log(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         # params = request.jsonrequest.copy()
         params = request.httprequest.get_json()
         token = params.get('token', '')
@@ -1777,7 +1840,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in update_sync_log------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in update_sync_log-------------------")
             return json.dumps(
@@ -1788,7 +1851,8 @@ class APIHomes(API_Homes):
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         if status:
-            result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+            result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                        'action_update_sync_log',
                                        [data])
         else:
@@ -1798,7 +1862,6 @@ class APIHomes(API_Homes):
 
     @route('/api/create_order_and_update_measurements', type='json', auth="none", methods=['POST'], csrf=False)
     def create_order_and_update_measurements(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         # params = request.jsonrequest.copy()
         params = request.httprequest.get_json()
         token = params.get('token', False)
@@ -1807,7 +1870,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in main update_contract_information api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main create_order_and_update_measurements api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
@@ -1816,7 +1879,8 @@ class APIHomes(API_Homes):
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         if status:
-            payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+            payment_data_result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                                     'action_create_order_and_update_measurements', [data])
 
             result = payment_data_result
@@ -1846,7 +1910,6 @@ class APIHomes(API_Homes):
 
     @route('/api/create_order_and_update_measurements_encoded', type='json', auth="none", methods=['POST'], csrf=False)
     def create_order_and_update_measurements_encoded(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         # params = request.jsonrequest.copy()
         params = request.httprequest.get_json()
         token = params.get('token', False)
@@ -1861,7 +1924,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in main create_order_and_update_measurements_encoded api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main create_order_and_update_measurements_encoded api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
@@ -1870,8 +1933,9 @@ class APIHomes(API_Homes):
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         if status:
-            stair_width_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_width_id', [{}])
-            get_stair_cover_risers_data = models.execute_kw(DB, int(uid), password, 'res.users', 'get_stair_cover_risers', [{}])
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+            stair_width_data = models.execute_kw(db, int(uid), password, 'res.users', 'get_stair_width_id', [{}])
+            get_stair_cover_risers_data = models.execute_kw(db, int(uid), password, 'res.users', 'get_stair_cover_risers', [{}])
             # Handle application issue with static room id 9 
             # Fix question_id 9 to 42 in answer list if present
             if data and "answer" in data and isinstance(data["answer"], list) and (
@@ -1891,6 +1955,7 @@ class APIHomes(API_Homes):
         decoded_data = data
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
             if enable_api_queue_system:
                 if data.get('appointment_id', 0):
@@ -1907,9 +1972,19 @@ class APIHomes(API_Homes):
                                     self.create_order_and_update_measurements_api_queue, data.get('appointment_id', 0)))
                             result = {'override_json_result': 1, 'result': 'Failed',
                                       'message': 'Execution is already in progress'}
-                            request.env['otl.api.sync.log'].sudo().create_api_log(
-                                '/api/create_order_and_update_measurements_encoded', data, uid,
-                                result, network_strength)
+                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                            try:
+                                if models:
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                      ['/api/create_order_and_update_measurements_encoded', data, uid,
+                                                       result, network_strength])
+                                else:
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(
+                                        '/api/create_order_and_update_measurements_encoded', data, uid,
+                                        result, network_strength)
+                            except Exception as e:
+                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
                             return json.dumps(result)
                     self.create_order_and_update_measurements_api_queue.update({
                         appointment_id: time
@@ -1947,9 +2022,19 @@ class APIHomes(API_Homes):
                         })
             except:
                 result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Something went wrong while decoding the credit application token'}
-                request.env['otl.api.sync.log'].sudo().create_api_log(
-                    '/api/create_order_and_update_measurements_encoded', data, uid,
-                    result, network_strength)
+                # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                try:
+                    if models:
+                        models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                          ['/api/create_order_and_update_measurements_encoded', data, uid,
+                                           result, network_strength])
+                    else:
+                        request.env['otl.api.sync.log'].sudo().create_api_log(
+                            '/api/create_order_and_update_measurements_encoded', data, uid,
+                            result, network_strength)
+                except Exception as e:
+                    _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
                 if enable_api_queue_system:
                     self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
                 return json.dumps(result)
@@ -1963,7 +2048,7 @@ class APIHomes(API_Homes):
                     else:
                         return data
                 decoded_data = remove_none_values(decoded_data)
-                payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                payment_data_result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                                      'action_create_order_and_update_measurements', [decoded_data])
             else:
                 return json.dumps({'override_json_result': 1, 'result': 'Failed',
@@ -1972,8 +2057,19 @@ class APIHomes(API_Homes):
             result = payment_data_result
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements_encoded', data, uid,
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/create_order_and_update_measurements_encoded', data, uid,
+                                                              result, network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/create_order_and_update_measurements_encoded', data, uid,
                                                               result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             if appointment_id:
@@ -1983,7 +2079,6 @@ class APIHomes(API_Homes):
 
     @route('/api/create_order_and_update_measurements_encoded_v2', type='json', auth="none", methods=['POST'], csrf=False)
     def create_order_and_update_measurements_encoded_v2(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         # params = request.jsonrequest.copy()
         params = request.httprequest.get_json()
         token = params.get('token', False)
@@ -1996,7 +2091,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in main create_order_and_update_measurements_encoded_v2 api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main create_order_and_update_measurements_encoded_v2 api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
@@ -2004,6 +2099,7 @@ class APIHomes(API_Homes):
             _logger.info("------------password missing in main create_order_and_update_measurements_encoded_v2 api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
             if data:
                 try:
@@ -2014,7 +2110,7 @@ class APIHomes(API_Homes):
                 # decoded_data = json.loads(native_data)
                 decoded_data = native_data
             if decoded_data:
-                payment_data_result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                payment_data_result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                                      'action_create_order_and_update_measurements', [decoded_data])
             else:
                 return json.dumps({'override_json_result': 1, 'result': 'Failed',
@@ -2023,14 +2119,24 @@ class APIHomes(API_Homes):
             result = payment_data_result
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements_encoded_v2', decoded_data, uid,
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/create_order_and_update_measurements_encoded_v2', decoded_data, uid,
+                                                              result, network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/create_order_and_update_measurements_encoded_v2', decoded_data, uid,
                                                               result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
         result.update({'override_json_result': 1})
         return json.dumps(result)
 
     @route('/api/fetch_database_raw_data', type='json', auth="none", methods=['POST'], csrf=False)
     def action_fetch_database_raw_data(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         # params = request.jsonrequest.copy()
         params = request.httprequest.get_json()
         token = params.get('token', False)
@@ -2042,7 +2148,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in main fetch_database_raw_data api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main fetch_database_raw_data api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
@@ -2063,7 +2169,6 @@ class APIHomes(API_Homes):
 
     @route('/api/check_auto_logout', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def check_auto_logout(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', '')
         _logger.info(
@@ -2071,7 +2176,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in main check_auto_logout api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main check_auto_logout api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
@@ -2080,7 +2185,8 @@ class APIHomes(API_Homes):
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token, token_mandatory=True)
         if status:
-            result = models.execute_kw(DB, int(uid), password, 'res.users', 'action_check_auto_logout', [])
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+            result = models.execute_kw(db, int(uid), password, 'res.users', 'action_check_auto_logout', [])
         else:
             result = message
         result.update({'override_json_result': 1})
@@ -2089,7 +2195,6 @@ class APIHomes(API_Homes):
 
     @route('/api/get_available_installation_date', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def action_get_available_installation_date(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', '')
         appointment_id = params.get('appointment_id', '')
@@ -2102,7 +2207,7 @@ class APIHomes(API_Homes):
         if not appointment_id:
             _logger.info("------------Appointment ID Missing in main action_get_available_installation_date api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty Appointment ID.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main action_get_available_installation_date api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
@@ -2112,6 +2217,7 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
             if enable_api_queue_system:
                 _logger.info('available_installation_date_api_queue Data - Starting--:%s - Appointment ID: %s' % (
@@ -2126,22 +2232,46 @@ class APIHomes(API_Homes):
                                 self.available_installation_date_api_queue, appointment_id))
                         result = {'override_json_result': 1, 'result': 'Failed',
                                   'message': 'Execution is already in progress'}
-                        request.env['otl.api.sync.log'].sudo().create_api_log(
-                            '/api/get_available_installation_date', params, uid,
-                            result, network_strength)
+                        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                        try:
+                            if models:
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                  ['/api/get_available_installation_date', params,
+                                                   uid,
+                                                   result, network_strength])
+                            else:
+                                request.env['otl.api.sync.log'].sudo().create_api_log(
+                                    '/api/get_available_installation_date', params,
+                                    uid,
+                                    result, network_strength)
+                        except Exception as e:
+                            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
                         return json.dumps(result)
                 self.available_installation_date_api_queue.update({
                     appointment_id: time
                 })
                 _logger.info('available_installation_date_api_queue Data - Added--:%s' % (
                     self.available_installation_date_api_queue))
-            result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment', 'action_get_available_installation_date', [{'appointment_id': appointment_id}])
+            result = models.execute_kw(db, int(uid), password, 'team.customer.appointment', 'action_get_available_installation_date', [{'appointment_id': appointment_id}])
         else:
             result = message
         _logger.info("---------action_get_available_installation_date Response: %s"%(result))
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/get_available_installation_date', params,
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/get_available_installation_date', params,
+                                                              uid,
+                                                              result, network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/get_available_installation_date', params,
                                                               uid,
                                                               result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.available_installation_date_api_queue.pop(appointment_id, '')
@@ -2152,7 +2282,6 @@ class APIHomes(API_Homes):
     @route('/api/submit_selected_installation_date', type='http', auth="none", methods=['POST'], csrf=False,
            allow_none=True, )
     def action_submit_selected_installation_date(self, **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', '')
         sale_order_id = params.get('sale_order_id', '')
@@ -2172,7 +2301,7 @@ class APIHomes(API_Homes):
                 "------------Selected Installation Date ID Missing in main submit_selected_installation_date api------------------")
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty Selected Installation Date ID.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main submit_selected_installation_date api-------------------")
             return json.dumps(
@@ -2185,6 +2314,7 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
             if enable_api_queue_system:
                 _logger.info('selected_installation_date_api_queue Data - Starting--:%s - Appointment ID: %s' % (
@@ -2199,24 +2329,48 @@ class APIHomes(API_Homes):
                                 self.selected_installation_date_api_queue, sale_order_id))
                         result = {'override_json_result': 1, 'result': 'Failed',
                                   'message': 'Execution is already in progress'}
-                        request.env['otl.api.sync.log'].sudo().create_api_log(
-                            '/api/get_available_installation_date', params, uid,
-                            result, network_strength)
+                        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                        try:
+                            if models:
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                  ['/api/submit_selected_installation_date', params,
+                                                   uid,
+                                                   result, network_strength])
+                            else:
+                                request.env['otl.api.sync.log'].sudo().create_api_log(
+                                    '/api/submit_selected_installation_date', params,
+                                    uid,
+                                    result, network_strength)
+                        except Exception as e:
+                            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
                         return json.dumps(result)
                 self.selected_installation_date_api_queue.update({
                     sale_order_id: time
                 })
                 _logger.info('selected_installation_date_api_queue Data - Added--:%s' % (
                     self.selected_installation_date_api_queue))
-            result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+            result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                        'action_submit_selected_installation_date',
                                        [{'sale_order_id': sale_order_id, 'installation_id': installation_id}])
         else:
             result = message
         _logger.info("---------submit_selected_installation_date Response: %s" % (result))
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/submit_selected_installation_date', params,
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/submit_selected_installation_date', params,
+                                                              uid,
+                                                              result, network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/submit_selected_installation_date', params,
                                                               uid,
                                                               result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.selected_installation_date_api_queue.pop(sale_order_id, '')
@@ -2227,7 +2381,6 @@ class APIHomes(API_Homes):
     @route('/api/<version>/create_versatile_credit_application', type='json', auth="none", methods=['POST'], csrf=False,
            allow_none=True, )
     def action_create_versatile_credit_application(self, version='v1', **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL), allow_none=True)
         # params = request.jsonrequest.copy()
         params = request.httprequest.get_json()
         token = ''
@@ -2245,7 +2398,7 @@ class APIHomes(API_Homes):
         if not data:
             _logger.info("------------Data Missing in main create_versatile_credit_application api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Data is not existing'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in main create_versatile_credit_application api-------------------")
             return json.dumps(
@@ -2257,8 +2410,9 @@ class APIHomes(API_Homes):
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         if status:
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
             if version == 'v1':
-                result = models.execute_kw(DB, int(uid), password, 'otl.versatile.credit.application',
+                result = models.execute_kw(db, int(uid), password, 'otl.versatile.credit.application',
                                            'action_create_versatile_credit_application',
                                            [data])
             else:
@@ -2271,7 +2425,6 @@ class APIHomes(API_Homes):
 
     @route('/api/<version>/update_additional_appointment_data', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def action_update_additional_appointment_data(self, version='v1', **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', '')
         flexible_installation = params.get('flexible_installation', 0) and int(params.get('flexible_installation', 0)) or 0
@@ -2288,7 +2441,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in update_additional_appointment_data------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in update_additional_appointment_data-------------------")
             return json.dumps(
@@ -2301,6 +2454,7 @@ class APIHomes(API_Homes):
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
             if version == 'v1':
                 data = {
                     'appointment_id': int(appointment_id),
@@ -2322,9 +2476,20 @@ class APIHomes(API_Homes):
                                 self.update_additional_appointment_data_api_queue, appointment_id))
                             result = {'override_json_result': 1, 'result': 'Failed',
                                       'message': 'Execution is already in progress'}
-                            request.env['otl.api.sync.log'].sudo().create_api_log(
-                                '/api/%s/update_additional_appointment_data'%(version), data, uid,
-                                result, network_strength)
+                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                            try:
+                                if models:
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                      ['/api/%s/update_additional_appointment_data' % (version), params,
+                                                       uid, result,
+                                                       network_strength])
+                                else:
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(
+                                        '/api/%s/update_additional_appointment_data' % (version), params, uid, result,
+                                        network_strength)
+                            except Exception as e:
+                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
                             return json.dumps(result)
                     self.update_additional_appointment_data_api_queue.update({
                         appointment_id: time
@@ -2332,14 +2497,24 @@ class APIHomes(API_Homes):
                     _logger.info('update_additional_appointment_data_api_queue Data - Added--:%s' % (
                         self.update_additional_appointment_data_api_queue))
 
-                result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment', 'action_update_additional_appointment_data',
+                result = models.execute_kw(db, int(uid), password, 'team.customer.appointment', 'action_update_additional_appointment_data',
                                            [data])
             else:
                 result= {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_additional_appointment_data'%(version), params, uid,
-                                                              result, network_strength)
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/%s/update_additional_appointment_data' % (version), params, uid, result,
+                                   network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/%s/update_additional_appointment_data' % (version), params, uid, result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.update_additional_appointment_data_api_queue.pop(appointment_id, '')
@@ -2350,7 +2525,6 @@ class APIHomes(API_Homes):
     @route('/api/<version>/get_credit_application_status', type='json', auth="none", methods=['POST'], csrf=False,
            allow_none=True, )
     def action_get_credit_application_status(self, version='v1', **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL), allow_none=True)
         # params = request.jsonrequest.copy()
         params = request.httprequest.get_json()
         token = ''
@@ -2370,7 +2544,7 @@ class APIHomes(API_Homes):
         if not data:
             _logger.info("------------Data Missing in get_credit_application_status api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Data is not existing'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in get_credit_application_status api-------------------")
             return json.dumps(
@@ -2383,6 +2557,7 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
             if version == 'v1':
                 if enable_api_queue_system:
@@ -2397,25 +2572,45 @@ class APIHomes(API_Homes):
                                 self.get_credit_application_status_api_queue, appointment_id))
                             result = {'override_json_result': 1, 'result': 'Failed',
                                       'message': 'Execution is already in progress'}
-                            request.env['otl.api.sync.log'].sudo().create_api_log(
-                                '/api/%s/update_additional_appointment_data'%(version), data, uid,
-                                result, network_strength)
-                            return json.dumps(result)
+                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                            try:
+                                if models:
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                      ['/api/%s/get_credit_application_status' % (version), params, uid,
+                                                       result,
+                                                       network_strength])
+                                else:
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(
+                                        '/api/%s/get_credit_application_status' % (version), params, uid, result,
+                                        network_strength)
+                            except Exception as e:
+                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
+                        return json.dumps(result)
                     self.get_credit_application_status_api_queue.update({
                         appointment_id: time
                     })
                     _logger.info('get_credit_application_status_api_queue Data - Added--:%s' % (
                         self.get_credit_application_status_api_queue))
-                result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                            'action_get_credit_application_status',
                                            [data])
             else:
                 result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/get_credit_application_status' % (version),
-                                                              params, uid,
-                                                              result, network_strength)
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/%s/get_credit_application_status' % (version), params, uid, result,
+                                   network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/%s/get_credit_application_status' % (version), params, uid, result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.get_credit_application_status_api_queue.pop(appointment_id, '')
@@ -2425,7 +2620,6 @@ class APIHomes(API_Homes):
 
     @route('/api/<version>/update_arrival_departure_time', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
     def action_update_arrival_departure_time(self, version='v1', **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', '')
         appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
@@ -2439,7 +2633,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in update_arrival_departure_time------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in update_arrival_departure_time-------------------")
             return json.dumps(
@@ -2451,6 +2645,7 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
             if version == 'v1':
                 data = {
@@ -2471,9 +2666,20 @@ class APIHomes(API_Homes):
                                 self.update_arrival_departure_time_api_queue, appointment_id))
                             result = {'override_json_result': 1, 'result': 'Failed',
                                       'message': 'Execution is already in progress'}
-                            request.env['otl.api.sync.log'].sudo().create_api_log(
-                                '/api/%s/update_arrival_departure_time'%(version), data, uid,
-                                result, network_strength)
+                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                            try:
+                                if models:
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                      ['/api/%s/update_arrival_departure_time' % (version), params, uid,
+                                                       result,
+                                                       network_strength])
+                                else:
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(
+                                        '/api/%s/update_arrival_departure_time' % (version), params, uid, result,
+                                        network_strength)
+                            except Exception as e:
+                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
                             return json.dumps(result)
                     self.update_arrival_departure_time_api_queue.update({
                         appointment_id: time
@@ -2481,14 +2687,24 @@ class APIHomes(API_Homes):
                     _logger.info('update_arrival_departure_time_api_queue Data - Added--:%s' % (
                         self.update_arrival_departure_time_api_queue))
 
-                result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment', 'action_update_arrival_departure_time',
+                result = models.execute_kw(db, int(uid), password, 'team.customer.appointment', 'action_update_arrival_departure_time',
                                            [data])
             else:
                 result= {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_arrival_departure_time'%(version), params, uid,
-                                                              result, network_strength)
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/%s/update_arrival_departure_time' % (version), params, uid, result,
+                                   network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/%s/update_arrival_departure_time' % (version), params, uid, result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.update_arrival_departure_time_api_queue.pop(appointment_id, '')
@@ -2499,7 +2715,6 @@ class APIHomes(API_Homes):
     @route('/api/<version>/get_appointment_sync_status', type='http', auth="none", methods=['GET'], csrf=False,
            allow_none=True, )
     def get_appointment_sync_status(self, version='v1', **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL), allow_none=True)
         token = ''
         access_token = request.httprequest.headers.get('Authorization')
         if not access_token:
@@ -2509,7 +2724,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in get_appointment_sync_status api------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token is not existing'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in get_appointment_sync_status api-------------------")
             return json.dumps(
@@ -2521,8 +2736,9 @@ class APIHomes(API_Homes):
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         if status:
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
             if version == 'v1':
-                result = models.execute_kw(DB, int(uid), password, 'res.users', 'action_get_appointment_sync_status', [int(uid)])
+                result = models.execute_kw(db, int(uid), password, 'res.users', 'action_get_appointment_sync_status', [int(uid)])
                 _logger.info('-----get_appointment_sync_status: Result: %s'%(result))
             else:
                 result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
@@ -2534,7 +2750,6 @@ class APIHomes(API_Homes):
     @route('/api/<version>/upload_compressed_files', type='http', auth="none", methods=['POST'], csrf=False,
            allow_none=True, )
     def upload_compressed_files_api(self,version='v1', **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = ''
         access_token = request.httprequest.headers.get('Authorization')
@@ -2549,7 +2764,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.error("upload_compressed_files - Empty Token")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.error("upload_compressed_files - Empty uid")
             return json.dumps(
@@ -2563,7 +2778,7 @@ class APIHomes(API_Homes):
             _logger.error("upload_compressed_files - Empty file")
             return json.dumps({'result': 'Failed', 'message': 'Empty attachment in values.'})
         if version == 'v1':
-
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
             if type(file) == werkzeug.datastructures.FileStorage:
                 image_binary = (file.read())
                 file_data.update({
@@ -2571,7 +2786,7 @@ class APIHomes(API_Homes):
                     'file_name': file.filename,
                     'appointment_id': appointment_id
                 })
-                data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'ir.attachment', 'upload_compressed_files',
+                data = models.execute_kw(db, API_USER_ID, API_USER_PASSWORD, 'ir.attachment', 'upload_compressed_files',
                                          [file_data])
 
                 if data:
@@ -2590,7 +2805,6 @@ class APIHomes(API_Homes):
     @route('/api/<version>/update_manual_arrival_date', type='http', auth="none", methods=['POST'], csrf=False,
            allow_none=True, )
     def action_update_manual_arrival_date(self, version='v1', **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = params.get('token', '')
         appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
@@ -2603,7 +2817,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in update_manual_arrival_date------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in update_manual_arrival_date-------------------")
             return json.dumps(
@@ -2616,6 +2830,7 @@ class APIHomes(API_Homes):
         # enable_api_queue_system = eval(
         #     str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
             if version == 'v1':
                 data = {
@@ -2636,26 +2851,46 @@ class APIHomes(API_Homes):
                                     self.update_manual_arrival_date_api_queue, appointment_id))
                             result = {'override_json_result': 1, 'result': 'Failed',
                                       'message': 'Execution is already in progress'}
-                            request.env['otl.api.sync.log'].sudo().create_api_log(
-                                '/api/%s/update_manual_arrival_date' % (version), data, uid,
-                                result, network_strength)
-                            return json.dumps(result)
+                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                            try:
+                                if models:
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                      ['/api/%s/update_manual_arrival_date' % (version), params, uid,
+                                                       result,
+                                                       network_strength])
+                                else:
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(
+                                        '/api/%s/update_manual_arrival_date' % (version), params, uid, result,
+                                        network_strength)
+                            except Exception as e:
+                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
+                        return json.dumps(result)
                     self.update_manual_arrival_date_api_queue.update({
                         appointment_id: time
                     })
                     _logger.info('update_manual_arrival_date_api_queue Data - Added--:%s' % (
                         self.update_manual_arrival_date_api_queue))
 
-                result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                            'action_update_manual_arrival_date',
                                            [data])
             else:
                 result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_manual_arrival_date' % (version),
-                                                              params, uid,
-                                                              result, network_strength)
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/%s/update_manual_arrival_date' % (version), params, uid, result,
+                                   network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/%s/update_manual_arrival_date' % (version), params, uid, result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.update_manual_arrival_date_api_queue.pop(appointment_id, '')
@@ -2666,7 +2901,6 @@ class APIHomes(API_Homes):
     @route('/api/<version>/send_review_link', type='http', auth="none", methods=['POST'], csrf=False,
            allow_none=True, )
     def action_send_review_link(self, version='v1', **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = ''
         access_token = request.httprequest.headers.get('Authorization')
@@ -2684,7 +2918,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in send_review_link------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in send_review_link-------------------")
             return json.dumps(
@@ -2698,6 +2932,7 @@ class APIHomes(API_Homes):
         #     str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
             if version == 'v1':
                 data = {
                     'appointment_id': int(appointment_id),
@@ -2716,26 +2951,44 @@ class APIHomes(API_Homes):
                                     self.send_review_link_api_queue, appointment_id))
                             result = {'override_json_result': 1, 'result': 'Failed',
                                       'message': 'Execution is already in progress'}
-                            request.env['otl.api.sync.log'].sudo().create_api_log(
-                                '/api/%s/send_review_link' % (version), data, uid,
-                                result, network_strength)
-                            return json.dumps(result)
+                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                            try:
+                                if models:
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                      ['/api/%s/send_review_link' % (version), params, uid, result,
+                                                       network_strength])
+                                else:
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(
+                                        '/api/%s/send_review_link' % (version), params, uid, result, network_strength)
+                            except Exception as e:
+                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
+                        return json.dumps(result)
                     self.send_review_link_api_queue.update({
                         appointment_id: time
                     })
                     _logger.info('send_review_link_api_queue Data - Added--:%s' % (
                         self.send_review_link_api_queue))
 
-                result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                            'action_send_review_link',
                                            [data])
             else:
                 result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/send_review_link' % (version),
-                                                              params, uid,
-                                                              result, network_strength)
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/%s/send_review_link' % (version), params, uid, result,
+                                   network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/%s/send_review_link' % (version), params, uid, result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.send_review_link_api_queue.pop(appointment_id, '')
@@ -2746,7 +2999,6 @@ class APIHomes(API_Homes):
     @route('/api/<version>/get_appointment_current_status', type='http', auth="none", methods=['POST'], csrf=False,
            allow_none=True, )
     def action_get_appointment_current_status(self, version='v1', **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = ''
         access_token = request.httprequest.headers.get('Authorization')
@@ -2763,7 +3015,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in get_appointment_current_status------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in get_appointment_current_status-------------------")
             return json.dumps(
@@ -2776,6 +3028,7 @@ class APIHomes(API_Homes):
         # enable_api_queue_system = eval(
         #     str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
             if version == 'v1':
                 data = {
@@ -2795,26 +3048,41 @@ class APIHomes(API_Homes):
                                     self.get_appointment_current_status_api_queue, appointment_id))
                             result = {'override_json_result': 1, 'result': 'Failed',
                                       'message': 'Execution is already in progress'}
-                            request.env['otl.api.sync.log'].sudo().create_api_log(
-                                '/api/%s/get_appointment_current_status' % (version), data, uid,
-                                result, network_strength)
-                            return json.dumps(result)
+                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                            try:
+                                if models:
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                      ['/api/%s/get_appointment_current_status' % (version), params,
+                                                       uid, result, network_strength])
+                                else:
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(
+                                        '/api/%s/get_appointment_current_status' % (version), params, uid, result,
+                                        network_strength)
+                            except Exception as e:
+                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
+                        return json.dumps(result)
                     self.get_appointment_current_status_api_queue.update({
                         appointment_id: time
                     })
                     _logger.info('get_appointment_current_status_api_queue Data - Added--:%s' % (
                         self.get_appointment_current_status_api_queue))
 
-                result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                            'action_get_appointment_current_status',
                                            [data])
             else:
                 result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/get_appointment_current_status' % (version),
-                                                              params, uid,
-                                                              result, network_strength)
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', ['/api/%s/get_appointment_current_status' % (version), params, uid, result, network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/get_appointment_current_status' % (version), params, uid, result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.get_appointment_current_status_api_queue.pop(appointment_id, '')
@@ -2826,7 +3094,6 @@ class APIHomes(API_Homes):
     @route('/api/<version>/update_live_screen_log', type='http', auth="none", methods=['POST'], csrf=False,
            allow_none=True, )
     def action_update_live_screen_log(self, version='v1', **kwargs):
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(URL))
         params = request.params.copy()
         token = ''
         access_token = request.httprequest.headers.get('Authorization')
@@ -2845,7 +3112,7 @@ class APIHomes(API_Homes):
         if not token:
             _logger.info("------------Token Missing in update_live_screen_log------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
-        uid, password = self.get_credentials(token)
+        uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info("------------uid missing in update_live_screen_log-------------------")
             return json.dumps(
@@ -2867,6 +3134,7 @@ class APIHomes(API_Homes):
         # enable_api_queue_system = eval(
         #     str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
             if version == 'v1':
                 data = {
@@ -2889,9 +3157,15 @@ class APIHomes(API_Homes):
                                     self.update_live_screen_log_api_queue, appointment_id))
                             result = {'override_json_result': 1, 'result': 'Failed',
                                       'message': 'Execution is already in progress'}
-                            request.env['otl.api.sync.log'].sudo().create_api_log(
-                                '/api/%s/update_live_screen_log' % (version), data, uid,
-                                result, network_strength)
+                            # log via XML-RPC execute_kw; fall back to internal env logging if it fails
+                            try:
+                                if models:
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log',
+                                                       'create_api_log', ['/api/%s/update_live_screen_log' % (version), data, uid, result, network_strength])
+                                else:
+                                    request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_live_screen_log' % (version), data, uid, result, network_strength)
+                            except Exception as e:
+                                _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
                             return json.dumps(result)
                     self.update_live_screen_log_api_queue.update({
                         appointment_id: time
@@ -2899,16 +3173,21 @@ class APIHomes(API_Homes):
                     _logger.info('update_live_screen_log_api_queue Data - Added--:%s' % (
                         self.update_live_screen_log_api_queue))
 
-                result = models.execute_kw(DB, int(uid), password, 'team.customer.appointment',
+                result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                            'action_update_live_screen_log',
                                            [data])
             else:
                 result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
         else:
             result = message
-        request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_live_screen_log' % (version),
-                                                              params, uid,
-                                                              result, network_strength)
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', ['/api/%s/update_live_screen_log' % (version), params, uid, result, network_strength])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_live_screen_log' % (version), params, uid, result, network_strength)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
         result.update({'override_json_result': 1})
         if enable_api_queue_system:
             self.update_live_screen_log_api_queue.pop(appointment_id, '')
