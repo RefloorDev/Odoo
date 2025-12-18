@@ -152,7 +152,7 @@
         </record>
 
         <record id="versatile_credit_application_company_rule" model="ir.rule">
-            <field name="name">Appointment Multi-Company</field>
+            <field name="name">Credit Application Multi-Company</field>
             <field name="model_id" ref="model_otl_versatile_credit_application"/>
             <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]
             </field>
@@ -160,7 +160,7 @@
         </record>
 
         <record id="destination_selection_company_rule" model="ir.rule">
-            <field name="name">Appointment Multi-Company</field>
+            <field name="name">Destination Selection Multi-Company</field>
             <field name="model_id" ref="model_otl_destination_selection"/>
             <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]
             </field>
@@ -168,8 +168,16 @@
         </record>
 
         <record id="questionnaire_calc_logic_company_rule" model="ir.rule">
-            <field name="name">Appointment Multi-Company</field>
+            <field name="name">Questionnaire Logic Multi-Company</field>
             <field name="model_id" ref="model_otl_questionnaire_calc_logic"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]
+            </field>
+            <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+        </record>
+
+        <record id="finance_provider_company_rule" model="ir.rule">
+            <field name="name">Finance Providers Multi-Company</field>
+            <field name="model_id" ref="model_otl_finance_provider"/>
             <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]
             </field>
             <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
