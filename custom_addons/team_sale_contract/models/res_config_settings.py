@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api
+from odoo.tools import config
 
 class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
@@ -30,4 +31,5 @@ class ResConfigSettings(models.TransientModel):
     enable_destination_selection = fields.Boolean("Enable Destination Selection", default=False, config_parameter="team_sale_contract.enable_destination_selection")
     address_visible_time_limit = fields.Integer('Maximum Allowed Time Limit to Show Full Address Prior to Appointment', default=120, config_parameter='team_sale_contract.address_visible_time_limit')
     version_mismatch_message = fields.Char('Version Mismatch Message', default="Please contact your administrator in order to update to the newest version.", config_parameter="team_sale_contract.version_mismatch_message")
+    api_call_base_url = fields.Char('API Call URL', config_parameter='team_sale_contract.api_base_url', default=lambda self: "http://localhost:%s" % config.get('http_port') )
 

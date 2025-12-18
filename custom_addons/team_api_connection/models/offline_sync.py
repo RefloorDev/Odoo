@@ -324,10 +324,16 @@ class ResUsers(models.Model):
         finance_checklist = []
         checklists = self.env['otl.finance.checklist.items'].search([])
         for checklist in checklists:
+            providers_list = []
+            if checklist.applicable_finance_providers:
+                providers_list = [x.code for x in checklist.applicable_finance_providers]
             finance_checklist.append({
                 'checklist_id': checklist.id,
                 'name': checklist.name or '',
-                'sequence': checklist.sequence
+                'sequence': checklist.sequence,
+                'applicable_type': checklist.applicable_type or '',
+                'applicable_finance_providers': providers_list,
+
             })
         return finance_checklist
 
@@ -2435,7 +2441,7 @@ class TeamCustomerAppointment(models.Model):
                             team_room_obj.write({'order_id': sale_order.id})
                         if room_transition_obj:
                             room_transition_obj.write({'order_id': sale_order.id})
-                    if sync_delay == 1:
+                    if sync_delay >= 1:
                         t1 = threading.Thread(target=self.action_start_sync_to_i360, args=(appointment.id, sale_order.id))
                         t1.start()
                         _logger.info("thread %s started!" % t1)
@@ -2638,7 +2644,7 @@ class TeamCustomerAppointment(models.Model):
                                     'payment_status': 'Success',
                                     'payment_message': "Payment is already processed.",
                                 }
-       
+
                         if (operation_mode == 'online' or (invoice_created and retry_order_creation)) and not existing_auth_transaction_id:
                             valid_transactions_lines = appointment.card_transaction_log_line.filtered(lambda x:x.state == 'success' and not x.void_transaction)
                             for line in valid_transactions_lines:
@@ -3399,6 +3405,9 @@ class TeamCustomerAppointment(models.Model):
             if data.get('flexible_installation', 0) == 1:
                 flexible_installation = True
             destination_selection_id = False
+            both_parties_present = False
+            if data.get('both_parties_present', 0) == 1:
+                both_parties_present = True
             if data.get('destination_selection_id', False):
                 destination_selection_id = int(data.get('destination_selection_id', 0))
                 destination_selection = self.env['otl.appointment.result.reason'].browse(destination_selection_id)
@@ -3411,6 +3420,7 @@ class TeamCustomerAppointment(models.Model):
                         'additional_comments': data.get('additional_comments', ''),
                         'send_physical_document': send_physical_document,
                         'flexible_installation': flexible_installation,
+                        'both_parties_present': both_parties_present,
                     }
                     if destination_selection_id:
                         appointment_vals.update({'destination_selection_id': destination_selection_id})
@@ -3496,6 +3506,7 @@ class TeamCustomerAppointment(models.Model):
                                 "status": versatile_application.status or "",
                                 "approved_amount": versatile_application.approved_amount or 0,
                                 "finance_provider": versatile_application.finance_provider or "",
+                                "co_applicant_exists": versatile_application.co_applicant_first_name and 1 or 0,
                             }
                         }
             else:
@@ -3791,6 +3802,102 @@ class TeamCustomerAppointment(models.Model):
                 'result': 'Failed'
             }
         _logger.info("------action_get_appointment_current_status result: %s-------------" % (result))
+        return result
+
+    def action_start_sync_live_screen_log_to_i360(self, live_screen_log_id):
+        time.sleep(3)
+        try:
+            # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            live_screen_log_obj = self.env['otl.app.live.screen.log']
+            sync_log = self.env['otl.appointment.sync.log']
+            live_screen_log = live_screen_log_obj.browse(int(live_screen_log_id))
+            appointment = live_screen_log.appointment_id
+            _logger.info('------Starting action_start_sync_live_screen_log_to_i360------: %s - %s'%(appointment.id, live_screen_log.name))
+            if not live_screen_log.synced_to_i360:
+                result = appointment.update_live_screen_log_in_i360(live_screen_log)
+                if result.get('success', '') == 'true':
+                    _logger.info("------ LastScreenAPI Success-------------")
+                    sync_log.create({
+                        'appointment_id': appointment.id,
+                        'response': result,
+                        'name': 'LastScreenAPI',
+                    })
+                else:
+                    _logger.info("------ LastScreenAPI Failed-------------")
+                    sync_log.create({
+                        'appointment_id': appointment.id,
+                        'response': result,
+                        'state': 'failed',
+                        'name': 'LastScreenAPI',
+                    })
+            else:
+                _logger.info('-----Data already synced to i360----')
+            self.env.cr.commit()
+            new_cr.close()
+            _logger.info('------End of action_start_sync_live_screen_log_to_i360------: %s - %s'%(appointment.id, live_screen_log.name))
+        except Exception as e:
+            _logger.info('------Exception in action_start_sync_live_screen_log_to_i360------: %s' % (e))
+            new_cr.rollback()
+        return True
+
+    @api.model
+    def action_update_live_screen_log(self, data):
+        result = {
+            'message': 'Something went wrong updating the appointment',
+            'result': 'Failed'
+        }
+        _logger.info("------action_update_live_screen_log data: %s-------------" % (data))
+        try:
+            appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
+            user_id = data.get('user_id', 0) and int(data.get('user_id', 0)) or 0
+            screen_entry_date = data.get('screen_entry_date', False) and data.get('screen_entry_date', False) or ''
+            screen_name = data.get('screen_name', False) and data.get('screen_name', False) or ''
+            live_screen_log_obj = self.env['otl.app.live.screen.log']
+            if appointment_id:
+                appointment = self.sudo().search([('id', '=', appointment_id)], limit=1)
+                if appointment:
+                    timezone = data.get('timezone', 'EST')
+                    screen_entry_date_utc = screen_entry_date
+                    if screen_entry_date and timezone:
+                        screen_entry_date_utc = self.get_timezone_based_time(screen_entry_date, timezone)
+                    live_screen_log = live_screen_log_obj.search([
+                        ('appointment_id', '=', appointment_id),
+                        ('screen_entry_date', '=', screen_entry_date_utc)
+                    ])
+                    if not live_screen_log:
+                        live_screen_log = live_screen_log_obj.create({
+                            'appointment_id': appointment.id,
+                            'name': screen_name,
+                            'screen_entry_date': screen_entry_date_utc,
+                        })
+                        self.env.cr.commit()
+                        t1 = threading.Thread(target=self.action_start_sync_live_screen_log_to_i360,
+                                              args=(live_screen_log.id,))
+                        t1.start()
+                        _logger.info("thread %s started!" % t1)
+                    result = {
+                        'message': 'Live Screen Entry Log updated successfully.',
+                        'result': 'Success'
+                    }
+
+                else:
+                    result = {
+                        'message': 'No appointment found for the given ID.',
+                        'result': 'Failed'
+                    }
+            else:
+                result = {
+                    'message': 'Appointment ID is missing',
+                    'result': 'Failed'
+                }
+        except:
+            result = {
+                'message': 'Something Went Wrong.',
+                'result': 'Failed'
+            }
+        _logger.info("------action_update_live_screen_log result: %s-------------" % (result))
         return result
     
 

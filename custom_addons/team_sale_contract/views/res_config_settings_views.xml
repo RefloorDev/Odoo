@@ -89,6 +89,9 @@
                     <setting id="version_mismatch_message" string="Version Mismatch Message" help="Message to display in App when salesperson is not using latest version.">
                         <field name="version_mismatch_message"/>
                     </setting>
+                    <setting id="api_call_base_url" string="API Call Base URL" help="Base URL for making API Calls.">
+                        <field name="api_call_base_url"/>
+                    </setting>
                 </block>
                 <block title="Google API Configuration" id="sale_other_data_id_setting">
                     <setting id="google_auth_attachment_id" string="Auth File" help="File for Google service authentication for cloud storage">

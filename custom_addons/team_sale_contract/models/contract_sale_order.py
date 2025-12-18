@@ -61,7 +61,8 @@ class TeamCustomerAppointment(models.Model):
             configurations = self.env['team.improveit.configuration'].search(
                 [('api_type', '=', 'boomi')], limit=1)
             for appointment in self:
-                _logger.info('--------Starting SalesRepArrivalDeparture API Appointment ID---------: %s' % (appointment.id))
+                _logger.info(
+                    '--------Starting SalesRepArrivalDeparture API Appointment ID---------: %s' % (appointment.id))
                 if appointment.improveit_appointment_id and (appointment.arrival_date or appointment.departure_date):
                     if appointment.arrival_departure_synced:
                         return {
@@ -95,7 +96,7 @@ class TeamCustomerAppointment(models.Model):
                     if isinstance(content, str):
                         content = json.loads(content)
                     _logger.info('SalesRepArrivalDeparture API Response of Appointment %s :%s' % (
-                    appointment.id, content))
+                        appointment.id, content))
                     if content.get('Result', '') == "Success":
                         appointment.write({
                             'arrival_departure_synced': True,
@@ -110,6 +111,60 @@ class TeamCustomerAppointment(models.Model):
         except IOError:
             pass
             _logger.error("******--------Error in update_arrival_departure_time_in_i360 API---------********")
+            result.update({"success": "false"})
+        return result
+
+    def update_live_screen_log_in_i360(self, live_screen_log):
+        result = {
+            "success": "true",
+            "errors": []
+        }
+        try:
+            configurations = self.env['team.improveit.configuration'].search(
+                [('api_type', '=', 'boomi')], limit=1)
+            for appointment in self:
+                _logger.info('--------Starting LastScreenAPI API Appointment ID---------: %s - %s' % (appointment.id, live_screen_log.name))
+                if appointment.improveit_appointment_id and live_screen_log.screen_entry_date:
+                    if live_screen_log.synced_to_i360:
+                        return {
+                            "success": "false",
+                            "errors": [{"message": "It is already synced to i360."}]
+                        }
+                    data = {
+                        'AppointmentID': appointment.improveit_appointment_id or '',
+                        'LastScreen': live_screen_log.name or '',
+                        'LastScreenTime': live_screen_log.screen_entry_date.strftime('%Y-%m-%dT%H:%M:%S')
+                    }
+                    headers = {
+                        'Content-type': 'application/json',
+                    }
+                    end_point_url = configurations.token_url
+                    client_token = configurations.client_token
+                    _logger.info('LastScreenAPI API Input Payload of Appointment %s - %s :%s' % (
+                        appointment.id, live_screen_log.name, data))
+                    if end_point_url and client_token:
+                        request_url = end_point_url + 'LastScreenAPI' + client_token
+                    req = requests.post(request_url, data=json.dumps(data), headers=headers, timeout=TIMEOUT,
+                                        verify=configurations.enable_ssl)
+                    req.raise_for_status()
+                    content = req.json()
+                    if isinstance(content, str):
+                        content = json.loads(content)
+                    _logger.info('LastScreenAPI API Response of Appointment %s - %s :%s' % (
+                    appointment.id, live_screen_log.name, content))
+                    if content.get('Result', '') == "Success":
+                        live_screen_log.write({
+                            'synced_to_i360': True,
+                        })
+                    else:
+                        return {
+                            "success": "false",
+                            "errors": [{"message": "Not synced to i360."}]
+                        }
+
+        except IOError:
+            pass
+            _logger.error("******--------Error in update_live_screen_log_in_i360 API---------********")
             result.update({"success": "false"})
         return result
 
