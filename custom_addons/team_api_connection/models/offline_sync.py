@@ -5240,3 +5240,4 @@ class VersatileCreditApplication(models.Model):
             }
         return result
 
+
