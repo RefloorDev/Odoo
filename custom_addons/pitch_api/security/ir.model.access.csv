@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_auth_revoked_token,auth.revoked.token,model_auth_revoked_token,base.group_system,1,1,1,1
+access_auth_refresh_token,auth.refresh.token,model_auth_refresh_token,base.group_system,1,1,1,1
+access_pitch_api_access_wizard,pitch.api.access.wizard,model_pitch_api_access_wizard,base.group_system,1,1,1,1

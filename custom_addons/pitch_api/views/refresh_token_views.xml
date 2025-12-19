@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_pitch_api_refresh_token_list" model="ir.ui.view">
+        <field name="name">auth.refresh.token.list</field>
+        <field name="model">auth.refresh.token</field>
+        <field name="arch" type="xml">
+            <list string="API Devices">
+                <field name="user_id"/>
+                <field name="device_id"/>
+                <field name="device_name"/>
+                <field name="created_on"/>
+                <field name="expires_on"/>
+                <field name="last_used"/>
+                <field name="revoked"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_pitch_api_refresh_token_form" model="ir.ui.view">
+        <field name="name">auth.refresh.token.form</field>
+        <field name="model">auth.refresh.token</field>
+        <field name="arch" type="xml">
+            <form string="API Device">
+                <sheet>
+                    <group>
+                        <field name="user_id"/>
+                        <field name="device_id"/>
+                        <field name="device_name"/>
+                        <field name="client_info"/>
+                        <field name="ip_address"/>
+                    </group>
+                    <group>
+                        <field name="created_on"/>
+                        <field name="expires_on"/>
+                        <field name="last_used"/>
+                        <field name="use_count"/>
+                        <field name="revoked"/>
+                        <field name="revocation_reason"/>
+                        <field name="token_family"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- Backend views for managing refresh tokens (devices) -->
+    <record id="action_pitch_api_refresh_tokens" model="ir.actions.act_window">
+        <field name="name">API Devices</field>
+        <field name="res_model">auth.refresh.token</field>
+        <field name="view_mode">list,form</field>
+        <field name="help">List of active refresh tokens (device sessions) for API clients.</field>
+    </record>
+
+
+    <!-- Menu item under Settings > Technical (or root Settings) -->
+    <record id="menu_pitch_api_root" model="ir.ui.menu">
+        <field name="name">Pitch API</field>
+        <field name="sequence">8000</field>
+        <field name="parent_id" ref="base.menu_custom"/>
+    </record>
+
+    <record id="menu_pitch_api_devices" model="ir.ui.menu">
+        <field name="name">API Devices</field>
+        <field name="parent_id" ref="menu_pitch_api_root"/>
+        <field name="action" ref="action_pitch_api_refresh_tokens"/>
+        <field name="sequence">10</field>
+    </record>
+
+</odoo>

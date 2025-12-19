@@ -1,0 +1,1059 @@
+openapi: 3.0.0
+info:
+  title: Pitch API
+  version: "1.0.0"
+  description: |
+    OpenAPI 3.0 specification for the `pitch_api` module. Covers Authentication
+    endpoints (login, refresh, logout, introspect, revoke refresh, devices, me)
+    and Appointment endpoints (single, list, paginated, today, app_screen_logs).
+servers:
+  - url: http://{host}
+    description: Replace {host} with your Odoo host
+    variables:
+      host:
+        default: localhost
+        description: Odoo host
+paths:
+  /api/auth/login:
+    post:
+      tags: [auth]
+      summary: Exchange username/password for access + refresh tokens (device-bound)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      parameters:
+        - name: X-Device-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Device-Name
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: X-App-Version
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Access token and refresh token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/auth/refresh:
+    post:
+      tags: [auth]
+      summary: Rotate a refresh token and issue new access + refresh tokens
+      parameters:
+        - name: X-Device-ID
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: New access token + rotated refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/auth/logout:
+    post:
+      tags: [auth]
+      summary: Revoke access and/or refresh tokens (single device or all devices)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Device-ID
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '200':
+          description: Logout success (single or all-devices)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/LogoutResponseSingle'
+                  - $ref: '#/components/schemas/LogoutResponseAll'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/auth/introspect:
+    post:
+      tags: [auth]
+      summary: Introspect access or refresh tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntrospectRequest'
+      responses:
+        '200':
+          description: Introspection result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntrospectResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/auth/revoke_refresh:
+    post:
+      tags: [auth]
+      summary: Client-initiated revocation of a refresh token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Device-ID
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevokeRefreshRequest'
+      responses:
+        '200':
+          description: Revocation success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokeRefreshResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/auth/devices:
+    get:
+      tags: [auth]
+      summary: List active devices (refresh-token sessions) for a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: token_type_hint
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [access_token, refresh_token]
+      responses:
+        '200':
+          description: Devices list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevicesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/auth/me:
+    get:
+      tags: [auth]
+      summary: Return basic profile for the user identified by token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/appointments/{appointment_id}:
+    get:
+      tags: [appointments]
+      summary: Get a single appointment if authorized
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Appointment object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/appointments:
+    get:
+      tags: [appointments]
+      summary: List appointments scoped to authenticated user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of appointments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                  count:
+                    type: integer
+                  appointments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Appointment'
+  /api/appointments/paginated:
+    get:
+      tags: [appointments]
+      summary: Paginated appointment listing
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated appointments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAppointments'
+
+  /api/appointments/{appointment_id}/app_screen_logs:
+    get:
+      tags: [appointments]
+      summary: Return app screen logs for an appointment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: App screen logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appointment_id:
+                    type: integer
+                  count:
+                    type: integer
+                  app_screen_logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AppScreenLog'
+
+  /api/appointments/today:
+    get:
+      tags: [appointments]
+      summary: Return appointments for today in the specified timezone
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tz
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Today's appointments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                  tz:
+                    type: string
+                  date:
+                    type: string
+                  count:
+                    type: integer
+                  appointments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Appointment'
+
+  /api/users:
+    get:
+      tags: [users]
+      summary: List all users (admin-only)
+      description: List all users with key profile fields. Groups information is available via separate endpoints. Requesting user must be a Pitch API Admin.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: active
+          in: query
+          required: false
+          description: |
+            Filter by user status:
+            - active=true: only active users
+            - active=false: only inactive users
+            - If not provided: returns ALL users (both active and inactive)
+          schema:
+            type: string
+            enum: [true, false]
+          example: "true"
+      responses:
+        '200':
+          description: A list of users.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/users/{user_id}:
+    get:
+      tags: [users]
+      summary: Get a user by ID (admin-only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/users/lookup:
+    get:
+      tags: [users]
+      summary: Lookup a user by ID or login (admin-only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: integer
+        - name: login
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/users/exists:
+    get:
+      tags: [users]
+      summary: Check if a user exists (admin-only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: integer
+        - name: login
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Existence check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exists:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/users/{user_id}/groups:
+    get:
+      tags: [users]
+      summary: Get groups for a single user (admin-only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A list of groups for the specified user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGroupsResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/users/groups:
+    get:
+      tags: [users]
+      summary: Get groups for multiple users (admin-only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_ids
+          in: query
+          required: true
+          description: Comma-separated list of user IDs
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of users with their respective groups.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiUserGroupsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ServerError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        error_description:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        login:
+          type: string
+        password:
+          type: string
+        device_name:
+          type: string
+      example:
+        username: "agent.smith@example.com"
+        password: "CorrectHorseBatteryStaple"
+        device_name: "iPhone 15 Pro"
+
+    LoginResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+        - refresh_token
+        - user_id
+      properties:
+        access_token:
+          type: string
+          description: JWT access token
+        token_type:
+          type: string
+          example: bearer
+        expires_in:
+          type: integer
+          description: Access token lifetime in seconds
+        refresh_token:
+          type: string
+          description: Refresh token for obtaining new access tokens
+        user_id:
+          type: integer
+          description: Odoo user ID
+        improveit_user_id:
+          type: string
+          nullable: true
+          description: i360/improveit user ID (can be null)
+      example:
+        access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type: "bearer"
+        expires_in: 3600
+        refresh_token: "rfr_3f5b7a1c-plaintext-token-example"
+        user_id: 123
+        improveit_user_id: "I360-456"
+
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+      example:
+        refresh_token: "rfr_3f5b7a1c-plaintext-token-example"
+
+    RefreshResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: integer
+        refresh_token:
+          type: string
+      required:
+        - access_token
+        - token_type
+        - expires_in
+        - refresh_token
+      description: "Note: Unlike /api/auth/login, this endpoint does NOT return user_id or improveit_user_id fields."
+      example:
+        access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.newaccesstoken..."
+        token_type: "bearer"
+        expires_in: 3600
+        refresh_token: "rfr_7c9d2e4b-newly-rotated-refresh"
+
+    LogoutRequest:
+      type: object
+      properties:
+        logout_all:
+          type: boolean
+      example:
+        logout_all: false
+
+    LogoutResponseSingle:
+      type: object
+      properties:
+        revoked:
+          type: boolean
+        device_id:
+          type: string
+      example:
+        revoked: true
+        device_id: "device-9a8b7c6d"
+
+    LogoutResponseAll:
+      type: object
+      properties:
+        revoked:
+          type: boolean
+        all_devices:
+          type: boolean
+        device_count:
+          type: integer
+      example:
+        revoked: true
+        all_devices: true
+        device_count: 4
+
+    IntrospectRequest:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+      example:
+        access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    IntrospectResponse:
+      type: object
+      properties:
+        active:
+          type: boolean
+        token_type:
+          type: string
+        token_use:
+          type: string
+        reason:
+          type: string
+        device_id:
+          type: string
+        expires_at:
+          type: string
+        created_at:
+          type: string
+      example:
+        active: true
+        token_type: "refresh"
+        token_use: "refresh_token"
+        reason: "valid"
+        device_id: "device-9a8b7c6d"
+        expires_at: "2025-11-08T12:34:56Z"
+        created_at: "2025-11-01T09:00:00Z"
+
+    RevokeRefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+      example:
+        refresh_token: "rfr_7c9d2e4b-newly-rotated-refresh"
+
+    RevokeRefreshResponse:
+      type: object
+      properties:
+        revoked:
+          type: boolean
+        device_id:
+          type: string
+        user_id:
+          type: integer
+      example:
+        revoked: true
+        device_id: "device-9a8b7c6d"
+        user_id: 42
+
+    DeviceItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        device_id:
+          type: string
+        device_name:
+          type: string
+        created_on:
+          type: string
+        expires_on:
+          type: string
+        last_used:
+          type: string
+        ip_address:
+          type: string
+        revoked:
+          type: boolean
+        revocation_reason:
+          type: string
+        token_family:
+          type: string
+        use_count:
+          type: integer
+      example:
+        id: 123
+        device_id: "device-9a8b7c6d"
+        device_name: "iPhone 15 Pro"
+        created_on: "2025-11-01T09:00:00Z"
+        expires_on: "2025-12-01T09:00:00Z"
+        last_used: "2025-11-06T18:20:00Z"
+        ip_address: "203.0.113.42"
+        revoked: false
+        revocation_reason: ""
+        token_family: "family-abc123"
+        use_count: 7
+
+    DevicesResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        device_count:
+          type: integer
+        devices:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceItem'
+      example:
+        user_id: 42
+        device_count: 2
+        devices:
+          - id: 123
+            device_id: "device-9a8b7c6d"
+            device_name: "iPhone 15 Pro"
+            created_on: "2025-11-01T09:00:00Z"
+            expires_on: "2025-12-01T09:00:00Z"
+            last_used: "2025-11-06T18:20:00Z"
+            ip_address: "203.0.113.42"
+            revoked: false
+            revocation_reason: ""
+            token_family: "family-abc123"
+            use_count: 7
+          - id: 124
+            device_id: "device-1f2e3d4c"
+            device_name: "Android Tablet"
+            created_on: "2025-10-28T11:30:00Z"
+            expires_on: "2025-11-28T11:30:00Z"
+            last_used: "2025-11-05T14:05:00Z"
+            ip_address: "198.51.100.22"
+            revoked: false
+            revocation_reason: ""
+            token_family: "family-def456"
+            use_count: 3
+
+    UserProfileResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            login:
+              type: string
+            email:
+              type: string
+            tz:
+              type: string
+            active:
+              type: boolean
+      example:
+        user:
+          id: 42
+          name: "Agent Smith"
+          login: "agent.smith@example.com"
+          email: "agent.smith@example.com"
+          tz: "UTC"
+          active: true
+
+    AppScreenLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        completion_date:
+          type: string
+      example:
+        id: 987
+        name: "photo_capture"
+        completion_date: "2025-11-06T18:25:00Z"
+
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: integer
+        improveit_appointment_id:
+          type: string
+        name:
+          type: string
+        state:
+          type: string
+        partner_id:
+          type: integer
+        customer_name:
+          type: string
+        appointment_date:
+          type: string
+        arrival_date:
+          type: string
+        departure_date:
+          type: string
+        manual_arrival_date:
+          type: string
+        app_screen_logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppScreenLog'
+        user_id:
+          type: integer
+        user_data:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            login:
+              type: string
+      example:
+        id: 555
+        improveit_appointment_id: "IMP-2025-0001"
+        name: "Kitchen Measurement"
+        state: "confirmed"
+        partner_id: 300
+        customer_name: "John Doe"
+        appointment_date: "2025-11-10T09:00:00+01:00"
+        arrival_date: null
+        departure_date: null
+        manual_arrival_date: null
+        app_screen_logs:
+          - id: 987
+            name: "photo_capture"
+            completion_date: "2025-11-06T18:25:00Z"
+        user_id: 42
+        user_data:
+          id: 42
+          name: "Agent Smith"
+          login: "agent.smith@example.com"
+
+    PaginatedAppointments:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        count:
+          type: integer
+        appointments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Appointment'
+      example:
+        user_id: 42
+        page: 1
+        per_page: 25
+        total: 3
+        count: 3
+        appointments:
+          - id: 555
+            improveit_appointment_id: "IMP-2025-0001"
+            name: "Kitchen Measurement"
+            state: "confirmed"
+            partner_id: 300
+            customer_name: "John Doe"
+            appointment_date: "2025-11-10T09:00:00+01:00"
+            app_screen_logs: []
+            user_id: 42
+            user_data:
+              id: 42
+              name: "Agent Smith"
+              login: "agent.smith@example.com"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        login:
+          type: string
+        active:
+          type: boolean
+        tz:
+          type: string
+        company_id:
+          type: integer
+          nullable: true
+        company_name:
+          type: string
+          nullable: true
+        login_date:
+          type: string
+          format: date-time
+          nullable: true
+        is_pitch_admin:
+          type: boolean
+        improveit_user_id:
+          type: string
+          nullable: true
+
+    UserListResponse:
+      type: object
+      properties:
+        admin_user_id:
+          type: integer
+        count:
+          type: integer
+          description: Number of users returned
+        active_filter:
+          type: string
+          description: "Applied active filter value. Shows 'all' when no active parameter provided, otherwise shows the actual parameter value (true/false)."
+          example: "all"
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+
+    UserGroup:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        xml_id:
+          type: string
+          nullable: true
+        category_id:
+          type: integer
+          nullable: true
+        category_name:
+          type: string
+          nullable: true
+
+    UserGroupsResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        user_login:
+          type: string
+        user_name:
+          type: string
+        groups_count:
+          type: integer
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserGroup'
+
+    MultiUserGroupsResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserGroupsResponse'
+
+tags:
+  - name: auth
+    description: Authentication and token management endpoints
+  - name: appointments
+    description: Appointment resources
+  - name: users
+    description: Admin-only endpoints for managing users and groups
