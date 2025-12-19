@@ -1571,7 +1571,7 @@ class APIHomes(API_Homes):
                         }
                         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
                         result = models.execute_kw(db, int(uid), password, 'team.customer.appointment', 'action_link_uploaded_image',
-                                                   [ ])
+                                                   [image_vals])
         else:
             result = message
         # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
@@ -3194,4 +3194,5 @@ class APIHomes(API_Homes):
             _logger.info('update_live_screen_log_api_queue Data - Ending--:%s' % (
                 self.update_live_screen_log_api_queue))
         return json.dumps(result)
+
 
