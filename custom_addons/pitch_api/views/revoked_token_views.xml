@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pitch_api_revoked_token_list" model="ir.ui.view">
+        <field name="name">auth.revoked.token.list</field>
+        <field name="model">auth.revoked.token</field>
+        <field name="arch" type="xml">
+            <list string="Revoked API Tokens">
+                <field name="jti"/>
+                <field name="token_type"/>
+                <field name="user_id"/>
+                <field name="revoked_on"/>
+                <field name="expires_on"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_pitch_api_revoked_token_form" model="ir.ui.view">
+        <field name="name">auth.revoked.token.form</field>
+        <field name="model">auth.revoked.token</field>
+        <field name="arch" type="xml">
+            <form string="Revoked Token">
+                <sheet>
+                    <group>
+                        <field name="jti"/>
+                        <field name="token_type"/>
+                        <field name="user_id"/>
+                    </group>
+                    <group>
+                        <field name="revoked_on"/>
+                        <field name="expires_on"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action Window for Revoked Tokens -->
+    <record id="action_pitch_api_revoked_tokens" model="ir.actions.act_window">
+        <field name="name">Revoked Tokens</field>
+        <field name="res_model">auth.revoked.token</field>
+        <field name="view_mode">list,form</field>
+        <field name="help">List of revoked API tokens.</field>
+    </record>
+
+    <record id="menu_pitch_api_revoked" model="ir.ui.menu">
+        <field name="name">Revoked Tokens</field>
+        <field name="parent_id" ref="menu_pitch_api_root"/>
+        <field name="action" ref="action_pitch_api_revoked_tokens"/>
+        <field name="sequence">20</field>
+    </record>
+
+</odoo>
