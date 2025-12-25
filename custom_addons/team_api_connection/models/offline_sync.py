@@ -5091,19 +5091,20 @@ class IRAttachment(models.Model):
         image_list = []
         image_already_existing= True
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        file_name = data.get('file_name', 'Attachment').replace(' ', '_')
         if data.get('image', False):
             vals = {
-                'name': data.get('file_name', 'Attachment'),
+                'name': file_name,
                 'datas': data.get('image'),
                 'image_type': data.get('image_type', ''),
-                'store_fname': data.get('file_name', 'Attachment'),
+                'store_fname': file_name,
             }
             if data.get('appointment_id', False):
                 vals.update({
                     'appointment_id': int(data.get('appointment_id', 0))
                 })
             attachment = self.env['ir.attachment'].sudo().search([
-                ('name', '=', data.get('file_name', 'Attachment')),
+                ('name', '=', file_name),
                 ('appointment_id', '=', int(data.get('appointment_id', '0')))
             ], limit=1)
             if not attachment:
@@ -5239,5 +5240,4 @@ class VersatileCreditApplication(models.Model):
                 "credit_application_id": credit_application.id
             }
         return result
-
 
