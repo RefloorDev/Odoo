@@ -4117,9 +4117,9 @@ class SaleOrder(models.Model):
                     elif "Errors" in content:
                         return content.get('Errors', {})
 
-        except IOError:
+        except Exception as e:
             pass
-            _logger.error("******--------Error in update_destination_selection_in_i360 API---------********")
+            _logger.error("******--------Error in update_destination_selection_in_i360 API---------********: %s"%e)
             result.update({"success": "false"})
         return result
 
