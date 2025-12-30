@@ -616,6 +616,106 @@ class PitchAdminApiController(http.Controller):
             'appointment': self._serialize_appointment(appt),
         }, 200)
 
+    @http.route("/api/admin/appointments/<int:appointment_id>/app_screen_logs", auth="none", methods=["GET"], csrf=False)
+    @json_response
+    def admin_get_appointment_app_screen_logs(self, appointment_id, **kwargs):
+        """Return the app screen log lines for a given appointment.
+
+        Admin-only endpoint. Returns app screen logs for any appointment
+        regardless of ownership.
+        """
+        _logger.info("admin_api.admin_get_appointment_app_screen_logs called: appointment_id=%s from=%s",
+                     appointment_id, request.httprequest.remote_addr)
+
+        # Authenticate admin
+        admin_user_id, err = self._authenticate_admin()
+        if err:
+            return err
+
+        # Load the appointment
+        appt_model = request.env['team.customer.appointment'].sudo()
+        appt = appt_model.browse(appointment_id)
+
+        if not appt.exists():
+            _logger.warning("admin_api.admin_get_appointment_app_screen_logs: appointment not found id=%s admin_user_id=%s",
+                            appointment_id, admin_user_id)
+            return ({"error": "not_found", "error_description": "appointment not found"}, 404)
+
+        # Gather app screen logs
+        logs = getattr(appt, 'app_screen_log_line', []) or []
+        out = []
+        for log in logs:
+            try:
+                out.append({
+                    'id': getattr(log, 'id', None),
+                    'name': getattr(log, 'name', None),
+                    'completion_date': self._fmt_datetime(getattr(log, 'completion_date', None)),
+                    'user_id': getattr(log.user_id, 'id', None) if hasattr(log, 'user_id') else None,
+                })
+            except Exception:
+                # best-effort: skip malformed entries
+                continue
+
+        _logger.info("admin_api.admin_get_appointment_app_screen_logs: success appointment_id=%s admin_user_id=%s logs_count=%s",
+                     appointment_id, admin_user_id, len(out))
+
+        return ({
+            'admin_user_id': admin_user_id,
+            'appointment_id': appointment_id,
+            'count': len(out),
+            'app_screen_logs': out,
+        }, 200)
+
+    @http.route("/api/admin/appointments/<int:appointment_id>/app_live_screen_logs", auth="none", methods=["GET"], csrf=False)
+    @json_response
+    def admin_get_appointment_app_live_screen_logs(self, appointment_id, **kwargs):
+        """Return the app live screen log lines for a given appointment.
+
+        Admin-only endpoint. Returns app live screen logs for any appointment
+        regardless of ownership.
+        """
+        _logger.info("admin_api.admin_get_appointment_app_live_screen_logs called: appointment_id=%s from=%s",
+                     appointment_id, request.httprequest.remote_addr)
+
+        # Authenticate admin
+        admin_user_id, err = self._authenticate_admin()
+        if err:
+            return err
+
+        # Load the appointment
+        appt_model = request.env['team.customer.appointment'].sudo()
+        appt = appt_model.browse(appointment_id)
+
+        if not appt.exists():
+            _logger.warning("admin_api.admin_get_appointment_app_live_screen_logs: appointment not found id=%s admin_user_id=%s",
+                            appointment_id, admin_user_id)
+            return ({"error": "not_found", "error_description": "appointment not found"}, 404)
+
+        # Gather app live screen logs
+        logs = getattr(appt, 'app_live_screen_log_line', []) or []
+        out = []
+        for log in logs:
+            try:
+                out.append({
+                    'id': getattr(log, 'id', None),
+                    'name': getattr(log, 'name', None),
+                    'screen_entry_date': self._fmt_datetime(getattr(log, 'screen_entry_date', None)),
+                    'user_id': getattr(log.user_id, 'id', None) if hasattr(log, 'user_id') else None,
+                })
+            except Exception:
+                # best-effort: skip malformed entries
+                continue
+
+        _logger.info("admin_api.admin_get_appointment_app_live_screen_logs: success appointment_id=%s admin_user_id=%s logs_count=%s",
+                     appointment_id, admin_user_id, len(out))
+
+        return ({
+            'admin_user_id': admin_user_id,
+            'appointment_id': appointment_id,
+            'count': len(out),
+            'app_live_screen_logs': out,
+        }, 200)
+
     @http.route("/api/admin/market-segments", auth="none", methods=["GET"], csrf=False)
     @json_response
     def admin_list_market_segments(self, **kwargs):

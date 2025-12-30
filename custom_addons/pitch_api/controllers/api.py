@@ -388,6 +388,52 @@ class PitchApiController(http.Controller):
 
         return ({'appointment_id': appointment_id, 'count': len(out), 'app_screen_logs': out}, 200)
 
+    @http.route("/api/appointments/<int:appointment_id>/app_live_screen_logs", auth="none", methods=["GET"], csrf=False)
+    @json_response
+    def get_appointment_app_live_screen_logs(self, appointment_id, **kwargs):
+        """Return the app live screen log lines for a given appointment.
+
+        Requires a valid Bearer access token in Authorization header and the
+        requesting user must be authorized to view the appointment (same rules
+        as `get_appointment`).
+        """
+        # Extract bearer token
+        token, err = self._extract_bearer_token()
+        if err:
+            return err
+
+        # Resolve user id from token and validate token
+        user_id, err = self._resolve_user_from_access_token(token)
+        if err:
+            return err
+
+        # Load the appointment
+        team_customer_appointment_obj = request.env['team.customer.appointment'].sudo()
+        appt = team_customer_appointment_obj.browse(appointment_id)
+        if not appt.exists():
+            return ({"error": "not_found", "error_description": "appointment not found"}, 404)
+
+        # Authorization
+        if not self._user_is_authorized_for_appointment(user_id, appt):
+            return ({"error": "forbidden", "error_description": "user not authorized to view this appointment"}, 403)
+
+        # Gather app live screen logs
+        logs = getattr(appt, 'app_live_screen_log_line', []) or []
+        out = []
+        for log in logs:
+            try:
+                out.append({
+                    'id': getattr(log, 'id', None),
+                    'name': getattr(log, 'name', None),
+                    'screen_entry_date': self._fmt_datetime(getattr(log, 'screen_entry_date', None)),
+                    'user_id': getattr(log.user_id, 'id', None) if hasattr(log, 'user_id') else None,
+                })
+            except Exception:
+                # best-effort: skip malformed entries
+                continue
+
+        return ({'appointment_id': appointment_id, 'count': len(out), 'app_live_screen_logs': out}, 200)
+
     @http.route("/api/appointments/today", auth="none", methods=["GET"], csrf=False)
     @json_response
     def list_todays_appointments(self, **kwargs):

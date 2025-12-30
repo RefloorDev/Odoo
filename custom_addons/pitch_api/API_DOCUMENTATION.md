@@ -25,10 +25,13 @@ Note: This API is designed to run inside Odoo. The examples show JSON bodies and
   - `GET /api/appointments/paginated`
   - `GET /api/appointments/today`
   - `GET /api/appointments/{appointment_id}/app_screen_logs`
+  - `GET /api/appointments/{appointment_id}/app_live_screen_logs`
 - Admin Appointments API (Pitch Admin Only)
   - `GET /api/admin/appointments`
   - `GET /api/admin/appointments/today`
   - `GET /api/admin/appointments/{appointment_id}`
+  - `GET /api/admin/appointments/{appointment_id}/app_screen_logs`
+  - `GET /api/admin/appointments/{appointment_id}/app_live_screen_logs`
   - `GET /api/admin/market-segments`
 - Users API (admin)
   - `GET /api/users`
@@ -728,16 +731,69 @@ Response (200): same shape as list routes.
 
 Return the `app_screen_log_line` entries for a given appointment. Requires the same authorization as `GET /api/appointments/{appointment_id}`.
 
+- URL: `/api/appointments/{appointment_id}/app_screen_logs`
+- Method: GET
+- Auth: `Authorization: Bearer <access_token>`
+
 Path parameters:
 - `appointment_id` (integer) — appointment record ID
 
 Response (200):
 
+```json
 {
-  "appointment_id": <id>,
-  "count": <n>,
-  "app_screen_logs": [ {"id":..., "name":..., "completion_date": ...}, ... ]
+  "appointment_id": 12345,
+  "count": 3,
+  "app_screen_logs": [
+    {
+      "id": 1,
+      "name": "Customer Info",
+      "completion_date": "2025-01-15 10:30:00",
+      "user_id": 625
+    }
+  ]
 }
+```
+
+Errors:
+- 401 Unauthorized — invalid or expired access token
+- 403 Forbidden — user not authorized to view this appointment
+- 404 Not Found — appointment not found
+
+---
+
+### GET /api/appointments/{appointment_id}/app_live_screen_logs
+
+Return the `app_live_screen_log_line` entries for a given appointment. Requires the same authorization as `GET /api/appointments/{appointment_id}`.
+
+- URL: `/api/appointments/{appointment_id}/app_live_screen_logs`
+- Method: GET
+- Auth: `Authorization: Bearer <access_token>`
+
+Path parameters:
+- `appointment_id` (integer) — appointment record ID
+
+Response (200):
+
+```json
+{
+  "appointment_id": 12345,
+  "count": 3,
+  "app_live_screen_logs": [
+    {
+      "id": 1,
+      "name": "Screen Name",
+      "screen_entry_date": "2025-01-15 10:30:00",
+      "user_id": 625
+    }
+  ]
+}
+```
+
+Errors:
+- 401 Unauthorized — invalid or expired access token
+- 403 Forbidden — user not authorized to view this appointment
+- 404 Not Found — appointment not found
 
 ---
 
@@ -1673,6 +1729,114 @@ curl -X GET "https://<HOST>/api/admin/appointments/999999999" \
    
 5. **Customer Service:**
    - Look up appointment by reference number
+
+---
+
+### GET /api/admin/appointments/{appointment_id}/app_screen_logs
+
+Return the app screen log lines for a given appointment. Admin-only endpoint that can access any appointment regardless of ownership.
+
+- URL: `/api/admin/appointments/{appointment_id}/app_screen_logs`
+- Method: GET
+- Auth: `Authorization: Bearer <access_token>` (must be from a Pitch Admin user)
+- Path parameters:
+  - `appointment_id` (integer) — appointment record ID
+
+**Response (200):**
+
+```json
+{
+  "admin_user_id": 691,
+  "appointment_id": 12345,
+  "count": 3,
+  "app_screen_logs": [
+    {
+      "id": 1,
+      "name": "Customer Info",
+      "completion_date": "2025-01-15 10:30:00",
+      "user_id": 625
+    },
+    {
+      "id": 2,
+      "name": "Product Selection",
+      "completion_date": "2025-01-15 10:45:00",
+      "user_id": 625
+    }
+  ]
+}
+```
+
+**Errors:**
+- **401 Unauthorized** — Invalid or expired access token
+- **403 Forbidden** — User is not a Pitch Admin
+  ```json
+  {"error": "forbidden", "error_description": "admin access required"}
+  ```
+- **404 Not Found** — Appointment does not exist
+  ```json
+  {"error": "not_found", "error_description": "appointment not found"}
+  ```
+
+**Example Request:**
+
+```bash
+curl -X GET "https://<HOST>/api/admin/appointments/12345/app_screen_logs" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+---
+
+### GET /api/admin/appointments/{appointment_id}/app_live_screen_logs
+
+Return the app live screen log lines for a given appointment. Admin-only endpoint that can access any appointment regardless of ownership.
+
+- URL: `/api/admin/appointments/{appointment_id}/app_live_screen_logs`
+- Method: GET
+- Auth: `Authorization: Bearer <access_token>` (must be from a Pitch Admin user)
+- Path parameters:
+  - `appointment_id` (integer) — appointment record ID
+
+**Response (200):**
+
+```json
+{
+  "admin_user_id": 691,
+  "appointment_id": 12345,
+  "count": 3,
+  "app_live_screen_logs": [
+    {
+      "id": 1,
+      "name": "Welcome Screen",
+      "screen_entry_date": "2025-01-15 10:30:00",
+      "user_id": 625
+    },
+    {
+      "id": 2,
+      "name": "Customer Info",
+      "screen_entry_date": "2025-01-15 10:32:00",
+      "user_id": 625
+    }
+  ]
+}
+```
+
+**Errors:**
+- **401 Unauthorized** — Invalid or expired access token
+- **403 Forbidden** — User is not a Pitch Admin
+  ```json
+  {"error": "forbidden", "error_description": "admin access required"}
+  ```
+- **404 Not Found** — Appointment does not exist
+  ```json
+  {"error": "not_found", "error_description": "appointment not found"}
+  ```
+
+**Example Request:**
+
+```bash
+curl -X GET "https://<HOST>/api/admin/appointments/12345/app_live_screen_logs" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
 
 ---
 
