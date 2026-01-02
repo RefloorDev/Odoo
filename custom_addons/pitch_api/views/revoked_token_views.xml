@@ -1,15 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- ===================================================================
+         Revoked Token Views
+         Track revoked access tokens to prevent reuse
+    ==================================================================== -->
+
     <record id="view_pitch_api_revoked_token_list" model="ir.ui.view">
         <field name="name">auth.revoked.token.list</field>
         <field name="model">auth.revoked.token</field>
         <field name="arch" type="xml">
             <list string="Revoked API Tokens">
                 <field name="jti"/>
-                <field name="token_type"/>
                 <field name="user_id"/>
-                <field name="revoked_on"/>
-                <field name="expires_on"/>
+                <field name="revoked_at"/>
+                <field name="expires_at"/>
+                <field name="reason"/>
+                <field name="ip_address"/>
             </list>
         </field>
     </record>
@@ -22,12 +28,13 @@
                 <sheet>
                     <group>
                         <field name="jti"/>
-                        <field name="token_type"/>
                         <field name="user_id"/>
+                        <field name="reason"/>
                     </group>
                     <group>
-                        <field name="revoked_on"/>
-                        <field name="expires_on"/>
+                        <field name="revoked_at"/>
+                        <field name="expires_at"/>
+                        <field name="ip_address"/>
                     </group>
                 </sheet>
             </form>
