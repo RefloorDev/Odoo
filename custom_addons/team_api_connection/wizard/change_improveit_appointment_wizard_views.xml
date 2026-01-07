@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Wizard view placed under wizard/ package -->
+        <record id="view_change_improveit_appointment_wizard_form" model="ir.ui.view">
+            <field name="name">change.improveit.appointment.wizard.form</field>
+            <field name="model">otl.change.improveit.appointment.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Change Improveit Appointment ID">
+                    <group>
+                        <field name="appointment_id" readonly="1"/>
+                        <field name="new_improveit_id"/>
+                        <field name="initiate_resync"/>
+                    </group>
+                    <footer>
+                        <button string="Apply" type="object" name="action_apply" class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_change_improveit_appointment_wizard" model="ir.actions.act_window">
+            <field name="name">Change Improveit Appointment ID</field>
+            <field name="res_model">otl.change.improveit.appointment.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_change_improveit_appointment_wizard_form"/>
+            <field name="target">new</field>
+            <field name="context">{'default_appointment_id': active_id}</field>
+        </record>
+    </data>
+</odoo>

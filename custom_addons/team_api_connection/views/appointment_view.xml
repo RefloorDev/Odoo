@@ -10,6 +10,9 @@
                     <field name="improveit_appointment_id" readonly="1"/>
                     <field name="completed_date" invisible="0"/>
                 </field>
+                <header position="inside">
+                    <button name="%(action_change_improveit_appointment_wizard)d" type="action" string="Change Improveit ID" class="oe_highlight"/>
+                </header>
             </field>
         </record>
 
@@ -24,6 +27,17 @@
             </field>
         </record>
 
+        <record id="team_customer_appointment_search" model="ir.ui.view">
+            <field name="name">team.customer.appointment.search</field>
+            <field name="model">team.customer.appointment</field>
+            <field name="inherit_id" ref="team_sale_contract.team_customer_appointment_search"/>
+            <field name="arch" type="xml">
+                <field name="name" position="after">
+                    <field name="improveit_appointment_id"/>
+                </field>
+            </field>
+        </record>
+
         <record id="view_attachment_search" model="ir.ui.view">
             <field name="name">ir.attachment.search</field>
             <field name="model">ir.attachment</field>
@@ -34,6 +48,6 @@
                 </filter>
             </field>
         </record>
-    
-    </data>
+
+     </data>
 </odoo>
