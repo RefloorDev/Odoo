@@ -84,6 +84,13 @@ class AdminAppointmentsController(
             except (ValueError, TypeError):
                 pass
 
+        # Improveit User ID filter (Salesforce ID) - only used if user_id not provided
+        if not filters.get('user_id'):
+            improveit_user_id_param = kwargs.get('improveit_user_id') or request.params.get('improveit_user_id')
+            if improveit_user_id_param:
+                filters['improveit_user_id'] = improveit_user_id_param.strip()
+                _logger.debug("AdminAppointments: improveit_user_id=%s", filters.get('improveit_user_id'))
+
         # Date filters
         date_from = kwargs.get('date_from') or request.params.get('date_from')
         if date_from:
@@ -309,6 +316,8 @@ class AdminAppointmentsController(
             result['market_segment'] = filters['market_segment']
         if filters.get('user_id'):
             result['user_id'] = filters['user_id']
+        if filters.get('resolved_improveit_user_id'):
+            result['improveit_user_id'] = filters['resolved_improveit_user_id']
         if filters.get('date_from'):
             result['date_from'] = str(filters['date_from'])
         if filters.get('date_to'):
@@ -346,6 +355,30 @@ class AdminAppointmentsController(
                 "error_description": f"Invalid order value '{filters['order_invalid']}'. Allowed values: id_desc, id_asc, date_desc, date_asc"
             }, 400)
 
+        # Resolve improveit_user_id to user_id
+        if filters.get('improveit_user_id'):
+            improveit_id = filters['improveit_user_id']
+            user = request.env['res.users'].sudo().search(
+                [('improveit_user_id', '=', improveit_id)],
+                limit=1
+            )
+            if not user:
+                _logger.warning(
+                    "%s: No user found with improveit_user_id='%s' from admin_user_id=%s",
+                    endpoint_name, improveit_id, admin_user_id
+                )
+                return ({
+                    "error": "user_not_found",
+                    "error_description": f"No user found with improveit_user_id: {improveit_id}"
+                }, 404)
+            # Set user_id from resolved improveit_user_id
+            filters['user_id'] = user.id
+            filters['resolved_improveit_user_id'] = improveit_id
+            _logger.debug(
+                "%s: Resolved improveit_user_id='%s' to user_id=%s",
+                endpoint_name, improveit_id, user.id
+            )
+
         return None
 
     # =========================================================================
@@ -362,7 +395,8 @@ class AdminAppointmentsController(
         Query params:
             tz: IANA timezone string (default: UTC)
             market_segment: Filter by market segment (comma-separated for multiple)
-            user_id: Filter by salesperson/user ID
+            user_id: Filter by salesperson/user ID (Odoo user ID)
+            improveit_user_id: Filter by Salesforce user ID (used if user_id not provided)
             status: Filter by status (draft, scheduled, canceled, done)
             date_from: Filter from date (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
             date_to: Filter to date (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
@@ -433,7 +467,8 @@ class AdminAppointmentsController(
         Query params:
             tz: IANA timezone string (default: UTC)
             market_segment: Filter by market segment (comma-separated for multiple)
-            user_id: Filter by salesperson/user ID
+            user_id: Filter by salesperson/user ID (Odoo user ID)
+            improveit_user_id: Filter by Salesforce user ID (used if user_id not provided)
             status: Filter by status (draft, scheduled, canceled, done)
             filter_logic: 'and' (default) or 'or'
             page: Page number (default: 1)

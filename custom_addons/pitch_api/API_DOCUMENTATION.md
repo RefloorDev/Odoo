@@ -827,7 +827,10 @@ Same as [GET /api/appointments](#get-apiappointments) plus:
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `user_id` | integer | Filter by assigned user ID |
+| `user_id` | integer | Filter by assigned Odoo user ID |
+| `improveit_user_id` | string | Filter by Salesforce user ID (used if `user_id` not provided) |
+
+*Note: If both `user_id` and `improveit_user_id` are provided, `user_id` takes priority.*
 
 **Success Response (200):**
 Same structure as [GET /api/appointments](#get-apiappointments)
@@ -838,6 +841,7 @@ Same structure as [GET /api/appointments](#get-apiappointments)
 | 401 | `invalid_token` | Token invalid |
 | 401 | `token_expired` | **Access token expired - call refresh endpoint** |
 | 403 | `forbidden` | Caller is not a Pitch Admin |
+| 404 | `user_not_found` | No user found with provided `improveit_user_id` |
 
 ---
 
@@ -854,14 +858,25 @@ Get today's appointments (admin access).
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `tz` | string | IANA timezone |
-| `user_id` | integer | Filter by assigned user ID |
+| `user_id` | integer | Filter by assigned Odoo user ID |
+| `improveit_user_id` | string | Filter by Salesforce user ID (used if `user_id` not provided) |
 | `status` | string | Filter by status |
 | `page` | integer | Page number |
 | `per_page` | integer | Items per page |
 | `order` | string | Sort order |
 
+*Note: If both `user_id` and `improveit_user_id` are provided, `user_id` takes priority.*
+
 **Success Response (200):**
 Same structure as [GET /api/appointments/today](#get-apiappointmentstoday)
+
+**Error Responses:**
+| Status | Error | Description |
+|--------|-------|-------------|
+| 401 | `invalid_token` | Token invalid |
+| 401 | `token_expired` | **Access token expired - call refresh endpoint** |
+| 403 | `forbidden` | Caller is not a Pitch Admin |
+| 404 | `user_not_found` | No user found with provided `improveit_user_id` |
 
 ---
 
