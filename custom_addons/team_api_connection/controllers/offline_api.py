@@ -3195,4 +3195,3 @@ class APIHomes(API_Homes):
                 self.update_live_screen_log_api_queue))
         return json.dumps(result)
 
-
