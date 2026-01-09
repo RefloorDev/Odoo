@@ -39,11 +39,13 @@ class ChangeImproveitAppointmentWizard(models.TransientModel):
             appointment.message_post(body=_('Improveit Appointment ID changed from %s to %s by %s') % (old_current, new_id, self.env.user.name))
             if self.initiate_resync:
                 order = appointment.sale_order_ids and appointment.sale_order_ids[0] or False
-                appointment.write({'start_sync_to_i360': False})
+                appointment.write({'start_sync_to_i360': False, 'prospect_info_updated': False, 'status_updated_to_i360': False})
                 if order:
                     if order.quote_id or order.excluded_quote_id or order.contract_document_uploaded or order.other_files_uploaded or order.is_data_upload_completed:
-                        order.write({'quote_id': '', 'excluded_quote_id': '', 'contract_document_uploaded': False, 'other_files_uploaded': False,
-                                       'is_data_upload_completed': False})
+                        order.write({'quote_id': '', 'excluded_quote_id': '', 'contract_document_uploaded': False,
+                                     'other_files_uploaded': False, 'update_destination_selection_synced': False,
+                                     'is_data_upload_completed': False, 'discount_history_sync_i360_ref': '',
+                                     'additional_comment_synced': False})
                         room_measurements = order.room_measurement_line.filtered(
                             lambda x: not x.exclude_from_calculation and x.improveit_id)
                         if room_measurements:
@@ -52,8 +54,27 @@ class ChangeImproveitAppointmentWizard(models.TransientModel):
                         synced_attachments = appointment.related_attachment_ids.filtered(lambda att: att.improveit_id)
                         if synced_attachments:
                             synced_attachments.write({'improveit_id': ''})
+                    card_transaction_log_line = appointment.card_transaction_log_line.filtered(lambda x: x.synced)
+                    if card_transaction_log_line:
+                        card_transaction_log_line.write({'synced': False})
+
                     if order.contract_doc_attachment_id and order.contract_doc_attachment_id.improveit_id:
                         order.contract_doc_attachment_id.write({'improveit_id': ''})
+                    credit_application = self.env['team.credit.application'].search([
+                        ('order_id', '=', order.id)
+                    ], limit=1, order='id desc')
+                    if credit_application:
+                        if credit_application.improveit_id:
+                            credit_application.write({'improveit_id': ''})
+                        if not credit_application.attachment_id:
+                            credit_application.generate_link(order)
+                        attachment = credit_application.attachment_id
+                        if attachment.improveit_id:
+                            attachment.write({'improveit_id': ''})
+                    ext_credit_application = self.env['otl.versatile.credit.application'].search(
+                        [('appointment_id', '=', int(appointment.id)), ('status', '=ilike', 'approved')], limit=1)
+                    if ext_credit_application and ext_credit_application.improveit_id:
+                        ext_credit_application.write({'improveit_id': ''})
                 # initiate resync
                 appointment.action_initiate_sync_to_i360({'appointment_id': appointment.id, 'sync_delay': 1})
         except Exception:
