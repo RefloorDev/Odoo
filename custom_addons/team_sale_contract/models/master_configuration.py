@@ -295,6 +295,7 @@ class ExternalApplicationCredentials(models.Model):
                                         default='versatile', required=True)
     location_based = fields.Boolean("Location Based Entity Key",default=False)
     location_entity_line = fields.One2many('otl.location.entity.key.line', 'external_application_id', string="Location Based Entity Key")
+    office_location_ids = fields.Many2many('otl.office.location', string='Available Market Segments')
 
     def action_generate_versatile_user_token(self):
         for record in self:
