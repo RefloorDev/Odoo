@@ -317,6 +317,7 @@ class ResUsers(models.Model):
                 'api_key': application.api_key or '',
                 'entity_key': application.entity_key or '',
                 'provider': application.provider or '',
+                'available_office_location_ids': application.office_location_ids and application.office_location_ids.ids or []
             })
         return credential_list
 

@@ -54,6 +54,7 @@
                                     <field name="provider" required="1"/>
                                     <field name="api_key" required="1"/>
                                     <field name="user_id" options="{'no_create_edit': True, 'no_open':True,'no_create': True}" domain="[('improveit_user_id', '=', False)]" required="1"/>
+                                    <field name="office_location_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
                                 </group>
                             </group>
                             <group string="Location Based Entity Key" invisible="location_based == False">
