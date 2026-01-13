@@ -11,6 +11,26 @@ Endpoints:
     GET /api/admin/appointments/<id>/app_screen_logs         - Screen logs for appointment
     GET /api/admin/appointments/<id>/app_live_screen_logs    - Live screen logs for appointment
     GET /api/admin/market-segments                           - List all distinct market segments
+    GET /api/admin/salespersons                              - List salespersons by market segment
+
+Filter Parameters (AND logic):
+    market_segment     - Filter by market segment (comma-separated for multiple)
+    user_id            - Filter by salesperson/user ID (Odoo user ID)
+    improveit_user_id  - Filter by Salesforce user ID
+    status             - Filter by status (draft, scheduled, canceled, done)
+    date_from          - Filter from date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
+    date_to            - Filter to date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
+
+Search Parameters (AND logic with filters):
+    customer      - Search in customer name fields (partial match, priority-based)
+    co_applicant  - Search in co-applicant name fields (partial match, priority-based)
+    name          - Search in appointment reference (partial match)
+    id            - Search by appointment ID (exact match)
+
+Pagination:
+    page      - Page number (default: 1)
+    per_page  - Items per page (default: 200, max: 2000)
+    order     - Sort order (id_desc, id_asc, date_desc, date_asc)
 """
 
 import logging
@@ -31,11 +51,6 @@ from .mixins import (
     DEFAULT_PER_PAGE,
     MAX_PER_PAGE,
 )
-
-try:
-    import pytz
-except ImportError:
-    pytz = None
 
 _logger = logging.getLogger(__name__)
 
@@ -66,15 +81,31 @@ class AdminAppointmentsController(
         """
         filters = {}
 
-        # Timezone
-        filters['tz'] = kwargs.get('tz') or request.params.get('tz') or 'UTC'
+        # Search parameters (direct field searches)
+        customer = kwargs.get('customer') or request.params.get('customer')
+        if customer:
+            filters['customer'] = customer.strip()
+
+        co_applicant = kwargs.get('co_applicant') or request.params.get('co_applicant')
+        if co_applicant:
+            filters['co_applicant'] = co_applicant.strip()
+
+        name = kwargs.get('name') or request.params.get('name')
+        if name:
+            filters['name'] = name.strip()
+
+        id_param = kwargs.get('id') or request.params.get('id')
+        if id_param:
+            try:
+                filters['id'] = int(id_param)
+            except (ValueError, TypeError):
+                filters['id_invalid'] = id_param
 
         # Market segment (comma-separated for multiple)
         market_segment = kwargs.get('market_segment') or request.params.get('market_segment')
         if market_segment:
             segments = [s.strip() for s in market_segment.split(',') if s.strip()]
             filters['market_segment'] = segments if len(segments) > 1 else (segments[0] if segments else None)
-            _logger.debug("AdminAppointments: market_segment=%s", filters.get('market_segment'))
 
         # User ID filter
         user_id_param = kwargs.get('user_id') or request.params.get('user_id')
@@ -89,7 +120,6 @@ class AdminAppointmentsController(
             improveit_user_id_param = kwargs.get('improveit_user_id') or request.params.get('improveit_user_id')
             if improveit_user_id_param:
                 filters['improveit_user_id'] = improveit_user_id_param.strip()
-                _logger.debug("AdminAppointments: improveit_user_id=%s", filters.get('improveit_user_id'))
 
         # Date filters
         date_from = kwargs.get('date_from') or request.params.get('date_from')
@@ -140,57 +170,294 @@ class AdminAppointmentsController(
             filters['order'] = 'id_desc'
             filters['order_clause'] = DEFAULT_ORDER
 
-        # Filter logic
-        filter_logic = kwargs.get('filter_logic') or request.params.get('filter_logic') or 'and'
-        filters['filter_logic'] = filter_logic.lower() if filter_logic in ('and', 'or', 'AND', 'OR') else 'and'
-
         return filters
 
-    def _convert_local_to_utc(self, local_dt_or_date, tz_name, start_of_day=True, is_datetime=False):
-        """Convert local date/datetime to UTC string for Odoo domain.
+    def _build_customer_search_domain(self, search_term):
+        """Build search domain for customer name fields with priority matching.
+
+        Priority order:
+        1. Exact match on customer_name
+        2. Reversed format match ("john doe" -> "doe, john")
+        3. first_name = first_word AND last_name = second_word
+        4. first_name = second_word AND last_name = first_word (swapped)
+        5. Partial match (ilike) on any field
+
+        Returns a list of (domain, priority) tuples for prioritized searching.
+        """
+        if not search_term:
+            return []
+
+        search_term = search_term.strip()
+        words = search_term.split()
+        domains_with_priority = []
+
+        # Fields to search
+        name_field = 'customer_name'
+        first_name_field = 'applicant_first_name'
+        middle_name_field = 'applicant_middle_name'
+        last_name_field = 'applicant_last_name'
+
+        # Priority 1: Exact match on customer_name
+        domains_with_priority.append((
+            [(name_field, '=ilike', search_term)],
+            1
+        ))
+
+        if len(words) >= 2:
+            first_word = words[0]
+            last_word = words[-1]
+            middle_words = ' '.join(words[1:-1]) if len(words) > 2 else None
+
+            # Priority 2: Reversed format ("john doe" -> "doe, john")
+            reversed_format = f"{last_word}, {first_word}"
+            domains_with_priority.append((
+                [(name_field, '=ilike', reversed_format)],
+                2
+            ))
+
+            # Also try with comma but no space
+            reversed_format_no_space = f"{last_word},{first_word}"
+            domains_with_priority.append((
+                [(name_field, '=ilike', reversed_format_no_space)],
+                2
+            ))
+
+            # Priority 3: first_name = first_word AND last_name = last_word
+            domains_with_priority.append((
+                ['&', (first_name_field, '=ilike', first_word), (last_name_field, '=ilike', last_word)],
+                3
+            ))
+
+            # Priority 4: first_name = last_word AND last_name = first_word (swapped)
+            domains_with_priority.append((
+                ['&', (first_name_field, '=ilike', last_word), (last_name_field, '=ilike', first_word)],
+                4
+            ))
+
+            # If there are middle words, also check middle_name
+            if middle_words:
+                domains_with_priority.append((
+                    ['&', '&',
+                     (first_name_field, '=ilike', first_word),
+                     (middle_name_field, '=ilike', middle_words),
+                     (last_name_field, '=ilike', last_word)],
+                    3
+                ))
+
+        # Priority 5: Partial match on any field
+        partial_pattern = f"%{search_term}%"
+        partial_domain = [
+            '|', '|', '|',
+            (name_field, 'ilike', search_term),
+            (first_name_field, 'ilike', search_term),
+            (middle_name_field, 'ilike', search_term),
+            (last_name_field, 'ilike', search_term),
+        ]
+        domains_with_priority.append((partial_domain, 5))
+
+        # Also search each word individually for partial matches
+        if len(words) >= 1:
+            for word in words:
+                if len(word) >= 2:  # Skip very short words
+                    word_domain = [
+                        '|', '|', '|',
+                        (name_field, 'ilike', word),
+                        (first_name_field, 'ilike', word),
+                        (middle_name_field, 'ilike', word),
+                        (last_name_field, 'ilike', word),
+                    ]
+                    domains_with_priority.append((word_domain, 6))
+
+        return domains_with_priority
+
+    def _build_co_applicant_search_domain(self, search_term):
+        """Build search domain for co-applicant name fields with priority matching.
+
+        Same priority logic as customer search but for co-applicant fields.
+        """
+        if not search_term:
+            return []
+
+        search_term = search_term.strip()
+        words = search_term.split()
+        domains_with_priority = []
+
+        # Fields to search
+        name_field = 'co_applicant'
+        first_name_field = 'co_applicant_first_name'
+        middle_name_field = 'co_applicant_middle_name'
+        last_name_field = 'co_applicant_last_name'
+
+        # Priority 1: Exact match on co_applicant
+        domains_with_priority.append((
+            [(name_field, '=ilike', search_term)],
+            1
+        ))
+
+        if len(words) >= 2:
+            first_word = words[0]
+            last_word = words[-1]
+            middle_words = ' '.join(words[1:-1]) if len(words) > 2 else None
+
+            # Priority 2: Reversed format ("john doe" -> "doe, john")
+            reversed_format = f"{last_word}, {first_word}"
+            domains_with_priority.append((
+                [(name_field, '=ilike', reversed_format)],
+                2
+            ))
+
+            reversed_format_no_space = f"{last_word},{first_word}"
+            domains_with_priority.append((
+                [(name_field, '=ilike', reversed_format_no_space)],
+                2
+            ))
+
+            # Priority 3: first_name = first_word AND last_name = last_word
+            domains_with_priority.append((
+                ['&', (first_name_field, '=ilike', first_word), (last_name_field, '=ilike', last_word)],
+                3
+            ))
+
+            # Priority 4: first_name = last_word AND last_name = first_word (swapped)
+            domains_with_priority.append((
+                ['&', (first_name_field, '=ilike', last_word), (last_name_field, '=ilike', first_word)],
+                4
+            ))
+
+            if middle_words:
+                domains_with_priority.append((
+                    ['&', '&',
+                     (first_name_field, '=ilike', first_word),
+                     (middle_name_field, '=ilike', middle_words),
+                     (last_name_field, '=ilike', last_word)],
+                    3
+                ))
+
+        # Priority 5: Partial match on any field
+        partial_domain = [
+            '|', '|', '|',
+            (name_field, 'ilike', search_term),
+            (first_name_field, 'ilike', search_term),
+            (middle_name_field, 'ilike', search_term),
+            (last_name_field, 'ilike', search_term),
+        ]
+        domains_with_priority.append((partial_domain, 5))
+
+        # Also search each word individually
+        if len(words) >= 1:
+            for word in words:
+                if len(word) >= 2:
+                    word_domain = [
+                        '|', '|', '|',
+                        (name_field, 'ilike', word),
+                        (first_name_field, 'ilike', word),
+                        (middle_name_field, 'ilike', word),
+                        (last_name_field, 'ilike', word),
+                    ]
+                    domains_with_priority.append((word_domain, 6))
+
+        return domains_with_priority
+
+    def _build_name_search_domain(self, search_term):
+        """Build search domain for appointment name/reference field.
+
+        Priority:
+        1. Exact match
+        2. Partial match (ilike)
+        """
+        if not search_term:
+            return []
+
+        search_term = search_term.strip()
+        domains_with_priority = []
+
+        # Priority 1: Exact match
+        domains_with_priority.append((
+            [('name', '=ilike', search_term)],
+            1
+        ))
+
+        # Priority 2: Partial match
+        domains_with_priority.append((
+            [('name', 'ilike', search_term)],
+            2
+        ))
+
+        return domains_with_priority
+
+    def _execute_priority_search(self, base_domain, search_domains_with_priority, model, order_clause):
+        """Execute search with priority-based domain matching.
+
+        Tries domains in priority order and returns IDs from the first
+        non-empty result set. If no priority match found, returns all IDs
+        matching any of the search conditions.
 
         Args:
-            local_dt_or_date: date or datetime object in local timezone
-            tz_name: IANA timezone string
-            start_of_day: If True and date input, use 00:00:00; else 23:59:59
-            is_datetime: If True, input is datetime with exact time
+            base_domain: Base domain conditions (non-search filters)
+            search_domains_with_priority: List of (domain, priority) tuples
+            model: Odoo model to search
+            order_clause: Order clause for sorting
 
         Returns:
-            str: UTC datetime string for Odoo domain
+            Recordset of matching appointments
         """
-        try:
-            if pytz is not None:
-                tz = pytz.timezone(tz_name)
-                if is_datetime:
-                    local_dt = tz.localize(local_dt_or_date)
-                else:
-                    time_val = time.min if start_of_day else time.max
-                    local_dt = tz.localize(datetime.combine(local_dt_or_date, time_val))
-                utc_dt = local_dt.astimezone(pytz.UTC)
-            else:
-                if is_datetime:
-                    utc_dt = local_dt_or_date.replace(tzinfo=timezone.utc)
-                else:
-                    time_val = time.min if start_of_day else time.max
-                    utc_dt = datetime.combine(local_dt_or_date, time_val).replace(tzinfo=timezone.utc)
-        except Exception as e:
-            _logger.debug("Failed to convert timezone %s: %s", tz_name, e)
-            if is_datetime:
-                utc_dt = local_dt_or_date.replace(tzinfo=timezone.utc) if hasattr(local_dt_or_date, 'hour') else \
-                    datetime.combine(local_dt_or_date, time.min).replace(tzinfo=timezone.utc)
-            else:
-                time_val = time.min if start_of_day else time.max
-                utc_dt = datetime.combine(local_dt_or_date, time_val).replace(tzinfo=timezone.utc)
+        if not search_domains_with_priority:
+            return None
 
-        return fields.Datetime.to_string(utc_dt)
+        # Sort by priority
+        sorted_domains = sorted(search_domains_with_priority, key=lambda x: x[1])
+
+        # Group by priority level
+        priority_groups = {}
+        for domain, priority in sorted_domains:
+            if priority not in priority_groups:
+                priority_groups[priority] = []
+            priority_groups[priority].append(domain)
+
+        # Try each priority level
+        for priority in sorted(priority_groups.keys()):
+            domains = priority_groups[priority]
+
+            # Build OR domain for all conditions at this priority level
+            if len(domains) == 1:
+                combined_search_domain = domains[0]
+            else:
+                combined_search_domain = ['|'] * (len(domains) - 1)
+                for d in domains:
+                    combined_search_domain.extend(d)
+
+            # Combine with base domain
+            full_domain = base_domain + combined_search_domain
+
+            # Check if any records match
+            count = model.search_count(full_domain)
+            if count > 0:
+                _logger.debug(
+                    "Priority search: Found %d records at priority %d",
+                    count, priority
+                )
+                return full_domain
+
+        # No matches at any priority level - return domain that matches nothing
+        # But we should still return records if partial match exists
+        # Combine all search domains with OR
+        all_domains = [d for d, _ in sorted_domains]
+        if len(all_domains) == 1:
+            combined_domain = all_domains[0]
+        else:
+            combined_domain = ['|'] * (len(all_domains) - 1)
+            for d in all_domains:
+                combined_domain.extend(d)
+
+        return base_domain + combined_domain
 
     def _build_domain(self, filters):
         """Build Odoo domain from parsed filters.
 
         Returns a domain list based on filter_logic (AND or OR).
+        All date/datetime values are treated as UTC.
         """
         conditions = []
-        tz_name = filters.get('tz', 'UTC')
 
         # Market segment filter
         if filters.get('market_segment'):
@@ -208,29 +475,71 @@ class AdminAppointmentsController(
         if filters.get('status'):
             conditions.append(('state', '=', filters['status']))
 
-        # Date from filter
+        # Date from filter (UTC)
         if filters.get('date_from'):
-            date_from_utc = self._convert_local_to_utc(
-                filters['date_from'], tz_name,
-                start_of_day=True,
-                is_datetime=filters.get('date_from_is_datetime', False)
-            )
-            conditions.append(('appointment_date', '>=', date_from_utc))
+            date_from = filters['date_from']
+            if filters.get('date_from_is_datetime'):
+                # datetime - use as-is
+                date_from_str = fields.Datetime.to_string(date_from)
+            else:
+                # date - use start of day (00:00:00 UTC)
+                date_from_str = fields.Datetime.to_string(
+                    datetime.combine(date_from, time.min)
+                )
+            conditions.append(('appointment_date', '>=', date_from_str))
 
-        # Date to filter
+        # Date to filter (UTC)
         if filters.get('date_to'):
-            date_to_utc = self._convert_local_to_utc(
-                filters['date_to'], tz_name,
-                start_of_day=False,
-                is_datetime=filters.get('date_to_is_datetime', False)
-            )
-            conditions.append(('appointment_date', '<=', date_to_utc))
+            date_to = filters['date_to']
+            if filters.get('date_to_is_datetime'):
+                # datetime - use as-is
+                date_to_str = fields.Datetime.to_string(date_to)
+            else:
+                # date - use end of day (23:59:59 UTC)
+                date_to_str = fields.Datetime.to_string(
+                    datetime.combine(date_to, time.max)
+                )
+            conditions.append(('appointment_date', '<=', date_to_str))
 
         if not conditions:
             return []
 
-        # Handle OR logic if needed
-        return self._apply_filter_logic(conditions, filters.get('filter_logic', 'and'))
+        return conditions
+
+    def _build_search_domain(self, filters):
+        """Build search-specific domain from parsed filters.
+
+        Handles search parameters: customer, co_applicant, name, id.
+        All search conditions are combined with AND logic.
+        Priority-based matching is used for customer and co_applicant.
+
+        Returns tuple: (search_conditions, all_priority_domains)
+        - search_conditions: simple domain conditions (like id=X)
+        - all_priority_domains: list of (domain, priority) tuples for priority search
+        """
+        search_conditions = []
+        all_priority_domains = []
+
+        # ID search (exact match)
+        if filters.get('id'):
+            search_conditions.append(('id', '=', filters['id']))
+
+        # Name search (partial match)
+        if filters.get('name'):
+            name_domains = self._build_name_search_domain(filters['name'])
+            all_priority_domains.extend(name_domains)
+
+        # Customer search (priority-based partial match)
+        if filters.get('customer'):
+            customer_domains = self._build_customer_search_domain(filters['customer'])
+            all_priority_domains.extend(customer_domains)
+
+        # Co-applicant search (priority-based partial match)
+        if filters.get('co_applicant'):
+            co_applicant_domains = self._build_co_applicant_search_domain(filters['co_applicant'])
+            all_priority_domains.extend(co_applicant_domains)
+
+        return search_conditions, all_priority_domains
 
     def _build_market_segment_conditions(self, segments):
         """Build domain conditions for market segment filter.
@@ -269,12 +578,12 @@ class AdminAppointmentsController(
         # Multiple segments - use OR
         return [('_market_segments_or', [(('market_segment', '=', seg)) for seg in matched])]
 
-    def _apply_filter_logic(self, conditions, logic):
-        """Apply AND/OR logic to domain conditions."""
+    def _apply_filter_logic(self, conditions):
+        """Apply AND logic to domain conditions."""
         if not conditions:
             return []
 
-        # Handle market segments OR separately
+        # Handle market segments OR separately (multiple values in same field)
         final_conditions = []
         market_seg_or = None
 
@@ -291,27 +600,20 @@ class AdminAppointmentsController(
             else:
                 market_domain = ['|'] * (len(market_seg_or) - 1) + list(market_seg_or)
 
-            if logic == 'and' and final_conditions:
+            if final_conditions:
                 result = ['&'] * len(final_conditions)
                 result.extend(market_domain)
                 result.extend(final_conditions)
                 return result
-            elif logic == 'or' and final_conditions:
-                all_conds = list(market_seg_or) + final_conditions
-                return ['|'] * (len(all_conds) - 1) + all_conds
             else:
                 return market_domain
-
-        if logic == 'or' and len(final_conditions) > 1:
-            return ['|'] * (len(final_conditions) - 1) + final_conditions
 
         return final_conditions
 
     def _build_filters_response(self, filters):
         """Build filters metadata for response."""
         result = {}
-        if filters.get('tz'):
-            result['tz'] = filters['tz']
+        # Filter parameters
         if filters.get('market_segment'):
             result['market_segment'] = filters['market_segment']
         if filters.get('user_id'):
@@ -324,10 +626,17 @@ class AdminAppointmentsController(
             result['date_to'] = str(filters['date_to'])
         if filters.get('status'):
             result['status'] = filters['status']
-        if filters.get('filter_logic'):
-            result['filter_logic'] = filters['filter_logic']
         if filters.get('order'):
             result['order'] = filters['order']
+        # Search parameters
+        if filters.get('customer'):
+            result['customer'] = filters['customer']
+        if filters.get('co_applicant'):
+            result['co_applicant'] = filters['co_applicant']
+        if filters.get('name'):
+            result['name'] = filters['name']
+        if filters.get('id'):
+            result['id'] = filters['id']
         return result
 
     def _validate_filters(self, filters, admin_user_id, endpoint_name):
@@ -374,10 +683,17 @@ class AdminAppointmentsController(
             # Set user_id from resolved improveit_user_id
             filters['user_id'] = user.id
             filters['resolved_improveit_user_id'] = improveit_id
-            _logger.debug(
-                "%s: Resolved improveit_user_id='%s' to user_id=%s",
-                endpoint_name, improveit_id, user.id
+
+        # Validate id parameter
+        if filters.get('id_invalid'):
+            _logger.warning(
+                "%s: Invalid id '%s' from admin_user_id=%s",
+                endpoint_name, filters['id_invalid'], admin_user_id
             )
+            return ({
+                "error": "invalid_request",
+                "error_description": f"Invalid id value '{filters['id_invalid']}'. Must be a valid integer."
+            }, 400)
 
         return None
 
@@ -391,19 +707,28 @@ class AdminAppointmentsController(
         """List all appointments with optional filters.
 
         Admin-only endpoint. Returns all appointments matching filters.
+        All filters are combined with AND logic.
+        All date/datetime values are treated as UTC.
 
         Query params:
-            tz: IANA timezone string (default: UTC)
-            market_segment: Filter by market segment (comma-separated for multiple)
-            user_id: Filter by salesperson/user ID (Odoo user ID)
-            improveit_user_id: Filter by Salesforce user ID (used if user_id not provided)
-            status: Filter by status (draft, scheduled, canceled, done)
-            date_from: Filter from date (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
-            date_to: Filter to date (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
-            filter_logic: 'and' (default) or 'or'
-            page: Page number (default: 1)
-            per_page: Items per page (default: 200, max: 2000)
-            order: Sort order (id_desc, id_asc, date_desc, date_asc)
+            Filters (AND logic):
+                market_segment: Filter by market segment (comma-separated for multiple)
+                user_id: Filter by salesperson/user ID (Odoo user ID)
+                improveit_user_id: Filter by Salesforce user ID (used if user_id not provided)
+                status: Filter by status (draft, scheduled, canceled, done)
+                date_from: Filter from date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
+                date_to: Filter to date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
+
+            Search (AND logic with filters):
+                customer: Search in customer name fields (partial match, priority-based)
+                co_applicant: Search in co-applicant name fields (partial match, priority-based)
+                name: Search in appointment reference (partial match)
+                id: Search by appointment ID (exact match)
+
+            Pagination:
+                page: Page number (default: 1)
+                per_page: Items per page (default: 200, max: 2000)
+                order: Sort order (id_desc, id_asc, date_desc, date_asc)
         """
         _logger.info(
             "AdminAppointments.list: from=%s",
@@ -422,8 +747,15 @@ class AdminAppointmentsController(
             return err
 
         # Build domain and order
-        domain = self._build_domain(filters)
+        base_domain = self._build_domain(filters)
         order_clause = filters.get('order_clause', DEFAULT_ORDER)
+
+        # Build search domain
+        search_conditions, priority_domains = self._build_search_domain(filters)
+        _logger.info(
+            "AdminAppointments.list: search_conditions=%s, priority_domains_count=%s",
+            search_conditions, len(priority_domains) if priority_domains else 0
+        )
 
         # Parse pagination
         page, per_page, err = self._parse_pagination(kwargs)
@@ -432,6 +764,23 @@ class AdminAppointmentsController(
 
         # Query appointments
         appt_model = request.env['team.customer.appointment'].sudo()
+
+        # Combine base domain with simple search conditions
+        domain = base_domain + search_conditions
+
+        # Handle priority-based searches (all domains are OR'd together)
+        if priority_domains:
+            result_domain = self._execute_priority_search(
+                domain, priority_domains, appt_model, order_clause
+            )
+            if result_domain is not None:
+                domain = result_domain
+            _logger.info(
+                "AdminAppointments.list: Applied priority search, domain=%s",
+                domain
+            )
+
+        _logger.info("AdminAppointments.list: final domain=%s", domain)
         offset = self._calculate_offset(page, per_page)
         total = appt_model.search_count(domain)
         records = appt_model.search(domain, limit=per_page, offset=offset, order=order_clause)
@@ -462,18 +811,26 @@ class AdminAppointmentsController(
     def list_today_appointments(self, **kwargs):
         """List today's appointments with optional filters.
 
-        Admin-only endpoint. Returns appointments for today in specified timezone.
+        Admin-only endpoint. Returns appointments for today in UTC.
+        All filters are combined with AND logic.
 
         Query params:
-            tz: IANA timezone string (default: UTC)
-            market_segment: Filter by market segment (comma-separated for multiple)
-            user_id: Filter by salesperson/user ID (Odoo user ID)
-            improveit_user_id: Filter by Salesforce user ID (used if user_id not provided)
-            status: Filter by status (draft, scheduled, canceled, done)
-            filter_logic: 'and' (default) or 'or'
-            page: Page number (default: 1)
-            per_page: Items per page (default: 200, max: 2000)
-            order: Sort order (id_desc, id_asc, date_desc, date_asc)
+            Filters (AND logic):
+                market_segment: Filter by market segment (comma-separated for multiple)
+                user_id: Filter by salesperson/user ID (Odoo user ID)
+                improveit_user_id: Filter by Salesforce user ID (used if user_id not provided)
+                status: Filter by status (draft, scheduled, canceled, done)
+
+            Search (AND logic with filters):
+                customer: Search in customer name fields (partial match, priority-based)
+                co_applicant: Search in co-applicant name fields (partial match, priority-based)
+                name: Search in appointment reference (partial match)
+                id: Search by appointment ID (exact match)
+
+            Pagination:
+                page: Page number (default: 1)
+                per_page: Items per page (default: 200, max: 2000)
+                order: Sort order (id_desc, id_asc, date_desc, date_asc)
         """
         _logger.info(
             "AdminAppointments.today: from=%s",
@@ -492,10 +849,11 @@ class AdminAppointmentsController(
             return err
 
         order_clause = filters.get('order_clause', DEFAULT_ORDER)
-        tz_name = filters.get('tz', 'UTC')
 
-        # Get today's range in UTC
-        start_str, end_str, local_date, tz_name = self._get_today_range_utc(tz_name)
+        # Get today's date range in UTC
+        today_utc = datetime.now(timezone.utc).date()
+        start_str = fields.Datetime.to_string(datetime.combine(today_utc, time.min))
+        end_str = fields.Datetime.to_string(datetime.combine(today_utc, time.max))
 
         # Remove date filters (we use today's date)
         filters.pop('date_from', None)
@@ -504,7 +862,14 @@ class AdminAppointmentsController(
         # Build domains
         date_domain = [('appointment_date', '>=', start_str), ('appointment_date', '<=', end_str)]
         additional_domain = self._build_domain(filters)
-        domain = date_domain + additional_domain
+        base_domain = date_domain + additional_domain
+
+        # Build search domain
+        search_conditions, priority_domains = self._build_search_domain(filters)
+        _logger.info(
+            "AdminAppointments.today: search_conditions=%s, priority_domains_count=%s",
+            search_conditions, len(priority_domains) if priority_domains else 0
+        )
 
         # Parse pagination
         page, per_page, err = self._parse_pagination(kwargs)
@@ -513,6 +878,23 @@ class AdminAppointmentsController(
 
         # Query appointments
         appt_model = request.env['team.customer.appointment'].sudo()
+
+        # Combine base domain with simple search conditions
+        domain = base_domain + search_conditions
+
+        # Handle priority-based searches (all domains are OR'd together)
+        if priority_domains:
+            result_domain = self._execute_priority_search(
+                domain, priority_domains, appt_model, order_clause
+            )
+            if result_domain is not None:
+                domain = result_domain
+            _logger.info(
+                "AdminAppointments.today: Applied priority search, domain=%s",
+                domain
+            )
+
+        _logger.info("AdminAppointments.today: final domain=%s", domain)
         offset = self._calculate_offset(page, per_page)
         total = appt_model.search_count(domain)
         records = appt_model.search(domain, limit=per_page, offset=offset, order=order_clause)
@@ -525,8 +907,7 @@ class AdminAppointmentsController(
 
         return ({
             'admin_user_id': admin_user_id,
-            'tz': tz_name,
-            'date': str(local_date),
+            'date': str(today_utc),
             'total': total,
             'count': len(data),
             'page': page,
@@ -740,8 +1121,120 @@ class AdminAppointmentsController(
             len(segments), admin_user_id, filter_user_id
         )
 
-        response = {'count': len(segments), 'market_segments': segments}
+        response = {'admin_user_id': admin_user_id, 'count': len(segments), 'market_segments': segments}
         if filter_user_id:
             response['user_id'] = filter_user_id
+
+        return (response, 200)
+
+    # =========================================================================
+    # Salespersons
+    # =========================================================================
+
+    @http.route("/api/admin/salespersons", auth="none", methods=["GET"], csrf=False)
+    @json_response
+    def list_salespersons(self, **kwargs):
+        """List salespersons filtered by market segment.
+
+        Admin-only endpoint. Returns unique salespersons who have appointments
+        in the specified market segment(s). If no market_segment is provided,
+        returns all salespersons from all appointments.
+
+        Query params:
+            market_segment: (optional) Comma-separated list of market segments
+        """
+        _logger.info(
+            "AdminAppointments.salespersons: from=%s",
+            request.httprequest.remote_addr
+        )
+
+        # Authenticate admin
+        admin_user_id, err = self._authenticate_admin()
+        if err:
+            return err
+
+        # Parse market_segment parameter (optional)
+        market_segment_param = kwargs.get('market_segment') or request.params.get('market_segment')
+        market_segments = None
+        if market_segment_param:
+            market_segments = [s.strip() for s in market_segment_param.split(',') if s.strip()]
+            if not market_segments:
+                market_segments = None
+
+        # Build domain for appointments with a user assigned
+        domain = [('user_id', '!=', False)]
+        if market_segments:
+            if len(market_segments) == 1:
+                domain.append(('market_segment', '=', market_segments[0]))
+            else:
+                domain.append(('market_segment', 'in', market_segments))
+
+        # Query appointments and collect unique user IDs
+        appt_model = request.env['team.customer.appointment'].sudo()
+        try:
+            # Use read_group to get distinct user_ids efficiently
+            groups = appt_model.read_group(
+                domain=domain,
+                fields=['user_id'],
+                groupby=['user_id'],
+            )
+            user_ids = [g['user_id'][0] for g in groups if g.get('user_id')]
+        except Exception as e:
+            _logger.debug("read_group failed for salespersons: %s, falling back to search", e)
+            try:
+                appointments = appt_model.search(domain)
+                user_ids = list(set(a.user_id.id for a in appointments if a.user_id))
+            except Exception as e2:
+                _logger.error("AdminAppointments.salespersons: Failed to query appointments: %s", e2)
+                user_ids = []
+
+        # Fetch user details
+        salespersons = []
+        if user_ids:
+            user_model = request.env['res.users'].sudo()
+            users = user_model.browse(user_ids).exists()
+            for user in users:
+                salespersons.append({
+                    'id': user.id,
+                    'improveit_user_id': user.improveit_user_id or None,
+                    'name': user.name or None,
+                    'login': user.login or None,
+                })
+            # Sort by name for consistent ordering
+            salespersons.sort(key=lambda x: (x.get('name') or '').lower())
+
+        # If no market_segment filter, get all available market segments
+        response_market_segments = market_segments
+        if not market_segments:
+            try:
+                segment_groups = appt_model.read_group(
+                    domain=[('market_segment', '!=', False)],
+                    fields=['market_segment'],
+                    groupby=['market_segment'],
+                )
+                response_market_segments = sorted([
+                    g['market_segment'] for g in segment_groups if g.get('market_segment')
+                ])
+            except Exception as e:
+                _logger.debug("read_group failed for all market_segments: %s", e)
+                try:
+                    all_appts = appt_model.search([('market_segment', '!=', False)])
+                    response_market_segments = sorted(set(
+                        a.market_segment for a in all_appts if a.market_segment
+                    ))
+                except Exception as e2:
+                    _logger.debug("search fallback failed for all market_segments: %s", e2)
+                    response_market_segments = []
+
+        _logger.info(
+            "AdminAppointments.salespersons: market_segments=%s count=%s admin_user_id=%s",
+            market_segments, len(salespersons), admin_user_id
+        )
+
+        response = {
+            'count': len(salespersons),
+            'market_segments': response_market_segments,
+            'salespersons': salespersons,
+        }
 
         return (response, 200)

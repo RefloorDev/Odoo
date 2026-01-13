@@ -1,6 +1,29 @@
-# Pitch API Documentation v2.0
+# Pitch API Documentation v2.3
 
 REST API for the Pitch mobile/web application.
+
+**Last Updated:** 2026-01-12
+
+**Changes in v2.3:**
+- Removed `tz` parameter from all endpoints - all dates are now in UTC
+- User endpoints (`/api/appointments`, `/api/appointments/today`) now use UTC only
+- Added `admin_user_id` to `/api/admin/market-segments` response for consistency
+- Added complete Admin Appointment Object documentation with all fields
+- Added `GET /api/admin/salespersons` endpoint to list salespersons by market segment
+
+**Changes in v2.2:**
+- Replaced `q` and `search_in` parameters with direct search parameters (`customer`, `co_applicant`, `name`, `id`)
+- Removed `filter_logic` parameter - all filters now use AND logic only
+- Removed `tz` parameter from admin endpoints - all dates are in UTC
+- Date filters (`date_from`, `date_to`) now use UTC directly
+- `/api/admin/appointments/today` now determines "today" in UTC
+
+**Changes in v2.1:**
+- Added search functionality to admin appointments endpoints
+- Added priority-based name matching for customer and co-applicant searches
+- Added detailed nested object documentation for appointment responses
+- Fixed response field types to indicate nullable fields
+- Corrected `co_applicant` field type (string, not boolean)
 
 ---
 
@@ -28,6 +51,7 @@ REST API for the Pitch mobile/web application.
   - [GET /api/admin/appointments/{id}/app_screen_logs](#get-apiadminappointmentsidapp_screen_logs)
   - [GET /api/admin/appointments/{id}/app_live_screen_logs](#get-apiadminappointmentsidapp_live_screen_logs)
   - [GET /api/admin/market-segments](#get-apiadminmarket-segments)
+  - [GET /api/admin/salespersons](#get-apiadminsalespersons)
 - [Users (Admin)](#users-admin)
   - [GET /api/users](#get-apiusers)
   - [GET /api/users/{id}](#get-apiusersid)
@@ -448,6 +472,7 @@ Endpoints for accessing appointments assigned to the authenticated user.
 ### GET /api/appointments
 
 List all appointments for the authenticated user.
+All date/datetime values are treated as UTC.
 
 **Headers:**
 | Header | Required | Description |
@@ -458,9 +483,8 @@ List all appointments for the authenticated user.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `status` | string | - | Filter by status: `draft`, `scheduled`, `canceled`, `done` |
-| `date_from` | string | - | Filter from date: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS` |
-| `date_to` | string | - | Filter to date: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS` |
-| `tz` | string | User's tz | IANA timezone for date conversion |
+| `date_from` | string | - | Filter from date in UTC: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS` |
+| `date_to` | string | - | Filter to date in UTC: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS` |
 | `page` | integer | 1 | Page number (1-based) |
 | `per_page` | integer | 200 | Items per page (max: 2000) |
 | `order` | string | `id_desc` | Sort order: `id_desc`, `id_asc`, `date_desc`, `date_asc` |
@@ -468,15 +492,16 @@ List all appointments for the authenticated user.
 **Success Response (200):**
 ```json
 {
+  "user_id": 789,
+  "total": 50,
   "count": 50,
   "page": 1,
   "per_page": 200,
-  "total_pages": 1,
   "order": "id_desc",
   "filters": {
-    "status": null,
-    "date_from": null,
-    "date_to": null
+    "status": "scheduled",
+    "date_from": "2025-01-01",
+    "date_to": "2025-01-31"
   },
   "appointments": [
     {
@@ -507,7 +532,7 @@ List all appointments for the authenticated user.
         "email": "jane@example.com"
       },
       "co_applicant_data": {
-        "co_applicant": true,
+        "co_applicant": "John Smith",
         "co_applicant_first_name": "John",
         "co_applicant_middle_name": null,
         "co_applicant_last_name": "Smith",
@@ -576,51 +601,103 @@ List all appointments for the authenticated user.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `count` | integer | Total appointments in current page |
+| `user_id` | integer | Authenticated user ID |
+| `total` | integer | Total matching appointments |
+| `count` | integer | Appointments in current page |
 | `page` | integer | Current page number |
 | `per_page` | integer | Items per page |
-| `total_pages` | integer | Total number of pages |
 | `order` | string | Applied sort order |
-| `filters` | object | Applied filters |
+| `filters` | object | Applied filters (only present if filters applied) |
 | `appointments` | array | List of appointments |
 
 **Appointment Object Fields:**
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | integer | Appointment ID |
-| `improveit_appointment_id` | string | External appointment ID |
-| `name` | string | Appointment reference number |
-| `state` | string | Status: `draft`, `scheduled`, `canceled`, `done` |
-| `partner_id` | integer | Customer partner ID |
-| `customer_name` | string | Customer full name |
-| `applicant_data` | object | Primary applicant information |
-| `co_applicant_data` | object | Co-applicant information |
-| `appointment_date` | string | Scheduled datetime |
-| `what_happened_notes` | string | Notes about the appointment |
-| `appointment_result` | string | Result of appointment |
-| `office_location_id` | integer | Office location ID |
-| `office_location_name` | string | Office location name |
-| `app_data` | object | App version information |
-| `credit_application_url` | string | Credit application URL |
-| `appointment_result_details` | object | Detailed result information |
-| `user_id` | integer | Assigned user ID |
-| `user_data` | object | Assigned user information |
+| `improveit_appointment_id` | string/null | External appointment ID (Salesforce) |
+| `name` | string/null | Appointment reference number (e.g., `CAP/2025/001`) |
+| `state` | string/null | Status: `draft`, `scheduled`, `canceled`, `done` |
+| `partner_id` | integer/null | Customer partner ID |
+| `customer_name` | string/null | Customer full name |
+| `applicant_data` | object | Primary applicant information (see below) |
+| `co_applicant_data` | object | Co-applicant information (see below) |
+| `appointment_date` | string/null | Scheduled datetime (UTC) |
+| `what_happened_notes` | string/null | Notes about the appointment |
+| `appointment_result` | string/null | Result of appointment |
+| `office_location_id` | integer/null | Office location ID |
+| `office_location_name` | string/null | Office location name |
+| `app_data` | object | App version information (see below) |
+| `credit_application_url` | string/null | Credit application URL |
+| `appointment_result_details` | object | Detailed result information (see below) |
+| `user_id` | integer/null | Assigned user ID |
+| `user_data` | object | Assigned user information (see below) |
 | `measurement_exist` | boolean | Whether measurements exist |
 | `send_physical_document` | boolean | Send physical document flag |
 | `flexible_installation` | boolean | Flexible installation flag |
-| `whats_next_notes` | string | Next steps notes |
-| `last_price_quoted_value` | number | Last quoted price |
-| `market_segment` | string | Market segment |
+| `whats_next_notes` | string/null | Next steps notes |
+| `last_price_quoted_value` | number/null | Last quoted price |
+| `market_segment` | string/null | Market segment |
 | `both_parties_present` | boolean | Both parties were present |
 | `sent_review_link` | boolean | Review link was sent |
 | `make_payment_failure` | boolean | Payment failure occurred |
-| `destination_selection_id` | integer | Destination selection ID |
-| `destination_selection_name` | string | Destination selection name |
-| `additional_comments` | string | Additional comments |
-| `geolocation_data` | object | GPS location data |
-| `arrival_date` | string | Arrival datetime |
-| `departure_date` | string | Departure datetime |
-| `manual_arrival_date` | string | Manual arrival datetime |
+| `destination_selection_id` | integer/null | Destination selection ID |
+| `destination_selection_name` | string/null | Destination selection name |
+| `additional_comments` | string/null | Additional comments |
+| `geolocation_data` | object | GPS location data (see below) |
+| `arrival_date` | string/null | Arrival datetime (UTC) |
+| `departure_date` | string/null | Departure datetime (UTC) |
+| `manual_arrival_date` | string/null | Manual arrival datetime (UTC) |
+
+**Nested Object: `applicant_data`**
+| Field | Type | Description |
+|-------|------|-------------|
+| `applicant_first_name` | string/null | First name |
+| `applicant_middle_name` | string/null | Middle name |
+| `applicant_last_name` | string/null | Last name |
+| `applicant_address` | object | Address object with `street`, `street2`, `city`, `state_id`, `state_code`, `state_name`, `country_id`, `country_code`, `country_name`, `zip` |
+| `phone` | string/null | Phone number |
+| `mobile` | string/null | Mobile number |
+| `email` | string/null | Email address |
+
+**Nested Object: `co_applicant_data`**
+| Field | Type | Description |
+|-------|------|-------------|
+| `co_applicant` | string/null | Co-applicant full name |
+| `co_applicant_first_name` | string/null | First name |
+| `co_applicant_middle_name` | string/null | Middle name |
+| `co_applicant_last_name` | string/null | Last name |
+| `co_applicant_address` | object | Address object with `co_applicant_address`, `co_applicant_city`, `co_applicant_state_id`, `co_applicant_state_code`, `co_applicant_state_name`, `co_applicant_country_id`, `co_applicant_country_code`, `co_applicant_country_name`, `co_applicant_zip`, `co_applicant_state_code_2` |
+| `co_applicant_phone` | string/null | Phone number |
+| `co_applicant_secondary_phone` | string/null | Secondary phone number |
+| `co_applicant_email` | string/null | Email address |
+
+**Nested Object: `app_data`**
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer/null | App version ID |
+| `app_version` | string/null | App version name |
+| `app_release_date` | string/null | App release date |
+
+**Nested Object: `appointment_result_details`**
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer/null | Result reason ID |
+| `reason` | string/null | Result reason text |
+| `tags` | array/null | List of result tag names |
+
+**Nested Object: `user_data`**
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer/null | User ID |
+| `name` | string/null | User full name |
+| `login` | string/null | User login (email) |
+
+**Nested Object: `geolocation_data`**
+| Field | Type | Description |
+|-------|------|-------------|
+| `date_localization` | string/null | Localization datetime (UTC) |
+| `partner_latitude` | number/null | Latitude |
+| `partner_longitude` | number/null | Longitude |
 
 **Error Responses:**
 | Status | Error | Description |
@@ -646,7 +723,22 @@ Get a single appointment by ID.
 | `id` | integer | Appointment ID |
 
 **Success Response (200):**
-Returns a single appointment object with the same structure as shown in [GET /api/appointments](#get-apiappointments).
+Returns the appointment object directly (not wrapped in a container).
+
+```json
+{
+  "id": 123,
+  "improveit_appointment_id": "APT-12345",
+  "name": "CAP/2025/001",
+  "state": "scheduled",
+  "partner_id": 456,
+  "customer_name": "Jane Smith",
+  "applicant_data": {...},
+  "co_applicant_data": {...},
+  "appointment_date": "2025-01-15 14:00:00",
+  "..."
+}
+```
 
 **Error Responses:**
 | Status | Error | Description |
@@ -661,6 +753,7 @@ Returns a single appointment object with the same structure as shown in [GET /ap
 ### GET /api/appointments/today
 
 Get today's appointments for the authenticated user.
+Today is determined in UTC.
 
 **Headers:**
 | Header | Required | Description |
@@ -670,7 +763,6 @@ Get today's appointments for the authenticated user.
 **Query Parameters:**
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `tz` | string | User's tz | IANA timezone for determining "today" |
 | `status` | string | - | Filter by status |
 | `page` | integer | 1 | Page number |
 | `per_page` | integer | 200 | Items per page (max: 2000) |
@@ -679,26 +771,30 @@ Get today's appointments for the authenticated user.
 **Success Response (200):**
 ```json
 {
+  "user_id": 789,
   "date": "2025-01-15",
-  "timezone": "America/New_York",
+  "total": 3,
   "count": 3,
   "page": 1,
   "per_page": 200,
-  "total_pages": 1,
   "order": "id_desc",
+  "filters": {
+    "status": "scheduled"
+  },
   "appointments": [...]
 }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `date` | string | Today's date in YYYY-MM-DD format |
-| `timezone` | string | Timezone used |
-| `count` | integer | Number of appointments |
+| `user_id` | integer | Authenticated user ID |
+| `date` | string | Today's date in UTC (`YYYY-MM-DD`) |
+| `total` | integer | Total matching appointments |
+| `count` | integer | Appointments in current page |
 | `page` | integer | Current page |
 | `per_page` | integer | Items per page |
-| `total_pages` | integer | Total pages |
 | `order` | string | Sort order |
+| `filters` | object | Applied filters (only if status filter applied) |
 | `appointments` | array | List of appointments |
 
 ---
@@ -738,6 +834,8 @@ Get screen logs for an appointment.
   ]
 }
 ```
+
+*Note: User endpoints do NOT include `admin_user_id` in response.*
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -789,6 +887,8 @@ Get live screen logs for an appointment. Returns full details including `id` and
 }
 ```
 
+*Note: User endpoints do NOT include `admin_user_id` in response.*
+
 | Field | Type | Description |
 |-------|------|-------------|
 | `appointment_id` | integer | Appointment ID |
@@ -796,7 +896,7 @@ Get live screen logs for an appointment. Returns full details including `id` and
 | `app_live_screen_logs` | array | List of live screen logs |
 | `app_live_screen_logs[].id` | integer | Log entry ID |
 | `app_live_screen_logs[].name` | string | Screen name |
-| `app_live_screen_logs[].screen_entry_date` | string | Screen entry datetime |
+| `app_live_screen_logs[].screen_entry_date` | string | Screen entry datetime (UTC) |
 | `app_live_screen_logs[].user_id` | integer | User ID |
 
 **Error Responses:**
@@ -815,7 +915,7 @@ Admin-only endpoints for accessing all appointments. Requires `is_pitch_admin=Tr
 
 ### GET /api/admin/appointments
 
-List all appointments (admin access).
+List all appointments with optional filters, search, and pagination.
 
 **Headers:**
 | Header | Required | Description |
@@ -823,21 +923,109 @@ List all appointments (admin access).
 | `Authorization` | Yes | `Bearer <access_token>` (admin) |
 
 **Query Parameters:**
-Same as [GET /api/appointments](#get-apiappointments) plus:
 
+**Filter Parameters (AND logic):**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `market_segment` | string | - | Filter by market segment. Comma-separated for multiple (OR within field) |
+| `user_id` | integer | - | Filter by assigned Odoo user ID |
+| `improveit_user_id` | string | - | Filter by Salesforce user ID (used if `user_id` not provided) |
+| `status` | string | - | Filter by status: `draft`, `scheduled`, `canceled`, `done` |
+| `date_from` | string | - | Start date in UTC: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS` |
+| `date_to` | string | - | End date in UTC: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS` |
+
+**Search Parameters (AND logic with filters):**
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `user_id` | integer | Filter by assigned Odoo user ID |
-| `improveit_user_id` | string | Filter by Salesforce user ID (used if `user_id` not provided) |
+| `customer` | string | Search in customer name fields (partial match, priority-based) |
+| `co_applicant` | string | Search in co-applicant name fields (partial match, priority-based) |
+| `name` | string | Search in appointment reference (partial match) |
+| `id` | integer | Search by appointment ID (exact match) |
+
+**Pagination Parameters:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | integer | `1` | Page number (1-indexed) |
+| `per_page` | integer | `200` | Items per page (max: 2000) |
+| `order` | string | `id_desc` | Sort: `id_desc`, `id_asc`, `date_desc`, `date_asc` |
 
 *Note: If both `user_id` and `improveit_user_id` are provided, `user_id` takes priority.*
 
+**Priority-Based Name Matching (for `customer` and `co_applicant`):**
+
+When searching customer or co-applicant names, results are prioritized:
+1. **Priority 1**: Exact match on full name
+2. **Priority 2**: Reversed format ("john doe" matches "doe, john")
+3. **Priority 3**: First word = first_name AND last word = last_name
+4. **Priority 4**: First word = last_name AND last word = first_name (swapped)
+5. **Priority 5**: Partial match (ilike) on any field
+6. **Priority 6**: Individual word matches on any field
+
+**Examples:**
+```
+# Search by customer name
+GET /api/admin/appointments?customer=john%20doe
+
+# Search by co-applicant name
+GET /api/admin/appointments?co_applicant=jane%20smith
+
+# Search by appointment ID (exact match)
+GET /api/admin/appointments?id=12345
+
+# Search by appointment reference
+GET /api/admin/appointments?name=CAP/2025/96361
+
+# Combined filters and search (all AND)
+GET /api/admin/appointments?customer=john&status=scheduled&market_segment=Residential
+
+# Multiple market segments (OR within field)
+GET /api/admin/appointments?market_segment=Residential,Commercial
+
+# Date range filter (UTC)
+GET /api/admin/appointments?date_from=2025-01-01&date_to=2025-01-31
+```
+
 **Success Response (200):**
-Same structure as [GET /api/appointments](#get-apiappointments)
+```json
+{
+  "admin_user_id": 123,
+  "total": 500,
+  "count": 200,
+  "page": 1,
+  "per_page": 200,
+  "order": "id_desc",
+  "filters": {
+    "market_segment": "Residential",
+    "user_id": 45,
+    "status": "scheduled",
+    "date_from": "2025-01-01",
+    "date_to": "2025-01-31",
+    "order": "id_desc",
+    "customer": "john doe",
+    "co_applicant": "jane"
+  },
+  "appointments": [...]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `admin_user_id` | integer | Authenticated admin user ID |
+| `total` | integer | Total matching appointments |
+| `count` | integer | Appointments in current page |
+| `page` | integer | Current page number |
+| `per_page` | integer | Items per page |
+| `order` | string | Applied sort order |
+| `filters` | object | Applied filters (echoed back) |
+| `appointments` | array | List of appointment objects (see [Admin Appointment Object](#admin-appointment-object)) |
 
 **Error Responses:**
 | Status | Error | Description |
 |--------|-------|-------------|
+| 400 | `invalid_request` | Invalid `status` value. Allowed: `draft`, `scheduled`, `canceled`, `done` |
+| 400 | `invalid_request` | Invalid `order` value. Allowed: `id_desc`, `id_asc`, `date_desc`, `date_asc` |
+| 400 | `invalid_request` | Invalid `id` value. Must be a valid integer |
+| 400 | `invalid_request` | Invalid `page` or `per_page` value |
 | 401 | `invalid_token` | Token invalid |
 | 401 | `token_expired` | **Access token expired - call refresh endpoint** |
 | 403 | `forbidden` | Caller is not a Pitch Admin |
@@ -847,7 +1035,8 @@ Same structure as [GET /api/appointments](#get-apiappointments)
 
 ### GET /api/admin/appointments/today
 
-Get today's appointments (admin access).
+Get today's appointments with optional filters, search, and pagination.
+Today is determined in UTC.
 
 **Headers:**
 | Header | Required | Description |
@@ -855,24 +1044,71 @@ Get today's appointments (admin access).
 | `Authorization` | Yes | `Bearer <access_token>` (admin) |
 
 **Query Parameters:**
+
+**Filter Parameters (AND logic):**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `market_segment` | string | - | Filter by market segment. Comma-separated for multiple (OR within field) |
+| `user_id` | integer | - | Filter by assigned Odoo user ID |
+| `improveit_user_id` | string | - | Filter by Salesforce user ID (used if `user_id` not provided) |
+| `status` | string | - | Filter by status: `draft`, `scheduled`, `canceled`, `done` |
+
+**Search Parameters (AND logic with filters):**
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `tz` | string | IANA timezone |
-| `user_id` | integer | Filter by assigned Odoo user ID |
-| `improveit_user_id` | string | Filter by Salesforce user ID (used if `user_id` not provided) |
-| `status` | string | Filter by status |
-| `page` | integer | Page number |
-| `per_page` | integer | Items per page |
-| `order` | string | Sort order |
+| `customer` | string | Search in customer name fields (partial match, priority-based) |
+| `co_applicant` | string | Search in co-applicant name fields (partial match, priority-based) |
+| `name` | string | Search in appointment reference (partial match) |
+| `id` | integer | Search by appointment ID (exact match) |
+
+**Pagination Parameters:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | integer | `1` | Page number (1-indexed) |
+| `per_page` | integer | `200` | Items per page (max: 2000) |
+| `order` | string | `id_desc` | Sort: `id_desc`, `id_asc`, `date_desc`, `date_asc` |
+
+*Note: `date_from` and `date_to` are ignored - today's date (UTC) is automatically applied.*
 
 *Note: If both `user_id` and `improveit_user_id` are provided, `user_id` takes priority.*
 
 **Success Response (200):**
-Same structure as [GET /api/appointments/today](#get-apiappointmentstoday)
+```json
+{
+  "admin_user_id": 123,
+  "date": "2025-01-15",
+  "total": 25,
+  "count": 25,
+  "page": 1,
+  "per_page": 200,
+  "order": "id_desc",
+  "filters": {
+    "status": "scheduled",
+    "customer": "john"
+  },
+  "appointments": [...]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `admin_user_id` | integer | Authenticated admin user ID |
+| `date` | string | Today's date in UTC (`YYYY-MM-DD`) |
+| `total` | integer | Total matching appointments |
+| `count` | integer | Appointments in current page |
+| `page` | integer | Current page number |
+| `per_page` | integer | Items per page |
+| `order` | string | Applied sort order |
+| `filters` | object | Applied filters (echoed back) |
+| `appointments` | array | List of appointment objects (see [Admin Appointment Object](#admin-appointment-object)) |
 
 **Error Responses:**
 | Status | Error | Description |
 |--------|-------|-------------|
+| 400 | `invalid_request` | Invalid `status` value. Allowed: `draft`, `scheduled`, `canceled`, `done` |
+| 400 | `invalid_request` | Invalid `order` value. Allowed: `id_desc`, `id_asc`, `date_desc`, `date_asc` |
+| 400 | `invalid_request` | Invalid `id` value. Must be a valid integer |
+| 400 | `invalid_request` | Invalid `page` or `per_page` value |
 | 401 | `invalid_token` | Token invalid |
 | 401 | `token_expired` | **Access token expired - call refresh endpoint** |
 | 403 | `forbidden` | Caller is not a Pitch Admin |
@@ -895,7 +1131,36 @@ Get a single appointment by ID (admin access).
 | `id` | integer | Appointment ID |
 
 **Success Response (200):**
-Same structure as single appointment object.
+```json
+{
+  "admin_user_id": 123,
+  "appointment": {
+    "id": 456,
+    "improveit_appointment_id": "APT-12345",
+    "name": "CAP/2025/001",
+    "state": "scheduled",
+    "partner_id": 789,
+    "customer_name": "Jane Smith",
+    "applicant_data": {...},
+    "co_applicant_data": {...},
+    "appointment_date": "2025-01-15 14:00:00",
+    "..."
+  }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `admin_user_id` | integer | Authenticated admin user ID |
+| `appointment` | object | Full appointment object (see [Admin Appointment Object](#admin-appointment-object)) |
+
+**Error Responses:**
+| Status | Error | Description |
+|--------|-------|-------------|
+| 401 | `invalid_token` | Token invalid |
+| 401 | `token_expired` | **Access token expired - call refresh endpoint** |
+| 403 | `forbidden` | Caller is not a Pitch Admin |
+| 404 | `not_found` | Appointment not found |
 
 ---
 
@@ -903,46 +1168,34 @@ Same structure as single appointment object.
 
 Get screen logs for an appointment (admin access).
 
-Same as [GET /api/appointments/{id}/app_screen_logs](#get-apiappointmentsidapp_screen_logs) but accessible by admin for any appointment.
-
----
-
-### GET /api/admin/appointments/{id}/app_live_screen_logs
-
-Get live screen logs for an appointment (admin access).
-
-Same as [GET /api/appointments/{id}/app_live_screen_logs](#get-apiappointmentsidapp_live_screen_logs) but accessible by admin for any appointment.
-
----
-
-### GET /api/admin/market-segments
-
-Get all market segments.
-
 **Headers:**
 | Header | Required | Description |
 |--------|----------|-------------|
 | `Authorization` | Yes | `Bearer <access_token>` (admin) |
 
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | integer | Appointment ID |
+
 **Success Response (200):**
 ```json
 {
-  "count": 3,
-  "market_segments": [
+  "admin_user_id": 123,
+  "appointment_id": 456,
+  "count": 5,
+  "app_screen_logs": [
     {
       "id": 1,
-      "name": "Residential",
-      "active": true
+      "name": "Welcome Screen",
+      "completion_date": "2025-01-15 14:05:00",
+      "user_id": 789
     },
     {
       "id": 2,
-      "name": "Commercial",
-      "active": true
-    },
-    {
-      "id": 3,
-      "name": "Industrial",
-      "active": false
+      "name": "Product Selection",
+      "completion_date": "2025-01-15 14:15:00",
+      "user_id": 789
     }
   ]
 }
@@ -950,11 +1203,318 @@ Get all market segments.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `count` | integer | Number of market segments |
-| `market_segments` | array | List of market segments |
-| `market_segments[].id` | integer | Market segment ID |
-| `market_segments[].name` | string | Market segment name |
-| `market_segments[].active` | boolean | Whether active |
+| `admin_user_id` | integer | Authenticated admin user ID |
+| `appointment_id` | integer | Appointment ID |
+| `count` | integer | Number of log entries |
+| `app_screen_logs` | array | List of screen logs |
+| `app_screen_logs[].id` | integer | Log entry ID |
+| `app_screen_logs[].name` | string | Screen name |
+| `app_screen_logs[].completion_date` | string | Completion datetime (UTC) |
+| `app_screen_logs[].user_id` | integer | User who completed |
+
+**Error Responses:**
+| Status | Error | Description |
+|--------|-------|-------------|
+| 401 | `invalid_token` | Token invalid |
+| 401 | `token_expired` | **Access token expired - call refresh endpoint** |
+| 403 | `forbidden` | Caller is not a Pitch Admin |
+| 404 | `not_found` | Appointment not found |
+
+---
+
+### GET /api/admin/appointments/{id}/app_live_screen_logs
+
+Get live screen logs for an appointment (admin access).
+
+**Headers:**
+| Header | Required | Description |
+|--------|----------|-------------|
+| `Authorization` | Yes | `Bearer <access_token>` (admin) |
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | integer | Appointment ID |
+
+**Success Response (200):**
+```json
+{
+  "admin_user_id": 123,
+  "appointment_id": 456,
+  "count": 3,
+  "app_live_screen_logs": [
+    {
+      "id": 1,
+      "name": "Welcome Screen",
+      "screen_entry_date": "2025-01-15 14:05:00",
+      "user_id": 789
+    },
+    {
+      "id": 2,
+      "name": "Product Selection",
+      "screen_entry_date": "2025-01-15 14:10:00",
+      "user_id": 789
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `admin_user_id` | integer | Authenticated admin user ID |
+| `appointment_id` | integer | Appointment ID |
+| `count` | integer | Number of log entries |
+| `app_live_screen_logs` | array | List of live screen logs |
+| `app_live_screen_logs[].id` | integer | Log entry ID |
+| `app_live_screen_logs[].name` | string | Screen name |
+| `app_live_screen_logs[].screen_entry_date` | string | Screen entry datetime (UTC) |
+| `app_live_screen_logs[].user_id` | integer | User ID |
+
+**Error Responses:**
+| Status | Error | Description |
+|--------|-------|-------------|
+| 401 | `invalid_token` | Token invalid |
+| 401 | `token_expired` | **Access token expired - call refresh endpoint** |
+| 403 | `forbidden` | Caller is not a Pitch Admin |
+| 404 | `not_found` | Appointment not found |
+
+---
+
+### GET /api/admin/market-segments
+
+Get all distinct market segment values from appointments.
+
+**Headers:**
+| Header | Required | Description |
+|--------|----------|-------------|
+| `Authorization` | Yes | `Bearer <access_token>` (admin) |
+
+**Query Parameters:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `user_id` | integer | - | Filter by salesperson/user ID (optional) |
+
+**Success Response (200):**
+```json
+{
+  "admin_user_id": 123,
+  "count": 5,
+  "market_segments": ["Commercial", "Government", "Residential", "Retail", "Wholesale"]
+}
+```
+
+**Success Response with `user_id` filter (200):**
+```json
+{
+  "admin_user_id": 123,
+  "count": 2,
+  "market_segments": ["Residential", "Commercial"],
+  "user_id": 45
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `admin_user_id` | integer | Authenticated admin user ID |
+| `count` | integer | Number of distinct market segments |
+| `market_segments` | array | Sorted list of market segment names (strings) |
+| `user_id` | integer | User ID filter (only present if filter was applied) |
+
+**Error Responses:**
+| Status | Error | Description |
+|--------|-------|-------------|
+| 401 | `invalid_token` | Token invalid |
+| 401 | `token_expired` | **Access token expired - call refresh endpoint** |
+| 403 | `forbidden` | Caller is not a Pitch Admin |
+
+---
+
+### GET /api/admin/salespersons
+
+List salespersons who have appointments. Returns unique salespersons, optionally filtered by market segment(s). If no `market_segment` is provided, returns all salespersons from all appointments.
+
+**Headers:**
+| Header | Required | Description |
+|--------|----------|-------------|
+| `Authorization` | Yes | `Bearer <access_token>` (admin) |
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `market_segment` | string | No | Comma-separated list of market segments to filter by. If omitted, returns all salespersons. |
+
+**Example Requests:**
+```
+GET /api/admin/salespersons
+GET /api/admin/salespersons?market_segment=Residential
+GET /api/admin/salespersons?market_segment=Residential,Commercial
+```
+
+**Success Response with filter (200):**
+```json
+{
+  "count": 3,
+  "market_segments": ["Residential", "Commercial"],
+  "salespersons": [
+    {
+      "id": 45,
+      "improveit_user_id": "I360-123",
+      "name": "Jane Smith",
+      "login": "jane@example.com"
+    },
+    {
+      "id": 67,
+      "improveit_user_id": "I360-456",
+      "name": "John Doe",
+      "login": "john@example.com"
+    },
+    {
+      "id": 89,
+      "improveit_user_id": null,
+      "name": "Bob Johnson",
+      "login": "bob@example.com"
+    }
+  ]
+}
+```
+
+**Success Response without filter (200):**
+```json
+{
+  "count": 50,
+  "market_segments": ["Commercial", "Government", "Residential", "Retail", "Wholesale"],
+  "salespersons": [
+    {
+      "id": 45,
+      "improveit_user_id": "I360-123",
+      "name": "Jane Smith",
+      "login": "jane@example.com"
+    }
+  ]
+}
+```
+
+**Empty Result Response (200):**
+```json
+{
+  "count": 0,
+  "market_segments": ["NonExistent"],
+  "salespersons": []
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `count` | integer | Number of unique salespersons |
+| `market_segments` | array | Market segments used for filtering, or all available market segments if no filter applied |
+| `salespersons` | array | List of unique salespersons (sorted by name) |
+| `salespersons[].id` | integer | User ID |
+| `salespersons[].improveit_user_id` | string/null | External user ID (Salesforce) |
+| `salespersons[].name` | string/null | User full name |
+| `salespersons[].login` | string/null | User login (email) |
+
+**Error Responses:**
+| Status | Error | Description |
+|--------|-------|-------------|
+| 401 | `invalid_token` | Token invalid |
+| 401 | `token_expired` | **Access token expired - call refresh endpoint** |
+| 403 | `forbidden` | Caller is not a Pitch Admin |
+
+---
+
+## Admin Appointment Object
+
+All admin appointment endpoints return appointments with the following structure.
+All datetime values are in UTC.
+
+**Appointment Object Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer | Appointment ID |
+| `improveit_appointment_id` | string/null | External appointment ID (Salesforce) |
+| `name` | string/null | Appointment reference number (e.g., `CAP/2025/001`) |
+| `state` | string/null | Status: `draft`, `scheduled`, `canceled`, `done` |
+| `partner_id` | integer/null | Customer partner ID |
+| `customer_name` | string/null | Customer full name |
+| `applicant_data` | object | Primary applicant information (see below) |
+| `co_applicant_data` | object | Co-applicant information (see below) |
+| `appointment_date` | string/null | Scheduled datetime (UTC) |
+| `what_happened_notes` | string/null | Notes about the appointment |
+| `appointment_result` | string/null | Result of appointment |
+| `office_location_id` | integer/null | Office location ID |
+| `office_location_name` | string/null | Office location name |
+| `app_data` | object | App version information (see below) |
+| `credit_application_url` | string/null | Credit application URL |
+| `appointment_result_details` | object | Detailed result information (see below) |
+| `user_id` | integer/null | Assigned user ID |
+| `user_data` | object | Assigned user information (see below) |
+| `measurement_exist` | boolean | Whether measurements exist |
+| `send_physical_document` | boolean | Send physical document flag |
+| `flexible_installation` | boolean | Flexible installation flag |
+| `whats_next_notes` | string/null | Next steps notes |
+| `last_price_quoted_value` | number/null | Last quoted price |
+| `market_segment` | string/null | Market segment |
+| `both_parties_present` | boolean | Both parties were present |
+| `sent_review_link` | boolean | Review link was sent |
+| `make_payment_failure` | boolean | Payment failure occurred |
+| `destination_selection_id` | integer/null | Destination selection ID |
+| `destination_selection_name` | string/null | Destination selection name |
+| `additional_comments` | string/null | Additional comments |
+| `geolocation_data` | object | GPS location data (see below) |
+| `arrival_date` | string/null | Arrival datetime (UTC) |
+| `departure_date` | string/null | Departure datetime (UTC) |
+| `manual_arrival_date` | string/null | Manual arrival datetime (UTC) |
+
+**Nested Object: `applicant_data`**
+| Field | Type | Description |
+|-------|------|-------------|
+| `applicant_first_name` | string/null | First name |
+| `applicant_middle_name` | string/null | Middle name |
+| `applicant_last_name` | string/null | Last name |
+| `applicant_address` | object | Address object with `street`, `street2`, `city`, `state_id`, `state_code`, `state_name`, `country_id`, `country_code`, `country_name`, `zip` |
+| `phone` | string/null | Phone number |
+| `mobile` | string/null | Mobile number |
+| `email` | string/null | Email address |
+
+**Nested Object: `co_applicant_data`**
+| Field | Type | Description |
+|-------|------|-------------|
+| `co_applicant` | string/null | Co-applicant full name |
+| `co_applicant_first_name` | string/null | First name |
+| `co_applicant_middle_name` | string/null | Middle name |
+| `co_applicant_last_name` | string/null | Last name |
+| `co_applicant_address` | object | Address object with `co_applicant_address`, `co_applicant_city`, `co_applicant_state_id`, `co_applicant_state_code`, `co_applicant_state_name`, `co_applicant_country_id`, `co_applicant_country_code`, `co_applicant_country_name`, `co_applicant_zip`, `co_applicant_state_code_2` |
+| `co_applicant_phone` | string/null | Phone number |
+| `co_applicant_secondary_phone` | string/null | Secondary phone number |
+| `co_applicant_email` | string/null | Email address |
+
+**Nested Object: `app_data`**
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer/null | App version ID |
+| `app_version` | string/null | App version name |
+| `app_release_date` | string/null | App release date |
+
+**Nested Object: `appointment_result_details`**
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer/null | Result reason ID |
+| `reason` | string/null | Result reason text |
+| `tags` | array/null | List of result tag names |
+
+**Nested Object: `user_data`**
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer/null | User ID |
+| `name` | string/null | User full name |
+| `login` | string/null | User login (email) |
+
+**Nested Object: `geolocation_data`**
+| Field | Type | Description |
+|-------|------|-------------|
+| `date_localization` | string/null | Localization datetime (UTC) |
+| `partner_latitude` | number/null | Latitude |
+| `partner_longitude` | number/null | Longitude |
 
 ---
 

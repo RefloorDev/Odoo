@@ -3,6 +3,7 @@
 
 Provides REST API endpoints for appointments accessible to authenticated users.
 Users can only access their own appointments.
+All date/datetime values are treated as UTC.
 
 Endpoints:
     GET /api/appointments                              - List appointments with filters
@@ -13,8 +14,9 @@ Endpoints:
 """
 
 import logging
+from datetime import datetime, time, timezone
 
-from odoo import http
+from odoo import http, fields
 from odoo.http import request
 
 from .base import json_response
@@ -41,7 +43,40 @@ class AppointmentsController(
 
     All endpoints require a valid Bearer token (JWT) in the Authorization header.
     Users can only access appointments where they are the owner or attendee.
+    All date/datetime values are treated as UTC.
     """
+
+    # =========================================================================
+    # Helper Methods
+    # =========================================================================
+
+    def _parse_date_to_utc(self, date_param, is_end_of_day=False):
+        """Parse date parameter as UTC.
+
+        Args:
+            date_param: Date string (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS).
+            is_end_of_day: If True and date-only, use 23:59:59; else 00:00:00.
+
+        Returns:
+            str: UTC datetime string, or None if no date_param.
+        """
+        if not date_param:
+            return None
+
+        try:
+            # Try datetime format first
+            try:
+                dt = datetime.strptime(date_param, '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                dt = datetime.strptime(date_param, '%Y-%m-%d')
+                time_val = time.max if is_end_of_day else time.min
+                dt = datetime.combine(dt.date(), time_val)
+
+            return fields.Datetime.to_string(dt)
+
+        except (ValueError, TypeError) as e:
+            _logger.debug("Failed to parse date '%s': %s", date_param, e)
+            return None
 
     # =========================================================================
     # Single Appointment
@@ -100,11 +135,12 @@ class AppointmentsController(
     def list_appointments(self, **kwargs):
         """List appointments with filtering and pagination.
 
+        All date/datetime values are treated as UTC.
+
         Query Parameters:
             status: Filter by status (draft, scheduled, canceled, done)
-            date_from: Filter from date (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
-            date_to: Filter to date (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
-            tz: Timezone for date conversion (default: user's tz or UTC)
+            date_from: Filter from date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
+            date_to: Filter to date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
             page: Page number (default: 1)
             per_page: Items per page (default: 200, max: 2000)
             order: Sort order (id_desc, id_asc, date_desc, date_asc)
@@ -131,25 +167,12 @@ class AppointmentsController(
         if err:
             return err
 
-        tz_name = self._parse_timezone(kwargs, user_id)
-
-        # Parse date filters
+        # Parse date filters (all dates treated as UTC)
         date_from_param = kwargs.get('date_from') or request.params.get('date_from')
         date_to_param = kwargs.get('date_to') or request.params.get('date_to')
 
-        date_from_utc, err = self._parse_date_filter(
-            date_from_param, tz_name, is_end_of_day=False,
-            user_id=user_id, param_name='date_from'
-        )
-        if err:
-            return err
-
-        date_to_utc, err = self._parse_date_filter(
-            date_to_param, tz_name, is_end_of_day=True,
-            user_id=user_id, param_name='date_to'
-        )
-        if err:
-            return err
+        date_from_utc = self._parse_date_to_utc(date_from_param, is_end_of_day=False)
+        date_to_utc = self._parse_date_to_utc(date_to_param, is_end_of_day=True)
 
         # Parse pagination
         page, per_page, err = self._parse_pagination(kwargs)
@@ -210,8 +233,6 @@ class AppointmentsController(
             filters['date_from'] = date_from_param
         if date_to_param:
             filters['date_to'] = date_to_param
-        if tz_name != 'UTC':
-            filters['tz'] = tz_name
         if filters:
             response['filters'] = filters
 
@@ -227,9 +248,10 @@ class AppointmentsController(
     def list_today_appointments(self, **kwargs):
         """List today's appointments with filtering and pagination.
 
+        Today is determined in UTC.
+
         Query Parameters:
             status: Filter by status (draft, scheduled, canceled, done)
-            tz: Timezone for determining 'today' (default: user's tz or UTC)
             page: Page number (default: 1)
             per_page: Items per page (default: 200, max: 2000)
             order: Sort order (id_desc, id_asc, date_desc, date_asc)
@@ -256,8 +278,6 @@ class AppointmentsController(
         if err:
             return err
 
-        tz_name = self._parse_timezone(kwargs, user_id)
-
         # Parse pagination
         page, per_page, err = self._parse_pagination(kwargs)
         if err:
@@ -265,8 +285,10 @@ class AppointmentsController(
 
         offset = self._calculate_offset(page, per_page)
 
-        # Get today's range
-        start_utc, end_utc, local_date, tz_name = self._get_today_range_utc(tz_name)
+        # Get today's range in UTC
+        today_utc = datetime.now(timezone.utc).date()
+        start_utc = fields.Datetime.to_string(datetime.combine(today_utc, time.min))
+        end_utc = fields.Datetime.to_string(datetime.combine(today_utc, time.max))
 
         # Build domain
         domain = [
@@ -305,8 +327,7 @@ class AppointmentsController(
         # Build response
         response = {
             'user_id': user_id,
-            'tz': tz_name,
-            'date': str(local_date),
+            'date': str(today_utc),
             'total': total,
             'count': len(appointments),
             'page': page,
