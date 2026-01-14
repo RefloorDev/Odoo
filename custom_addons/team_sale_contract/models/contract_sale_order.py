@@ -2527,7 +2527,8 @@ class SaleOrder(models.Model):
                     "MoldingType": room_line.molding_type_id and room_line.molding_type_id.name or "",
                     "Comments": comments,
                     # "MiscellaneousChargeComments": misc_charge_comments,
-                    "DeliveryOption": room_line.delivery_option or ""
+                    "DeliveryOption": room_line.delivery_option or "",
+                    "MoldingPrice": room_line.molding_total_price or 0,
                 }
                 if stair_product:
                     data.update({
@@ -2768,6 +2769,7 @@ class SaleOrder(models.Model):
                                 "Comments": comments,
                                 "MiscellaneousChargeComments": misc_charge_comments,
                                 "DeliveryOption": room_line.delivery_option or "",
+                                "MoldingPrice": room_line.molding_total_price or 0,
                             }
                             if stair_product:
                                 data.update({
@@ -3011,6 +3013,7 @@ class SaleOrder(models.Model):
                             "Comments": comments,
                             "MiscellaneousChargeComments": misc_charge_comments,
                             "DeliveryOption": room_line.delivery_option or "",
+                            "MoldingPrice": room_line.molding_total_price or 0,
                         }
                         if stair_product:
                             data.update({
