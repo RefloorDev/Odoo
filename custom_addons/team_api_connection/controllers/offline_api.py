@@ -2428,6 +2428,7 @@ class APIHomes(API_Homes):
         params = request.params.copy()
         token = params.get('token', '')
         flexible_installation = params.get('flexible_installation', 0) and int(params.get('flexible_installation', 0)) or 0
+        both_parties_present = params.get('both_parties_present', 0) and int(params.get('both_parties_present', 0)) or 0
         send_physical_document = params.get('send_physical_document', 0) and int(
             params.get('send_physical_document', 0)) or 0
         additional_comments = params.get('additional_comments', '')
@@ -2460,6 +2461,7 @@ class APIHomes(API_Homes):
                     'appointment_id': int(appointment_id),
                     'send_physical_document': send_physical_document,
                     'flexible_installation': flexible_installation,
+                    'both_parties_present': both_parties_present,
                     'additional_comments': additional_comments,
                     'recision_date': recision_date,
                     'destination_selection_id': int(destination_selection_id),
