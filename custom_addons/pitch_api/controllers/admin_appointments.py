@@ -10,6 +10,8 @@ Endpoints:
     GET /api/admin/appointments/<id>                         - Single appointment by ID
     GET /api/admin/appointments/<id>/app_screen_logs         - Screen logs for appointment
     GET /api/admin/appointments/<id>/app_live_screen_logs    - Live screen logs for appointment
+    POST /api/admin/appointments/app_live_screen_logs        - Bulk live screen logs for multiple appointments
+    GET /api/admin/appointments/analytics                    - Time analytics and metrics
     GET /api/admin/market-segments                           - List all distinct market segments
     GET /api/admin/salespersons                              - List salespersons by market segment
 
@@ -1056,6 +1058,345 @@ class AdminAppointmentsController(
             'count': len(data),
             'app_live_screen_logs': data,
         }, 200)
+
+    @http.route("/api/admin/appointments/app_live_screen_logs", auth="none", methods=["POST"], csrf=False)
+    @json_response
+    def get_bulk_live_screen_logs(self, **kwargs):
+        """Get app live screen logs for multiple appointments.
+
+        Admin-only endpoint. Returns logs for multiple appointments at once.
+        Supports pagination for the appointments list.
+
+        Request body:
+            appointment_ids: List of appointment IDs (required)
+            page: Page number (default: 1)
+            per_page: Items per page (default: 200, max: 2000)
+        """
+        _logger.info(
+            "AdminAppointments.bulk_live_logs: from=%s",
+            request.httprequest.remote_addr
+        )
+
+        # Authenticate admin
+        admin_user_id, err = self._authenticate_admin()
+        if err:
+            return err
+
+        # Parse JSON body
+        try:
+            body = request.get_json_data() if hasattr(request, 'get_json_data') else {}
+            if not body:
+                body = request.jsonrequest if hasattr(request, 'jsonrequest') else {}
+        except Exception as e:
+            _logger.debug("Failed to parse JSON body: %s", e)
+            body = {}
+
+        # Get appointment_ids from body
+        appointment_ids = body.get('appointment_ids', [])
+        if not appointment_ids:
+            _logger.warning(
+                "AdminAppointments.bulk_live_logs: Missing appointment_ids from admin_user_id=%s",
+                admin_user_id
+            )
+            return (
+                {
+                    "error": "invalid_request",
+                    "error_description": "appointment_ids is required and must be a non-empty list"
+                },
+                400
+            )
+
+        # Validate appointment_ids is a list of integers
+        if not isinstance(appointment_ids, list):
+            return (
+                {
+                    "error": "invalid_request",
+                    "error_description": "appointment_ids must be a list"
+                },
+                400
+            )
+
+        try:
+            appointment_ids = [int(aid) for aid in appointment_ids]
+        except (ValueError, TypeError):
+            return (
+                {
+                    "error": "invalid_request",
+                    "error_description": "appointment_ids must contain only integers"
+                },
+                400
+            )
+
+        # Parse pagination from body
+        page = body.get('page', 1)
+        per_page = body.get('per_page', DEFAULT_PER_PAGE)
+        try:
+            page = max(1, int(page))
+            per_page = min(max(1, int(per_page)), MAX_PER_PAGE)
+        except (ValueError, TypeError):
+            page = 1
+            per_page = DEFAULT_PER_PAGE
+
+        # Calculate pagination for appointment IDs
+        total_appointments = len(appointment_ids)
+        offset = (page - 1) * per_page
+        paginated_ids = appointment_ids[offset:offset + per_page]
+
+        # Load appointments
+        appt_model = request.env['team.customer.appointment'].sudo()
+        appointments = appt_model.browse(paginated_ids)
+
+        # Build response for each appointment
+        results = []
+        total_logs = 0
+        total_time_spent_seconds = 0
+        appointments_with_time = 0
+        
+        for appt_id in paginated_ids:
+            appointment = appointments.filtered(lambda a: a.id == appt_id)
+            logs_data = []
+            screen_entry_times = []
+            
+            if appointment.exists():
+                logs = getattr(appointment, 'app_live_screen_log_line', []) or []
+                for log in logs:
+                    try:
+                        logs_data.append(self._serialize_live_screen_log(log))
+                        # Collect screen_entry_date for time calculation
+                        entry_date = getattr(log, 'screen_entry_date', None)
+                        if entry_date:
+                            screen_entry_times.append(entry_date)
+                    except (AttributeError, TypeError) as e:
+                        _logger.debug("Failed to serialize live screen log: %s", e)
+                        continue
+            
+            # Calculate time spent based on earliest and latest screen_entry_date
+            time_spent_seconds = 0
+            if len(screen_entry_times) >= 2:
+                earliest = min(screen_entry_times)
+                latest = max(screen_entry_times)
+                time_diff = latest - earliest
+                time_spent_seconds = int(time_diff.total_seconds())
+                total_time_spent_seconds += time_spent_seconds
+                appointments_with_time += 1
+            
+            total_logs += len(logs_data)
+            results.append({
+                'appointment_id': appt_id,
+                'logs_count': len(logs_data),
+                'time_spent_seconds': time_spent_seconds,
+                'app_live_screen_logs': logs_data,
+            })
+
+        # Calculate average time spent (only for appointments that have time data)
+        average_time_spent_seconds = 0
+        if appointments_with_time > 0:
+            average_time_spent_seconds = round(total_time_spent_seconds / appointments_with_time, 2)
+
+        _logger.info(
+            "AdminAppointments.bulk_live_logs: Success admin_user_id=%s total_appointments=%s page=%s per_page=%s appointments_returned=%s total_logs=%s total_time=%s avg_time=%s",
+            admin_user_id, total_appointments, page, per_page, len(results), total_logs, total_time_spent_seconds, average_time_spent_seconds
+        )
+
+        return ({
+            'admin_user_id': admin_user_id,
+            'total_appointments': total_appointments,
+            'count': len(results),
+            'page': page,
+            'per_page': per_page,
+            'total_logs': total_logs,
+            'total_time_spent_seconds': total_time_spent_seconds,
+            'average_time_spent_seconds': average_time_spent_seconds,
+            'appointments': results,
+        }, 200)
+
+    # =========================================================================
+    # Analytics
+    # =========================================================================
+
+    @http.route("/api/admin/appointments/analytics", auth="none", methods=["GET"], csrf=False)
+    @json_response
+    def get_analytics(self, **kwargs):
+        """Get time analytics for appointments.
+
+        Admin-only endpoint. Returns aggregated time metrics for appointments
+        based on optional filters.
+
+        Query params:
+            market_segment: (optional) Comma-separated list of market segments
+            user_id: (optional) Comma-separated list of Odoo user IDs
+            improveit_user_id: (optional) Comma-separated list of Salesforce user IDs
+            date_from: (optional) Start date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
+            date_to: (optional) End date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
+        """
+        _logger.info(
+            "AdminAppointments.analytics: from=%s",
+            request.httprequest.remote_addr
+        )
+
+        # Authenticate admin
+        admin_user_id, err = self._authenticate_admin()
+        if err:
+            return err
+
+        # Parse filters
+        filters_applied = {}
+
+        # Parse market_segment (comma-separated)
+        market_segment_param = kwargs.get('market_segment') or request.params.get('market_segment')
+        market_segments = None
+        if market_segment_param:
+            market_segments = [s.strip() for s in market_segment_param.split(',') if s.strip()]
+            if market_segments:
+                filters_applied['market_segments'] = market_segments
+
+        # Parse user_id (comma-separated)
+        user_id_param = kwargs.get('user_id') or request.params.get('user_id')
+        user_ids = None
+        if user_id_param:
+            try:
+                user_ids = [int(uid.strip()) for uid in user_id_param.split(',') if uid.strip()]
+                if user_ids:
+                    filters_applied['user_ids'] = user_ids
+            except (ValueError, TypeError):
+                _logger.warning("AdminAppointments.analytics: Invalid user_id format: %s", user_id_param)
+
+        # Parse improveit_user_id (comma-separated) - resolve to Odoo user IDs
+        improveit_user_id_param = kwargs.get('improveit_user_id') or request.params.get('improveit_user_id')
+        if improveit_user_id_param and not user_ids:
+            improveit_ids = [uid.strip() for uid in improveit_user_id_param.split(',') if uid.strip()]
+            if improveit_ids:
+                user_model = request.env['res.users'].sudo()
+                resolved_users = user_model.search([('improveit_user_id', 'in', improveit_ids)])
+                if resolved_users:
+                    user_ids = resolved_users.ids
+                    filters_applied['user_ids'] = user_ids
+                    filters_applied['improveit_user_ids'] = improveit_ids
+                else:
+                    # No users found for given improveit_user_ids - return empty results
+                    _logger.info(
+                        "AdminAppointments.analytics: No users found for improveit_user_ids=%s",
+                        improveit_ids
+                    )
+                    return ({
+                        'admin_user_id': admin_user_id,
+                        'filters': {'improveit_user_ids': improveit_ids},
+                        'total_appointments': 0,
+                        'appointments_with_logs': 0,
+                        'appointments_without_logs': 0,
+                        'total_time_spent_seconds': 0,
+                        'average_time_spent_seconds': 0,
+                        'min_time_spent_seconds': 0,
+                        'max_time_spent_seconds': 0,
+                    }, 200)
+
+        # Parse date_from
+        date_from_param = kwargs.get('date_from') or request.params.get('date_from')
+        date_from = None
+        if date_from_param:
+            try:
+                try:
+                    date_from = datetime.strptime(date_from_param, '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    date_from = datetime.strptime(date_from_param, '%Y-%m-%d')
+                    date_from = datetime.combine(date_from.date(), time.min)
+                filters_applied['date_from'] = date_from_param
+            except (ValueError, TypeError):
+                _logger.warning("AdminAppointments.analytics: Invalid date_from format: %s", date_from_param)
+
+        # Parse date_to
+        date_to_param = kwargs.get('date_to') or request.params.get('date_to')
+        date_to = None
+        if date_to_param:
+            try:
+                try:
+                    date_to = datetime.strptime(date_to_param, '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    date_to = datetime.strptime(date_to_param, '%Y-%m-%d')
+                    date_to = datetime.combine(date_to.date(), time.max)
+                filters_applied['date_to'] = date_to_param
+            except (ValueError, TypeError):
+                _logger.warning("AdminAppointments.analytics: Invalid date_to format: %s", date_to_param)
+
+        # Build domain
+        domain = []
+        if market_segments:
+            if len(market_segments) == 1:
+                domain.append(('market_segment', '=', market_segments[0]))
+            else:
+                domain.append(('market_segment', 'in', market_segments))
+        if user_ids:
+            if len(user_ids) == 1:
+                domain.append(('user_id', '=', user_ids[0]))
+            else:
+                domain.append(('user_id', 'in', user_ids))
+        if date_from:
+            domain.append(('appointment_date', '>=', fields.Datetime.to_string(date_from)))
+        if date_to:
+            domain.append(('appointment_date', '<=', fields.Datetime.to_string(date_to)))
+
+        # Query appointments
+        appt_model = request.env['team.customer.appointment'].sudo()
+        appointments = appt_model.search(domain)
+
+        # Calculate time metrics
+        total_appointments = len(appointments)
+        total_time_spent_seconds = 0
+        appointments_with_logs = 0
+        appointments_without_logs = 0
+        time_spent_list = []
+
+        for appointment in appointments:
+            logs = getattr(appointment, 'app_live_screen_log_line', []) or []
+            screen_entry_times = []
+            
+            for log in logs:
+                entry_date = getattr(log, 'screen_entry_date', None)
+                if entry_date:
+                    screen_entry_times.append(entry_date)
+            
+            if len(screen_entry_times) >= 2:
+                earliest = min(screen_entry_times)
+                latest = max(screen_entry_times)
+                time_diff = latest - earliest
+                time_spent = int(time_diff.total_seconds())
+                total_time_spent_seconds += time_spent
+                time_spent_list.append(time_spent)
+                appointments_with_logs += 1
+            else:
+                appointments_without_logs += 1
+
+        # Calculate aggregates
+        average_time_spent_seconds = 0
+        min_time_spent_seconds = 0
+        max_time_spent_seconds = 0
+        
+        if time_spent_list:
+            average_time_spent_seconds = round(total_time_spent_seconds / len(time_spent_list), 2)
+            min_time_spent_seconds = min(time_spent_list)
+            max_time_spent_seconds = max(time_spent_list)
+
+        _logger.info(
+            "AdminAppointments.analytics: Success admin_user_id=%s total=%s with_logs=%s without_logs=%s total_time=%s avg_time=%s",
+            admin_user_id, total_appointments, appointments_with_logs, appointments_without_logs,
+            total_time_spent_seconds, average_time_spent_seconds
+        )
+
+        response = {
+            'admin_user_id': admin_user_id,
+            'total_appointments': total_appointments,
+            'appointments_with_logs': appointments_with_logs,
+            'appointments_without_logs': appointments_without_logs,
+            'total_time_spent_seconds': total_time_spent_seconds,
+            'average_time_spent_seconds': average_time_spent_seconds,
+            'min_time_spent_seconds': min_time_spent_seconds,
+            'max_time_spent_seconds': max_time_spent_seconds,
+        }
+        
+        if filters_applied:
+            response['filters'] = filters_applied
+
+        return (response, 200)
 
     # =========================================================================
     # Market Segments

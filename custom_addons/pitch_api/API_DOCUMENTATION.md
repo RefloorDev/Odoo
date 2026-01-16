@@ -1,8 +1,12 @@
-# Pitch API Documentation v2.3
+# Pitch API Documentation v2.4
 
 REST API for the Pitch mobile/web application.
 
-**Last Updated:** 2026-01-12
+**Last Updated:** 2026-01-16
+
+**Changes in v2.4:**
+- Added `POST /api/admin/appointments/app_live_screen_logs` endpoint for bulk live screen logs retrieval with time spent calculation
+- Added `GET /api/admin/appointments/analytics` endpoint for time analytics and metrics
 
 **Changes in v2.3:**
 - Removed `tz` parameter from all endpoints - all dates are now in UTC
@@ -50,6 +54,8 @@ REST API for the Pitch mobile/web application.
   - [GET /api/admin/appointments/{id}](#get-apiadminappointmentsid)
   - [GET /api/admin/appointments/{id}/app_screen_logs](#get-apiadminappointmentsidapp_screen_logs)
   - [GET /api/admin/appointments/{id}/app_live_screen_logs](#get-apiadminappointmentsidapp_live_screen_logs)
+  - [POST /api/admin/appointments/app_live_screen_logs](#post-apiadminappointmentsapp_live_screen_logs)
+  - [GET /api/admin/appointments/analytics](#get-apiadminappointmentsanalytics)
   - [GET /api/admin/market-segments](#get-apiadminmarket-segments)
   - [GET /api/admin/salespersons](#get-apiadminsalespersons)
 - [Users (Admin)](#users-admin)
@@ -1277,6 +1283,224 @@ Get live screen logs for an appointment (admin access).
 | 401 | `token_expired` | **Access token expired - call refresh endpoint** |
 | 403 | `forbidden` | Caller is not a Pitch Admin |
 | 404 | `not_found` | Appointment not found |
+
+---
+
+### POST /api/admin/appointments/app_live_screen_logs
+
+Get live screen logs for multiple appointments in a single request. Supports pagination for handling large numbers of appointments. Calculates time spent per appointment based on earliest and latest screen entry times.
+
+**Headers:**
+| Header | Required | Description |
+|--------|----------|-------------|
+| `Authorization` | Yes | `Bearer <access_token>` (admin) |
+| `Content-Type` | Yes | `application/json` |
+
+**Request Body:**
+```json
+{
+  "appointment_ids": [123, 456, 789, ...],
+  "page": 1,
+  "per_page": 200
+}
+```
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `appointment_ids` | array | Yes | - | List of appointment IDs to fetch logs for |
+| `page` | integer | No | 1 | Page number (1-based) for appointment list pagination |
+| `per_page` | integer | No | 200 | Appointments per page (max: 2000) |
+
+**Success Response (200):**
+```json
+{
+  "admin_user_id": 123,
+  "total_appointments": 5000,
+  "count": 200,
+  "page": 1,
+  "per_page": 200,
+  "total_logs": 1547,
+  "total_time_spent_seconds": 86400,
+  "average_time_spent_seconds": 432.5,
+  "appointments": [
+    {
+      "appointment_id": 456,
+      "logs_count": 5,
+      "time_spent_seconds": 300,
+      "app_live_screen_logs": [
+        {
+          "id": 1,
+          "name": "Welcome Screen",
+          "screen_entry_date": "2025-01-15 14:05:00",
+          "user_id": 789
+        },
+        {
+          "id": 2,
+          "name": "Product Selection",
+          "screen_entry_date": "2025-01-15 14:10:00",
+          "user_id": 789
+        }
+      ]
+    },
+    {
+      "appointment_id": 789,
+      "logs_count": 0,
+      "time_spent_seconds": 0,
+      "app_live_screen_logs": []
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `admin_user_id` | integer | Authenticated admin user ID |
+| `total_appointments` | integer | Total number of appointment IDs provided |
+| `count` | integer | Number of appointments in current page |
+| `page` | integer | Current page number |
+| `per_page` | integer | Appointments per page |
+| `total_logs` | integer | Total logs returned across all appointments in this page |
+| `total_time_spent_seconds` | integer | Sum of time spent across all appointments in this page |
+| `average_time_spent_seconds` | number | Average time spent per appointment (only counts appointments with 2+ logs) |
+| `appointments` | array | List of appointments with their logs |
+| `appointments[].appointment_id` | integer | Appointment ID |
+| `appointments[].logs_count` | integer | Number of logs for this appointment |
+| `appointments[].time_spent_seconds` | integer | Time spent on appointment (earliest to latest `screen_entry_date`) |
+| `appointments[].app_live_screen_logs` | array | List of live screen logs |
+| `appointments[].app_live_screen_logs[].id` | integer | Log entry ID |
+| `appointments[].app_live_screen_logs[].name` | string | Screen name |
+| `appointments[].app_live_screen_logs[].screen_entry_date` | string | Screen entry datetime (UTC) |
+| `appointments[].app_live_screen_logs[].user_id` | integer | User ID |
+
+**Notes:**
+- Appointments that don't exist are included in the response with empty `app_live_screen_logs: []` and `time_spent_seconds: 0`
+- `time_spent_seconds` is calculated as the difference between earliest and latest `screen_entry_date` in seconds
+- Appointments with 0 or 1 log have `time_spent_seconds: 0` (need at least 2 entries to calculate time)
+- `average_time_spent_seconds` only includes appointments that have time data (2+ logs)
+- Pagination applies to the list of appointment IDs, not the logs themselves
+- Designed to handle tens of thousands of appointment IDs efficiently
+
+**Error Responses:**
+| Status | Error | Description |
+|--------|-------|-------------|
+| 400 | `invalid_request` | `appointment_ids` is required, must be a non-empty list of integers |
+| 401 | `invalid_token` | Token invalid |
+| 401 | `token_expired` | **Access token expired - call refresh endpoint** |
+| 403 | `forbidden` | Caller is not a Pitch Admin |
+
+---
+
+### GET /api/admin/appointments/analytics
+
+Get aggregated time analytics and metrics for appointments. Calculates total time spent, average time, min/max times based on live screen logs. All filters are optional - if not provided, analyzes all appointments.
+
+**Headers:**
+| Header | Required | Description |
+|--------|----------|-------------|
+| `Authorization` | Yes | `Bearer <access_token>` (admin) |
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `market_segment` | string | No | Comma-separated list of market segments |
+| `user_id` | string | No | Comma-separated list of Odoo user IDs |
+| `improveit_user_id` | string | No | Comma-separated list of Salesforce user IDs (resolved to Odoo user IDs) |
+| `date_from` | string | No | Start date in UTC: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS` |
+| `date_to` | string | No | End date in UTC: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS` |
+
+*Note: If both `user_id` and `improveit_user_id` are provided, `user_id` takes priority.*
+
+**Example Requests:**
+```
+GET /api/admin/appointments/analytics
+GET /api/admin/appointments/analytics?market_segment=Residential,Commercial
+GET /api/admin/appointments/analytics?user_id=45,67,89
+GET /api/admin/appointments/analytics?improveit_user_id=I360-123,I360-456
+GET /api/admin/appointments/analytics?date_from=2025-01-01&date_to=2025-01-31
+GET /api/admin/appointments/analytics?market_segment=Residential&user_id=45&date_from=2025-01-01
+```
+
+**Success Response (200):**
+```json
+{
+  "admin_user_id": 123,
+  "total_appointments": 500,
+  "appointments_with_logs": 450,
+  "appointments_without_logs": 50,
+  "total_time_spent_seconds": 162000,
+  "average_time_spent_seconds": 360.0,
+  "min_time_spent_seconds": 60,
+  "max_time_spent_seconds": 3600,
+  "filters": {
+    "market_segments": ["Residential", "Commercial"],
+    "user_ids": [45, 67],
+    "date_from": "2025-01-01",
+    "date_to": "2025-01-31"
+  }
+}
+```
+
+**Success Response with improveit_user_id (200):**
+```json
+{
+  "admin_user_id": 123,
+  "total_appointments": 100,
+  "appointments_with_logs": 95,
+  "appointments_without_logs": 5,
+  "total_time_spent_seconds": 36000,
+  "average_time_spent_seconds": 378.95,
+  "min_time_spent_seconds": 120,
+  "max_time_spent_seconds": 1800,
+  "filters": {
+    "user_ids": [45, 67],
+    "improveit_user_ids": ["I360-123", "I360-456"]
+  }
+}
+```
+
+**Success Response with no filters (200):**
+```json
+{
+  "admin_user_id": 123,
+  "total_appointments": 10000,
+  "appointments_with_logs": 9500,
+  "appointments_without_logs": 500,
+  "total_time_spent_seconds": 3420000,
+  "average_time_spent_seconds": 360.0,
+  "min_time_spent_seconds": 30,
+  "max_time_spent_seconds": 7200
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `admin_user_id` | integer | Authenticated admin user ID |
+| `total_appointments` | integer | Total number of appointments matching filters |
+| `appointments_with_logs` | integer | Appointments with 2+ logs (time can be calculated) |
+| `appointments_without_logs` | integer | Appointments with 0-1 logs (time cannot be calculated) |
+| `total_time_spent_seconds` | integer | Sum of time spent across all appointments with logs |
+| `average_time_spent_seconds` | number | Average time spent per appointment (only counts appointments with 2+ logs) |
+| `min_time_spent_seconds` | integer | Minimum time spent on a single appointment |
+| `max_time_spent_seconds` | integer | Maximum time spent on a single appointment |
+| `filters` | object | Applied filters (only present if any filter was applied) |
+| `filters.market_segments` | array | Market segments filter |
+| `filters.user_ids` | array | Odoo user IDs filter |
+| `filters.improveit_user_ids` | array | Original Salesforce user IDs (when resolved to Odoo IDs) |
+| `filters.date_from` | string | Start date filter |
+| `filters.date_to` | string | End date filter |
+
+**Notes:**
+- Time spent is calculated as the difference between earliest and latest `screen_entry_date` for each appointment
+- Appointments with 0 or 1 log are counted as `appointments_without_logs` (need at least 2 entries to calculate time)
+- When `improveit_user_id` is provided, the system resolves it to Odoo user IDs and filters by those
+- If no matching users are found for `improveit_user_id`, returns empty results with count 0
+
+**Error Responses:**
+| Status | Error | Description |
+|--------|-------|-------------|
+| 401 | `invalid_token` | Token invalid |
+| 401 | `token_expired` | **Access token expired - call refresh endpoint** |
+| 403 | `forbidden` | Caller is not a Pitch Admin |
 
 ---
 
