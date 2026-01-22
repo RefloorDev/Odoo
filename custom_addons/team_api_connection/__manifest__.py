@@ -12,7 +12,8 @@
         'data/cron_improveit_api.xml',
         'data/email_template_data.xml',
         'views/appointment_api_configuration.xml',
-        'views/appointment_view.xml'
+        'wizard/change_improveit_appointment_wizard_views.xml',
+        'views/appointment_view.xml',
     ],
     'qweb': [
         ],

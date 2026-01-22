@@ -1,18 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- ===================================================================
+         Refresh Token Views
+         Manage device-bound refresh tokens for API sessions
+    ==================================================================== -->
 
     <record id="view_pitch_api_refresh_token_list" model="ir.ui.view">
         <field name="name">auth.refresh.token.list</field>
         <field name="model">auth.refresh.token</field>
         <field name="arch" type="xml">
-            <list string="API Devices">
+            <list string="API Devices" decoration-muted="revoked == True">
                 <field name="user_id"/>
                 <field name="device_id"/>
                 <field name="device_name"/>
+                <field name="ip_address"/>
                 <field name="created_on"/>
                 <field name="expires_on"/>
                 <field name="last_used"/>
-                <field name="revoked"/>
+                <field name="use_count"/>
+                <field name="revoked" widget="boolean"/>
+                <field name="revocation_reason" optional="hide"/>
             </list>
         </field>
     </record>
@@ -22,22 +29,35 @@
         <field name="model">auth.refresh.token</field>
         <field name="arch" type="xml">
             <form string="API Device">
+                <header>
+                    <field name="revoked" widget="statusbar" statusbar_visible="False,True"/>
+                </header>
                 <sheet>
+                    <div class="oe_title">
+                        <h1><field name="device_name" placeholder="Device Name"/></h1>
+                    </div>
                     <group>
-                        <field name="user_id"/>
-                        <field name="device_id"/>
-                        <field name="device_name"/>
-                        <field name="client_info"/>
-                        <field name="ip_address"/>
+                        <group string="Token Details">
+                            <field name="user_id"/>
+                            <field name="device_id"/>
+                            <field name="token_family"/>
+                        </group>
+                        <group string="Client Information">
+                            <field name="client_info"/>
+                            <field name="ip_address"/>
+                        </group>
                     </group>
                     <group>
-                        <field name="created_on"/>
-                        <field name="expires_on"/>
-                        <field name="last_used"/>
-                        <field name="use_count"/>
-                        <field name="revoked"/>
-                        <field name="revocation_reason"/>
-                        <field name="token_family"/>
+                        <group string="Timestamps">
+                            <field name="created_on"/>
+                            <field name="expires_on"/>
+                            <field name="last_used"/>
+                        </group>
+                        <group string="Usage &amp; Status">
+                            <field name="use_count"/>
+                            <field name="revoked"/>
+                            <field name="revocation_reason" invisible="not revoked"/>
+                        </group>
                     </group>
                 </sheet>
             </form>

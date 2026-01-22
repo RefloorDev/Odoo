@@ -110,6 +110,7 @@ class ResCompany(models.Model):
             appointments = self.env['team.customer.appointment'].search([
                 ('appointment_date', '<=', date_delete_appointment),
                 ('state', '=', 'done'),
+                ('related_attachment_ids', '!=', False),
             ])
             count = 1
             for appointment in appointments:
@@ -140,7 +141,7 @@ class ResCompany(models.Model):
                             room_measure.protrusion_image_ids.unlink()
                         if room_measure.shape_image_id:
                             room_measure.shape_image_id.unlink()
-            self.env['ir.autovacuum'].sudo().power_on()
+            self.env['ir.autovacuum'].sudo()._run_vacuum_cleaner()
 
     def get_attachment_file_path(self, attachment_id):
         file_path = ''
@@ -195,46 +196,54 @@ class ResCompany(models.Model):
                     ])
                     for order in orders:
                         appointment = order.appointment_id or False
+                        appointment_name = ''
                         if appointment:
                             appointment_date = appointment.appointment_date.strftime('%d%b%Y')
                             appointment_name = appointment.improveit_appointment_id or appointment.name
                             _logger.info('Start Processing Cloud Upload. Appointment:%s, Sale Order: %s'%(appointment_name, order.name))
                             for attachment in appointment.attachment_ids:
-                                destination_blob_name = snapshot_path.format(date=appointment_date, appointment=appointment_name) + '/%s'%attachment.name
+                                attachment_name = attachment.name.replace(" ", "_").replace(":", "_")
+                                destination_blob_name = snapshot_path.format(date=appointment_date, appointment=appointment_name) + '/%s'%attachment_name
                                 self.action_upload_file_to_cloud_storage(attachment, bucket, destination_blob_name=destination_blob_name)
                             if appointment.applicant_signature_id:
+                                attachment_name = appointment.applicant_signature_id.name.replace(" ", "_").replace(":", "_")
                                 destination_blob_name = signature_path.format(date=appointment_date,
-                                                                             appointment=appointment_name) + '/%s' % appointment.applicant_signature_id.name
+                                                                             appointment=appointment_name) + '/%s' % attachment_name
                                 self.action_upload_file_to_cloud_storage(appointment.applicant_signature_id, bucket,
                                                                          destination_blob_name=destination_blob_name)
                             if appointment.applicant_initial_id:
+                                attachment_name = appointment.applicant_initial_id.name.replace(" ", "_").replace(":", "_")
                                 destination_blob_name = signature_path.format(date=appointment_date,
-                                                                             appointment=appointment_name) + '/%s' % appointment.applicant_initial_id.name
+                                                                             appointment=appointment_name) + '/%s' % attachment_name
                                 self.action_upload_file_to_cloud_storage(appointment.applicant_initial_id, bucket,
                                                                          destination_blob_name=destination_blob_name)
                             if appointment.co_applicant_signature_id:
+                                attachment_name = appointment.co_applicant_signature_id.name.replace(" ", "_").replace(":", "_")
                                 destination_blob_name = signature_path.format(date=appointment_date,
-                                                                             appointment=appointment_name) + '/%s' % appointment.co_applicant_signature_id.name
+                                                                             appointment=appointment_name) + '/%s' % attachment_name
                                 self.action_upload_file_to_cloud_storage(appointment.co_applicant_signature_id, bucket,
                                                                          destination_blob_name=destination_blob_name)
                             if appointment.co_applicant_initial_id:
+                                attachment_name = appointment.co_applicant_initial_id.name.replace(" ", "_").replace(":", "_")
                                 destination_blob_name = signature_path.format(date=appointment_date,
-                                                                             appointment=appointment_name) + '/%s' % appointment.co_applicant_initial_id.name
+                                                                             appointment=appointment_name) + '/%s' % attachment_name
                                 self.action_upload_file_to_cloud_storage(appointment.co_applicant_initial_id, bucket,
                                                                         destination_blob_name=destination_blob_name)
                             credit_applications = self.env['team.credit.application'].search(
                                 [('appointment_id', '=', appointment.id)])
                             for credit_application in credit_applications:
                                 if credit_application.attachment_id:
+                                    attachment_name = credit_application.attachment_id.name.replace(" ", "_").replace(":", "_")
                                     destination_blob_name = document_path.format(date=appointment_date,
-                                                                                  appointment=appointment_name) + '/%s' % credit_application.attachment_id.name
+                                                                                  appointment=appointment_name) + '/%s' % attachment_name
                                     self.action_upload_file_to_cloud_storage(credit_application.attachment_id,
                                                                              bucket,
                                                                              destination_blob_name=destination_blob_name)
                             if order.contract_doc_attachment_id:
                                 _logger.info('Starting Contract Document Cloud Upload. Appointment:%s, Sale Order: %s' % (appointment_name, order.name))
+                                attachment_name = order.contract_doc_attachment_id.name.replace(" ", "_").replace(":", "_")
                                 destination_blob_name = document_path.format(date=appointment_date,
-                                                                             appointment=appointment_name) + '/%s' % order.contract_doc_attachment_id.name
+                                                                             appointment=appointment_name) + '/%s' % attachment_name
                                 self.action_upload_file_to_cloud_storage(order.contract_doc_attachment_id,
                                                                          bucket,
                                                                          destination_blob_name=destination_blob_name)
@@ -246,26 +255,29 @@ class ResCompany(models.Model):
                                     room_name, appointment_name, order.name))
                                 if room_measure.attachment_ids:
                                     for attachment in room_measure.attachment_ids:
+                                        attachment_name = attachment.name.replace(" ", "_").replace(":", "_")
                                         destination_blob_name = room_path.format(date=appointment_date, room_name= room_name,
-                                                                                     appointment=appointment_name) + '/%s' % attachment.name
+                                                                                     appointment=appointment_name) + '/%s' % attachment_name
                                         self.action_upload_file_to_cloud_storage(attachment, bucket,
                                                                                  destination_blob_name=destination_blob_name)
 
                                 if room_measure.protrusion_image_ids:
                                     for attachment in room_measure.protrusion_image_ids:
+                                        attachment_name = attachment.name.replace(" ", "_").replace(":", "_")
                                         destination_blob_name = room_anomaly_path.format(date=appointment_date,
                                                                                          room_name=room_name,
-                                                                                         appointment=appointment_name) + '/%s' % attachment.name
+                                                                                         appointment=appointment_name) + '/%s' % attachment_name
                                         self.action_upload_file_to_cloud_storage(attachment, bucket,
                                                                                  destination_blob_name=destination_blob_name)
                                 if room_measure.shape_image_id:
+                                    attachment_name = room_measure.shape_image_id.name.replace(" ", "_").replace(":", "_")
                                     destination_blob_name = room_measurement_path.format(date=appointment_date, room_name=room_name,
-                                                                             appointment=appointment_name) + '/%s' % room_measure.shape_image_id.name
+                                                                             appointment=appointment_name) + '/%s' % attachment_name
                                     self.action_upload_file_to_cloud_storage(room_measure.shape_image_id, bucket,
                                                                              destination_blob_name=destination_blob_name)
                         order.write({'synced_to_cloud_storage': True})
                         _logger.info('Completed Processing Cloud Upload. Appointment:%s, Sale Order: %s'%(appointment_name, order.name))
-        self.env['ir.autovacuum'].sudo().power_on()
+        self.env['ir.autovacuum'].sudo()._run_vacuum_cleaner()
         return True
 
 
@@ -283,6 +295,7 @@ class ExternalApplicationCredentials(models.Model):
                                         default='versatile', required=True)
     location_based = fields.Boolean("Location Based Entity Key",default=False)
     location_entity_line = fields.One2many('otl.location.entity.key.line', 'external_application_id', string="Location Based Entity Key")
+    office_location_ids = fields.Many2many('otl.office.location', string='Available Market Segments')
 
     def action_generate_versatile_user_token(self):
         for record in self:
@@ -632,6 +645,55 @@ class IRAttachment(models.Model):
     _inherit = 'ir.attachment'
 
     improveit_id = fields.Char('Improveit Reference ID')
+
+    def unlink(self):
+        # Try to delete corresponding blob from Google Cloud Storage before unlinking attachment records
+        google_auth_attachment_id = self.env['ir.config_parameter'].sudo().get_param(
+            'team_sale_contract.google_auth_attachment_id') or False
+        google_bucket_name = self.env['ir.config_parameter'].sudo().get_param(
+            'team_sale_contract.google_bucket_name') or ''
+
+        if google_auth_attachment_id and google_bucket_name:
+            try:
+                auth_attach = self.env['ir.attachment'].browse(int(google_auth_attachment_id))
+                if auth_attach and auth_attach.store_fname:
+                    auth_file = auth_attach._full_path(auth_attach.store_fname)
+                    credentials = service_account.Credentials.from_service_account_file(auth_file)
+                    storage_client = storage.Client(credentials=credentials)
+                    bucket = storage_client.bucket(google_bucket_name)
+                    for attachment in self:
+                        if attachment.type == 'url' and attachment.url:
+                            try:
+                                url = attachment.url
+                                blob_name = None
+                                # Common GCS public URL patterns handling
+                                if google_bucket_name in url:
+                                    parts = url.split(google_bucket_name + '/')
+                                    if len(parts) > 1:
+                                        blob_name = parts[1]
+                                # if not blob_name:
+                                #     for marker in ('storage.googleapis.com/', 'storage.cloud.google.com/',
+                                #                    '.storage.googleapis.com/'):
+                                #         if marker in url:
+                                #             parts = url.split(marker)
+                                #             if len(parts) > 1:
+                                #                 blob_name = parts[1]
+                                #                 break
+                                if blob_name:
+                                    blob = bucket.blob(blob_name)
+                                    try:
+                                        blob.delete()
+                                        _logger.info('Deleted cloud blob %s from bucket %s for attachment %s',
+                                                     blob_name, google_bucket_name, attachment.id)
+                                    except Exception:
+                                        _logger.exception('Failed to delete cloud blob %s for attachment %s',
+                                                          blob_name, attachment.id)
+                            except Exception:
+                                _logger.exception('Error processing attachment %s for cloud deletion', attachment.id)
+            except Exception:
+                _logger.exception('Failed to initialize Google Cloud Storage client for attachment deletion')
+
+        return super(IRAttachment, self).unlink()
 
 
 class OfficeLocation(models.Model):

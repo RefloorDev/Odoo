@@ -2527,7 +2527,8 @@ class SaleOrder(models.Model):
                     "MoldingType": room_line.molding_type_id and room_line.molding_type_id.name or "",
                     "Comments": comments,
                     # "MiscellaneousChargeComments": misc_charge_comments,
-                    "DeliveryOption": room_line.delivery_option or ""
+                    "DeliveryOption": room_line.delivery_option or "",
+                    "MoldingPrice": room_line.molding_total_price or 0,
                 }
                 if stair_product:
                     data.update({
@@ -2768,6 +2769,7 @@ class SaleOrder(models.Model):
                                 "Comments": comments,
                                 "MiscellaneousChargeComments": misc_charge_comments,
                                 "DeliveryOption": room_line.delivery_option or "",
+                                "MoldingPrice": room_line.molding_total_price or 0,
                             }
                             if stair_product:
                                 data.update({
@@ -3011,6 +3013,7 @@ class SaleOrder(models.Model):
                             "Comments": comments,
                             "MiscellaneousChargeComments": misc_charge_comments,
                             "DeliveryOption": room_line.delivery_option or "",
+                            "MoldingPrice": room_line.molding_total_price or 0,
                         }
                         if stair_product:
                             data.update({
@@ -4117,9 +4120,9 @@ class SaleOrder(models.Model):
                     elif "Errors" in content:
                         return content.get('Errors', {})
 
-        except IOError:
+        except Exception as e:
             pass
-            _logger.error("******--------Error in update_destination_selection_in_i360 API---------********")
+            _logger.error("******--------Error in update_destination_selection_in_i360 API---------********: %s"%e)
             result.update({"success": "false"})
         return result
 

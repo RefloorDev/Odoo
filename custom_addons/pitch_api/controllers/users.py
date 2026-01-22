@@ -1,94 +1,54 @@
-import base64
-import json
+# -*- coding: utf-8 -*-
+"""Users API Controller.
+
+Provides REST API endpoints for user management (admin-only).
+
+Endpoints:
+    GET /api/users                      - List all users
+    GET /api/users/<id>                 - Get user by ID
+    GET /api/users/lookup               - Lookup user by ID or login
+    GET /api/users/exists               - Check if user exists
+    GET /api/users/<id>/groups          - Get groups for a user
+    GET /api/users/groups               - Get groups for multiple users
+"""
+
 import logging
 
 from odoo import http, fields
 from odoo.http import request
 
-from .base import json_response, _ensure_secret, mask_token
-from .auth import PitchApiAuthController
-
-try:
-    import jwt
-except Exception:
-    jwt = None
+from .base import json_response
+from .mixins import AuthenticationMixin
 
 _logger = logging.getLogger(__name__)
 
 
-class PitchApiUsersController(http.Controller):
-    """Users API endpoints (admin-only)."""
+class UsersController(http.Controller, AuthenticationMixin):
+    """REST API controller for user management endpoints.
 
-    # --- Helpers ---------------------------------------------------------
-    def _extract_bearer_token(self):
-        auth_hdr = request.httprequest.headers.get('Authorization') or request.httprequest.headers.get('authorization')
-        if not auth_hdr:
-            _logger.warning("users._extract_bearer_token: missing Authorization header from %s", request.httprequest.remote_addr)
-            return None, ({"error": "invalid_request", "error_description": "Authorization header with bearer token required"}, 400)
-        parts = auth_hdr.split()
-        if len(parts) != 2 or parts[0].lower() != 'bearer':
-            _logger.warning("users._extract_bearer_token: malformed Authorization header from %s: %s", request.httprequest.remote_addr, auth_hdr)
-            return None, ({"error": "invalid_request", "error_description": "Authorization header must be 'Bearer <token>'"}, 400)
-        try:
-            _logger.debug("users._extract_bearer_token: token provided from %s token=%s", request.httprequest.remote_addr, mask_token(parts[1]))
-        except Exception:
-            pass
-        return parts[1], None
+    All endpoints require a valid Bearer token (JWT) in the Authorization header
+    and the authenticated user must have `is_pitch_admin=True`.
+    """
 
-    def _resolve_user_from_access_token(self, token):
-        if not token or token.count('.') != 2:
-            _logger.warning("users._resolve_user_from_access_token: invalid token format from %s", request.httprequest.remote_addr)
-            return None, ({"error": "invalid_request", "error_description": "access token (JWT) required in Authorization header"}, 400)
+    # =========================================================================
+    # Helper Methods
+    # =========================================================================
 
-        auth_ctrl = PitchApiAuthController()
-        intros = auth_ctrl._introspect_access_token(token)
-        if not intros.get('active'):
-            _logger.warning("users._resolve_user_from_access_token: introspect failed reason=%s from %s", intros.get('reason', 'invalid'), request.httprequest.remote_addr)
-            return None, ({"error": "invalid_token", "error_description": intros.get('reason', 'invalid')}, 401)
-
-        try:
-            secret = _ensure_secret(request.env)
-        except Exception:
-            secret = None
-
-        uid = None
-        if jwt is not None and secret is not None:
-            try:
-                claims = jwt.decode(token, secret, algorithms=["HS256"], options={"verify_exp": False, "verify_aud": False})
-                uid = claims.get('uid') or claims.get('sub')
-            except Exception:
-                uid = None
-
-        if uid is None:
-            try:
-                _h, payload_b64, _s = token.split('.')
-                payload_json = base64.urlsafe_b64decode(payload_b64 + '=' * (-len(payload_b64) % 4))
-                payload = json.loads(payload_json)
-                uid = payload.get('uid') or payload.get('sub')
-            except Exception:
-                uid = None
-
-        try:
-            uid = int(uid) if uid is not None else None
-        except Exception:
-            uid = None
-
-        if not uid:
-            _logger.warning("users._resolve_user_from_access_token: could not determine uid from token from %s", request.httprequest.remote_addr)
-            return None, ({"error": "invalid_request", "error_description": "could not determine user from token"}, 400)
-        return uid, None
-
-    def _fmt_datetime(self, dt):
+    def _format_datetime(self, dt):
+        """Format datetime to string."""
         try:
             return fields.Datetime.to_string(dt) if dt else None
-        except Exception:
+        except (TypeError, ValueError) as e:
+            _logger.debug("Failed to format datetime: %s", e)
             return str(dt) if dt else None
 
     def _serialize_user(self, user):
+        """Serialize a user record to a dictionary."""
         try:
             company_id = getattr(user.company_id, 'id', None) if getattr(user, 'company_id', None) else None
             company_name = getattr(user.company_id, 'name', None) if getattr(user, 'company_id', None) else None
-        except Exception:
+        except (AttributeError, TypeError) as e:
+            _logger.debug("Failed to serialize user company: %s", e)
             company_id = None
             company_name = None
 
@@ -100,7 +60,7 @@ class PitchApiUsersController(http.Controller):
             'tz': getattr(user, 'tz', None),
             'company_id': company_id,
             'company_name': company_name,
-            'login_date': self._fmt_datetime(getattr(user, 'login_date', None)),
+            'login_date': self._format_datetime(getattr(user, 'login_date', None)),
             'is_pitch_admin': bool(getattr(user, 'is_pitch_admin', False)),
             'improveit_user_id': getattr(user, 'improveit_user_id', None),
         }
@@ -113,7 +73,10 @@ class PitchApiUsersController(http.Controller):
             xml_map = {}
             try:
                 xml_map = groups.get_external_id()
-            except Exception:
+            except AttributeError:
+                xml_map = {}
+            except Exception as e:
+                _logger.debug("Failed to get external IDs for groups: %s", e)
                 xml_map = {}
             for g in groups:
                 try:
@@ -124,45 +87,41 @@ class PitchApiUsersController(http.Controller):
                         'category_id': getattr(g.category_id, 'id', None) if getattr(g, 'category_id', None) else None,
                         'category_name': getattr(g.category_id, 'name', None) if getattr(g, 'category_id', None) else None,
                     })
-                except Exception:
+                except (AttributeError, TypeError) as e:
+                    _logger.debug("Failed to serialize group %s: %s", getattr(g, 'id', 'unknown'), e)
                     continue
-        except Exception:
+        except Exception as e:
+            _logger.debug("Failed to serialize user groups: %s", e)
             groups_out = []
         return groups_out
 
-    # --- Routes ----------------------------------------------------------
+    # =========================================================================
+    # List Users
+    # =========================================================================
+
     @http.route("/api/users", auth="none", methods=["GET"], csrf=False)
     @json_response
     def list_users(self, **kwargs):
         """List all users (admin-only).
 
-        Security:
-        - Requires a valid Bearer access token in Authorization header.
-        - The requesting user must be a Pitch API Admin (is_pitch_admin=True).
-
         Query params (optional):
-        - active: 'true'|'false'|'all' (default 'all')
-          - 'true': only active users
-          - 'false': only inactive users
-          - 'all': both active and inactive users
+            active: 'true'|'false'|'all' (default: 'all')
+                - 'true': only active users
+                - 'false': only inactive users
+                - 'all': both active and inactive users
         """
-        token, err = self._extract_bearer_token()
-        if err:
-            return err
-        uid, err = self._resolve_user_from_access_token(token)
+        _logger.info("Users.list: from=%s", request.httprequest.remote_addr)
+
+        # Authenticate admin
+        admin_user_id, err = self._authenticate_admin()
         if err:
             return err
 
-        admin_user = request.env['res.users'].sudo().browse(uid)
-        if not getattr(admin_user, 'is_pitch_admin', False):
-            _logger.warning("users.list_users: forbidden for user_id=%s (not pitch admin)", uid)
-            return ({"error": "forbidden", "error_description": "Pitch API admin required"}, 403)
-
+        # Parse active filter
         active_param = kwargs.get('active') or request.params.get('active')
-        
         user_model = request.env['res.users'].sudo()
         domain = []
-        
+
         if active_param is not None:
             active_param = active_param.strip().lower()
             if active_param in ('true', '1', 'yes'):
@@ -170,77 +129,91 @@ class PitchApiUsersController(http.Controller):
             elif active_param in ('false', '0', 'no'):
                 domain.append(('active', '=', False))
             else:
-                # If active param provided but not true/false, get both
                 user_model = user_model.with_context(active_test=False)
         else:
-            # No active param provided - get all users (active and inactive)
             user_model = user_model.with_context(active_test=False)
-        
+
+        # Query users
         users = user_model.search(domain, order='id asc')
         data = [self._serialize_user(u) for u in users]
 
+        _logger.info("Users.list: count=%s admin_user_id=%s", len(data), admin_user_id)
+
         return ({
-            'admin_user_id': uid,
+            'admin_user_id': admin_user_id,
             'count': len(data),
             'active_filter': active_param if active_param else 'all',
             'users': data,
         }, 200)
 
+    # =========================================================================
+    # Get User by ID
+    # =========================================================================
+
     @http.route("/api/users/<int:user_id>", auth="none", methods=["GET"], csrf=False)
     @json_response
-    def get_user_by_id(self, user_id, **kwargs):
-        """Get a single user's info by id (admin-only)."""
-        token, err = self._extract_bearer_token()
-        if err:
-            return err
-        uid, err = self._resolve_user_from_access_token(token)
+    def get_user(self, user_id, **kwargs):
+        """Get a single user by ID (admin-only)."""
+        _logger.info("Users.get: user_id=%s from=%s", user_id, request.httprequest.remote_addr)
+
+        # Authenticate admin
+        admin_user_id, err = self._authenticate_admin()
         if err:
             return err
 
-        admin_user = request.env['res.users'].sudo().browse(uid)
-        if not getattr(admin_user, 'is_pitch_admin', False):
-            return ({"error": "forbidden", "error_description": "Pitch API admin required"}, 403)
-
+        # Load user
         user = request.env['res.users'].sudo().browse(user_id)
         if not user.exists():
+            _logger.warning("Users.get: Not found user_id=%s admin_user_id=%s", user_id, admin_user_id)
             return ({"error": "not_found", "error_description": "user not found"}, 404)
+
+        _logger.info("Users.get: Success user_id=%s admin_user_id=%s", user_id, admin_user_id)
         return (self._serialize_user(user), 200)
+
+    # =========================================================================
+    # Lookup User
+    # =========================================================================
 
     @http.route("/api/users/lookup", auth="none", methods=["GET"], csrf=False)
     @json_response
     def lookup_user(self, **kwargs):
-        """Lookup a user by id or login (admin-only).
+        """Lookup a user by ID or login (admin-only).
 
         Query params: user_id=<int> or login=<string>
         """
-        token, err = self._extract_bearer_token()
-        if err:
-            return err
-        uid, err = self._resolve_user_from_access_token(token)
+        _logger.info("Users.lookup: from=%s", request.httprequest.remote_addr)
+
+        # Authenticate admin
+        admin_user_id, err = self._authenticate_admin()
         if err:
             return err
 
-        admin_user = request.env['res.users'].sudo().browse(uid)
-        if not getattr(admin_user, 'is_pitch_admin', False):
-            return ({"error": "forbidden", "error_description": "Pitch API admin required"}, 403)
-
-        user = None
+        # Parse lookup parameters
         user_id_param = kwargs.get('user_id') or request.params.get('user_id')
         login_param = kwargs.get('login') or request.params.get('login')
 
+        user = None
         if user_id_param:
             try:
                 user_id_val = int(user_id_param)
                 usr = request.env['res.users'].sudo().browse(user_id_val)
                 user = usr if usr.exists() else None
-            except Exception:
+            except (ValueError, TypeError) as e:
+                _logger.debug("Invalid user_id parameter: %s", e)
                 user = None
         elif login_param:
             user = request.env['res.users'].sudo().search([('login', '=', login_param)], limit=1)
 
         if not user:
+            _logger.warning("Users.lookup: Not found admin_user_id=%s", admin_user_id)
             return ({"error": "not_found", "error_description": "user not found"}, 404)
+
+        _logger.info("Users.lookup: Found user_id=%s admin_user_id=%s", user.id, admin_user_id)
         return (self._serialize_user(user), 200)
+
+    # =========================================================================
+    # Check User Exists
+    # =========================================================================
 
     @http.route("/api/users/exists", auth="none", methods=["GET"], csrf=False)
     @json_response
@@ -250,57 +223,61 @@ class PitchApiUsersController(http.Controller):
         Query params: user_id=<int> or login=<string>
         Returns: { exists: true|false }
         """
-        token, err = self._extract_bearer_token()
-        if err:
-            return err
-        uid, err = self._resolve_user_from_access_token(token)
+        _logger.info("Users.exists: from=%s", request.httprequest.remote_addr)
+
+        # Authenticate admin
+        admin_user_id, err = self._authenticate_admin()
         if err:
             return err
 
-        admin_user = request.env['res.users'].sudo().browse(uid)
-        if not getattr(admin_user, 'is_pitch_admin', False):
-            return ({"error": "forbidden", "error_description": "Pitch API admin required"}, 403)
-
+        # Parse lookup parameters
         user_id_param = kwargs.get('user_id') or request.params.get('user_id')
         login_param = kwargs.get('login') or request.params.get('login')
+
+        if not user_id_param and not login_param:
+            return ({"error": "invalid_request", "error_description": "provide user_id or login"}, 400)
 
         exists = False
         if user_id_param:
             try:
                 user_id_val = int(user_id_param)
                 exists = request.env['res.users'].sudo().search_count([('id', '=', user_id_val)]) > 0
-            except Exception:
+            except (ValueError, TypeError) as e:
+                _logger.debug("Invalid user_id for exists check: %s", e)
                 exists = False
         elif login_param:
             exists = request.env['res.users'].sudo().search_count([('login', '=', login_param)]) > 0
-        else:
-            return ({"error": "invalid_request", "error_description": "provide user_id or login"}, 400)
 
+        _logger.info("Users.exists: exists=%s admin_user_id=%s", exists, admin_user_id)
         return ({'exists': bool(exists)}, 200)
+
+    # =========================================================================
+    # User Groups
+    # =========================================================================
 
     @http.route("/api/users/<int:user_id>/groups", auth="none", methods=["GET"], csrf=False)
     @json_response
     def get_user_groups(self, user_id, **kwargs):
         """Get groups for a single user (admin-only).
-        
+
         Returns detailed group information including XML IDs and categories.
         """
-        token, err = self._extract_bearer_token()
-        if err:
-            return err
-        uid, err = self._resolve_user_from_access_token(token)
+        _logger.info("Users.groups: user_id=%s from=%s", user_id, request.httprequest.remote_addr)
+
+        # Authenticate admin
+        admin_user_id, err = self._authenticate_admin()
         if err:
             return err
 
-        admin_user = request.env['res.users'].sudo().browse(uid)
-        if not getattr(admin_user, 'is_pitch_admin', False):
-            return ({"error": "forbidden", "error_description": "Pitch API admin required"}, 403)
-
+        # Load user
         user = request.env['res.users'].sudo().browse(user_id)
         if not user.exists():
+            _logger.warning("Users.groups: Not found user_id=%s admin_user_id=%s", user_id, admin_user_id)
             return ({"error": "not_found", "error_description": "user not found"}, 404)
 
         groups = self._serialize_user_groups(user)
+
+        _logger.info("Users.groups: user_id=%s groups=%s admin_user_id=%s", user_id, len(groups), admin_user_id)
         return ({
             'user_id': user.id,
             'user_login': user.login,
@@ -313,35 +290,34 @@ class PitchApiUsersController(http.Controller):
     @json_response
     def get_multiple_users_groups(self, **kwargs):
         """Get groups for multiple users (admin-only).
-        
+
         Query params:
-        - user_ids: comma-separated user IDs (e.g., "1,2,3")
-        
+            user_ids: comma-separated user IDs (e.g., "1,2,3")
+
         Returns groups information for each requested user.
         """
-        token, err = self._extract_bearer_token()
-        if err:
-            return err
-        uid, err = self._resolve_user_from_access_token(token)
+        _logger.info("Users.groups_multi: from=%s", request.httprequest.remote_addr)
+
+        # Authenticate admin
+        admin_user_id, err = self._authenticate_admin()
         if err:
             return err
 
-        admin_user = request.env['res.users'].sudo().browse(uid)
-        if not getattr(admin_user, 'is_pitch_admin', False):
-            return ({"error": "forbidden", "error_description": "Pitch API admin required"}, 403)
-
+        # Parse user_ids parameter
         user_ids_param = kwargs.get('user_ids') or request.params.get('user_ids')
         if not user_ids_param:
             return ({"error": "invalid_request", "error_description": "user_ids parameter required (comma-separated)"}, 400)
 
         try:
             user_ids = [int(uid_str.strip()) for uid_str in user_ids_param.split(',') if uid_str.strip()]
-        except Exception:
+        except (ValueError, TypeError) as e:
+            _logger.debug("Failed to parse user_ids: %s", e)
             return ({"error": "invalid_request", "error_description": "user_ids must be comma-separated integers"}, 400)
 
         if not user_ids:
             return ({"error": "invalid_request", "error_description": "at least one user_id required"}, 400)
 
+        # Query users and serialize groups
         users = request.env['res.users'].sudo().browse(user_ids)
         result = []
         for user in users:
@@ -355,6 +331,7 @@ class PitchApiUsersController(http.Controller):
                     'groups': groups,
                 })
 
+        _logger.info("Users.groups_multi: count=%s admin_user_id=%s", len(result), admin_user_id)
         return ({
             'count': len(result),
             'users': result,

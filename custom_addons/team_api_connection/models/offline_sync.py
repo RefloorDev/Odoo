@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import fromstring, ElementTree
-from odoo import models, fields, api, _
+from odoo import models, fields, api, _, registry
 import json
 import ast
 from odoo.exceptions import UserError
@@ -317,6 +317,7 @@ class ResUsers(models.Model):
                 'api_key': application.api_key or '',
                 'entity_key': application.entity_key or '',
                 'provider': application.provider or '',
+                'available_office_location_ids': application.office_location_ids and application.office_location_ids.ids or []
             })
         return credential_list
 
@@ -965,6 +966,7 @@ class TeamCustomerAppointment(models.Model):
     completed_date = fields.Datetime('Appointment Completed Date')
     sync_initiated_date = fields.Datetime('Sync Initiated Time', copy=False)
     timezone = fields.Char('Timezone', default='US/Eastern')
+    related_attachment_ids = fields.One2many('ir.attachment', 'appointment_id', string="Related Attachments")
 
     @api.model
     def action_get_appointment_data(self, user_id):
@@ -2326,14 +2328,18 @@ class TeamCustomerAppointment(models.Model):
                                 'state': 'failed',
                                 'name': 'UpdateDestinationSelection',
                             })
-                    if sale_order.check_document_upload_completed():
-                        sale_order_vals.update({'is_data_upload_completed': True})
                     if sale_order_vals:
                         sale_order_vals.update({
                             'write_uid': self.env.user.id,
                             'write_date': datetime.now().replace(tzinfo=pytz.utc)
                         })
                         sale_order.write(sale_order_vals)
+                        if sale_order.check_document_upload_completed():
+                            sale_order.write({
+                                'is_data_upload_completed': True,
+                                'write_uid': self.env.user.id,
+                                'write_date': datetime.now().replace(tzinfo=pytz.utc)
+                            })
                     self.env.cr.commit()
             new_cr.close()
             _logger.info('------End of action_start_sync_to_i360------: %s' % (sale_order_id))
@@ -3806,40 +3812,59 @@ class TeamCustomerAppointment(models.Model):
 
     def action_start_sync_live_screen_log_to_i360(self, live_screen_log_id):
         time.sleep(3)
+        new_cr = None
+
         try:
-            # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
-            new_cr = self.pool.cursor()
-            self = self.with_env(self.env(cr=new_cr))
-            live_screen_log_obj = self.env['otl.app.live.screen.log']
-            sync_log = self.env['otl.appointment.sync.log']
+            db_registry = registry(self.env.cr.dbname)
+            new_cr = db_registry.cursor()
+
+            env = api.Environment(new_cr, self.env.uid, self.env.context)
+
+            live_screen_log_obj = env['otl.app.live.screen.log']
+            sync_log = env['otl.appointment.sync.log']
+
             live_screen_log = live_screen_log_obj.browse(int(live_screen_log_id))
             appointment = live_screen_log.appointment_id
-            _logger.info('------Starting action_start_sync_live_screen_log_to_i360------: %s - %s'%(appointment.id, live_screen_log.name))
+
+            _logger.info(
+                '------Starting action_start_sync_live_screen_log_to_i360------: %s - %s',
+                appointment.id, live_screen_log.name
+            )
+
             if not live_screen_log.synced_to_i360:
                 result = appointment.update_live_screen_log_in_i360(live_screen_log)
-                if result.get('success', '') == 'true':
-                    _logger.info("------ LastScreenAPI Success-------------")
-                    sync_log.create({
-                        'appointment_id': appointment.id,
-                        'response': result,
-                        'name': 'LastScreenAPI',
-                    })
-                else:
-                    _logger.info("------ LastScreenAPI Failed-------------")
-                    sync_log.create({
-                        'appointment_id': appointment.id,
-                        'response': result,
-                        'state': 'failed',
-                        'name': 'LastScreenAPI',
-                    })
+
+                vals = {
+                    'appointment_id': appointment.id,
+                    'response': result,
+                    'name': 'LastScreenAPI',
+                }
+
+                if result.get('success') != 'true':
+                    vals['state'] = 'failed'
+
+                sync_log.create(vals)
             else:
                 _logger.info('-----Data already synced to i360----')
-            self.env.cr.commit()
-            new_cr.close()
-            _logger.info('------End of action_start_sync_live_screen_log_to_i360------: %s - %s'%(appointment.id, live_screen_log.name))
+
+            new_cr.commit()
+
+            _logger.info(
+                '------End of action_start_sync_live_screen_log_to_i360------: %s - %s',
+                appointment.id, live_screen_log.name
+            )
+
         except Exception as e:
-            _logger.info('------Exception in action_start_sync_live_screen_log_to_i360------: %s' % (e))
-            new_cr.rollback()
+            _logger.exception(
+                '------Exception in action_start_sync_live_screen_log_to_i360------:%s' %e
+            )
+            if new_cr:
+                new_cr.rollback()
+
+        finally:
+            if new_cr:
+                new_cr.close()
+
         return True
 
     @api.model
@@ -5091,19 +5116,20 @@ class IRAttachment(models.Model):
         image_list = []
         image_already_existing= True
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        file_name = data.get('file_name', 'Attachment').replace(" ", "_").replace(":", "_")
         if data.get('image', False):
             vals = {
-                'name': data.get('file_name', 'Attachment'),
+                'name': file_name,
                 'datas': data.get('image'),
                 'image_type': data.get('image_type', ''),
-                'store_fname': data.get('file_name', 'Attachment'),
+                'store_fname': file_name,
             }
             if data.get('appointment_id', False):
                 vals.update({
                     'appointment_id': int(data.get('appointment_id', 0))
                 })
             attachment = self.env['ir.attachment'].sudo().search([
-                ('name', '=', data.get('file_name', 'Attachment')),
+                ('name', '=', file_name),
                 ('appointment_id', '=', int(data.get('appointment_id', '0')))
             ], limit=1)
             if not attachment:
@@ -5239,5 +5265,4 @@ class VersatileCreditApplication(models.Model):
                 "credit_application_id": credit_application.id
             }
         return result
-
 
