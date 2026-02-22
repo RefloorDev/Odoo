@@ -208,6 +208,7 @@ class ResCompany(models.Model):
 
                     for order in orders:
                         _logger.info('Start Processing Sale Order: %s, %s/%s for Company: %s' % (order.name, count, total, company.name))
+                        count += 1
                         appointment = order.appointment_id or False
                         appointment_name = ''
                         if appointment:
