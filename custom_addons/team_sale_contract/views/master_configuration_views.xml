@@ -84,6 +84,7 @@
                 <field name="recision_date"/>
                 <field name="attachment_delete_day_limit"/>
                 <field name="pending_order_sync_notify_limit"/>
+                <field name="cloud_sync_order_limit"/>
             </field>
         </field>
     </record>
