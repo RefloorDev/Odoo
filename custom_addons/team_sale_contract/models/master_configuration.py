@@ -75,6 +75,7 @@ class ResCompany(models.Model):
     versatile_entity_key = fields.Char("Versatile Entity Key")
     external_application_line = fields.One2many('otl.external.application.credentials', 'company_id', string="External Application Credentials")
     pending_order_sync_notify_limit = fields.Integer("Day Limit for Notify Pending Order to Sync")
+    cloud_sync_order_limit = fields.Integer("Cloud Storage Sync Order Limit", default=100, help="Number of orders to be synced in each cron run")
 
 
 
@@ -189,12 +190,24 @@ class ResCompany(models.Model):
                 # Get the bucket
                 bucket = storage_client.bucket(google_bucket_name)
                 for company in self.search([]):
-                    orders = self.env['sale.order'].search([
-                        ('synced_to_cloud_storage', '=', False),
-                        ('is_data_upload_completed', '=', True),
-                        ('company_id', '=', company.id)
-                    ])
+                    if company.cloud_sync_order_limit:
+                        orders = self.env['sale.order'].search([
+                            ('synced_to_cloud_storage', '=', False),
+                            ('is_data_upload_completed', '=', True),
+                            ('company_id', '=', company.id)
+                        ], limit=company.cloud_sync_order_limit, order='id asc')
+                        _logger.info('Cloud Sync Order Limit: %s. Orders to Sync: %s for Company: %s' % (company.cloud_sync_order_limit, len(orders), company.name))
+                    else:
+                        orders = self.env['sale.order'].search([
+                            ('synced_to_cloud_storage', '=', False),
+                            ('is_data_upload_completed', '=', True),
+                            ('company_id', '=', company.id)
+                        ])
+                    count = 0
+                    total = len(orders)
+
                     for order in orders:
+                        _logger.info('Start Processing Sale Order: %s, %s/%s for Company: %s' % (order.name, count, total, company.name))
                         appointment = order.appointment_id or False
                         appointment_name = ''
                         if appointment:
@@ -278,6 +291,7 @@ class ResCompany(models.Model):
                         order.write({'synced_to_cloud_storage': True})
                         _logger.info('Completed Processing Cloud Upload. Appointment:%s, Sale Order: %s'%(appointment_name, order.name))
         self.env['ir.autovacuum'].sudo()._run_vacuum_cleaner()
+        _logger.info("-------------Completed Cloud Upload Cron Job---------")
         return True
 
 
