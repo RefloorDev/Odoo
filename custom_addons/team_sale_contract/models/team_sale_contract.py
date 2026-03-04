@@ -241,6 +241,14 @@ class TeamContractRoomMeasurement(models.Model):
                 molding_total_price = record.room_perimeter * record.molding_unit_price
             record.molding_total_price = molding_total_price
 
+    @api.depends('material_id', 'appointment_id', 'appointment_id.office_location_id')
+    def _compute_special_order_material(self):
+        for record in self:
+            special_order_material = False
+            if record.material_id and record.material_id.special_order:
+                special_order_material = True
+            record.special_order_material = special_order_material
+
     name = fields.Text('Description', compute='_compute_name')
     room_id = fields.Many2one('team.room.room', string='Room', required=True)
     floor_id = fields.Many2one('team.floor.level', string='Floor', required=False)
@@ -271,6 +279,7 @@ class TeamContractRoomMeasurement(models.Model):
     appointment_result = fields.Char('Appointment Result', related='order_id.appointment_result', store=True)
     misc_charge_comments = fields.Char('Miscellaneous Charge Comments')
     delivery_option = fields.Char("Selected Delivery Option")
+    special_order_material = fields.Boolean('Is Special Order Material', compute='_compute_special_order_material', store=True)
 
     def write(self, vals):
         _logger.info('ContractRoomMeasurement ID: %s, vals: %s'%(self.ids, vals))

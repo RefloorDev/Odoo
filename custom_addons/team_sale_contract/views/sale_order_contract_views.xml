@@ -23,6 +23,7 @@
                             <field name="delivery_option"/>
                             <field name="shape_image_id"  invisible="1"/>
                             <field name="material_id" options="{'no_open':True,'no_create': True}" domain="[('improveit_product_id', '!=', False)]"/>
+                            <field name="special_order_material"/>
                             <field name="material_comments"/>
                             <field name="molding_type_id" options="{'no_open':True,'no_create': True}"/>
                         </group>

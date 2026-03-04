@@ -66,6 +66,9 @@
                     <setting id="installer_date_range_limit" string="Installer Date Range" help="Maximum number of days from the appointment date to fetch available installation date.">
                         <field name="installer_date_range_limit" options="{'no_create': True}"/>
                     </setting>
+                    <setting id="special_order_delay_limit" string="Special Order Delay Days" help="Delay days required for special order products to consider while fetching available installation date.">
+                        <field name="special_order_delay_limit"/>
+                    </setting>
 
                     <setting id="max_i360_sync_retry_limit" string="i360 Sync Retry Limit" help="Maximum allowed duration for i360 sync retry attempts from sync initiated time.">
                         <field name="max_i360_sync_retry_limit" options="{'no_create': True}"/>

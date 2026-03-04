@@ -203,7 +203,7 @@ class ResCompany(models.Model):
                             ('is_data_upload_completed', '=', True),
                             ('company_id', '=', company.id)
                         ])
-                    count = 0
+                    count = 1
                     total = len(orders)
 
                     for order in orders:
@@ -311,6 +311,7 @@ class ExternalApplicationCredentials(models.Model):
     location_based = fields.Boolean("Location Based Entity Key",default=False)
     location_entity_line = fields.One2many('otl.location.entity.key.line', 'external_application_id', string="Location Based Entity Key")
     office_location_ids = fields.Many2many('otl.office.location', string='Available Market Segments')
+    installation_delay_days = fields.Integer("Installation Delay Days", default=0)
 
     def action_generate_versatile_user_token(self):
         for record in self:
