@@ -1685,6 +1685,7 @@ class TeamCustomerAppointment(models.Model):
                 'special_price_id': special_price_id or False,
                 'stair_special_price_id': stair_special_price_id or False,
                 'promotion_code_id': promotion_code_id or False,
+                'finance_provider_id': finance_provider_id or False,
                 'calc_based_on': calc_based_on,
                 'stair_calc_based_on': stair_calc_based_on,
                 'balance_payment_method': payment_method,
@@ -3105,10 +3106,27 @@ class TeamCustomerAppointment(models.Model):
                 environment = "development"
             
             try:
+                credit_application = self.env['otl.versatile.credit.application'].search([('appointment_id', '=', sale_order.appointment_id.id)], limit=1, order='id desc')
+                finance_installation_delay = 0
+                if credit_application and credit_application.finance_provider == 'hunter':
+                    ext_credential = self.env['otl.external.application.credentials'].search([('provider_id', '=', 'hunter')], limit=1)
+                    if ext_credential and ext_credential.installation_delay_days:
+                        finance_installation_delay = ext_credential.installation_delay_days or 0
                 # Request schedule using a new sales order
                 appointment_date = sale_order.appointment_id and sale_order.appointment_id.appointment_date.date() or date.today()
                 installer_date_range_limit = int(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.installer_date_range_limit')) or 30
-                start_date = appointment_date + relativedelta(days=1)
+                is_special_order = sale_order.room_measurement_line.filtered(lambda x: x.special_order_material)
+                if is_special_order:
+                    special_order_delay_limit = int(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.special_order_delay_limit')) or 14
+                else:
+                    special_order_delay_limit = 0
+                total_delay = 1
+                if finance_installation_delay > 0:
+                    if finance_installation_delay > special_order_delay_limit:
+                        total_delay += finance_installation_delay
+                    else:
+                        total_delay += special_order_delay_limit
+                start_date = appointment_date + relativedelta(days=total_delay)
                 end_date = start_date + relativedelta(days=installer_date_range_limit)
 
                 model = ScheduleRequest()

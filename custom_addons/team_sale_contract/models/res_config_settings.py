@@ -32,4 +32,5 @@ class ResConfigSettings(models.TransientModel):
     address_visible_time_limit = fields.Integer('Maximum Allowed Time Limit to Show Full Address Prior to Appointment', default=120, config_parameter='team_sale_contract.address_visible_time_limit')
     version_mismatch_message = fields.Char('Version Mismatch Message', default="Please contact your administrator in order to update to the newest version.", config_parameter="team_sale_contract.version_mismatch_message")
     api_call_base_url = fields.Char('API Call URL', config_parameter='team_sale_contract.api_base_url', default=lambda self: "http://localhost:%s" % config.get('http_port') )
+    special_order_delay_limit = fields.Integer("Special Order Delay Limit", default=14, config_parameter='team_sale_contract.special_order_delay_limit')
 
