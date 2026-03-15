@@ -201,6 +201,8 @@ class API_Homes(http.Controller):
                 _logger.info(f"Authentication - authenticate_user -odoo - user : {username} ; Retrieving user details")
                 user_details = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'get_user_details',
                                               [int(uid)])
+                if user_details.get('result', '') == 'Failed':
+                    return user_details
                 user_details.update({
                     'user_id': uid,
                     'token': token,

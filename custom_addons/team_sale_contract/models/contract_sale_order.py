@@ -472,7 +472,7 @@ class SaleOrder(models.Model):
     downpayment_percentage = fields.Float('Down Payment Percentage')
     down_payment_amount = fields.Float('Down Payment Amount')
     amount_balance = fields.Float('Amount Balance')
-    payment_method = fields.Selection([('credit_card', 'Credit Card'), ('debit_card', 'Debit Card'),('cash', 'Cash'),('check', 'Check')],string="Down Payment Method",)
+    payment_method = fields.Selection([('credit_card', 'Credit Card'), ('debit_card', 'Debit Card'),('cash', 'Cash'),('check', 'Check'), ('ach', 'ACH')],string="Down Payment Method",)
     balance_payment_option = fields.Selection([('job_completion', 'Job Completion'), ('loan', 'Loan')],string="Balance Amount Payment Option",)
     balance_payment_method = fields.Selection([('credit_card', 'Credit Card'), ('debit_card', 'Debit Card'), ('cash', 'Cash'),('check','Check'), ('finance', 'Finance')],string="Payment Method of Balance",)
     check_number = fields.Char('Check No')
@@ -550,6 +550,7 @@ class SaleOrder(models.Model):
     i360_sync_stopped_manually = fields.Boolean('i360 Sync Stopped Manually', default=False, copy=False)
     discount_history_sync_i360_ref = fields.Char('Synced Discount i360 Ref', default=False, copy=False)
     pay_later = fields.Boolean('Do Payment Later', default=False)
+    finance_provider_id = fields.Many2one('otl.external.application.credentials', string='External Finance Provider')
 
 
     def write(self, vals):

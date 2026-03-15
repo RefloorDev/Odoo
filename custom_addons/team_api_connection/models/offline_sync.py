@@ -28,6 +28,12 @@ from fusion_refloor.api_client import ApiClient, ApiException
 from fusion_refloor.api import scheduling_services_api
 from fusion_refloor.models.schedule_request import ScheduleRequest
 
+import base64
+try:
+    from urllib.request import urlopen  # pylint: disable=deprecated-module
+except ImportError:
+    from urllib import urlopen  # pylint: disable=deprecated-module
+
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -313,6 +319,7 @@ class ResUsers(models.Model):
         applications = self.env['otl.external.application.credentials'].search([])
         for application in applications:
             credential_list.append({
+                'ext_credential_id': application.id,
                 'url': application.url or '',
                 'api_key': application.api_key or '',
                 'entity_key': application.entity_key or '',
@@ -692,10 +699,96 @@ class ResUsers(models.Model):
         result = super(ResUsers, self).get_user_details(uid)
         user = self.env['res.users'].search([('id', '=', uid)])
         if user:
+            enable_user_qrcode = eval(str(self.env['ir.config_parameter'].sudo().get_param(
+                'team_sale_contract.enable_user_qrcode'))) or False
+            qrcode_url = ''
+            if enable_user_qrcode:
+                res = user.get_user_qrcode_from_gtr()
+                if res.get('result', '') == 'Failed':
+                    _logger.error('Error is occurred while fetching QR code from GTR for user %s. Message: %s' % (user.name, res.get('message', '')))
+                    return res
+                if user.qrcode_attachment_id and user.qrcode_attachment_id.datas:
+                    attachment = user.qrcode_attachment_id
+                    attachment.sudo().generate_access_token()
+                    base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+                    qrcode_url = _('%s/web/image/%s?access_token=%s' % (base_url, attachment.id, attachment.access_token))
             result.update({
                 "restrict_geolocation": user.restrict_geolocation and 1 or 0,
+                "referral_qr_code_url": qrcode_url,
             })
         return result
+
+    def get_user_qrcode_from_gtr(self):
+        for user in self:
+            configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'gtr')])
+            if configurations:
+                end_point_url = configurations.token_url
+                client_secret = configurations.client_secret
+                if end_point_url and client_secret:
+                    url = "%s/v2/salesreps/%s" % (end_point_url, user.gtr_user_id or '')
+                    headers = {
+                        'Authorization': "Bearer %s" % client_secret,
+                        'Content-Type': 'application/json'
+                    }
+                    data = {}
+                    try:
+                        req = requests.get(url, data=data, headers=headers, timeout=TIMEOUT,
+                                           verify=configurations.enable_ssl)
+                        req.raise_for_status()
+                        content = req.json()
+                        sales_rep_data = content.get('salesreps', [])
+                        for data in sales_rep_data:
+                            user_data = data.get('attributes', {})
+                            if user.:
+                                if str(data.get('id')) == str(user.gtr_user_id):
+                                    qrcode_url = user_data.get('qr_code_url', '')
+                                    if qrcode_url:
+                                        image_data = self.env['team.improveit.configuration'].is_valid_url_image(qrcode_url)
+                                        image_binary = False
+                                        if image_data:
+                                            try:
+                                                image_data = urlopen(qrcode_url).read()
+                                                # image_binary = base64.encodestring(image_data)
+                                                image_binary = base64.b64encode(image_data)
+                                            except:
+                                                image_binary = False
+                                        user.write({'referral_qrcode': image_binary})
+                                        return {
+                                            'result': 'Success',
+                                            'message': 'QR code fetched successfully from GTR.'
+                                        }
+                            else:
+                                if user.email == user_data.get('email', ''):
+                                    qrcode_url = user_data.get('qr_code_url', '')
+                                    if qrcode_url:
+                                        image_data = self.env['team.improveit.configuration'].is_valid_url_image(
+                                            qrcode_url)
+                                        image_binary = False
+                                        if image_data:
+                                            try:
+                                                image_data = urlopen(qrcode_url).read()
+                                                # image_binary = base64.encodestring(image_data)
+                                                image_binary = base64.b64encode(image_data)
+                                            except:
+                                                image_binary = False
+                                        user.write({'referral_qrcode': image_binary})
+                                        return {
+                                            'result': 'Success',
+                                            'message': 'QR code fetched successfully from GTR.'
+                                        }
+
+                    except:
+                        return {
+                            'result': 'Failed',
+                            'message': 'Error is occurred while fetching QR code from GTR.'
+                        }
+
+        return {
+            'result': 'Failed',
+            'message': 'User does not have GTR User ID or QR code URL is missing.'
+        }
+
+
 
 
 class TeamQuoteQuestion(models.Model):
@@ -811,7 +904,8 @@ class ProductProduct(models.Model):
                         'in_stock': product.in_stock and 1 or 0,
                         'glue_down': product.glue_down and 1 or 0,
                         'special_order': product.special_order and 1 or 0,
-                        'office_location_ids': product.office_location_ids and product.office_location_ids.ids or []
+                        'office_location_ids': product.office_location_ids and product.office_location_ids.ids or [],
+                        'special_order_location_ids': product.special_order_office_location_ids and product.special_order_office_location_ids.ids or []
                     }
 
                     color_list.append(color)
@@ -920,7 +1014,7 @@ class ProductTemplate(models.Model):
             warranty = dict(product._fields['warranty'].selection).get(product.warranty)
             product_list.append({
                 'id': product.id,
-                'plan_title': product.name or '',
+                'plan_title': product.display_name_in_app or '',
                 'plan_subtitle': product.payment_plan or '',
                 'description': product.description or '',
                 'material_cost': product.list_price,
@@ -936,7 +1030,8 @@ class ProductTemplate(models.Model):
                 'grade': product.grade or '',
                 'stair_cost': stair_product and stair_product.list_price or 0,
                 'stair_msrp': stair_product and stair_product.msrp or 0,
-                'stair_product_id': stair_product and stair_product.id or 0
+                'stair_product_id': stair_product and stair_product.id or 0,
+                'office_location_ids': product.office_location_ids and product.office_location_ids.ids or []
 
             })
         return product_list
@@ -1508,6 +1603,7 @@ class TeamCustomerAppointment(models.Model):
             coapplicant_skip = int(data.get('coapplicant_skip', 0))
             appointment_id = appointment.id
             selected_package_id = int(data.get('selected_package_id', 0))
+            finance_provider_id = int(data.get('finance_provider_id', 0))
             discount = float(data.get('discount', 0))
             msrp = float(data.get('msrp', 0))
             savings_amount = float(data.get('savings', 0))
@@ -1577,6 +1673,13 @@ class TeamCustomerAppointment(models.Model):
                 _logger.info("------ Promotion Code is Not Exists-------------")
                 status = {
                     'message': 'Promotion Code is Not Exists',
+                    'result': 'Failed'
+                }
+                return status
+            if finance_provider_id and not self.env['otl.external.application.credentials'].browse(finance_provider_id).exists():
+                _logger.info("------ Finance Provider Not Exist-------------")
+                status = {
+                    'message': 'Finance Provider Not Exist',
                     'result': 'Failed'
                 }
                 return status
@@ -3106,15 +3209,10 @@ class TeamCustomerAppointment(models.Model):
                 environment = "development"
             
             try:
-                credit_application = self.env['otl.versatile.credit.application'].search([('appointment_id', '=', sale_order.appointment_id.id)], limit=1, order='id desc')
-                finance_installation_delay = 0
-                if credit_application and credit_application.finance_provider == 'hunter':
-                    ext_credential = self.env['otl.external.application.credentials'].search([('provider_id', '=', 'hunter')], limit=1)
-                    if ext_credential and ext_credential.installation_delay_days:
-                        finance_installation_delay = ext_credential.installation_delay_days or 0
                 # Request schedule using a new sales order
                 appointment_date = sale_order.appointment_id and sale_order.appointment_id.appointment_date.date() or date.today()
                 installer_date_range_limit = int(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.installer_date_range_limit')) or 30
+                finance_installation_delay = sale_order.finance_provider_id and sale_order.finance_provider_id.installation_delay_days or 0
                 is_special_order = sale_order.room_measurement_line.filtered(lambda x: x.special_order_material)
                 if is_special_order:
                     special_order_delay_limit = int(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.special_order_delay_limit')) or 14
@@ -3133,7 +3231,8 @@ class TeamCustomerAppointment(models.Model):
                 model.proposed_start_date = start_date
                 model.proposed_end_date = end_date
 
-                api_response = api_instance.schedule_existing_order(sale_order.quote_id, x_refloor_environment=environment, schedule_request=model)
+                api_response = api_instance.schedule_existing_order(sale_order.quote_id, x_refloor_environment=environment,
+                                                                    schedule_request=model)
                 _logger.info(api_response)
                 if not isinstance(api_response, dict):
                     # api_response = api_response.dict()
@@ -4088,7 +4187,7 @@ class SaleOrder(models.Model):
         values = {}
         for order in self:
             payment_method = data.get('payment_method', '')
-            if payment_method not in ['credit_card', 'debit_card', 'cash', 'check']:
+            if payment_method not in ['credit_card', 'debit_card', 'cash', 'check', 'ach']:
                 _logger.info("------ Wrong Payment Method-------------")
                 status = {'message': 'Wrong Payment Method', 'result': 'Failed'}
                 return status
@@ -4238,6 +4337,29 @@ class SaleOrder(models.Model):
                             'message': payment_status['message'],
                         }
                         return status
+            elif payment_method in ['ach']:
+                if data.get('bank_account_number', ''):
+                    bank_account_number = data.get('bank_account_number', '')
+                else:
+                    _logger.info("------bank_account_number Empty------------")
+                    status = {
+                        'message': 'bank_account_number  Empty',
+                        'result': 'Failed',
+                    }
+                    return status
+                if data.get('bank_routing_number', ''):
+                    bank_routing_number = data.get('bank_routing_number', '')
+                else:
+                    _logger.info("------bank_routing_number Empty------------")
+                    status = {
+                        'message': 'bank_routing_number  Empty',
+                        'result': 'Failed',
+                    }
+                    return status
+                values.update({
+                    'bank_account_number': bank_account_number,
+                    'bank_routing_number': bank_routing_number,
+                })
             #[FIX] Dtd: 07/07/2023 - to solve concurrent update error, passing 'state' & 'order date' in values instead of calling action_confirm() function.
             #order.action_confirm()
 
