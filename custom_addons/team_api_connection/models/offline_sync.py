@@ -739,7 +739,7 @@ class ResUsers(models.Model):
                         sales_rep_data = content.get('salesreps', [])
                         for data in sales_rep_data:
                             user_data = data.get('attributes', {})
-                            if user.:
+                            if user.gtr_user_id:
                                 if str(data.get('id')) == str(user.gtr_user_id):
                                     qrcode_url = user_data.get('qr_code_url', '')
                                     if qrcode_url:
