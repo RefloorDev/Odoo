@@ -49,6 +49,7 @@
                                     <field name="url" widget="url" required="1"/>
                                     <field name="location_based"/>
                                     <field name="entity_key" required="location_based == False" invisible="location_based != False"/>
+                                    <field name="installation_delay_days"/>
                                 </group>
                                 <group>
                                     <field name="provider" required="1"/>
