@@ -67,6 +67,12 @@
                 <field name="mobile" position="after">
                     <field name="restrict_geolocation"/>
                 </field>
+                <group name="phone_numbers" position="after">
+                    <group>
+                        <field name="qrcode_attachment_id" invisible="1"/>
+                        <field name="referral_qrcode" widget='image' class="oe_avatar"/>
+                    </group>
+                </group>
             </field>
         </record>
     </data>

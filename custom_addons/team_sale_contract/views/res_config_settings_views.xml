@@ -95,6 +95,9 @@
                     <setting id="api_call_base_url" string="API Call Base URL" help="Base URL for making API Calls.">
                         <field name="api_call_base_url"/>
                     </setting>
+                    <setting id="enable_user_qrcode" string="Enable User QR Code" help="To Display the Referral QR Code on the salesapp based on users.">
+                        <field name="enable_user_qrcode"/>
+                    </setting>
                 </block>
                 <block title="Google API Configuration" id="sale_other_data_id_setting">
                     <setting id="google_auth_attachment_id" string="Auth File" help="File for Google service authentication for cloud storage">
