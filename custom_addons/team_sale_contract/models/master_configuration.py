@@ -299,6 +299,7 @@ class ResCompany(models.Model):
 class ExternalApplicationCredentials(models.Model):
     _name = 'otl.external.application.credentials'
     _description = 'External Application Credentials'
+    _order = 'sequence asc'
 
     name = fields.Char("Reference")
     user_id = fields.Many2one('res.users', string="User")
@@ -312,6 +313,8 @@ class ExternalApplicationCredentials(models.Model):
     location_entity_line = fields.One2many('otl.location.entity.key.line', 'external_application_id', string="Location Based Entity Key")
     office_location_ids = fields.Many2many('otl.office.location', string='Available Market Segments')
     installation_delay_days = fields.Integer("Installation Delay Days", default=0)
+    sequence = fields.Integer('Priority',
+                              help="Give to the more specialized category, a higher priority to have them in top of the list.", default=10)
 
     def action_generate_versatile_user_token(self):
         for record in self:
