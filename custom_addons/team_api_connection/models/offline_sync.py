@@ -704,9 +704,7 @@ class ResUsers(models.Model):
             qrcode_url = ''
             if enable_user_qrcode:
                 res = user.get_user_qrcode_from_gtr()
-                if res.get('result', '') == 'Failed':
-                    _logger.error('Error is occurred while fetching QR code from GTR for user %s. Message: %s' % (user.name, res.get('message', '')))
-                    return res
+                _logger.info('Response of get_user_qrcode_from_gtr for user %s. Message: %s' % (user.name, res.get('message', '')))
                 if user.qrcode_attachment_id and user.qrcode_attachment_id.datas:
                     attachment = user.qrcode_attachment_id
                     attachment.sudo().generate_access_token()
@@ -739,50 +737,46 @@ class ResUsers(models.Model):
                         sales_rep_data = content.get('salesreps', [])
                         for data in sales_rep_data:
                             user_data = data.get('attributes', {})
-                            if user.gtr_user_id:
-                                if str(data.get('id')) == str(user.gtr_user_id):
-                                    qrcode_url = user_data.get('qr_code_url', '')
-                                    if qrcode_url:
-                                        image_data = self.env['team.improveit.configuration'].is_valid_url_image(qrcode_url)
+                            qrcode_url = user_data.get('qr_code_url', '')
+                            if qrcode_url:
+                                image_data = self.env['team.improveit.configuration'].is_valid_url_image(qrcode_url)
+                                image_binary = False
+                                if image_data:
+                                    try:
+                                        image_data = urlopen(qrcode_url).read()
+                                        image_binary = base64.b64encode(image_data)
+                                    except:
                                         image_binary = False
-                                        if image_data:
-                                            try:
-                                                image_data = urlopen(qrcode_url).read()
-                                                # image_binary = base64.encodestring(image_data)
-                                                image_binary = base64.b64encode(image_data)
-                                            except:
-                                                image_binary = False
-                                        user.write({'referral_qrcode': image_binary})
-                                        return {
-                                            'result': 'Success',
-                                            'message': 'QR code fetched successfully from GTR.'
-                                        }
-                            else:
-                                if user.email == user_data.get('email', ''):
-                                    qrcode_url = user_data.get('qr_code_url', '')
-                                    if qrcode_url:
-                                        image_data = self.env['team.improveit.configuration'].is_valid_url_image(
-                                            qrcode_url)
-                                        image_binary = False
-                                        if image_data:
-                                            try:
-                                                image_data = urlopen(qrcode_url).read()
-                                                # image_binary = base64.encodestring(image_data)
-                                                image_binary = base64.b64encode(image_data)
-                                            except:
-                                                image_binary = False
-                                        user.write({'referral_qrcode': image_binary})
-                                        return {
-                                            'result': 'Success',
-                                            'message': 'QR code fetched successfully from GTR.'
-                                        }
+                                    if image_binary:
+                                        if user.gtr_user_id:
+                                            if str(data.get('id')) == str(user.gtr_user_id):
+                                                    user.write({'referral_qrcode': image_binary})
+                                                    return {
+                                                        'result': 'Success',
+                                                        'message': 'QR code fetched successfully from GTR.'
+                                                    }
+                                        else:
+                                            if user.email == user_data.get('email', ''):
+                                                user.write({'referral_qrcode': image_binary, 'gtr_user_id': data.get('id')})
+                                                return {
+                                                    'result': 'Success',
+                                                    'message': 'QR code fetched successfully from GTR.'
+                                                }
 
+                        #if the code reaches here, it means QR code is not fetched for the user,
+                        # so removing any existing QR code for the user to avoid mismatch of QR code in case of any future successful fetch.
+                        user.write({'referral_qrcode': False})
                     except:
                         return {
                             'result': 'Failed',
                             'message': 'Error is occurred while fetching QR code from GTR.'
                         }
 
+            else:
+                return {
+                    'result': 'Failed',
+                    'message': 'API Configuration is missing for GTR.'
+                }
         return {
             'result': 'Failed',
             'message': 'User does not have GTR User ID or QR code URL is missing.'
@@ -3224,6 +3218,8 @@ class TeamCustomerAppointment(models.Model):
                         total_delay += finance_installation_delay
                     else:
                         total_delay += special_order_delay_limit
+                else:
+                    total_delay += special_order_delay_limit
                 start_date = appointment_date + relativedelta(days=total_delay)
                 end_date = start_date + relativedelta(days=installer_date_range_limit)
 
@@ -3231,8 +3227,11 @@ class TeamCustomerAppointment(models.Model):
                 model.proposed_start_date = start_date
                 model.proposed_end_date = end_date
 
-                api_response = api_instance.schedule_existing_order(sale_order.quote_id, x_refloor_environment=environment,
-                                                                    schedule_request=model)
+                api_response = api_instance.schedule_existing_order(sale_order.quote_id,
+                                                                    schedule_request=model,
+                                                                    _headers={
+                                                                        "x_refloor_environment": environment
+                                                                    })
                 _logger.info(api_response)
                 if not isinstance(api_response, dict):
                     # api_response = api_response.dict()
