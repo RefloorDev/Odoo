@@ -245,7 +245,8 @@ class TeamContractRoomMeasurement(models.Model):
     def _compute_special_order_material(self):
         for record in self:
             special_order_material = False
-            if record.material_id and record.material_id.special_order:
+            if record.material_id and record.material_id.special_order_office_location_ids and \
+                    record.appointment_id.office_location_id.id in record.material_id.special_order_office_location_ids.ids:
                 special_order_material = True
             record.special_order_material = special_order_material
 

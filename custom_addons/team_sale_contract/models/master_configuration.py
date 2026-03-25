@@ -299,6 +299,7 @@ class ResCompany(models.Model):
 class ExternalApplicationCredentials(models.Model):
     _name = 'otl.external.application.credentials'
     _description = 'External Application Credentials'
+    _order = 'sequence asc'
 
     name = fields.Char("Reference")
     user_id = fields.Many2one('res.users', string="User")
@@ -306,12 +307,14 @@ class ExternalApplicationCredentials(models.Model):
     url = fields.Char("URL")
     api_key = fields.Char("API Key")
     entity_key = fields.Char("Entity Key")
-    provider = fields.Selection([('versatile', 'Versatile'), ('hunter', 'Hunter')], string='Provider',
+    provider = fields.Selection([('versatile', 'Versatile'), ('hunter', 'Hunter'), ('one_and_fund', 'OneAndFund')], string='Provider',
                                         default='versatile', required=True)
     location_based = fields.Boolean("Location Based Entity Key",default=False)
     location_entity_line = fields.One2many('otl.location.entity.key.line', 'external_application_id', string="Location Based Entity Key")
     office_location_ids = fields.Many2many('otl.office.location', string='Available Market Segments')
     installation_delay_days = fields.Integer("Installation Delay Days", default=0)
+    sequence = fields.Integer('Priority',
+                              help="Give to the more specialized category, a higher priority to have them in top of the list.", default=10)
 
     def action_generate_versatile_user_token(self):
         for record in self:
@@ -347,7 +350,8 @@ class FloorColor(models.Model):
     in_stock = fields.Boolean('Stock Available', default=False)
     glue_down = fields.Boolean('Is Glue Down', default=False)
     special_order = fields.Boolean('Special Order', default=False)
-    office_location_ids = fields.Many2many('otl.office.location', string='Market Segments Where Out Of Stock')
+    office_location_ids = fields.Many2many('otl.office.location', 'fc_out_of_stock_office_loc_id_rel', 'color_id', 'office_location_id', string='Market Segments Where Out Of Stock')
+    special_order_office_location_ids = fields.Many2many('otl.office.location', 'fc_special_order_office_loc_id_rel', 'color_id', 'office_location_id', string='Special Order Market Segments')
 
 
 class FloorColorLine(models.Model):
@@ -552,7 +556,11 @@ class ProductProduct(models.Model):
     in_stock = fields.Boolean('Stock Available', default=False)
     glue_down = fields.Boolean('Is Glue Down', default=False)
     special_order = fields.Boolean('Special Order', default=False)
-    office_location_ids = fields.Many2many('otl.office.location', string='Market Segments Where Out Of Stock')
+    office_location_ids = fields.Many2many('otl.office.location', 'prod_out_of_stock_office_loc_id_rel', 'product_id',
+                                           'office_location_id', string='Market Segments Where Out Of Stock')
+    special_order_office_location_ids = fields.Many2many('otl.office.location', 'prod_special_order_office_loc_id_rel',
+                                                         'product_id', 'office_location_id',
+                                                         string='Special Order Market Segments')
 
 
 class LaborCost(models.Model):
@@ -621,6 +629,8 @@ class Product(models.Model):
     grade = fields.Char('Grade')
 
     min_sale_price = fields.Float('Minimum Sale Price', default=0)
+    office_location_ids = fields.Many2many('otl.office.location', string='Available Market Segments')
+    display_name_in_app = fields.Char(string="Display Name in App")
 
     @api.depends('list_price', 'cost_per_sqft')
     def _compute_flooring_cost(self):

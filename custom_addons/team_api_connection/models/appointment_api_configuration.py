@@ -48,6 +48,7 @@ class TeamImproveitConfiguration(models.Model):
         ('contract_doc', 'Contract Document'),
         ('review', 'Send Review'),
         ('order_checklist', 'Order Checklist'),
+        ('gtr', 'GTR'),
     ], string='API Type', default='improveit')
     section = fields.Selection([
         ('quote', 'Quote'),
@@ -715,6 +716,7 @@ class TeamImproveitConfiguration(models.Model):
             end_point_url = configurations.token_url
             client_token = configurations.client_token
             improveit_product_id_list = []
+            location_dict = self.get_office_locations()
             if end_point_url and client_token:
                 url = end_point_url + 'GetProducts' + client_token
                 headers = {"Content-type": "application/json"}
@@ -740,6 +742,7 @@ class TeamImproveitConfiguration(models.Model):
                         available_colors=[]
                         category_name = product.get('Category', '')
                         grade = product.get('Grade', '')
+                        display_name_in_app = product.get('SalesAppProductName', '') and product.get('SalesAppProductName', '') or name
                         category = False
                         if category_name:
                             category = self.env['product.category'].search([('name', '=', category_name)], limit=1)
@@ -751,6 +754,19 @@ class TeamImproveitConfiguration(models.Model):
                         # available_colors = self.env['floor.color'].search([])
                         product_template = self.env['product.template'].search(
                             [('improveit_product_id', '=', improveit_product_id)])
+                        market_segments = product.get('ApplicableMarkets', '') or ''
+                        office_location_ids = []
+                        if market_segments:
+                            market_segment_list = market_segments.split(';')
+                            for market_segment in market_segment_list:
+                                if market_segment not in location_dict:
+                                    location_id = self.env['otl.office.location'].create({
+                                        'name': market_segment
+                                    })
+                                    location_dict.update({
+                                        market_segment: location_id.id
+                                    })
+                                office_location_ids.append(location_dict.get(market_segment, 0))
                         if product_template:
                             product_template_values = {
                                 'name': name,
@@ -767,7 +783,8 @@ class TeamImproveitConfiguration(models.Model):
                                 'sequence': sequence,
                                 'grade': grade,
                                 'is_material': True,
-
+                                'display_name_in_app': display_name_in_app,
+                                'office_location_ids': [(6, 0, office_location_ids)],
                             }
                             if category:
                                 product_template_values.update({'categ_id': category.id})
@@ -813,7 +830,8 @@ class TeamImproveitConfiguration(models.Model):
                                 'sequence': sequence,
                                 'grade': grade,
                                 'is_material': True,
-
+                                'display_name_in_app': display_name_in_app,
+                                'office_location_ids': [(6, 0, office_location_ids)],
                             }
                             if category:
                                 product_template_values.update({'categ_id': category.id})
@@ -1182,7 +1200,8 @@ class TeamImproveitConfiguration(models.Model):
                         color_up_charge_price = color.get('colorUpcharge', 0) or 0
                         in_stock = color.get('inStock', False) or False
                         glue_down = color.get('glueDown', False) or False
-                        special_order = color.get('specialOrder', False) or False
+                        #field type is changed
+                        # special_order = color.get('specialOrder', False) or False
                         market_segments = color.get('marketSegment', '') or ''
                         office_location_ids = []
                         if market_segments:
@@ -1196,6 +1215,19 @@ class TeamImproveitConfiguration(models.Model):
                                         market_segment: location_id.id
                                     })
                                 office_location_ids.append(location_dict.get(market_segment, 0))
+                        sp_market_segments = color.get('specialOrder', '') or ''
+                        sp_office_location_ids = []
+                        if sp_market_segments:
+                            market_segment_list = sp_market_segments.split(';')
+                            for market_segment in market_segment_list:
+                                if market_segment not in location_dict:
+                                    location_id = self.env['otl.office.location'].create({
+                                        'name': market_segment
+                                    })
+                                    location_dict.update({
+                                        market_segment: location_id.id
+                                    })
+                                sp_office_location_ids.append(location_dict.get(market_segment, 0))
                         if product_lines:
                             thumb_nail = color.get('thumbnail') or ''
                             image_url = ''
@@ -1225,8 +1257,9 @@ class TeamImproveitConfiguration(models.Model):
                                 'display_name_in_app': display_name_in_app,
                                 'in_stock': in_stock,
                                 'glue_down': glue_down,
-                                'special_order': special_order,
+                                # 'special_order': special_order,
                                 'office_location_ids': [(6, 0, office_location_ids)],
+                                'special_order_office_location_ids': [(6, 0, sp_office_location_ids)],
                                 'active': True
                             }
                             if floor_color:
@@ -1248,8 +1281,9 @@ class TeamImproveitConfiguration(models.Model):
                                         'image_variant_1920': image_binary,
                                         'in_stock': in_stock,
                                         'glue_down': glue_down,
-                                        'special_order': special_order,
-                                        'office_location_ids': [(6, 0, office_location_ids)]
+                                        # 'special_order': special_order,
+                                        'office_location_ids': [(6, 0, office_location_ids)],
+                                        'special_order_office_location_ids': [(6, 0, sp_office_location_ids)],
                                     })
                                     if product.color_attachment_id:
                                         if not product.image_variant_128:
@@ -1754,5 +1788,40 @@ class Users(models.Model):
     device_name = fields.Char(string='Device Name')
     device_os = fields.Char(string='Device OS')
     app_version = fields.Char(string='App Version')
+    qrcode_attachment_id = fields.Many2one('ir.attachment', string='QR Code Attachment')
+    referral_qrcode = fields.Binary(string='Referral QR Code Image')
+    gtr_user_id = fields.Char(string='GTR User ID')
+
+    def write(self, vals):
+        res = super(Users, self).write(vals)
+        if vals.get('referral_qrcode', False):
+            for user in self:
+                attachment = False
+                qrcode_filename = f'{self.login}_qrcode.png'
+                if self.qrcode_attachment_id:
+                    attachment = self.qrcode_attachment_id
+                    attachment.sudo().write({
+                        'datas': user.referral_qrcode,
+                        'name': qrcode_filename,
+                        'public': True,
+                    })
+                else:
+                    attachment = self.env['ir.attachment'].sudo().create({
+                        'datas': user.referral_qrcode,
+                        'name': qrcode_filename,
+                        'res_model': 'res.users',
+                        'res_id': self.id,
+                        'public': True,
+                        'mimetype': 'image/png',
+                    })
+                user.write({'qrcode_attachment_id': attachment.id})
+        else:
+            if 'referral_qrcode' in vals and not vals.get('referral_qrcode', False):
+                for user in self:
+                    if user.qrcode_attachment_id:
+                        user.qrcode_attachment_id.write({'datas': False})
+        return res
+
+
 
 
