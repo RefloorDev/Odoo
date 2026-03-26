@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_provider_cardpoint" model="payment.provider">
+        <field name="name">CardPointe</field>
+        <field name="code">cardpoint</field>
+        <!-- In Odoo 18, we only need to link our custom inline form -->
+        <field name="inline_form_view_id" ref="inline_form"/>
+        <field name="is_published">True</field>
+        <field name="state">test</field>
+        <!-- Keeping these empty as you requested -->
+        <field name="cardpoint_merchant_id"></field>
+        <field name="cardpoint_api_username"></field>
+        <field name="cardpoint_api_password"></field>
+        <!-- Automatically link Card and ACH payment methods on install -->
+        <field name="payment_method_ids" eval="[(6, 0, [ref('payment.payment_method_card'), ref('payment.payment_method_ach_direct_debit')])]"/>
+    </record>
+</odoo>

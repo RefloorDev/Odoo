@@ -1,0 +1,199 @@
+/* CardPointe Payment Form Styles
+ * =================================
+ * Frontend checkout form styles for the CardPointe payment widget.
+ * Designed to integrate seamlessly with Odoo 18's Bootstrap-based UI.
+ */
+
+/* -------------------------------------------------------------------------
+   Container
+   ------------------------------------------------------------------------- */
+.o_cardpoint_payment_form {
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+/* -------------------------------------------------------------------------
+   Tab navigation
+   ------------------------------------------------------------------------- */
+.o_cardpoint_tabs {
+    border-bottom: 2px solid #e9ecef;
+}
+
+.o_cardpoint_tabs .nav-link {
+    color: #6c757d;
+    font-weight: 500;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    padding: 0.5rem 1.25rem;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.o_cardpoint_tabs .nav-link:hover {
+    color: #0d6efd;
+    border-bottom-color: #0d6efd;
+}
+
+.o_cardpoint_tabs .nav-link.active {
+    color: #0d6efd;
+    border-bottom-color: #0d6efd;
+    background: none;
+}
+
+/* -------------------------------------------------------------------------
+   Form inputs
+   ------------------------------------------------------------------------- */
+.o_cardpoint_input {
+    border: 1.5px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.95rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    background-color: #fff;
+}
+
+.o_cardpoint_input:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    outline: none;
+}
+
+.o_cardpoint_input.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+}
+
+.o_cardpoint_input:disabled {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
+
+/* -------------------------------------------------------------------------
+   Card icons row
+   ------------------------------------------------------------------------- */
+.o_cardpoint_card_icons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.o_cardpoint_card_icon {
+    height: 24px;
+    width: auto;
+    border-radius: 3px;
+    border: 1px solid #e9ecef;
+    padding: 1px 3px;
+    background: #fff;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.o_cardpoint_card_icon.active,
+.o_cardpoint_card_icon:hover {
+    opacity: 1;
+}
+
+/* -------------------------------------------------------------------------
+   Billing address section
+   ------------------------------------------------------------------------- */
+.o_cardpoint_billing_section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e9ecef;
+}
+
+/* -------------------------------------------------------------------------
+   ACH info alert
+   ------------------------------------------------------------------------- */
+.o_cardpoint_ach_form .alert-info {
+    border-left: 4px solid #0dcaf0;
+    background: #cff4fc;
+    border-color: #b6effb;
+    font-size: 0.9rem;
+}
+
+/* -------------------------------------------------------------------------
+   Security badge
+   ------------------------------------------------------------------------- */
+.o_cardpoint_security_badge {
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.o_cardpoint_security_badge small {
+    font-size: 0.8rem;
+}
+
+/* -------------------------------------------------------------------------
+   Processing state animations
+   ------------------------------------------------------------------------- */
+.o_cardpoint_payment_form.processing {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.o_cardpoint_payment_form.processing::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.5);
+    z-index: 10;
+}
+
+/* -------------------------------------------------------------------------
+   Submit button (integrates with Odoo's pay button)
+   ------------------------------------------------------------------------- */
+.o_cardpoint_submit_btn {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+}
+
+/* -------------------------------------------------------------------------
+   Alert messages
+   ------------------------------------------------------------------------- */
+#o_cardpoint_alert {
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+/* -------------------------------------------------------------------------
+   Test mode badge (shown in test environment)
+   ------------------------------------------------------------------------- */
+.o_cardpoint_test_badge {
+    display: inline-block;
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* -------------------------------------------------------------------------
+   Responsive adjustments
+   ------------------------------------------------------------------------- */
+@media (max-width: 576px) {
+    .o_cardpoint_tabs .nav-link {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .o_cardpoint_card_icons {
+        gap: 4px;
+    }
+}

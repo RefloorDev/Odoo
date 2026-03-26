@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_provider_form" model="ir.ui.view">
+        <field name="name">CardPointe Provider Form</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
+        <field name="arch" type="xml">
+            <!-- Add CardPointe credentials inside the existing Credentials tab -->
+            <group name="provider_credentials" position="inside">
+                <group invisible="code != 'cardpoint'">
+                    <field name="cardpoint_merchant_id"/>
+                    <field name="cardpoint_api_username"/>
+                    <field name="cardpoint_api_password" password="True"/>
+                    <button name="action_cardpoint_test_connection"
+                            string="Test Connection"
+                            type="object"
+                            class="btn-secondary"
+                            icon="fa-refresh"
+                            invisible="code != 'cardpoint'"/>
+                </group>
+            </group>
+
+            <!-- Add CardPointe-specific options in the Configuration tab -->
+            <group name="payment_form" position="inside">
+                <field name="cardpoint_capture_mode"
+                       invisible="code != 'cardpoint'"/>
+                <field name="cardpoint_payment_methods"
+                       invisible="code != 'cardpoint'"/>
+                <field name="cardpoint_ach_sec_code"
+                       invisible="code != 'cardpoint' or cardpoint_payment_methods == 'card'"/>
+                <field name="cardpoint_enable_tokenization"
+                       invisible="code != 'cardpoint'"/>
+                <field name="cardpoint_require_cvv"
+                       invisible="code != 'cardpoint'"/>
+                <field name="cardpoint_require_avs"
+                       invisible="code != 'cardpoint'"/>
+            </group>
+        </field>
+    </record>
+
+</odoo>

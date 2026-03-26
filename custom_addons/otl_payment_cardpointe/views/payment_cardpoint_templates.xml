@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="inline_form" name="CardPointe Inline Form">
+        <div name="o_cardpoint_form" class="o_cardpoint_form"
+             t-att-data-cardpoint-inline-form-values="provider_sudo._get_cardpoint_inline_form_values()">
+
+            <!-- Credit Card Fields -->
+            <div id="o_cardpoint_card_container" class="mt-2">
+                <div class="row g-2">
+                    <div class="col-12">
+                        <label class="form-label">Card Number</label>
+                        <input type="text" id="o_cardpoint_card_number" required=""
+                               class="form-control" placeholder="1234 1234 1234 1234"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Cardholder Name</label>
+                        <input type="text" id="o_cardpoint_card_name" required=""
+                               class="form-control" placeholder="Full name as on card"/>
+                    </div>
+                    <div class="col-sm-8">
+                        <label class="form-label">Expiration (MM/YY)</label>
+                        <input type="text" id="o_cardpoint_expiry" required=""
+                               class="form-control" placeholder="MM / YY"/>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label">CVV</label>
+                        <input type="text" id="o_cardpoint_cvv" required=""
+                               class="form-control" placeholder="123"/>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACH Fields (hidden by default) -->
+            <div id="o_cardpoint_ach_container" class="d-none mt-3">
+                <div class="row g-2">
+                    <div class="col-12">
+                        <label class="form-label">Routing Number</label>
+                        <input type="text" id="o_cardpoint_routing"
+                               class="form-control" placeholder="Routing Number"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Account Number</label>
+                        <input type="text" id="o_cardpoint_account"
+                               class="form-control" placeholder="Account Number"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Account Holder Name</label>
+                        <input type="text" id="o_cardpoint_ach_name"
+                               class="form-control" placeholder="Full name on account"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Account Type</label>
+                        <select id="o_cardpoint_account_type" class="form-select">
+                            <option value="checking">Checking</option>
+                            <option value="savings">Savings</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </template>
+</odoo>
