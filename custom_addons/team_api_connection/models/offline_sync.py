@@ -4118,55 +4118,116 @@ class SaleOrder(models.Model):
         acquirer = self.env.ref('payment.payment_provider_authorize').sudo()
         card_type = ''
         for order in self:
-            transaction = AuthorizeAPICustom(acquirer)
-            if order.authorize_transaction_id:
-                transaction.void(order.authorize_transaction_id or '')
+            reference = order.name
+            office_location = order.appointment_id.office_location_id or False
+            if office_location and office_location.payment_provider_id:
+                acquirer = office_location.payment_provider_id
+            currency = order.currency_id
+            partner = order.partner_id
+            transaction_ref = ''
+            payment_transaction = self.env['payment.transaction'].sudo().search([
+                ('sale_order_ids', 'in', order.ids),
+                ('state', 'in', ['draft'])
+            ], limit=1)
             transaction_type = "authCaptureTransaction"
             transaction_type_to_log = "authcapture"
             if data.get('pay_later', 0):
                 transaction_type = "authOnlyTransaction"
                 transaction_type_to_log = "authorize"
-            values = self.prepare_authcapture_payment_values(acquirer, order, data, transaction_type)
-            response = transaction._authorize_request_custom(values)
-            if response and response.get('err_code'):
-                self.env['otl.card.transaction.log'].create({
-                    'sale_order_id': order.id,
-                    'name': response.get('transaction_id', ''),
-                    'error_code': response.get('err_code', ''),
-                    'message': response.get('error_text', ''),
-                    'state': 'failed',
-                    'type': transaction_type_to_log,
-                })
-                self.env.cr.commit()
+            if not payment_transaction:
+                reference = self.env['payment.transaction']._compute_reference(
+                    acquirer.code)
+                vals = {
+                    'amount': data.get('amount', 0),
+                    'currency_id': currency.id,
+                    'partner_id': partner.id,
+                    'provider_id': acquirer.id,
+                    'sale_order_ids': [(6, 0, self.ids)],
+                    'payment_method_id': self.env.ref('payment.payment_method_card').id,
+                    'reference': reference,
+                    # 'acquirer_id': acquirer.id,
+                    # 'acquirer_reference': response.get('transactionResponse', {}).get('transId', ''),
+                    # 'date': fields.Datetime.now(),
+                }
+                payment_transaction = self.env['payment.transaction'].create([vals])
+
+            if acquirer.code == 'authorize':
+                transaction = AuthorizeAPICustom(acquirer)
+                if order.authorize_transaction_id:
+                    transaction.void(order.authorize_transaction_id or '')
+                values = self.prepare_authcapture_payment_values(acquirer, order, data, transaction_type)
+                response = transaction._authorize_request_custom(values)
+                if response and response.get('err_code'):
+                    self.env['otl.card.transaction.log'].create({
+                        'sale_order_id': order.id,
+                        'name': response.get('transaction_id', ''),
+                        'error_code': response.get('err_code', ''),
+                        'message': response.get('error_text', ''),
+                        'state': 'failed',
+                        'type': transaction_type_to_log,
+                    })
+                    self.env.cr.commit()
+                    return {
+                        'result': 'Failed',
+                        'message': response.get('error_text', '')
+                    }
+                transaction_ref = response.get('transactionResponse', {}).get('transId', '')
+                card_type = response.get('transactionResponse', {}).get('accountType', '')
+                transaction_response = response.get('transactionResponse', {}).get('messages')[0].get('description')
+                # [FIX] order update restricting to avoid concurrent error
+                #order.write({'authorize_transaction_id': transaction_ref, 'card_type': card_type})
+                transc_ref = response.get('transactionResponse', {}) and response.get('transactionResponse', {}).get('transId', '') + ' ' + response.get('transactionResponse', {}).get('transId', '') + ' ' + fields.Datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT) or ''
+            elif acquirer.code == 'cardpoint':
+                if order.authorize_transaction_id:
+                    acquirer._cardpoint_void_transaction(order.authorize_transaction_id)
+                # Build payment data
+                payment_data = {
+                    'payment_type': 'card',
+                    'token': data.get('cc_number', ''),
+                    'expiry': data.get('cc_expiry', ''),
+                    'cvv': data.get('cc_cvc', ''),
+                    'card_name': partner.name,
+                }
+
+                # Process the payment
+                payment_transaction._cardpoint_process_payment(payment_data, transaction_type)
+                if payment_transaction.cardpoint_respcode in ['A', 'B'] and payment_transaction.cardpoint_retref:
+                    transaction_ref = payment_transaction.cardpoint_retref
+                    card_type = payment_transaction.cardpoint_account_type
+                    transaction_response = payment_transaction.cardpoint_resptext
+                else:
+                    # C, D, F, P, R, E = declined/error
+                    error_message = f"CardPointe: Payment declined — {payment_transaction.cardpoint_resptext}"
+                    if error_message:
+                        self.env['otl.card.transaction.log'].create({
+                            'sale_order_id': order.id,
+                            'name': payment_transaction.cardpoint_retref,
+                            'error_code': payment_transaction.cardpoint_respcode,
+                            'message': error_message,
+                            'state': 'failed',
+                            'type': transaction_type_to_log,
+                        })
+                        return {
+                            'result': 'Failed',
+                            'message': error_message
+                        }
+                _logger.info(
+                    "CardPointe payment processed for transaction with reference %s, state: %s",
+                    reference, payment_transaction.state,
+                )
+            else:
                 return {
                     'result': 'Failed',
-                    'message': response.get('error_text', '')
+                    'message': 'Wrong Payment Acquirer.'
                 }
-            transaction_ref = response.get('transactionResponse', {}).get('transId', '')
-            card_type = response.get('transactionResponse', {}).get('accountType', '')
-            # [FIX] order update restricting to avoid concurrent error
-            #order.write({'authorize_transaction_id': transaction_ref, 'card_type': card_type})
-            currency = order.currency_id
-            partner = order.partner_id
-            transc_ref = response.get('transactionResponse', {}) and response.get('transactionResponse', {}).get('transId', '') + ' ' + response.get('transactionResponse', {}).get('transId', '') + ' ' + fields.Datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT) or ''
-            vals = {
-                'amount': data.get('amount', 0),
-                'currency_id': currency.id,
-                'partner_id': partner.id,
-                'provider_id': acquirer.id,
-                'reference': transc_ref,
-                'sale_order_ids': [(6, 0, self.ids)],
-                'payment_method_id': self.env.ref('payment.payment_method_card').id,
-                # 'acquirer_id': acquirer.id,
-                # 'acquirer_reference': response.get('transactionResponse', {}).get('transId', ''),
-                # 'date': fields.Datetime.now(),
-            }
-            transaction = self.env['payment.transaction'].create([vals])
-            transaction._set_done()
+
+
+            payment_transaction.write({'provider_reference': transaction_ref})
+            payment_transaction._set_done()
             self.env['otl.card.transaction.log'].create({
                 'sale_order_id': order.id,
                 'name': transaction_ref,
-                'message': response.get('transactionResponse', {}).get('messages')[0].get('description'),
+                'message': transaction_response,
                 'state': 'success',
                 'type': transaction_type_to_log,
             })
@@ -4175,7 +4236,101 @@ class SaleOrder(models.Model):
                 'result': 'Success',
                 'transaction_id': transaction_ref,
                 'card_type': card_type,
-                'message': response.get('transactionResponse', {}).get('messages')[0].get('description'),
+                'message': transaction_response,
+            }
+
+    def action_authcapture_ach_payment(self, data):
+        """
+
+        :param data:
+            Sample format is as follows: {
+                'sale_order_id': self.id,
+                'cc_number': '4111111111111111',
+                'cc_expiry': '02/22',
+                'cc_cvc': '185',
+                'cc_holder_name': 'Ajay Jayaram',
+                'amount': 2000.0,
+            }
+        :return:
+        """
+        acquirer = self.env.ref('otl_payment_cardpointe.payment_provider_cardpoint').sudo()
+        card_type = ''
+        for order in self:
+            reference = order.name
+            currency = order.currency_id
+            partner = order.partner_id
+            transaction_ref = ''
+            payment_transaction = self.env['payment.transaction'].sudo().search([
+                ('sale_order_ids', 'in', order.ids),
+                ('state', 'in', ['draft'])
+            ], limit=1)
+            if not payment_transaction:
+                reference = self.env['payment.transaction']._compute_reference(
+                    acquirer.code)
+                vals = {
+                    'amount': data.get('amount', 0),
+                    'currency_id': currency.id,
+                    'partner_id': partner.id,
+                    'provider_id': acquirer.id,
+                    'sale_order_ids': [(6, 0, self.ids)],
+                    'payment_method_id': self.env.ref('payment.payment_method_ach_direct_debit').id,
+                    'reference': reference,
+                    # 'acquirer_id': acquirer.id,
+                    # 'acquirer_reference': response.get('transactionResponse', {}).get('transId', ''),
+                    # 'date': fields.Datetime.now(),
+                }
+                payment_transaction = self.env['payment.transaction'].create([vals])
+
+            if order.authorize_transaction_id:
+                acquirer._cardpoint_void_transaction(order.authorize_transaction_id)
+            # Build payment data
+            payment_data = {
+                'payment_type': 'ach_direct_debit',
+                'bank_aba': data.get('bank_account_number', ''),
+                'ssnl4': data.get('bank_routing_number', ''),
+            }
+
+            # Process the payment
+            payment_transaction._cardpoint_process_payment(payment_data)
+            if payment_transaction.cardpoint_respcode in ['A', 'B'] and payment_transaction.cardpoint_retref:
+                transaction_ref = payment_transaction.cardpoint_retref
+                transaction_response = payment_transaction.cardpoint_resptext
+            else:
+                # C, D, F, P, R, E = declined/error
+                error_message = f"CardPointe: Payment declined — {payment_transaction.cardpoint_resptext}"
+                if error_message:
+                    self.env['otl.card.transaction.log'].create({
+                        'sale_order_id': order.id,
+                        'name': payment_transaction.cardpoint_retref,
+                        'error_code': payment_transaction.cardpoint_respcode,
+                        'message': error_message,
+                        'state': 'failed',
+                        'type': 'authcapture',
+                    })
+                    return {
+                        'result': 'Failed',
+                        'message': error_message
+                    }
+                _logger.info(
+                    "CardPointe payment processed for transaction with reference %s, state: %s",
+                    reference, payment_transaction.state,
+                )
+
+            payment_transaction.write({'provider_reference': transaction_ref})
+            payment_transaction._set_done()
+            self.env['otl.card.transaction.log'].create({
+                'sale_order_id': order.id,
+                'name': transaction_ref,
+                'message': transaction_response,
+                'state': 'success',
+                'type': 'authcapture',
+            })
+            self.env.cr.commit()
+            return {
+                'result': 'Success',
+                'transaction_id': transaction_ref,
+                'card_type': card_type,
+                'message': transaction_response,
             }
 
     def action_update_payment_data(self, data={}, existing_auth_transaction_id='', existing_card_type=''):
@@ -4359,6 +4514,25 @@ class SaleOrder(models.Model):
                     'bank_account_number': bank_account_number,
                     'bank_routing_number': bank_routing_number,
                 })
+                payment_data = {
+                    'sale_order_id': order.id,
+                    'bank_account_number': bank_account_number,
+                    'bank_routing_number': bank_routing_number,
+                    'amount': order.down_payment_amount,
+                }
+                payment_status = order.action_authcapture_ach_payment(payment_data)
+                if payment_status['result'] == 'Success':
+                    if payment_status.get('transaction_id', ''):
+                        values.update({
+                            'authorize_transaction_id': payment_status.get('transaction_id', '')
+                        })
+                else:
+                    _logger.info("------ Payment_Transaction Failed------------")
+                    status = {
+                        'result': 'Failed',
+                        'message': payment_status['message'],
+                    }
+                    return status
             #[FIX] Dtd: 07/07/2023 - to solve concurrent update error, passing 'state' & 'order date' in values instead of calling action_confirm() function.
             #order.action_confirm()
 
@@ -5129,6 +5303,7 @@ class SaleOrder(models.Model):
                             document_template_id = self.env['ir.config_parameter'].sudo().get_param(
                                 'team_sale_contract.sale_contract_tmpl_id') or False
                     if document_template_id:
+                        
                         template = self.env['otl_document_sign.template'].sudo().browse(int(document_template_id))
                         # if template.sign_item_ids.filtered(lambda x: x.type_id.option_field):
                         #     if (contract_plumbing_option_1 and contract_plumbing_option_2) or \

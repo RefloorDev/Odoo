@@ -732,6 +732,7 @@ class OfficeLocation(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     special_price_line = fields.One2many('otl.product.special.price', 'office_location_id', 'Special Price')
     enable_destination_selection = fields.Boolean('Enable Destination Selection', default=False)
+    payment_provider_id = fields.Many2one('payment.provider', string="Provider", help="Select the payment provider for the payment transaction")
 
     _sql_constraints = [
         ('name_company_uniq', 'unique (name,company_id)', 'The name of materials must be unique per company!')
