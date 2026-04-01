@@ -1956,6 +1956,7 @@ class APIHomes(API_Homes):
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+        appointment_ids_to_ignore = eval(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.appointment_ids_to_ignore', '[]'))
         if status:
             if enable_api_queue_system:
                 if data.get('appointment_id', 0):
@@ -1963,6 +1964,25 @@ class APIHomes(API_Homes):
                         self.create_order_and_update_measurements_api_queue, data.get('appointment_id', 0)))
                     appointment_id = data.get('appointment_id', 0) and str(data.get('appointment_id', 0)) or '0'
                     time = datetime.now()
+                    if int(appointment_id) in appointment_ids_to_ignore:
+                        _logger.info('create_order_and_update_measurements_api_queue Data - Ignored--:%s - Appointment ID: %s' % (
+                            self.create_order_and_update_measurements_api_queue, appointment_id))
+                        result = {'override_json_result': 1, 'result': 'Success',
+                                  'message': 'Execution is ignored for this appointment'}
+                        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                        try:
+                            if models:
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                  ['/api/create_order_and_update_measurements_encoded', data, uid,
+                                                   result, network_strength])
+                            else:
+                                request.env['otl.api.sync.log'].sudo().create_api_log(
+                                    '/api/create_order_and_update_measurements_encoded', data, uid,
+                                    result, network_strength)
+                        except Exception as e:
+                            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
+                        return json.dumps(result)
                     if appointment_id in self.create_order_and_update_measurements_api_queue:
                         queue_time = self.create_order_and_update_measurements_api_queue.get(appointment_id, {})
                         time_difference = (time - queue_time).total_seconds()
