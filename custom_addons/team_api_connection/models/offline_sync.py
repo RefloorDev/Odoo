@@ -4121,7 +4121,7 @@ class SaleOrder(models.Model):
             reference = order.name
             office_location = order.appointment_id.office_location_id or False
             if office_location and office_location.payment_provider_id:
-                acquirer = office_location.payment_provider_id
+                acquirer = office_location.payment_provider_id.sudo()
             currency = order.currency_id
             partner = order.partner_id
             transaction_ref = ''
@@ -4197,7 +4197,7 @@ class SaleOrder(models.Model):
                     transaction_response = payment_transaction.cardpoint_resptext
                 else:
                     # C, D, F, P, R, E = declined/error
-                    error_message = f"CardPointe: Payment declined — {payment_transaction.cardpoint_resptext}"
+                    error_message = payment_transaction.cardpoint_resptext
                     if error_message:
                         self.env['otl.card.transaction.log'].create({
                             'sale_order_id': order.id,
@@ -4253,7 +4253,7 @@ class SaleOrder(models.Model):
             }
         :return:
         """
-        acquirer = self.env.ref('otl_payment_cardpointe.payment_provider_cardpoint').sudo()
+        acquirer = self.env.ref('ott_payment_cardpointe.payment_provider_cardpoint').sudo()
         card_type = ''
         for order in self:
             reference = order.name
@@ -5303,7 +5303,6 @@ class SaleOrder(models.Model):
                             document_template_id = self.env['ir.config_parameter'].sudo().get_param(
                                 'team_sale_contract.sale_contract_tmpl_id') or False
                     if document_template_id:
-                        
                         template = self.env['otl_document_sign.template'].sudo().browse(int(document_template_id))
                         # if template.sign_item_ids.filtered(lambda x: x.type_id.option_field):
                         #     if (contract_plumbing_option_1 and contract_plumbing_option_2) or \
