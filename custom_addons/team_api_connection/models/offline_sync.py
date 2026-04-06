@@ -2737,11 +2737,11 @@ class TeamCustomerAppointment(models.Model):
                         if payment_method_dict and paymentdetails_dict and not existing_auth_transaction_id:
                             payment_method = payment_method_dict.get('payment_method', '')
                             down_payment_amount = float(paymentdetails_dict.get('down_payment_amount', 0))
-                            if order.payment_method in ['credit_card', 'debit_card'] and down_payment_amount and not order.card_transaction_log_line.filtered(lambda x: x.state == 'success'):
+                            if order.payment_method in ['credit_card', 'debit_card', 'ach'] and down_payment_amount and not order.card_transaction_log_line.filtered(lambda x: x.state == 'success'):
                                 retry_order_creation = True
-                            elif order.payment_method in ['credit_card', 'debit_card'] and down_payment_amount and order.card_transaction_log_line.filtered(lambda x: x.state == 'success') and order.payment_method != payment_method:
+                            elif order.payment_method in ['credit_card', 'debit_card', 'ach'] and down_payment_amount and order.card_transaction_log_line.filtered(lambda x: x.state == 'success') and order.payment_method != payment_method:
                                 retry_order_creation = True
-                            elif order.payment_method in ['credit_card', 'debit_card'] and down_payment_amount and order.card_transaction_log_line.filtered(lambda x: x.state == 'success') and order.payment_method == payment_method and down_payment_amount == order.down_payment_amount:
+                            elif order.payment_method in ['credit_card', 'debit_card', 'ach'] and down_payment_amount and order.card_transaction_log_line.filtered(lambda x: x.state == 'success') and order.payment_method == payment_method and down_payment_amount == order.down_payment_amount:
                                 return {
                                     'message': 'Order details are already updated successfully.',
                                     'result': 'Success',
@@ -2755,17 +2755,32 @@ class TeamCustomerAppointment(models.Model):
                                 authorize_transaction_id = line.name or ''
                                 if authorize_transaction_id:
                                     acquirer = self.env.ref('payment.payment_provider_authorize').sudo()
-                                    transaction = AuthorizeAPICustom(acquirer)
-                                    response = transaction.void(authorize_transaction_id or '')
-                                    if response.get('x_trans_id', ''):
-                                        line.write({
-                                            'void_transaction': True,
-                                            'void_transaction_id': response.get('x_trans_id', '')
-                                        })
-                                    elif response.get('x_response_code', ''):
-                                        line.write({
-                                            'error_code': response.get('x_response_reason_text', '')
-                                        })
+                                    if line.provider_id:
+                                        acquirer = line.provider_id.sudo()
+                                    if acquirer.code == 'authorize':
+                                        transaction = AuthorizeAPICustom(acquirer)
+                                        response = transaction.void(authorize_transaction_id or '')
+                                        if response.get('x_trans_id', ''):
+                                            line.write({
+                                                'void_transaction': True,
+                                                'void_transaction_id': response.get('x_trans_id', '')
+                                            })
+                                        elif response.get('x_response_code', ''):
+                                            line.write({
+                                                'error_code': response.get('x_response_reason_text', '')
+                                            })
+                                    elif acquirer.code == 'cardpoint':
+                                        response = acquirer._cardpoint_void_transaction(order.authorize_transaction_id)
+                                        if response.get('respstat', '') == 'A':
+                                            line.write({
+                                                'void_transaction': True,
+                                                'void_transaction_id': response.get('retref', '')
+                                            })
+                                        elif response.get('respstat', '') != 'A':
+                                            line.write({
+                                                'error_code': response.get('resptext', '')
+                                            })
+
                             order.action_cancel()
                             order.action_draft()
                             order.write({'active': False})
@@ -4165,6 +4180,7 @@ class SaleOrder(models.Model):
                         'message': response.get('error_text', ''),
                         'state': 'failed',
                         'type': transaction_type_to_log,
+                        'provider_id': acquirer.id
                     })
                     self.env.cr.commit()
                     return {
@@ -4206,6 +4222,7 @@ class SaleOrder(models.Model):
                             'message': error_message,
                             'state': 'failed',
                             'type': transaction_type_to_log,
+                            'provider_id': acquirer.id
                         })
                         return {
                             'result': 'Failed',
@@ -4230,6 +4247,8 @@ class SaleOrder(models.Model):
                 'message': transaction_response,
                 'state': 'success',
                 'type': transaction_type_to_log,
+                'provider_id': acquirer.id
+
             })
             self.env.cr.commit()
             return {
@@ -4253,7 +4272,7 @@ class SaleOrder(models.Model):
             }
         :return:
         """
-        acquirer = self.env.ref('ott_payment_cardpointe.payment_provider_cardpoint').sudo()
+        acquirer = self.env.ref('otl_payment_cardpointe.payment_provider_cardpoint').sudo()
         card_type = ''
         for order in self:
             reference = order.name
@@ -4306,6 +4325,7 @@ class SaleOrder(models.Model):
                         'message': error_message,
                         'state': 'failed',
                         'type': 'authcapture',
+                        'provider_id': acquirer.id
                     })
                     return {
                         'result': 'Failed',
@@ -4324,6 +4344,7 @@ class SaleOrder(models.Model):
                 'message': transaction_response,
                 'state': 'success',
                 'type': 'authcapture',
+                'provider_id': acquirer.id
             })
             self.env.cr.commit()
             return {
@@ -4407,6 +4428,10 @@ class SaleOrder(models.Model):
                         'authorize_transaction_id': existing_auth_transaction_id,
                         'card_type': existing_card_type
                     })
+                    acquirer = False
+                    payment_transaction = self.env['payment.transaction'].sudo().search([('provider_reference', '=', existing_auth_transaction_id)], limit=1)
+                    if payment_transaction:
+                        acquirer = payment_transaction.provider_id.id
                     if not order.card_transaction_log_line.filtered(lambda x: x.name == existing_auth_transaction_id):
                         transaction_type_to_log = "authcapture"
                         if order.pay_later:
@@ -4417,6 +4442,7 @@ class SaleOrder(models.Model):
                             'message': '',
                             'state': 'success',
                             'type': transaction_type_to_log,
+                            'provider_id': acquirer.id
                         })
 
                 else:
