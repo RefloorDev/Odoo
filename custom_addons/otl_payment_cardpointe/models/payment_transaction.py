@@ -402,7 +402,7 @@ class PaymentTransaction(models.Model):
                 payment_type=payment_type,
                 transaction_type = transaction_type
             )
-			_logger.info('CardPointe: transaction response %s', response)
+            _logger.info('CardPointe: transaction response %s', response)
             self._cardpoint_handle_auth_response(response)
 
             # Handle tokenization / profile creation
