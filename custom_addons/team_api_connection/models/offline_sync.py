@@ -4306,6 +4306,7 @@ class SaleOrder(models.Model):
             payment_data = {
                 'payment_type': 'ach_direct_debit',
                 'account_number': data.get('bank_account_number', ''),
+                'ssnl4': data.get('bank_routing_number', ''),
                 'routing_number': data.get('bank_routing_number', ''),
             }
 
