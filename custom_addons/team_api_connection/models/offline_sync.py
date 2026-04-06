@@ -4305,8 +4305,8 @@ class SaleOrder(models.Model):
             # Build payment data
             payment_data = {
                 'payment_type': 'ach_direct_debit',
-                'bank_aba': data.get('bank_account_number', ''),
-                'ssnl4': data.get('bank_routing_number', ''),
+                'account_number': data.get('bank_account_number', ''),
+                'routing_number': data.get('bank_routing_number', ''),
             }
 
             # Process the payment
@@ -4316,7 +4316,7 @@ class SaleOrder(models.Model):
                 transaction_response = payment_transaction.cardpoint_resptext
             else:
                 # C, D, F, P, R, E = declined/error
-                error_message = f"CardPointe: Payment declined — {payment_transaction.cardpoint_resptext}"
+                error_message = payment_transaction.cardpoint_resptext
                 if error_message:
                     self.env['otl.card.transaction.log'].create({
                         'sale_order_id': order.id,
