@@ -4164,6 +4164,7 @@ class CardTransactionLog(models.Model):
     synced = fields.Boolean('Synced to i360', default=False)
     void_transaction = fields.Boolean('Is Void Transaction?', default=False)
     void_transaction_id = fields.Char('Void Transaction ID')
+    provider_id = fields.Many2one('payment.provider', 'Payment Provider')
 
 
 class DiscountHistoryLine(models.Model):
