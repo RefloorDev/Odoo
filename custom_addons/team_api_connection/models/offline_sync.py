@@ -4538,8 +4538,8 @@ class SaleOrder(models.Model):
                     }
                     return status
                 values.update({
-                    'bank_account_number': bank_account_number,
-                    'bank_routing_number': bank_routing_number,
+                    'check_account_number': bank_account_number,
+                    'check_routing_number': bank_routing_number,
                 })
                 payment_data = {
                     'sale_order_id': order.id,
