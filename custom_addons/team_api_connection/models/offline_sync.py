@@ -4308,6 +4308,7 @@ class SaleOrder(models.Model):
                 'account_number': data.get('bank_account_number', ''),
                 'ssnl4': data.get('bank_routing_number', ''),
                 'routing_number': data.get('bank_routing_number', ''),
+                'acct_type': data.get('acct_type', ''),
             }
 
             # Process the payment
@@ -4519,6 +4520,21 @@ class SaleOrder(models.Model):
                         }
                         return status
             elif payment_method in ['ach']:
+                acct_type = ''
+                if data.get('acct_type', ''):
+                    acct_type = data.get('acct_type', '')
+                    if acct_type not in ['ECHK', 'ESAV']:
+                        return {
+                            'message': 'Wrong Value for Account Type',
+                            'result': 'Failed',
+                        }
+                else:
+                    _logger.info("------acct_type Empty------------")
+                    status = {
+                        'message': 'Account Type   Empty',
+                        'result': 'Failed',
+                    }
+                    return status
                 if data.get('bank_account_number', ''):
                     bank_account_number = data.get('bank_account_number', '')
                 else:
@@ -4546,6 +4562,7 @@ class SaleOrder(models.Model):
                     'bank_account_number': bank_account_number,
                     'bank_routing_number': bank_routing_number,
                     'amount': order.down_payment_amount,
+                    'acct_type': acct_type,
                 }
                 payment_status = order.action_authcapture_ach_payment(payment_data)
                 if payment_status['result'] == 'Success':
