@@ -309,7 +309,7 @@ class PaymentProvider(models.Model):
         # Payment-type specific fields
         if payment_type == CARDPOINT_PAYMENT_TYPE_ACH:
             payload.update({
-                'accttype': 'ECHK',  # Electronic Check
+                'accttype': customer_data.get('acct_type', '') if customer_data else '',  # Electronic Check
                 'bankaba': customer_data.get('bank_aba', '') if customer_data else '',
                 'ssnl4': customer_data.get('ssnl4', '') if customer_data else '',
             })

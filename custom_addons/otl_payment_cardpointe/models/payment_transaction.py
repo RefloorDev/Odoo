@@ -369,6 +369,7 @@ class PaymentTransaction(models.Model):
         cvv = payment_data.get('cvv', '')
         account_number = payment_data.get('account_number', '')  # For ACH
         routing_number = payment_data.get('routing_number', '')  # For ACH
+        acct_type = payment_data.get('acct_type', '')  # For ACH
 
         # Update payment type on transaction
         self.cardpoint_payment_type = payment_type
@@ -385,6 +386,7 @@ class PaymentTransaction(models.Model):
             # ACH uses routing|account format tokenized via CardSecure
             account = token if token else f"{account_number}"
             customer_data['bank_aba'] = routing_number
+            customer_data['acct_type'] = acct_type
         else:
             account = token
 
