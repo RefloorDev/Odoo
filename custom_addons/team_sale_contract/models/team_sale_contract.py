@@ -113,9 +113,9 @@ class TeamContractQuestions(models.Model):
                                     amount = answer_line.answer_score
                                 if stair_room:
                                     if stair_cover_riser == 'Yes':
-                                        room_area = stair_width * stair_count * 2.25
+                                        room_area = stair_width * stair_count * 2.4
                                     else:
-                                        room_area = stair_width * stair_count * 1.25
+                                        room_area = stair_width * stair_count * 1.6
                                 else:
                                     room_area = record.room_measurement_id.adjusted_area or 0
                                 net_room_area = (room_area - amount_included) > 0 and room_area - amount_included or 0
