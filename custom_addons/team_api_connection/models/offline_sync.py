@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # import xml.etree.ElementTree as ET
+import re
 from xml.etree.ElementTree import fromstring, ElementTree
 from odoo import models, fields, api, _, registry
 import json
@@ -5536,6 +5537,11 @@ class VersatileCreditApplication(models.Model):
     _inherit = 'otl.versatile.credit.application'
 
     def convert_date_to_utc(self, date, tz):
+        # Step 1: Trim nanoseconds → microseconds (6 digits)
+        date = re.sub(r"(\.\d{6})\d+Z", r"\1Z", date)
+        # Step 2: Handle case where no microseconds exist
+        if "." not in date:
+            date = date.replace("Z", ".000000Z")
         date_obj = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%fZ')
         date_utc = tz.localize(date_obj).astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
         return date_utc
