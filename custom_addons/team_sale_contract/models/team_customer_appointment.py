@@ -6,6 +6,10 @@ import pytz
 import requests
 import base64
 
+import logging
+
+_logger = logging.getLogger(__name__)
+
 _STATES = [
     ('draft', 'New'),
     ('scheduled', 'Scheduled'),
@@ -381,10 +385,22 @@ class APISyncLog(models.Model):
     data = fields.Text('API Data')
     name = fields.Char('API')
     network_strength = fields.Char('Upload Network Strength')
+    api_create_date = fields.Char('API Create Date')
 
     @api.model
-    def create_api_log(self, url, data, uid, result, network_strength=''):
+    def create_api_log(self, url, data, uid, result, network_strength='', api_create_date=None):
         appointment_id = data.get('appointment_id', False)
+        # api_create_date may be passed explicitly as a separate param (preferred)
+        # otherwise try to normalize from common keys in payload
+        if not api_create_date:
+            api_create_date = data.get('api_create_date') or data.get('create_date') or data.get('created_date') or False
+        # try to normalize datetime strings to Odoo format when possible
+        if api_create_date:
+            try:
+                api_create_date = fields.Datetime.to_string(fields.Datetime.to_datetime(api_create_date))
+            except Exception:
+                # leave raw value if parsing fails
+                pass
         sale_order_id = data.get('sale_order_id', False)
         if sale_order_id and not appointment_id:
             sale_order = self.env['sale.order'].browse(int(sale_order_id))
@@ -394,31 +410,48 @@ class APISyncLog(models.Model):
         if result.get('result', False) in ['Failed', 'AuthFailed']:
             state = 'failed'
         if uid and appointment_id and self.env['team.customer.appointment'].browse(int(appointment_id)).exists():
-            self.create({
-                'name': url,
-                'appointment_id': int(appointment_id),
-                'user_id': uid,
-                'data': data,
-                'response': result,
-                'state': state,
-                'network_strength': network_strength,
-            })
+            try:
+                self.create({
+                    'name': url,
+                    'appointment_id': int(appointment_id),
+                    'user_id': uid,
+                    'data': data,
+                    'response': result,
+                    'state': state,
+                    'network_strength': network_strength,
+                    'api_create_date': api_create_date,
+                })
+            except Exception:
+                # If DB constraint or other error occurs, don't raise to callers of API logging
+                _logger.warning('create_api_log: failed to create log for appointment %s url %s', appointment_id, url)
         return True
 
-    def store_database_raw_data(self, url, data, uid, appointment_id, network_strength=''):
+    def store_database_raw_data(self, url, data, uid, appointment_id, network_strength='', api_create_date=None):
         result = {'result': 'Failed', 'message': 'Something went wrong while storing data'}
         state = 'success'
+        # normalize api_create_date if provided in payload or as explicit param
+        if not api_create_date:
+            api_create_date = data.get('api_create_date') or data.get('create_date') or data.get('created_date') or False
+        if api_create_date:
+            try:
+                api_create_date = fields.Datetime.to_string(fields.Datetime.to_datetime(api_create_date))
+            except Exception:
+                pass
         if uid and appointment_id and self.env['team.customer.appointment'].browse(int(appointment_id)).exists():
             result = {'result': 'Success', 'message': 'Data stored successfully'}
-            self.create({
-                'name': url,
-                'appointment_id': int(appointment_id),
-                'user_id': uid,
-                'data': data,
-                'response': result,
-                'state': state,
-                'network_strength': network_strength,
-            })
+            try:
+                self.create({
+                    'name': url,
+                    'appointment_id': int(appointment_id),
+                    'user_id': uid,
+                    'data': data,
+                    'response': result,
+                    'state': state,
+                    'network_strength': network_strength,
+                    'api_create_date': api_create_date,
+                })
+            except Exception:
+                _logger.warning('store_database_raw_data: failed to create log for appointment %s url %s', appointment_id, url)
         else:
             result = {'result': 'Failed', 'message': 'Appointment is not existing'}
         return result
