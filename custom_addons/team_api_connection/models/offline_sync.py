@@ -3279,76 +3279,78 @@ class TeamCustomerAppointment(models.Model):
         _logger.info("------action_get_available_installation_date data: %s-------------" % (data))
         try:
             appointment_id = data.get('appointment_id', 0) and int(data.get('appointment_id', 0)) or 0
+            only_fetch_installation_dates = data.get('only_fetch_installation_dates', False) and eval(data.get('only_fetch_installation_dates', False)) or False
             if appointment_id:
                 appointment = self.browse(appointment_id)
                 if appointment.exists():
                     sale_order = sale_order_obj.search([('appointment_id', '=', appointment_id)], limit=1)
                     if sale_order:
-                        sale_sync_result = self.action_sync_sale_data_to_i360(appointment, sale_order, return_on_failure=True)
-                        _logger.info('i360 Sale Manual Sync Response: --%s'%(sale_sync_result))
-                        if sale_sync_result.get('result', '') == 'Success':
-                            rules_engine_result = self.action_get_available_dates_from_rule_engine_api(sale_order)
-                            if rules_engine_result.get('result', '') == 'Failed':
-                                return rules_engine_result
-                            crews_list = rules_engine_result.get('data', [])
-                            if not crews_list:
-                                return {
-                                    'message': 'No Data received from Rules Engine',
-                                    'result': 'Failed'
-                                }
-                            start_date_list = []
-                            user = self.env.user
-                            tz = user.tz and pytz.timezone(user.tz) or pytz.utc
-                            if sale_order.available_installation_line:
-                                sale_order.available_installation_line.unlink()
-                            for crew_data in crews_list:
-                                i360_id = crew_data.get('id', '')
-                                name = crew_data.get('name', '')
-                                crew = crew_obj.search([('improveit_id', '=', i360_id)], limit=1)
-                                if not crew:
-                                    crew = crew_obj.create({'improveit_id': i360_id, 'name': name})
-                                time_slot = crew_data.get('slot', {})
-                                if time_slot:
-                                    start_date = time_slot.get('start_date', False)
-                                    end_date = time_slot.get('end_date', False)
-                                    start_date_utc = tz.localize(start_date).astimezone(pytz.utc).strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-                                    if start_date_utc not in start_date_list:
-                                        start_date_list.append(start_date_utc)
-                                        end_date_utc = tz.localize(end_date).astimezone(pytz.utc).strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-                                        self.env['otl.available.installation.line'].create({
-                                                'start_date': start_date_utc,
-                                                'end_date': end_date_utc,
-                                                'order_id': sale_order.id,
-                                                'crew_id': crew.id
-                                            })
-                            if not start_date_list:
-                                return {
-                                    'message': 'No Dates are Available',
-                                    'result': 'Failed'
-                                }
-                            available_date_list = []
-                            for installation_date in sale_order.available_installation_line:
-                                start_date = utc_2_local(installation_date.start_date, user.tz or 'UTC')
-                                end_date = utc_2_local(installation_date.end_date, user.tz or 'UTC')
-                                available_date_list.append({
-                                    'installation_id': installation_date.id,
-                                    'start_date': start_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
-                                    'end_date': end_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
-                                    'crew_id': installation_date.crew_id.id,
-                                    'crew_name': installation_date.crew_id.name,
-                                })
-                            if available_date_list:
-                                available_date_list.sort(key = lambda x:x['start_date'])
-                            return {
-                                'result': 'Success',
-                                'message': "Available Installation Date retrieved Successfully",
-                                'data': {
-                                    'available_dates': available_date_list,
-                                    'sale_order_id': sale_order.id
-                                }
+                        if not only_fetch_installation_dates:
+                            sale_sync_result = self.action_sync_sale_data_to_i360(appointment, sale_order, return_on_failure=True)
+                            _logger.info('i360 Sale Manual Sync Response: --%s'%(sale_sync_result))
+                            if sale_sync_result.get('result', '') == 'Success':
+                                rules_engine_result = self.action_get_available_dates_from_rule_engine_api(sale_order)
+                                if rules_engine_result.get('result', '') == 'Failed':
+                                    return rules_engine_result
+                                crews_list = rules_engine_result.get('data', [])
+                                if not crews_list:
+                                    return {
+                                        'message': 'No Data received from Rules Engine',
+                                        'result': 'Failed'
+                                    }
+                                start_date_list = []
+                                user = self.env.user
+                                tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+                                if sale_order.available_installation_line:
+                                    sale_order.available_installation_line.unlink()
+                                for crew_data in crews_list:
+                                    i360_id = crew_data.get('id', '')
+                                    name = crew_data.get('name', '')
+                                    crew = crew_obj.search([('improveit_id', '=', i360_id)], limit=1)
+                                    if not crew:
+                                        crew = crew_obj.create({'improveit_id': i360_id, 'name': name})
+                                    time_slot = crew_data.get('slot', {})
+                                    if time_slot:
+                                        start_date = time_slot.get('start_date', False)
+                                        end_date = time_slot.get('end_date', False)
+                                        start_date_utc = tz.localize(start_date).astimezone(pytz.utc).strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+                                        if start_date_utc not in start_date_list:
+                                            start_date_list.append(start_date_utc)
+                                            end_date_utc = tz.localize(end_date).astimezone(pytz.utc).strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+                                            self.env['otl.available.installation.line'].create({
+                                                    'start_date': start_date_utc,
+                                                    'end_date': end_date_utc,
+                                                    'order_id': sale_order.id,
+                                                    'crew_id': crew.id
+                                                })
+                                if not start_date_list:
+                                    return {
+                                        'message': 'No Dates are Available',
+                                        'result': 'Failed'
+                                    }
+                            else:
+                                return sale_sync_result
+                        available_date_list = []
+                        for installation_date in sale_order.available_installation_line:
+                            start_date = utc_2_local(installation_date.start_date, user.tz or 'UTC')
+                            end_date = utc_2_local(installation_date.end_date, user.tz or 'UTC')
+                            available_date_list.append({
+                                'installation_id': installation_date.id,
+                                'start_date': start_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+                                'end_date': end_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+                                'crew_id': installation_date.crew_id.id,
+                                'crew_name': installation_date.crew_id.name,
+                            })
+                        if available_date_list:
+                            available_date_list.sort(key = lambda x:x['start_date'])
+                        return {
+                            'result': 'Success',
+                            'message': "Available Installation Date retrieved Successfully",
+                            'data': {
+                                'available_dates': available_date_list,
+                                'sale_order_id': sale_order.id
                             }
-                        else:
-                            return sale_sync_result
+                        }
                     else:
                         _logger.info("------Sale Order is not existing against this appointment-------------")
                         result = {
