@@ -4337,7 +4337,7 @@ class SaleOrder(models.Model):
             }
             tokenize_response = acquirer._cardpointe_tokenize(tokenize_data)
             token = ''
-            if tokenize_response.get('token', '') and tokenize_response.get('errorcode', 0) not in [0]:
+            if tokenize_response.get('token', '') and tokenize_response.get('errorcode', 0) in [0]:
                 token = tokenize_response.get('token')
             else:
                 message = tokenize_response.get('message', '')
