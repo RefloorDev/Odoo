@@ -4119,6 +4119,10 @@ class SaleOrder(models.Model):
         }
         return values
 
+    def format_expiry(expiry):
+        month, year = expiry.replace("/", "-").split("-")
+        return f"{month.zfill(2)}{year[-2:]}"
+
     def action_authcapture_payment(self, data):
         """
 
@@ -4201,7 +4205,7 @@ class SaleOrder(models.Model):
                     acquirer._cardpoint_void_transaction(order.authorize_transaction_id)
                 tokenize_data = {
                     "account": data.get('cc_number', ''),
-                    "expiry": data.get('cc_expiry', ''),
+                    "expiry": self.format_expiry(data.get('cc_expiry', '')),
                     "cvv": data.get('cc_cvc', ''),
                 }
                 tokenize_response = acquirer._cardpointe_tokenize(tokenize_data)
