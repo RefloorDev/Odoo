@@ -4199,12 +4199,31 @@ class SaleOrder(models.Model):
             elif acquirer.code == 'cardpoint':
                 if order.authorize_transaction_id:
                     acquirer._cardpoint_void_transaction(order.authorize_transaction_id)
+                tokenize_data = {
+                    "account": data.get('cc_number', ''),
+                    "expiry": data.get('cc_expiry', ''),
+                    "cvv": data.get('cc_cvc', ''),
+                }
+                tokenize_response = acquirer._cardpointe_tokenize(tokenize_data)
+                token = ''
+                if tokenize_response.get('token', '') and tokenize_response.get('errorcode', 0) not in [0]:
+                    token = tokenize_response.get('token')
+                else:
+                    message = tokenize_response.get('message', '')
+                    if message:
+                        return {
+                            'result': 'Failed',
+                            'message': 'Tokenization is failed with following reason : %s.'%(message)
+                        }
+                    else:
+                        return {
+                            'result': 'Failed',
+                            'message': 'Tokenization is failed.'
+                        }
                 # Build payment data
                 payment_data = {
                     'payment_type': 'card',
-                    'token': data.get('cc_number', ''),
-                    'expiry': data.get('cc_expiry', ''),
-                    'cvv': data.get('cc_cvc', ''),
+                    'token': token,
                     'card_name': partner.name,
                 }
 
@@ -4305,12 +4324,31 @@ class SaleOrder(models.Model):
 
             if order.authorize_transaction_id:
                 acquirer._cardpoint_void_transaction(order.authorize_transaction_id)
+
+            tokenize_data = {
+                "account": "%s/%s"%(data.get('bank_routing_number', ''), data.get('bank_account_number', '')),
+            }
+            tokenize_response = acquirer._cardpointe_tokenize(tokenize_data)
+            token = ''
+            if tokenize_response.get('token', '') and tokenize_response.get('errorcode', 0) not in [0]:
+                token = tokenize_response.get('token')
+            else:
+                message = tokenize_response.get('message', '')
+                if message:
+                    return {
+                        'result': 'Failed',
+                        'message': 'Tokenization is failed with following reason : %s.' % (message)
+                    }
+                else:
+                    return {
+                        'result': 'Failed',
+                        'message': 'Tokenization is failed.'
+                    }
+
             # Build payment data
             payment_data = {
                 'payment_type': 'ach_direct_debit',
-                'account_number': data.get('bank_account_number', ''),
-                'ssnl4': data.get('bank_routing_number', ''),
-                'routing_number': data.get('bank_routing_number', ''),
+                'token': token,
                 'acct_type': data.get('acct_type', ''),
             }
 

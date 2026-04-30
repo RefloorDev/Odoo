@@ -385,8 +385,10 @@ class PaymentTransaction(models.Model):
         if payment_type == 'ach_direct_debit':
             # ACH uses routing|account format tokenized via CardSecure
             account = token if token else f"{account_number}"
-            customer_data['bank_aba'] = routing_number
+            # customer_data['bank_aba'] = routing_number
             customer_data['acct_type'] = acct_type
+            customer_data['ach_entry_code'] = "WEB"
+            customer_data['ach_description'] = "PURCHASE"
         else:
             account = token
 

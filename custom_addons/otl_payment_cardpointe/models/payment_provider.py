@@ -31,6 +31,7 @@ CARDPOINT_PATH_REFUND = '/refund'
 # CARDPOINT_PATH_INQUIRE = '/inquire'
 CARDPOINT_PATH_INQUIRE = '/inquireMerchant'
 CARDPOINT_PATH_PROFILE = '/profile'
+CARDPOINT_PATH_TOKENIZE = '/v1/ccn/tokenize'
 
 # Payment method type codes
 CARDPOINT_PAYMENT_TYPE_CARD = 'card'
@@ -312,6 +313,8 @@ class PaymentProvider(models.Model):
                 'accttype': customer_data.get('acct_type', '') if customer_data else '',  # Electronic Check
                 'bankaba': customer_data.get('bank_aba', '') if customer_data else '',
                 'ssnl4': customer_data.get('ssnl4', '') if customer_data else '',
+                'achEntryCode': customer_data.get('ach_entry_code', '') if customer_data else '',
+                'achDescription': customer_data.get('ach_description', '') if customer_data else '',
             })
         else:
             # Card-specific fields
@@ -413,6 +416,56 @@ class PaymentProvider(models.Model):
         if acct_id:
             path += f"/{acct_id}"
         return self._cardpoint_make_request(path, method='DELETE')
+
+    def _cardpointe_tokenize(self, payload, method='POST'):
+        """Tokenize card/account data."""
+        base_url = self._cardpoint_get_base_url()
+        base_url = base_url.replace('cardconnect/rest', 'cardsecure/api')
+        url = f"{base_url}{CARDPOINT_PATH_TOKENIZE}"
+        headers = self._cardpoint_get_auth_header()
+
+        _logger.info(
+            "CardPointe API request | Method: %s | URL: %s | Payload keys: %s Values",
+            method,
+            url,
+            list(payload.keys()) if payload else '[]',
+            str(payload)
+        )
+
+        try:
+            response = requests.request(
+                method=method,
+                url=url,
+                headers=headers,
+                json=payload,
+                timeout=30,
+            )
+            response.raise_for_status()
+        except requests.exceptions.Timeout:
+            _logger.error("CardPointe API timeout for URL: %s", url)
+            raise UserError(_('CardPointe API request timed out. Please try again.'))
+        except requests.exceptions.ConnectionError as e:
+            _logger.error("CardPointe API connection error: %s", str(e))
+            raise UserError(_('Unable to connect to CardPointe API. Please check your internet connection.'))
+        except requests.exceptions.HTTPError as e:
+            _logger.error("CardPointe API HTTP error %s: %s", response.status_code, response.text)
+            raise UserError(_(
+                'CardPointe API returned an error (HTTP %s). '
+                'Please check your credentials and try again.'
+            ) % response.status_code)
+
+        try:
+            result = response.json()
+        except ValueError:
+            _logger.error("CardPointe API returned non-JSON response: %s", response.text)
+            raise UserError(_('CardPointe API returned an unexpected response format.'))
+
+        _logger.info(
+            "CardPointe API response | Status: %s | Response keys: %s",
+            response.status_code,
+            list(result.keys()) if isinstance(result, dict) else 'list',
+        )
+        return result
 
     # ------------------------------------------------------------------
     # Response interpretation helpers
