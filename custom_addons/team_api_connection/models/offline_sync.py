@@ -4119,9 +4119,11 @@ class SaleOrder(models.Model):
         }
         return values
 
-    def format_expiry(expiry):
+    def format_expiry(self, expiry):
         month, year = expiry.replace("/", "-").split("-")
-        return f"{month.zfill(2)}{year[-2:]}"
+        if len(year) == 4:
+            year = year[-2:]
+        return f"{month.zfill(2)}{year}"
 
     def action_authcapture_payment(self, data):
         """
@@ -4210,7 +4212,7 @@ class SaleOrder(models.Model):
                 }
                 tokenize_response = acquirer._cardpointe_tokenize(tokenize_data)
                 token = ''
-                if tokenize_response.get('token', '') and tokenize_response.get('errorcode', 0) not in [0]:
+                if tokenize_response.get('token', '') and tokenize_response.get('errorcode', 0) in [0]:
                     token = tokenize_response.get('token')
                 else:
                     message = tokenize_response.get('message', '')
