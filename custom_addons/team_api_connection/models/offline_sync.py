@@ -4231,6 +4231,7 @@ class SaleOrder(models.Model):
                     'payment_type': 'card',
                     'token': token,
                     'card_name': partner.name,
+                    "expiry": self.format_expiry(data.get('cc_expiry', '')),
                 }
 
                 # Process the payment

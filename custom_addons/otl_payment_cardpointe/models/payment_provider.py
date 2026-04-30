@@ -229,7 +229,7 @@ class PaymentProvider(models.Model):
         headers = self._cardpoint_get_auth_header()
 
         _logger.info(
-            "CardPointe API request | Method: %s | URL: %s | Payload keys: %s Values",
+            "CardPointe API request | Method: %s | URL: %s | Payload keys: %s Values: %s",
             method,
             url,
             list(payload.keys()) if payload else '[]',
