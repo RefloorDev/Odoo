@@ -191,11 +191,15 @@ class PaymentTransaction(models.Model):
             account = token.provider_ref
 
         try:
+            if self.sale_order_ids and self.sale_order_ids[0].appointment_id and self.sale_order_ids[0].appointment_id.improveit_appointment_id:
+                reference = self.sale_order_ids[0].appointment_id.improveit_appointment_id
+            else:
+                reference = self.reference
             response = provider._cardpoint_authorize_transaction(
                 amount=self.amount,
                 currency=self.currency_id.name,
                 account=account,
-                tx_ref=self.reference,
+                tx_ref= reference,
                 customer_data=customer_data,
                 payment_type=self.cardpoint_payment_type,
             )
@@ -397,11 +401,15 @@ class PaymentTransaction(models.Model):
             return
 
         try:
+            if self.sale_order_ids and self.sale_order_ids[0].appointment_id and self.sale_order_ids[0].appointment_id.improveit_appointment_id:
+                reference = self.sale_order_ids[0].appointment_id.improveit_appointment_id
+            else:
+                reference = self.reference
             response = self.provider_id._cardpoint_authorize_transaction(
                 amount=self.amount,
                 currency=self.currency_id.name,
                 account=account,
-                tx_ref=self.reference,
+                tx_ref=reference,
                 customer_data=customer_data,
                 payment_type=payment_type,
                 transaction_type = transaction_type
