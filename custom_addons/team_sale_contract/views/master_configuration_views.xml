@@ -50,8 +50,7 @@
                                     <field name="url" widget="url" required="1"/>
                                     <field name="location_based"/>
                                     <field name="entity_key" required="location_based == False and provider != 'one_and_fund'" invisible="location_based != False"/>
-                                    <field name="installation_delay_days"/>
-                                </group>
+                                    <field name="installation_delay_days"/>                                </group>
                                 <group>
                                     <field name="provider" required="1"/>
                                     <field name="sequence" widget="handle"/>
@@ -842,6 +841,7 @@
                                        groups="base.group_multi_company"/>
                             </group>
                             <group name="right">
+                                    <field name="payment_provider_id" domain="[('state', '!=', 'disabled'), ('module_state', '=', 'installed')]" options="{'no_create_edit': True, 'no_open':True,'no_create': True}"/>
                                 <field name="active" invisible="1"/>
                             </group>
                         </group>

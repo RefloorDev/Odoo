@@ -1,0 +1,49 @@
+/* CardPointe Backend Configuration Styles
+ * ==========================================
+ * Styles for the CardPointe payment provider configuration
+ * in Odoo's backend (Settings > Payment Providers).
+ */
+
+/* Test mode warning */
+.o_cardpoint_test_warning {
+    border-left: 4px solid #ffc107;
+}
+
+.o_cardpoint_test_warning code {
+    background: #fff8e1;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.85em;
+}
+
+/* Production mode warning */
+.o_cardpoint_prod_warning {
+    border-left: 4px solid #dc3545;
+}
+
+/* Webhook URL display */
+#o_cardpoint_webhook_url {
+    font-family: monospace;
+    font-size: 0.9rem;
+    background: #f8f9fa;
+}
+
+#o_cardpoint_full_webhook_url {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Provider logo placeholder */
+.o_cardpoint_logo_placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    color: white;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}

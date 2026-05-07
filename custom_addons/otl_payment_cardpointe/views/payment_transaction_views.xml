@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Extend payment transaction form view -->
+    <record id="payment_transaction_form_cardpoint" model="ir.ui.view">
+        <field name="name">payment.transaction.form.cardpoint</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.payment_transaction_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Add CardPointe details after the main info group -->
+            <xpath expr="//sheet" position="inside">
+                <group string="CardPointe Transaction Details"
+                       name="cardpoint_details"
+                       invisible="provider_code != 'cardpoint'">
+
+                    <group string="Transaction Info" name="cardpoint_tx_info">
+                        <field name="cardpoint_payment_type"/>
+                        <field name="cardpoint_retref"/>
+                        <field name="cardpoint_authcode"/>
+                        <field name="cardpoint_respcode"/>
+                        <field name="cardpoint_resptext"/>
+                        <field name="cardpoint_batch_id"/>
+                    </group>
+
+                    <group string="Payment Method Details" name="cardpoint_pm_details">
+                        <field name="cardpoint_account_type"/>
+                        <field name="cardpoint_account_last4"/>
+                        <field name="cardpoint_avs_resp"/>
+                        <field name="cardpoint_cvv_resp"/>
+                        <field name="cardpoint_profile_id"/>
+                        <field name="cardpoint_acct_id"/>
+                    </group>
+
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- Extend payment token form view -->
+    <record id="payment_token_form_cardpoint" model="ir.ui.view">
+        <field name="name">payment.token.form.cardpoint</field>
+        <field name="model">payment.token</field>
+        <field name="inherit_id" ref="payment.payment_token_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//sheet" position="inside">
+                <group string="CardPointe Token Details"
+                       name="cardpoint_token_details"
+                       invisible="provider_code != 'cardpoint'">
+                    <field name="cardpoint_payment_type"/>
+                    <field name="cardpoint_profile_id"/>
+                    <field name="cardpoint_acct_id"/>
+                    <field name="cardpoint_account_type"/>
+                    <field name="cardpoint_last4"/>
+                    <field name="cardpoint_expiry"/>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>
