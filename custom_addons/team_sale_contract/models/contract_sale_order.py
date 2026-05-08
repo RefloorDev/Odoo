@@ -2245,6 +2245,23 @@ class SaleOrder(models.Model):
                             result.update({"success": "false"})
 
         return result
+
+    def get_total_image_count(self):
+        count = 0
+        for sale_order in self:
+            for room_line in sale_order.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation):
+                if room_line.shape_image_id:
+                    count += 1
+                if room_line.attachment_ids:
+                    count += len(room_line.attachment_ids)
+                if room_line.protrusion_image_ids:
+                    count += len(room_line.protrusion_image_ids)
+            if sale_order.appointment_id and sale_order.appointment_id.attachment_ids:
+                count += len(sale_order.appointment_id.attachment_ids)
+        return count
+
+
+
     def add_sale_id_file(self, document=None):
         result = {
             "success": "true",
@@ -2254,6 +2271,8 @@ class SaleOrder(models.Model):
             configurations = self.env['team.improveit.configuration'].search(
                 [('api_type', '=', 'zapier'), ('section', '=', 'SaleAddAttachment')])
             for sale_order in self:
+                total_image_count = sale_order.get_total_image_count()
+                image_count = 0
                 if sale_order.quote_id:
                     quote_id = sale_order.quote_id
                     excluded_quote_id = sale_order.excluded_quote_id or ''
@@ -2284,6 +2303,9 @@ class SaleOrder(models.Model):
                     for room_lines in sale_order.room_measurement_line.filtered(lambda x: not x.exclude_from_calculation):
                         _logger.info('Attaching Room line  Data %s' % room_lines.name)
                         if room_lines.shape_image_id:
+                            image_count += 1
+                            if image_count == total_image_count:
+                                request_url += '&lastImage=true'
                             attach = room_lines.shape_image_id
                             if not attach.improveit_id:
                                 extension = attach.name.split(".")[-1]
@@ -2309,7 +2331,7 @@ class SaleOrder(models.Model):
                                     headers = {
                                         'Content-type': multi_part_data.content_type,
                                     }
-                                    _logger.info('Measurement Upload of sale %s: %s' %(sale_order.id, multi_part_data))
+                                    _logger.info('Measurement Upload of sale %s: %s with URL: %s' %(sale_order.id, multi_part_data, request_url))
                                     req = requests.post(request_url, data=multi_part_data, headers=headers, timeout=TIMEOUT, verify=configurations.enable_ssl)
                                     req.raise_for_status()
                                     content = req.json()
@@ -2329,6 +2351,9 @@ class SaleOrder(models.Model):
                             count = 0
                             for attachment in room_lines.attachment_ids:
                                 _logger.info('Attaching Room Images')
+                                image_count += 1
+                                if image_count == total_image_count:
+                                    request_url += '&lastImage=true'
                                 if not attachment.improveit_id:
                                     count += 1
                                     extension = attachment.name.split(".")[-1]
@@ -2354,7 +2379,7 @@ class SaleOrder(models.Model):
                                         headers = {
                                             'Content-type': multi_part_data.content_type,
                                         }
-                                        _logger.info('Room images Upload of sale %s: %s' %(sale_order.id, multi_part_data))
+                                        _logger.info('Room images Upload of sale %s: %s with URL: %s' %(sale_order.id, multi_part_data, request_url))
                                         req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
                                         req.raise_for_status()
@@ -2376,6 +2401,9 @@ class SaleOrder(models.Model):
                             count = 0
                             for attachment in room_lines.protrusion_image_ids:
                                 _logger.info('Attaching Room Anomaly Images')
+                                image_count += 1
+                                if image_count == total_image_count:
+                                    request_url += '&lastImage=true'
                                 if not attachment.improveit_id:
                                     count += 1
                                     extension = attachment.name.split(".")[-1]
@@ -2401,7 +2429,7 @@ class SaleOrder(models.Model):
                                         headers = {
                                             'Content-type': multi_part_data.content_type,
                                         }
-                                        _logger.info('Room Anomaly images Upload of sale %s: %s' %(sale_order.id, multi_part_data))
+                                        _logger.info('Room Anomaly images Upload of sale %s: %s with URL: %s' %(sale_order.id, multi_part_data, request_url))
                                         req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                             timeout=TIMEOUT, verify=configurations.enable_ssl)
                                         req.raise_for_status()
@@ -2425,6 +2453,9 @@ class SaleOrder(models.Model):
                         count = 0
                         _logger.info('--------------Snapshot Uploading Started--------------')
                         for attachment in attachment_ids:
+                            image_count += 1
+                            if image_count == total_image_count:
+                                request_url += '&lastImage=true'
                             if not attachment.improveit_id:
                                 count += 1
                                 file_name_split = attachment.name.split(".")
@@ -2451,7 +2482,7 @@ class SaleOrder(models.Model):
                                     headers = {
                                         'Content-type': multi_part_data.content_type,
                                     }
-                                    _logger.info('Snapshot images Upload of sale %s: %s' %(sale_order.id, multi_part_data))
+                                    _logger.info('Snapshot images Upload of sale %s: %s with URL: %s' %(sale_order.id, multi_part_data, request_url))
                                     req = requests.post(request_url, data=multi_part_data, headers=headers,
                                                         timeout=TIMEOUT, verify=configurations.enable_ssl)
                                     req.raise_for_status()
