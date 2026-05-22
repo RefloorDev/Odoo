@@ -1382,8 +1382,10 @@ class SaleOrder(models.Model):
                     if sale_order.payment_method:
                         if sale_order.payment_method == 'cash':
                             payment_method = 'Cash'
-                        elif sale_order.payment_method in ['check', 'ach']:
+                        elif sale_order.payment_method == 'check':
                             payment_method = 'Check'
+                        elif sale_order.payment_method == 'ach':
+                            payment_method = 'E-Check'
                         else:
                             payment_method = 'Credit Card'
                     balance_payment_method = 'Financing'
