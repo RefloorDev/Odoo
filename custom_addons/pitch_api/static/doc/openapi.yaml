@@ -249,6 +249,28 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [draft, scheduled, canceled, done]
+        - name: progress_status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [not_started, in_progress, completed]
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
         - name: limit
           in: query
           required: false
@@ -887,6 +909,15 @@ components:
           type: string
         manual_arrival_date:
           type: string
+          nullable: true
+        progress_status:
+          type: string
+          enum: [not_started, in_progress, completed]
+          description: Derived from state and live screen logs (sales app)
+        progress_status_updated_at:
+          type: string
+          nullable: true
+          description: Latest live screen log screen_entry_date (UTC)
         app_screen_logs:
           type: array
           items:
@@ -913,6 +944,8 @@ components:
         arrival_date: null
         departure_date: null
         manual_arrival_date: null
+        progress_status: in_progress
+        progress_status_updated_at: "2025-11-06T18:25:00"
         app_screen_logs:
           - id: 987
             name: "photo_capture"

@@ -1,8 +1,13 @@
-# Pitch API Documentation v2.4
+# Pitch API Documentation v2.5
 
 REST API for the Pitch mobile/web application.
 
-**Last Updated:** 2026-01-16
+**Last Updated:** 2026-05-29
+
+**Changes in v2.5:**
+- Added derived `progress_status` (`not_started`, `in_progress`, `completed`) and `progress_status_updated_at` on all appointment list/get responses
+- Added optional `progress_status` query filter on `GET /api/appointments`, `GET /api/appointments/today`, `GET /api/admin/appointments`, and `GET /api/admin/appointments/today`
+- `progress_status` is derived from Odoo `state` and sales-app live screen logs (`otl.app.live.screen.log`): `done` → `completed`; not `done` with ≥1 log → `in_progress`; otherwise `not_started`
 
 **Changes in v2.4:**
 - Added `POST /api/admin/appointments/app_live_screen_logs` endpoint for bulk live screen logs retrieval with time spent calculation
@@ -489,11 +494,14 @@ All date/datetime values are treated as UTC.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `status` | string | - | Filter by status: `draft`, `scheduled`, `canceled`, `done` |
+| `progress_status` | string | - | Filter by derived progress: `not_started`, `in_progress`, `completed` |
 | `date_from` | string | - | Filter from date in UTC: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS` |
 | `date_to` | string | - | Filter to date in UTC: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS` |
 | `page` | integer | 1 | Page number (1-based) |
 | `per_page` | integer | 200 | Items per page (max: 2000) |
 | `order` | string | `id_desc` | Sort order: `id_desc`, `id_asc`, `date_desc`, `date_asc` |
+
+**Progress status derivation:** `state == done` → `completed`; not `done` with at least one live screen log row → `in_progress`; otherwise `not_started`. Distinct from analytics `with_logs` (which requires ≥2 log entries).
 
 **Success Response (200):**
 ```json
@@ -599,7 +607,9 @@ All date/datetime values are treated as UTC.
       },
       "arrival_date": "2025-01-15 13:55:00",
       "departure_date": "2025-01-15 16:30:00",
-      "manual_arrival_date": null
+      "manual_arrival_date": null,
+      "progress_status": "in_progress",
+      "progress_status_updated_at": "2025-01-15 14:10:00"
     }
   ]
 }
@@ -653,6 +663,8 @@ All date/datetime values are treated as UTC.
 | `arrival_date` | string/null | Arrival datetime (UTC) |
 | `departure_date` | string/null | Departure datetime (UTC) |
 | `manual_arrival_date` | string/null | Manual arrival datetime (UTC) |
+| `progress_status` | string | Derived progress: `not_started`, `in_progress`, `completed` |
+| `progress_status_updated_at` | string/null | Latest live screen log `screen_entry_date` (UTC), or null |
 
 **Nested Object: `applicant_data`**
 | Field | Type | Description |
@@ -770,6 +782,7 @@ Today is determined in UTC.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `status` | string | - | Filter by status |
+| `progress_status` | string | - | Filter by derived progress: `not_started`, `in_progress`, `completed` |
 | `page` | integer | 1 | Page number |
 | `per_page` | integer | 200 | Items per page (max: 2000) |
 | `order` | string | `id_desc` | Sort order |
@@ -937,6 +950,7 @@ List all appointments with optional filters, search, and pagination.
 | `user_id` | integer | - | Filter by assigned Odoo user ID |
 | `improveit_user_id` | string | - | Filter by Salesforce user ID (used if `user_id` not provided) |
 | `status` | string | - | Filter by status: `draft`, `scheduled`, `canceled`, `done` |
+| `progress_status` | string | - | Filter by derived progress: `not_started`, `in_progress`, `completed` |
 | `date_from` | string | - | Start date in UTC: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS` |
 | `date_to` | string | - | End date in UTC: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS` |
 
@@ -956,6 +970,8 @@ List all appointments with optional filters, search, and pagination.
 | `order` | string | `id_desc` | Sort: `id_desc`, `id_asc`, `date_desc`, `date_asc` |
 
 *Note: If both `user_id` and `improveit_user_id` are provided, `user_id` takes priority.*
+
+**Progress status:** Same derivation as user appointments. Optional `progress_status` filter is applied server-side (SQL) with existing filters.
 
 **Priority-Based Name Matching (for `customer` and `co_applicant`):**
 
@@ -989,6 +1005,9 @@ GET /api/admin/appointments?market_segment=Residential,Commercial
 
 # Date range filter (UTC)
 GET /api/admin/appointments?date_from=2025-01-01&date_to=2025-01-31
+
+# Progress status filter (server-side)
+GET /api/admin/appointments?progress_status=in_progress&date_from=2026-05-01&date_to=2026-05-31
 ```
 
 **Success Response (200):**
@@ -1004,6 +1023,7 @@ GET /api/admin/appointments?date_from=2025-01-01&date_to=2025-01-31
     "market_segment": "Residential",
     "user_id": 45,
     "status": "scheduled",
+    "progress_status": "in_progress",
     "date_from": "2025-01-01",
     "date_to": "2025-01-31",
     "order": "id_desc",
@@ -1029,6 +1049,8 @@ GET /api/admin/appointments?date_from=2025-01-01&date_to=2025-01-31
 | Status | Error | Description |
 |--------|-------|-------------|
 | 400 | `invalid_request` | Invalid `status` value. Allowed: `draft`, `scheduled`, `canceled`, `done` |
+| 400 | `invalid_request` | Invalid `progress_status` value. Allowed: `not_started`, `in_progress`, `completed` |
+| 400 | `invalid_request` | Conflicting `progress_status` and `status` (e.g. `completed` + `scheduled`, or `in_progress` + `done`) |
 | 400 | `invalid_request` | Invalid `order` value. Allowed: `id_desc`, `id_asc`, `date_desc`, `date_asc` |
 | 400 | `invalid_request` | Invalid `id` value. Must be a valid integer |
 | 400 | `invalid_request` | Invalid `page` or `per_page` value |
@@ -1058,6 +1080,7 @@ Today is determined in UTC.
 | `user_id` | integer | - | Filter by assigned Odoo user ID |
 | `improveit_user_id` | string | - | Filter by Salesforce user ID (used if `user_id` not provided) |
 | `status` | string | - | Filter by status: `draft`, `scheduled`, `canceled`, `done` |
+| `progress_status` | string | - | Filter by derived progress: `not_started`, `in_progress`, `completed` |
 
 **Search Parameters (AND logic with filters):**
 | Parameter | Type | Description |
@@ -1112,6 +1135,8 @@ Today is determined in UTC.
 | Status | Error | Description |
 |--------|-------|-------------|
 | 400 | `invalid_request` | Invalid `status` value. Allowed: `draft`, `scheduled`, `canceled`, `done` |
+| 400 | `invalid_request` | Invalid `progress_status` value. Allowed: `not_started`, `in_progress`, `completed` |
+| 400 | `invalid_request` | Conflicting `progress_status` and `status` |
 | 400 | `invalid_request` | Invalid `order` value. Allowed: `id_desc`, `id_asc`, `date_desc`, `date_asc` |
 | 400 | `invalid_request` | Invalid `id` value. Must be a valid integer |
 | 400 | `invalid_request` | Invalid `page` or `per_page` value |
@@ -1688,6 +1713,8 @@ All datetime values are in UTC.
 | `arrival_date` | string/null | Arrival datetime (UTC) |
 | `departure_date` | string/null | Departure datetime (UTC) |
 | `manual_arrival_date` | string/null | Manual arrival datetime (UTC) |
+| `progress_status` | string | Derived progress: `not_started`, `in_progress`, `completed` |
+| `progress_status_updated_at` | string/null | Latest live screen log `screen_entry_date` (UTC), or null |
 
 **Nested Object: `applicant_data`**
 | Field | Type | Description |
