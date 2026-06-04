@@ -4058,6 +4058,162 @@ class TeamCustomerAppointment(models.Model):
             }
         _logger.info("------action_update_live_screen_log result: %s-------------" % (result))
         return result
+
+    @api.model
+    def action_process_credit_card_payment(self, data):
+        result = {
+            'message': 'No Data found to update',
+            'result': 'Failed'
+        }
+        payment_status = 'Not Done'
+        payment_message = 'Payment is not Done'
+        success_msg = 'Order details updated successfully'
+        _logger.info("------action_process_credit_card_payment data: %s-------------" % (data))
+        sale_order_obj = self.env['sale.order']
+        # accepted values - online, offline
+        operation_mode = data.get('operation_mode', 'offline')
+        transaction_id = 'Invalid'
+        card_type = ''
+        down_payment_amount = 0
+        try:
+            appointment_id = data.get('appointment_id', '')
+            if appointment_id:
+                appointment = self.search([('improveit_appointment_id', '=', appointment_id)], limit=1, order='id desc')
+                if appointment.exists():
+                    order = self.env['sale.order'].search([('appointment_id', '=', appointment.id)], limit=1)
+                    if order:
+                        payment_method_dict = data.get('payment_method', {})
+                        payment_transaction_info_dict = data.get('payment_transaction_info', {})
+                        existing_auth_transaction_id = ''
+                        if payment_transaction_info_dict:
+                            existing_auth_transaction_id = payment_transaction_info_dict.get('authorize_transaction_id',
+                                                                                             0)
+                            card_type = payment_transaction_info_dict.get('card_type', '')
+                        invoice_created = False
+                        if order.order_line.filtered(lambda x: x.invoice_lines):
+                            invoice_created = True
+                        retry_order_creation = False
+                        if payment_method_dict and not existing_auth_transaction_id:
+                            payment_method = payment_method_dict.get('payment_method', '')
+                            down_payment_amount = float(payment_method_dict.get('down_payment_amount', 0))
+                            if order.payment_method in ['credit_card', 'debit_card',
+                                                        'ach'] and down_payment_amount and not order.card_transaction_log_line.filtered(
+                                    lambda x: x.state == 'success'):
+                                retry_order_creation = True
+                            elif order.payment_method in ['credit_card', 'debit_card',
+                                                          'ach'] and down_payment_amount and order.card_transaction_log_line.filtered(
+                                    lambda x: x.state == 'success') and order.payment_method != payment_method:
+                                retry_order_creation = True
+                            elif order.payment_method in ['credit_card', 'debit_card',
+                                                          'ach'] and down_payment_amount and order.card_transaction_log_line.filtered(
+                                    lambda x: x.state == 'success') and order.payment_method == payment_method and down_payment_amount == order.down_payment_amount:
+                                return {
+                                    'message': 'Order details are already updated successfully.',
+                                    'result': 'Success',
+                                    'payment_status': 'Success',
+                                    'payment_message': "Payment is already processed.",
+                                }
+
+                        if (operation_mode == 'online' or (
+                                invoice_created and retry_order_creation)) and not existing_auth_transaction_id:
+                            valid_transactions_lines = appointment.card_transaction_log_line.filtered(
+                                lambda x: x.state == 'success' and not x.void_transaction)
+                            for line in valid_transactions_lines:
+                                authorize_transaction_id = line.name or ''
+                                if authorize_transaction_id:
+                                    acquirer = self.env.ref('payment.payment_provider_authorize').sudo()
+                                    if line.provider_id:
+                                        acquirer = line.provider_id.sudo()
+                                    if acquirer.code == 'authorize':
+                                        transaction = AuthorizeAPICustom(acquirer)
+                                        response = transaction.void(authorize_transaction_id or '')
+                                        if response.get('x_trans_id', ''):
+                                            line.write({
+                                                'void_transaction': True,
+                                                'void_transaction_id': response.get('x_trans_id', '')
+                                            })
+                                        elif response.get('x_response_code', ''):
+                                            line.write({
+                                                'error_code': response.get('x_response_reason_text', '')
+                                            })
+                                    elif acquirer.code == 'cardpoint':
+                                        response = acquirer._cardpoint_void_transaction(order.authorize_transaction_id)
+                                        if response.get('respstat', '') == 'A':
+                                            line.write({
+                                                'void_transaction': True,
+                                                'void_transaction_id': response.get('retref', '')
+                                            })
+                                        elif response.get('respstat', '') != 'A':
+                                            line.write({
+                                                'error_code': response.get('resptext', '')
+                                            })
+
+                        if order.state != 'draft':
+                            order.action_cancel()
+                            order.action_draft()
+                        order.write({'down_payment_amount': down_payment_amount})
+                        if order.floor_type:
+                            monthly_promo = order.floor_type and order.floor_type.monthly_promo or 0
+                            order.add_payment_line(order.discount, order.adjustment, order.additional_cost,
+                                                   monthly_promo, 0, order.final_sale_price)
+                        if order.down_payment_amount and data.get('payment_method', {}):
+                            payment_result = order.action_update_payment_data(data.get('payment_method', {}),
+                                                                              existing_auth_transaction_id,
+                                                                              card_type)
+                            payment_status = payment_result.get('result', '')
+                            if payment_result.get('result', '') != 'Success':
+                                payment_message = payment_result.get('message', '')
+                                if operation_mode == 'online':
+                                    payment_result.update({
+                                        'payment_status': payment_status,
+                                        'payment_message': payment_message,
+                                    })
+                                    return payment_result
+                            else:
+                                payment_message = 'Payment Processed Successfully'
+                                order_values = payment_result.get('values', {})
+                                if order_values:
+                                    transaction_id = order_values.get('authorize_transaction_id', '')
+                                    card_type = order_values.get('card_type', '')
+                                    order.write(order_values)
+
+                        return {
+                            'message': 'Order details updated successfully.',
+                            'result': 'Success',
+                            'payment_status': payment_status,
+                            'payment_message': payment_message,
+                            'transaction_id': transaction_id,
+                            'card_type': card_type
+                        }
+                    else:
+                        _logger.info("------Empty Sale Order-------------")
+                        result = {
+                            'message': 'Sale order is not existing for the appointment.',
+                            'result': 'Failed'
+                        }
+                else:
+                    _logger.info("------Wrong Appointment id-------------")
+                    result = {
+                        'message': 'Wrong Appointment id',
+                        'result': 'Failed'
+                    }
+            else:
+                _logger.info("------Empty Appointment id-------------")
+                result = {
+                    'message': 'Empty Appointment id',
+                    'result': 'Failed'
+                }
+        except:
+            result = {
+                'message': 'Something went wrong',
+                'result': 'Failed',
+                'transaction_id': transaction_id,
+                'card_type': card_type,
+                'payment_status': payment_status,
+                'payment_message': payment_message,
+            }
+        _logger.info("------action_process_credit_card_payment result: %s-------------" % (result))
+        return result
     
 
 class SaleOrder(models.Model):
