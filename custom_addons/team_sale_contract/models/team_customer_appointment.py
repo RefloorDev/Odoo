@@ -390,6 +390,13 @@ class APISyncLog(models.Model):
     @api.model
     def create_api_log(self, url, data, uid, result, network_strength='', api_create_date=None):
         appointment_id = data.get('appointment_id', False)
+        if appointment_id:
+            try:
+                appointment_id = int(data.get('appointment_id', 0))
+            except (ValueError, TypeError):
+                appointment = self.env['team.customer.appointment'].search([('improveit_appointment_id', '=', appointment_id)], limit=1, order='id desc')
+                if appointment:
+                    appointment_id = appointment.id
         # api_create_date may be passed explicitly as a separate param (preferred)
         # otherwise try to normalize from common keys in payload
         if not api_create_date:

@@ -54,6 +54,7 @@ class APIHomes(API_Homes):
     def __init__(self, *args):
         super(APIHomes, self).__init__(*args)
         self.create_order_and_update_measurements_api_queue = dict()
+        self.process_credit_card_payment_api_queue = dict()
         self.generate_contract_document_api_queue = dict()
         self.update_additional_appointment_data_api_queue = dict()
         self.update_arrival_departure_time_api_queue = dict()
@@ -3510,4 +3511,162 @@ class APIHomes(API_Homes):
             _logger.info('update_live_screen_log_api_queue Data - Ending--:%s' % (
                 self.update_live_screen_log_api_queue))
         return json.dumps(result)
+
+    @route('/api/process_credit_card_payment', type='json', auth="none", methods=['POST'], csrf=False)
+    def process_credit_card_payment(self, **kwargs):
+        params = request.httprequest.get_json()
+        token = params.get('token', False)
+        data = params.get('data', False)
+        network_strength = params.get('network_strength', '')
+        api_create_date_val = self._extract_api_create_date(params)
+        appointment_id = False
+        _logger.info(
+            "------------process_credit_card_payment params - 1st: %s------------------" % (params))
+        while 'data' in data:
+            data = data.get('data', {})
+        _logger.info(
+            "------------process_credit_card_payment params- 2nd: %s------------------" % (params))
+        decode_options = ast.literal_eval(str(params.get('decode_options', {'verify_signature': True})))
+        if not token:
+            _logger.info(
+                "------------Token Missing in main process_credit_card_payment api------------------")
+            return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
+        uid, password, url, db = self.get_credentials(token)
+        if not uid:
+            _logger.info(
+                "------------uid missing in main process_credit_card_payment api-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        if not password:
+            _logger.info(
+                "------------password missing in main process_credit_card_payment api-------------------")
+            return json.dumps(
+                {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
+        status, message = self.action_verify_token(uid, token)
+        decoded_data = data
+        # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
+        enable_api_queue_system = str2bool(
+            request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+        if status:
+            if enable_api_queue_system:
+                if data.get('appointment_id', 0):
+                    _logger.info(
+                        'process_credit_card_payment_api_queue Data - Starting--:%s - Appointment ID: %s' % (
+                            self.process_credit_card_payment_api_queue, data.get('appointment_id', 0)))
+                    appointment_id = data.get('appointment_id', 0) and str(data.get('appointment_id', 0)) or '0'
+                    time = datetime.now()
+                    if appointment_id in self.process_credit_card_payment_api_queue:
+                        queue_time = self.process_credit_card_payment_api_queue.get(appointment_id, {})
+                        time_difference = (time - queue_time).total_seconds()
+                        if int(time_difference) < 20:
+                            _logger.info(
+                                'process_credit_card_payment_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
+                                    self.process_credit_card_payment_api_queue, data.get('appointment_id', 0)))
+                            result = {'override_json_result': 1, 'result': 'Failed',
+                                      'message': 'Execution is already in progress'}
+                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                            try:
+                                if models:
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                      ['/api/process_credit_card_payment', data, uid,
+                                                       result, network_strength, api_create_date_val])
+                                else:
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(
+                                        '/api/process_credit_card_payment', data, uid,
+                                        result, network_strength, api_create_date_val)
+                            except Exception as e:
+                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
+                            return json.dumps(result)
+                    self.process_credit_card_payment_api_queue.update({
+                        appointment_id: time
+                    })
+                    _logger.info('process_credit_card_payment_api_queue Data - Added--:%s' % (
+                        self.process_credit_card_payment_api_queue))
+                else:
+                    _logger.info(
+                        "------------Appointment ID missing in process_credit_card_payment api-------------------")
+                    return json.dumps(
+                        {'override_json_result': 1, 'result': 'Failed', 'message': 'Appointment ID is missing'})
+            try:
+                if self._skip_if_already_logged('/api/process_credit_card_payment',
+                                                api_create_date_val, appointment_id=int(appointment_id)):
+                    result = {'override_json_result': 1, 'result': 'Success', 'message': 'API is already executed.'}
+                    try:
+                        if models:
+                            models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                              ['/api/process_credit_card_payment', data, uid, result,
+                                               network_strength, api_create_date_val])
+                        else:
+                            request.env['otl.api.sync.log'].sudo().create_api_log(
+                                '/api/process_credit_card_payment', data, uid, result,
+                                network_strength, api_create_date_val)
+                    except Exception as e:
+                        _logger.exception('Failed to create_api_log (skip) via XML-RPC: %s', e)
+                    if enable_api_queue_system:
+                        self.process_credit_card_payment_api_queue.pop(appointment_id, '')
+                        _logger.info('process_credit_card_payment_api_queue Data - Ending--:%s' % (
+                            self.process_credit_card_payment_api_queue))
+                    return json.dumps(result)
+            except Exception:
+                pass
+            payment_method_secret = data.get('payment_method_secret', '')
+            try:
+                if payment_method_secret:
+                    payment_method_dict = self.action_extract_jwt_token(token, payment_method_secret, decode_options)
+                    if payment_method_dict:
+                        decoded_data.update({
+                            'payment_method': payment_method_dict
+                        })
+            except:
+                result = {'override_json_result': 1, 'result': 'Failed',
+                          'message': 'Something went wrong while decoding the payment token'}
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/process_credit_card_payment', data, uid,
+                    result, network_strength, api_create_date_val)
+                if enable_api_queue_system:
+                    self.process_credit_card_payment_api_queue.pop(appointment_id, '')
+                return json.dumps(result)
+            if decoded_data:
+                def remove_none_values(data):
+                    """Recursively remove None values from dictionaries and lists."""
+                    if isinstance(data, dict):
+                        return {k: remove_none_values(v) for k, v in data.items() if v is not None}
+                    elif isinstance(data, list):
+                        return [remove_none_values(v) for v in data if v is not None]
+                    else:
+                        return data
+
+                decoded_data = remove_none_values(decoded_data)
+                payment_data_result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
+                                                        'action_process_credit_card_payment', [decoded_data])
+            else:
+                return json.dumps({'override_json_result': 1, 'result': 'Failed',
+                                   'message': 'Empty values in decoded data'})
+
+            result = payment_data_result
+        else:
+            result = message
+        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+        try:
+            if models:
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/process_credit_card_payment', data, uid,
+                                   result, network_strength, api_create_date_val])
+            else:
+                request.env['otl.api.sync.log'].sudo().create_api_log(
+                    '/api/process_credit_card_payment', data, uid,
+                    result, network_strength, api_create_date_val)
+        except Exception as e:
+            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+
+        result.update({'override_json_result': 1})
+        if enable_api_queue_system:
+            if appointment_id:
+                self.process_credit_card_payment_api_queue.pop(appointment_id, '')
+            _logger.info('process_credit_card_payment_api_queue Data - Ending--:%s' % (
+                self.process_credit_card_payment_api_queue))
+        return json.dumps(result)
+
 

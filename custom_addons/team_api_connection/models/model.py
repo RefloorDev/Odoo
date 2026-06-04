@@ -217,6 +217,10 @@ class ResUsers(models.Model):
     def authenticate_salesperson_user(self, data):
         username = data.get('username', 0)
         password = data.get('password', 0)
+        try:
+            installer_user = int(data.get('installer_user', 0))
+        except (ValueError, TypeError):
+            installer_user = 0
         url = ''
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')], limit=1)
         if configurations:
@@ -248,6 +252,16 @@ class ResUsers(models.Model):
                     # if eval(content.get('RestrictGeolocationTracking', 'False')):
                     #     restrict_geolocation = True
                     if not users:
+                        groups = [
+                            self.env.ref('sales_team.group_sale_salesman').id,
+                            self.env.ref('base.group_partner_manager').id,
+                            self.env.ref('account.group_account_invoice').id,
+                        ]
+
+                        if installer_user == 1:
+                            groups.append(
+                                self.env.ref('sales_team.group_sale_salesman_all_leads').id
+                            )
                         users = self.env['res.users'].sudo().with_context(no_reset_password=True, create_mode=False,
                                                                           mail_create_nosubscribe=True,
                                                                           tracking_disable=True).create({
@@ -257,9 +271,7 @@ class ResUsers(models.Model):
                             'password': password,
                             'can_view_phone_number': can_view_phone_number,
                             # 'restrict_geolocation': restrict_geolocation,
-                            'groups_id': [(6, 0, [self.env.ref('sales_team.group_sale_salesman').id,
-                                                  self.env.ref('base.group_partner_manager').id,
-                                                  self.env.ref('account.group_account_invoice').id])],
+                            'groups_id': [(6, 0, groups)],
                             'improveit_user_id': content.get('SalespersonID', '') or content.get('InstallerID',
                                                                                                  '') or ''
                         })
