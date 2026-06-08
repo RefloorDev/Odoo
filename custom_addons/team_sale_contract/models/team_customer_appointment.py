@@ -5,6 +5,7 @@ from datetime import timedelta, datetime
 import pytz
 import requests
 import base64
+from odoo.addons.base.models.res_partner import _tz_get
 
 import logging
 
@@ -256,6 +257,7 @@ class TeamCustomerAppointment(models.Model):
     compressed_attachment_id = fields.Many2one('ir.attachment', string="Compressed Appointment Data")
     both_parties_present = fields.Boolean("All Homeowners Present", default=False, copy=False)
     destination_selection_id = fields.Many2one('otl.destination.selection', 'Destination Selection', copy=False)
+    appointment_timezone = fields.Selection(_tz_get, string='Appointment Timezone')
 
     @api.onchange('country_id')
     def _onchange_country_id(self):

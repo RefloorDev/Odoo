@@ -251,17 +251,17 @@ class ResUsers(models.Model):
                     # restrict_geolocation = False
                     # if eval(content.get('RestrictGeolocationTracking', 'False')):
                     #     restrict_geolocation = True
-                    if not users:
-                        groups = [
-                            self.env.ref('sales_team.group_sale_salesman').id,
-                            self.env.ref('base.group_partner_manager').id,
-                            self.env.ref('account.group_account_invoice').id,
-                        ]
+                    groups = [
+                        self.env.ref('sales_team.group_sale_salesman').id,
+                        self.env.ref('base.group_partner_manager').id,
+                        self.env.ref('account.group_account_invoice').id,
+                    ]
 
-                        if installer_user == 1:
-                            groups.append(
-                                self.env.ref('sales_team.group_sale_salesman_all_leads').id
-                            )
+                    if installer_user == 1:
+                        groups.append(
+                            self.env.ref('sales_team.group_sale_salesman_all_leads').id
+                        )
+                    if not users:
                         users = self.env['res.users'].sudo().with_context(no_reset_password=True, create_mode=False,
                                                                           mail_create_nosubscribe=True,
                                                                           tracking_disable=True).create({
@@ -282,6 +282,7 @@ class ResUsers(models.Model):
                             vals = {
                                 'password': password,
                                 'can_view_phone_number': can_view_phone_number,
+                                'groups_id': [(6, 0, groups)],
                                 # 'restrict_geolocation': restrict_geolocation,
                             }
                             if content.get('SalespersonID', ''):

@@ -21,6 +21,7 @@ from datetime import datetime, date
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT
 from odoo.addons.team_api_connection.models.model import AuthorizeAPICustom
 from odoo.addons.resource.models.utils import float_to_time
+from odoo.addons.base.models.res_partner import _tz_get
 import threading
 import time
 
@@ -540,6 +541,10 @@ class ResUsers(models.Model):
                             partner = self.env['res.partner'].search(
                                 [('name', '=', appointment.get('ProspectName','')), ('email', '=', appointment.get('ProspectEmail', ''))], limit=1)
                             applicant_name_split = self.split_name(appointment['ProspectName'])
+                            appointment_timezone = appointment.get('TimeZone', '')
+                            if appointment_timezone:
+                                if not appointment_timezone in [tz[0] for tz in _tz_get(self)]:
+                                    appointment_timezone = ''
                             str1 = appointment.get('AppointmentTime', '0:00 AM')
                             if str1 is None:
                                 return {
@@ -556,7 +561,10 @@ class ResUsers(models.Model):
                                 hour = str(int(hour) + 12)
                             appointment_date = date_obj.replace(hour=int(hour), minute=int(minute))
                             user = self.env.user
-                            tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+                            if appointment_timezone:
+                                tz = pytz.timezone(appointment_timezone)
+                            else:
+                                tz = user.tz and pytz.timezone(user.tz) or pytz.utc
                             appointment_date = tz.localize(appointment_date).astimezone(pytz.utc).strftime(
                                 '%Y-%m-%d %H:%M:%S')
                             state = self.env['res.country.state'].search(
@@ -595,6 +603,7 @@ class ResUsers(models.Model):
                                     'applicant_last_name': applicant_name_split['last_name'] or False,
                                     'market_segment': market_segment,
                                     'office_location_id': office_location_id and office_location_id.id or False,
+                                    'appointment_timezone': appointment_timezone,
 
                                 }
                                 try:
@@ -635,6 +644,7 @@ class ResUsers(models.Model):
                                     'market_segment': market_segment,
                                     'office_location_id': office_location_id and office_location_id.id or False,
                                     # 'attachment_ids': [(6, 0, [])],
+                                    'appointment_timezone': appointment_timezone,
                                 }
                                 appointments.write(appointment_values)
                                 try:
@@ -1087,7 +1097,7 @@ class TeamCustomerAppointment(models.Model):
                     if data.improveit_appointment_id in improveit_appointment_ids:
                         continue
                     improveit_appointment_ids.append(data.improveit_appointment_id)
-                appointment_date = data.appointment_date and utc_2_local(data.appointment_date, tz) or False
+                appointment_date = data.appointment_date and utc_2_local(data.appointment_date, data.appointment_timezone or tz) or False
                 appointment_datetime = ''
                 if appointment_date:
                     appointment_datetime = appointment_date.strftime('%d %b %I:%M %p')
@@ -1150,7 +1160,8 @@ class TeamCustomerAppointment(models.Model):
                     'partner_longitude': data.partner_longitude or 0,
                     'recision_date': self.env.user.company_id.recision_date and self.env.user.company_id.recision_date.strftime(
                         DEFAULT_SERVER_DATE_FORMAT) or '',
-                    'external_entity_keys': external_entity_keys
+                    'external_entity_keys': external_entity_keys,
+                    'appointment_timezone': data.appointment_timezone or '',
                 }
                 list.append(vals)
 
@@ -3283,6 +3294,13 @@ class TeamCustomerAppointment(models.Model):
             if appointment_id:
                 appointment = self.browse(appointment_id)
                 if appointment.exists():
+                    user = self.env.user
+                    if appointment.appointment_timezone:
+                        tz = pytz.timezone(appointment.appointment_timezone)
+                        timezone = appointment.appointment_timezone
+                    else:
+                        tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+                        timezone = user.tz or 'UTC'
                     sale_order = sale_order_obj.search([('appointment_id', '=', appointment_id)], limit=1)
                     if sale_order:
                         if not only_fetch_installation_dates:
@@ -3299,8 +3317,7 @@ class TeamCustomerAppointment(models.Model):
                                         'result': 'Failed'
                                     }
                                 start_date_list = []
-                                user = self.env.user
-                                tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+
                                 if sale_order.available_installation_line:
                                     sale_order.available_installation_line.unlink()
                                 for crew_data in crews_list:
@@ -3332,8 +3349,8 @@ class TeamCustomerAppointment(models.Model):
                                 return sale_sync_result
                         available_date_list = []
                         for installation_date in sale_order.available_installation_line:
-                            start_date = utc_2_local(installation_date.start_date, user.tz or 'UTC')
-                            end_date = utc_2_local(installation_date.end_date, user.tz or 'UTC')
+                            start_date = utc_2_local(installation_date.start_date, timezone)
+                            end_date = utc_2_local(installation_date.end_date, timezone)
                             available_date_list.append({
                                 'installation_id': installation_date.id,
                                 'start_date': start_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
@@ -3393,7 +3410,12 @@ class TeamCustomerAppointment(models.Model):
                 'result': 'Failed'
             }
         user = self.env.user
-        tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+        if sale_order.appointment_id.appointment_timezone:
+            tz = pytz.timezone(sale_order.appointment_id.appointment_timezone)
+            timezone = sale_order.appointment_id.appointment_timezone
+        else:
+            tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+            timezone = user.tz or 'UTC'
         for crew_data in crews_list:
             time_slot = crew_data.get('slot', {})
             crew_i360_id = crew_data.get('id', '')
@@ -5756,7 +5778,6 @@ class VersatileCreditApplication(models.Model):
             "message": "Something went wrong"
         }
         user = self.env.user
-        tz = user.tz and pytz.timezone(user.tz) or pytz.utc
         data = versatile_payload.get("data", {})
         webhook_event_id = versatile_payload.get('id', "")
         event_type = versatile_payload.get('type', "")
@@ -5769,9 +5790,15 @@ class VersatileCreditApplication(models.Model):
         appointment = self.env['team.customer.appointment'].search([('improveit_appointment_id', '=', ext_customer_id)], limit=1)
         if not appointment:
             return {"result": "Failed", "message": "Appointment is not found related to the External Customer ID '%s'."%(ext_customer_id)}
+        credit_application = self.search([('appointment_id', '=', appointment.id)], limit=1)
+        if appointment.appointment_timezone:
+            tz = pytz.timezone(appointment.appointment_timezone)
+            timezone = appointment.appointment_timezone
+        else:
+            tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+            timezone = user.tz or 'UTC'
         if event_date:
             event_date = self.convert_date_to_utc(event_date, tz)
-        credit_application = self.search([('appointment_id', '=', appointment.id)], limit=1)
 
         account_id = data.get("accountId", "")
         provider = data.get("providerId", "")
