@@ -1198,8 +1198,16 @@ class TeamCustomerAppointment(models.Model):
             completed_date = data.get('completed_date', '')
             timezone = data.get('timezone', 'US/Eastern')
             completed_date_utc = False
-            if completed_date and timezone:
-                completed_date_utc = self.get_timezone_based_time(completed_date, timezone)
+            appointment_timezone = appointment.appointment_timezone
+            tz = False
+            if appointment_timezone:
+                tz = pytz.timezone(appointment_timezone)
+            if completed_date:
+                completed_date_utc = completed_date
+                if tz:
+                    completed_date_utc = tz.localize(completed_date).astimezone(pytz.utc)
+                elif timezone:
+                    completed_date_utc = self.get_timezone_based_time(completed_date, timezone)
             send_physical_document = False
             if data.get('send_physical_document', 0) == 1:
                 send_physical_document = True
@@ -1242,8 +1250,11 @@ class TeamCustomerAppointment(models.Model):
                 vals.update({'completed_date': completed_date_utc})
             manual_arrival_date = data.get('manual_arrival_date', False)
             manual_arrival_date_utc = manual_arrival_date
-            if manual_arrival_date and timezone:
-                manual_arrival_date_utc = self.get_timezone_based_time(manual_arrival_date, timezone)
+            if manual_arrival_date:
+                if tz:
+                    manual_arrival_date_utc = tz.localize(manual_arrival_date).astimezone(pytz.utc)
+                elif timezone:
+                    manual_arrival_date_utc = self.get_timezone_based_time(manual_arrival_date, timezone)
             if manual_arrival_date_utc:
                 vals.update({'manual_arrival_date': manual_arrival_date_utc})
             applicant_first_name = ''
@@ -2473,9 +2484,14 @@ class TeamCustomerAppointment(models.Model):
         res_partner_obj = self.env['res.partner']
         sale_order_obj = self.env['sale.order']
         screen_logs = data.get('screen_logs', [])
+        appointment_result = data.get('appointment_result', '')
         if appointment_id:
             appointment = self.browse(appointment_id)
             if appointment.exists():
+                appointment_timezone = appointment.appointment_timezone
+                tz = False
+                if appointment_timezone:
+                    tz = pytz.timezone(appointment_timezone)
                 if appointment.start_sync_to_i360:
                     _logger.info("------Sync is already initiated for the appointment %s-------------"%(appointment.id))
                     result = {
@@ -2484,19 +2500,25 @@ class TeamCustomerAppointment(models.Model):
                     }
                 else:
                     # try:
-                    appointment.write({
+                    vals = {
                         'start_sync_to_i360': True,
                         'state': 'done',
                         'sync_initiated_date': fields.Datetime.now()
-                    })
+                    }
+                    if appointment_result and appointment_result != appointment.appointment_result:
+                        vals.update({'appointment_result': data.get('appointment_result', '')})
+                    appointment.write(vals)
                     if appointment.app_screen_log_line:
                         appointment.app_screen_log_line.unlink()
                     timezone = appointment.timezone
                     for log in screen_logs:
                         completion_date = log.get('completion_time', '')
                         completion_date_utc = completion_date
-                        if completion_date and timezone:
-                            completion_date_utc = self.get_timezone_based_time(completion_date, timezone)
+                        if completion_date:
+                            if tz:
+                                completion_date_utc = tz.localize(completion_date).astimezone(pytz.utc)
+                            elif timezone:
+                                completion_date_utc = self.get_timezone_based_time(completion_date, timezone)
                         screen_log_obj.create({
                             'appointment_id': appointment.id,
                             'name': log.get('screen_name', ''),
@@ -2601,6 +2623,10 @@ class TeamCustomerAppointment(models.Model):
             if appointment_id:
                 appointment = self.sudo().browse(appointment_id)
                 if appointment.exists():
+                    appointment_timezone = appointment.appointment_timezone
+                    tz = False
+                    if appointment_timezone:
+                        tz = pytz.timezone(appointment_timezone)
                     sync_date = data.get('sync_time', '')
                     message = data.get('message', '')
                     if not sync_date:
@@ -2616,8 +2642,11 @@ class TeamCustomerAppointment(models.Model):
                     sync_date_utc = sync_date
                     timezone = appointment.timezone
                     completed_date_utc = False
-                    if sync_date and timezone:
-                        sync_date_utc = self.get_timezone_based_time(sync_date, timezone)
+                    if sync_date:
+                        if tz:
+                            sync_date_utc = tz.localize(sync_date).astimezone(pytz.utc)
+                        elif timezone:
+                            sync_date_utc = self.get_timezone_based_time(sync_date, timezone)
                     sync_log_obj.create({
                         'appointment_id': appointment_id,
                         'sync_date': sync_date_utc,
@@ -3738,13 +3767,21 @@ class TeamCustomerAppointment(models.Model):
             if appointment_id:
                 appointment = self.env['team.customer.appointment'].browse(appointment_id)
                 if appointment.exists():
+                    appointment_timezone = appointment.appointment_timezone
+                    tz = False
+                    if appointment_timezone:
+                        tz = pytz.timezone(appointment_timezone)
                     if arrival_date:
                         arrival_date_utc = arrival_date
-                        if arrival_date and timezone:
+                        if tz:
+                            arrival_date_utc = tz.localize(arrival_date).astimezone(pytz.utc)
+                        elif timezone:
                             arrival_date_utc = self.get_timezone_based_time(arrival_date, timezone)
                     if departure_date:
                         departure_date_utc = departure_date
-                        if departure_date and timezone:
+                        if tz:
+                            departure_date_utc = tz.localize(departure_date).astimezone(pytz.utc)
+                        elif timezone:
                             departure_date_utc = self.get_timezone_based_time(departure_date, timezone)
                     appointment.write({
                         'arrival_date': arrival_date_utc,
@@ -3839,7 +3876,13 @@ class TeamCustomerAppointment(models.Model):
                     else:
                         if manual_arrival_date:
                             manual_arrival_date_utc = manual_arrival_date
-                            if manual_arrival_date and timezone:
+                            appointment_timezone = appointment.appointment_timezone
+                            tz = False
+                            if appointment_timezone:
+                                tz = pytz.timezone(appointment_timezone)
+                            if tz:
+                                manual_arrival_date_utc = tz.localize(manual_arrival_date).astimezone(pytz.utc)
+                            elif timezone:
                                 manual_arrival_date_utc = self.get_timezone_based_time(manual_arrival_date, timezone)
                         appointment.write({
                             'manual_arrival_date': manual_arrival_date_utc,
@@ -4040,8 +4083,14 @@ class TeamCustomerAppointment(models.Model):
                 appointment = self.sudo().search([('id', '=', appointment_id)], limit=1)
                 if appointment:
                     timezone = data.get('timezone', 'EST')
+                    appointment_timezone = appointment.appointment_timezone
+                    tz = False
+                    if appointment_timezone:
+                        tz = pytz.timezone(appointment_timezone)
                     screen_entry_date_utc = screen_entry_date
-                    if screen_entry_date and timezone:
+                    if tz:
+                        screen_entry_date_utc = tz.localize(screen_entry_date).astimezone(pytz.utc)
+                    elif timezone:
                         screen_entry_date_utc = self.get_timezone_based_time(screen_entry_date, timezone)
                     live_screen_log = live_screen_log_obj.search([
                         ('appointment_id', '=', appointment_id),
