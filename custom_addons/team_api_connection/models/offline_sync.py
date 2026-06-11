@@ -4236,7 +4236,7 @@ class SaleOrder(models.Model):
 
                 # Process the payment
                 payment_transaction._cardpoint_process_payment(payment_data, transaction_type)
-                if payment_transaction.cardpoint_respcode in ['A', 'B'] and payment_transaction.cardpoint_retref:
+                if payment_transaction.cardpoint_respcode in ['A'] and payment_transaction.cardpoint_retref:
                     transaction_ref = payment_transaction.cardpoint_retref
                     card_type = payment_transaction.cardpoint_account_type
                     transaction_response = payment_transaction.cardpoint_resptext
