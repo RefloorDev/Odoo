@@ -1245,9 +1245,7 @@ class TeamCustomerAppointment(models.Model):
             manual_arrival_date = data.get('manual_arrival_date', False)
             manual_arrival_date_utc = manual_arrival_date
             if manual_arrival_date:
-                if tz:
-                    manual_arrival_date_utc = tz.localize(manual_arrival_date).astimezone(pytz.utc)
-                elif timezone:
+                if timezone:
                     manual_arrival_date_utc = self.get_timezone_based_time(manual_arrival_date, timezone)
             if manual_arrival_date_utc:
                 vals.update({'manual_arrival_date': manual_arrival_date_utc})
