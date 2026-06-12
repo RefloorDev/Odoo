@@ -34,4 +34,5 @@ class ResConfigSettings(models.TransientModel):
     api_call_base_url = fields.Char('API Call URL', config_parameter='team_sale_contract.api_base_url', default=lambda self: "http://localhost:%s" % config.get('http_port') )
     special_order_delay_limit = fields.Integer("Special Order Delay Limit", default=14, config_parameter='team_sale_contract.special_order_delay_limit')
     enable_user_qrcode = fields.Boolean("Enable User QR Code", default=False, config_parameter="team_sale_contract.enable_user_qrcode")
+    gtr_page_limit = fields.Integer("GTR Page Limit", default=50, config_parameter="team_sale_contract.gtr_page_limit")
 

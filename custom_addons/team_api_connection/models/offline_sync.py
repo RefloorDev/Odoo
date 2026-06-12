@@ -733,8 +733,13 @@ class ResUsers(models.Model):
             if configurations:
                 end_point_url = configurations.token_url
                 client_secret = configurations.client_secret
+                gtr_page_limit = int(self.env['ir.config_parameter'].sudo().get_param(
+                    'team_sale_contract.gtr_page_limit')) or 0
                 if end_point_url and client_secret:
-                    url = "%s/v2/salesreps/%s" % (end_point_url, user.gtr_user_id or '')
+                    if user.gtr_user_id:
+                        url = "%s/v2/salesreps/%s" % (end_point_url, user.gtr_user_id or '')
+                    else:
+                        url = "%s/v2/salesreps/page_size=%s" % (end_point_url, gtr_page_limit)
                     headers = {
                         'Authorization': "Bearer %s" % client_secret,
                         'Content-Type': 'application/json'
