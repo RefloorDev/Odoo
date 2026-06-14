@@ -4117,77 +4117,24 @@ class TeamCustomerAppointment(models.Model):
                             existing_auth_transaction_id = payment_transaction_info_dict.get('authorize_transaction_id',
                                                                                              0)
                             card_type = payment_transaction_info_dict.get('card_type', '')
-                        invoice_created = False
-                        if order.order_line.filtered(lambda x: x.invoice_lines):
-                            invoice_created = True
-                        retry_order_creation = False
                         if payment_method_dict and not existing_auth_transaction_id:
                             payment_method = payment_method_dict.get('payment_method', '')
                             down_payment_amount = float(payment_method_dict.get('down_payment_amount', 0))
-                            if order.payment_method in ['credit_card', 'debit_card',
-                                                        'ach'] and down_payment_amount and not order.card_transaction_log_line.filtered(
-                                    lambda x: x.state == 'success'):
-                                retry_order_creation = True
-                            elif order.payment_method in ['credit_card', 'debit_card',
-                                                          'ach'] and down_payment_amount and order.card_transaction_log_line.filtered(
-                                    lambda x: x.state == 'success') and order.payment_method != payment_method:
-                                retry_order_creation = True
-                            elif order.payment_method in ['credit_card', 'debit_card',
-                                                          'ach'] and down_payment_amount and order.card_transaction_log_line.filtered(
-                                    lambda x: x.state == 'success') and order.payment_method == payment_method and down_payment_amount == order.down_payment_amount:
-                                return {
-                                    'message': 'Order details are already updated successfully.',
-                                    'result': 'Success',
-                                    'payment_status': 'Success',
-                                    'payment_message': "Payment is already processed.",
-                                }
+                            down_payment_lines = order.order_line.filtered(lambda x: x.is_downpayment)
+                            if down_payment_lines:
+                                invoiced_amount = 0
+                                for line in down_payment_lines:
+                                    invoiced_amount += line.price_unit or 0
+                                if round(invoiced_amount+down_payment_amount)> round(order.amount_total):
+                                    return {
+                                        'result': 'Failed',
+                                        'message': 'The payment amount exceeds the remaining balance on this order. Please enter an amount equal to or less than the outstanding balance.'
+                                    }
 
-                        if (operation_mode == 'online' or (
-                                invoice_created and retry_order_creation)) and not existing_auth_transaction_id:
-                            valid_transactions_lines = appointment.card_transaction_log_line.filtered(
-                                lambda x: x.state == 'success' and not x.void_transaction)
-                            for line in valid_transactions_lines:
-                                authorize_transaction_id = line.name or ''
-                                if authorize_transaction_id:
-                                    acquirer = self.env.ref('payment.payment_provider_authorize').sudo()
-                                    if line.provider_id:
-                                        acquirer = line.provider_id.sudo()
-                                    if acquirer.code == 'authorize':
-                                        transaction = AuthorizeAPICustom(acquirer)
-                                        response = transaction.void(authorize_transaction_id or '')
-                                        if response.get('x_trans_id', ''):
-                                            line.write({
-                                                'void_transaction': True,
-                                                'void_transaction_id': response.get('x_trans_id', '')
-                                            })
-                                        elif response.get('x_response_code', ''):
-                                            line.write({
-                                                'error_code': response.get('x_response_reason_text', '')
-                                            })
-                                    elif acquirer.code == 'cardpoint':
-                                        response = acquirer._cardpoint_void_transaction(order.authorize_transaction_id)
-                                        if response.get('respstat', '') == 'A':
-                                            line.write({
-                                                'void_transaction': True,
-                                                'void_transaction_id': response.get('retref', '')
-                                            })
-                                        elif response.get('respstat', '') != 'A':
-                                            line.write({
-                                                'error_code': response.get('resptext', '')
-                                            })
-
-                        if order.state != 'draft':
-                            order.action_cancel()
-                            order.action_draft()
-                        order.write({'down_payment_amount': down_payment_amount})
-                        if order.floor_type:
-                            monthly_promo = order.floor_type and order.floor_type.monthly_promo or 0
-                            order.add_payment_line(order.discount, order.adjustment, order.additional_cost,
-                                                   monthly_promo, 0, order.final_sale_price)
-                        if order.down_payment_amount and data.get('payment_method', {}):
+                        if down_payment_amount and data.get('payment_method', {}):
                             payment_result = order.action_update_payment_data(data.get('payment_method', {}),
                                                                               existing_auth_transaction_id,
-                                                                              card_type)
+                                                                              card_type, transaction_amount= down_payment_amount, allow_multiple_payment=True)
                             payment_status = payment_result.get('result', '')
                             if payment_result.get('result', '') != 'Success':
                                 payment_message = payment_result.get('message', '')
@@ -4203,7 +4150,14 @@ class TeamCustomerAppointment(models.Model):
                                 if order_values:
                                     transaction_id = order_values.get('authorize_transaction_id', '')
                                     card_type = order_values.get('card_type', '')
-                                    order.write(order_values)
+                                    order.confirm_order_and_create_invoice(transaction_amount= down_payment_amount)
+                                    # no need to write values to sale order since it is calling from installer app.
+                                    # order.write(order_values)
+                        else:
+                            return {
+                                'result': 'Failed',
+                                'message': 'Payment amount or Payment method is missing'
+                            }
 
                         return {
                             'message': 'Order details updated successfully.',
@@ -4309,7 +4263,7 @@ class SaleOrder(models.Model):
             year = year[-2:]
         return f"{month.zfill(2)}{year}"
 
-    def action_authcapture_payment(self, data):
+    def action_authcapture_payment(self, data, allow_multiple_payment=False):
         """
 
         :param data:
@@ -4333,6 +4287,7 @@ class SaleOrder(models.Model):
             currency = order.currency_id
             partner = order.partner_id
             transaction_ref = ''
+            transaction_response = ''
             payment_transaction = self.env['payment.transaction'].sudo().search([
                 ('sale_order_ids', 'in', order.ids),
                 ('state', 'in', ['draft'])
@@ -4361,7 +4316,7 @@ class SaleOrder(models.Model):
 
             if acquirer.code == 'authorize':
                 transaction = AuthorizeAPICustom(acquirer)
-                if order.authorize_transaction_id:
+                if order.authorize_transaction_id and not allow_multiple_payment:
                     transaction.void(order.authorize_transaction_id or '')
                 values = self.prepare_authcapture_payment_values(acquirer, order, data, transaction_type)
                 response = transaction._authorize_request_custom(values)
@@ -4387,7 +4342,7 @@ class SaleOrder(models.Model):
                 #order.write({'authorize_transaction_id': transaction_ref, 'card_type': card_type})
                 transc_ref = response.get('transactionResponse', {}) and response.get('transactionResponse', {}).get('transId', '') + ' ' + response.get('transactionResponse', {}).get('transId', '') + ' ' + fields.Datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT) or ''
             elif acquirer.code == 'cardpoint':
-                if order.authorize_transaction_id:
+                if order.authorize_transaction_id and not allow_multiple_payment:
                     acquirer._cardpoint_void_transaction(order.authorize_transaction_id)
                 tokenize_data = {
                     "account": data.get('cc_number', ''),
@@ -4492,6 +4447,7 @@ class SaleOrder(models.Model):
             currency = order.currency_id
             partner = order.partner_id
             transaction_ref = ''
+            transaction_response = ''
             payment_transaction = self.env['payment.transaction'].sudo().search([
                 ('sale_order_ids', 'in', order.ids),
                 ('state', 'in', ['draft'])
@@ -4588,13 +4544,15 @@ class SaleOrder(models.Model):
                 'message': transaction_response,
             }
 
-    def action_update_payment_data(self, data={}, existing_auth_transaction_id='', existing_card_type=''):
+    def action_update_payment_data(self, data={}, existing_auth_transaction_id='', existing_card_type='', transaction_amount= 0, allow_multiple_payment=False):
         status = {
             'message': 'Sale order payment method update is failed due to some unknown reason',
             'result': 'Failed'
         }
         values = {}
         for order in self:
+            if not transaction_amount:
+                transaction_amount = order.down_payment_amount
             payment_method = data.get('payment_method', '')
             if payment_method not in ['credit_card', 'debit_card', 'cash', 'check', 'ach']:
                 _logger.info("------ Wrong Payment Method-------------")
@@ -4608,7 +4566,7 @@ class SaleOrder(models.Model):
                 'write_date': datetime.now().replace(tzinfo=pytz.utc),
                 'pay_later': data.get('pay_later', 0) == 1 and True or False,
             })
-            if order.invoice_ids:
+            if order.invoice_ids and not allow_multiple_payment:
                 _logger.info("------Payment Already Done------------")
                 status = {
                     'message': 'Payment Already Done',
@@ -4731,10 +4689,10 @@ class SaleOrder(models.Model):
                         'cc_expiry': card_expiry,
                         'cc_cvc': cardpin,
                         'cc_holder_name': card_holder_name,
-                        'amount': order.down_payment_amount,
+                        'amount': transaction_amount,
                         'pay_later': data.get('pay_later', 0),
                     }
-                    payment_status = order.action_authcapture_payment(payment_data)
+                    payment_status = order.action_authcapture_payment(payment_data, allow_multiple_payment)
                     if payment_status['result'] == 'Success':
                         if payment_status.get('transaction_id', ''):
                             values.update({
@@ -4752,63 +4710,85 @@ class SaleOrder(models.Model):
                         }
                         return status
             elif payment_method in ['ach']:
-                acct_type = ''
-                if data.get('acct_type', ''):
-                    acct_type = data.get('acct_type', '')
-                    if acct_type not in ['ECHK', 'ESAV']:
-                        return {
-                            'message': 'Wrong Value for Account Type',
-                            'result': 'Failed',
-                        }
-                else:
-                    _logger.info("------acct_type Empty------------")
-                    status = {
-                        'message': 'Account Type   Empty',
-                        'result': 'Failed',
-                    }
-                    return status
-                if data.get('bank_account_number', ''):
-                    bank_account_number = data.get('bank_account_number', '')
-                else:
-                    _logger.info("------bank_account_number Empty------------")
-                    status = {
-                        'message': 'bank_account_number  Empty',
-                        'result': 'Failed',
-                    }
-                    return status
-                if data.get('bank_routing_number', ''):
-                    bank_routing_number = data.get('bank_routing_number', '')
-                else:
-                    _logger.info("------bank_routing_number Empty------------")
-                    status = {
-                        'message': 'bank_routing_number  Empty',
-                        'result': 'Failed',
-                    }
-                    return status
-                values.update({
-                    'check_account_number': bank_account_number,
-                    'check_routing_number': bank_routing_number,
-                })
-                payment_data = {
-                    'sale_order_id': order.id,
-                    'bank_account_number': bank_account_number,
-                    'bank_routing_number': bank_routing_number,
-                    'amount': order.down_payment_amount,
-                    'acct_type': acct_type,
-                }
-                payment_status = order.action_authcapture_ach_payment(payment_data)
-                if payment_status['result'] == 'Success':
-                    if payment_status.get('transaction_id', ''):
-                        values.update({
-                            'authorize_transaction_id': payment_status.get('transaction_id', '')
+                if existing_auth_transaction_id:
+                    values.update({
+                        'authorize_transaction_id': existing_auth_transaction_id,
+                        'card_type': existing_card_type
+                    })
+                    acquirer = False
+                    payment_transaction = self.env['payment.transaction'].sudo().search([('provider_reference', '=', existing_auth_transaction_id)], limit=1)
+                    if payment_transaction:
+                        acquirer = payment_transaction.provider_id.id
+                    if not order.card_transaction_log_line.filtered(lambda x: x.name == existing_auth_transaction_id):
+                        transaction_type_to_log = "authcapture"
+                        if order.pay_later:
+                            transaction_type_to_log = "authorize"
+                        self.env['otl.card.transaction.log'].create({
+                            'sale_order_id': order.id,
+                            'name': existing_auth_transaction_id,
+                            'message': '',
+                            'state': 'success',
+                            'type': transaction_type_to_log,
+                            'provider_id': acquirer.id
                         })
                 else:
-                    _logger.info("------ Payment_Transaction Failed------------")
-                    status = {
-                        'result': 'Failed',
-                        'message': payment_status['message'],
+                    acct_type = ''
+                    if data.get('acct_type', ''):
+                        acct_type = data.get('acct_type', '')
+                        if acct_type not in ['ECHK', 'ESAV']:
+                            return {
+                                'message': 'Wrong Value for Account Type',
+                                'result': 'Failed',
+                            }
+                        else:
+                            _logger.info("------acct_type Empty------------")
+                            status = {
+                                'message': 'Account Type   Empty',
+                                'result': 'Failed',
+                            }
+                            return status
+                    if data.get('bank_account_number', ''):
+                        bank_account_number = data.get('bank_account_number', '')
+                    else:
+                        _logger.info("------bank_account_number Empty------------")
+                        status = {
+                            'message': 'bank_account_number  Empty',
+                            'result': 'Failed',
+                        }
+                        return status
+                    if data.get('bank_routing_number', ''):
+                        bank_routing_number = data.get('bank_routing_number', '')
+                    else:
+                        _logger.info("------bank_routing_number Empty------------")
+                        status = {
+                            'message': 'bank_routing_number  Empty',
+                            'result': 'Failed',
+                        }
+                        return status
+                    values.update({
+                        'check_account_number': bank_account_number,
+                        'check_routing_number': bank_routing_number,
+                    })
+                    payment_data = {
+                        'sale_order_id': order.id,
+                        'bank_account_number': bank_account_number,
+                        'bank_routing_number': bank_routing_number,
+                        'amount': transaction_amount,
+                        'acct_type': acct_type,
                     }
-                    return status
+                    payment_status = order.action_authcapture_ach_payment(payment_data, allow_multiple_payment)
+                    if payment_status['result'] == 'Success':
+                        if payment_status.get('transaction_id', ''):
+                            values.update({
+                                'authorize_transaction_id': payment_status.get('transaction_id', '')
+                            })
+                    else:
+                        _logger.info("------ Payment_Transaction Failed------------")
+                        status = {
+                            'result': 'Failed',
+                            'message': payment_status['message'],
+                        }
+                        return status
             #[FIX] Dtd: 07/07/2023 - to solve concurrent update error, passing 'state' & 'order date' in values instead of calling action_confirm() function.
             #order.action_confirm()
 

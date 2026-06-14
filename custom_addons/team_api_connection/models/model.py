@@ -4745,18 +4745,20 @@ class SaleOrder(models.Model):
             message += '\n We are having issue with communicating our server . Please tap on Retry button to try again. If issue continues, please reach out to the support'
         return {'message': message, 'result': 'Failed'}
 
-    def confirm_order_and_create_invoice(self):
+    def confirm_order_and_create_invoice(self, transaction_amount= 0):
         for order in self:
             if order.state != 'sale':
                order.action_confirm()
-            if order.down_payment_amount:
+            if not transaction_amount:
+                transaction_amount = order.down_payment_amount
+            if transaction_amount:
                 adv_wiz = self.env['sale.advance.payment.inv'].with_context(active_ids=[order.id],
                                                                             open_invoices=True).create({
                     'advance_payment_method': 'fixed',
-                    'fixed_amount': float(order.down_payment_amount)
+                    'fixed_amount': float(transaction_amount)
                 })
                 invoice_created = adv_wiz.with_context(open_invoices=True).create_invoices()
-                order.invoice_ids.action_post()
+                order.invoice_ids.filtered(lambda x: x.state=='draft').action_post()
                 if order.payment_method in ['cash', 'check']:
                     domain = []
                     if order.payment_method == 'cash':
@@ -4772,7 +4774,7 @@ class SaleOrder(models.Model):
                         'journal_id': journal_id.id,
                         'payment_type': 'inbound',
                         'payment_method_id': payment_method_id,
-                        'amount': order.down_payment_amount,
+                        'amount': transaction_amount,
                         'partner_type': 'customer',
                         'partner_id': order.partner_id.id,
                         # 'communication': order.invoice_ids.name,
