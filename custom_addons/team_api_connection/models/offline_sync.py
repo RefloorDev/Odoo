@@ -733,8 +733,13 @@ class ResUsers(models.Model):
             if configurations:
                 end_point_url = configurations.token_url
                 client_secret = configurations.client_secret
+                gtr_page_limit = int(self.env['ir.config_parameter'].sudo().get_param(
+                    'team_sale_contract.gtr_page_limit')) or 0
                 if end_point_url and client_secret:
-                    url = "%s/v2/salesreps/%s" % (end_point_url, user.gtr_user_id or '')
+                    if user.gtr_user_id:
+                        url = "%s/v2/salesreps/%s" % (end_point_url, user.gtr_user_id or '')
+                    else:
+                        url = "%s/v2/salesreps/page_size=%s" % (end_point_url, gtr_page_limit)
                     headers = {
                         'Authorization': "Bearer %s" % client_secret,
                         'Content-Type': 'application/json'
@@ -4415,7 +4420,7 @@ class SaleOrder(models.Model):
 
                 # Process the payment
                 payment_transaction._cardpoint_process_payment(payment_data, transaction_type)
-                if payment_transaction.cardpoint_respcode in ['A', 'B'] and payment_transaction.cardpoint_retref:
+                if payment_transaction.cardpoint_respcode in ['A'] and payment_transaction.cardpoint_retref:
                     transaction_ref = payment_transaction.cardpoint_retref
                     card_type = payment_transaction.cardpoint_account_type
                     transaction_response = payment_transaction.cardpoint_resptext
