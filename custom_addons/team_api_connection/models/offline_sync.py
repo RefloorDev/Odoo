@@ -4740,13 +4740,13 @@ class SaleOrder(models.Model):
                                 'message': 'Wrong Value for Account Type',
                                 'result': 'Failed',
                             }
-                        else:
-                            _logger.info("------acct_type Empty------------")
-                            status = {
-                                'message': 'Account Type   Empty',
-                                'result': 'Failed',
-                            }
-                            return status
+                    else:
+                        _logger.info("------acct_type Empty------------")
+                        status = {
+                            'message': 'Account Type   Empty',
+                            'result': 'Failed',
+                        }
+                        return status
                     if data.get('bank_account_number', ''):
                         bank_account_number = data.get('bank_account_number', '')
                     else:
