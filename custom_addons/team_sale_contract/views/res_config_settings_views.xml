@@ -98,6 +98,9 @@
                     <setting id="enable_user_qrcode" string="Enable User QR Code" help="To Display the Referral QR Code on the salesapp based on users.">
                         <field name="enable_user_qrcode"/>
                     </setting>
+                    <setting id="gtr_page_limit" string="GTR Page Limit" help="Maximum number of records to display.">
+                        <field name="gtr_page_limit"/>
+                    </setting>
                 </block>
                 <block title="Google API Configuration" id="sale_other_data_id_setting">
                     <setting id="google_auth_attachment_id" string="Auth File" help="File for Google service authentication for cloud storage">
