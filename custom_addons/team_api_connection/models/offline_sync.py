@@ -4426,7 +4426,7 @@ class SaleOrder(models.Model):
                 'message': transaction_response,
             }
 
-    def action_authcapture_ach_payment(self, data):
+    def action_authcapture_ach_payment(self, data, allow_multiple_payment=False):
         """
 
         :param data:
@@ -4469,7 +4469,7 @@ class SaleOrder(models.Model):
                 }
                 payment_transaction = self.env['payment.transaction'].create([vals])
 
-            if order.authorize_transaction_id:
+            if order.authorize_transaction_id and not allow_multiple_payment:
                 acquirer._cardpoint_void_transaction(order.authorize_transaction_id)
 
             tokenize_data = {
