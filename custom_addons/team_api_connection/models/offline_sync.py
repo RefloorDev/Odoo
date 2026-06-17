@@ -2752,6 +2752,15 @@ class TeamCustomerAppointment(models.Model):
                         payment_transaction_info_dict = data.get('payment_transaction_info', {})
                         rooms_list = data.get('rooms', [])
                         answer_list = data.get('answer', [])
+                        customer_dict = data.get('customer', {})
+                        if customer_dict.get('appointment_result', '') and appointment.appointment_result != customer_dict.get('appointment_result', ''):
+                            appointment_result = appointment.action_update_appointment(customer_dict, app_version)
+                            if appointment_result.get('result', False) == 'Failed':
+                                appointment_result.update({
+                                    'payment_status': payment_status,
+                                    'payment_message': payment_message,
+                                })
+                                return appointment_result
                         existing_auth_transaction_id = ''
                         if payment_transaction_info_dict:
                             existing_auth_transaction_id = payment_transaction_info_dict.get('authorize_transaction_id', 0)
