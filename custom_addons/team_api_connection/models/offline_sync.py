@@ -729,7 +729,7 @@ class ResUsers(models.Model):
                     if user.gtr_user_id:
                         url = "%s/v2/salesreps/%s" % (end_point_url, user.gtr_user_id or '')
                     else:
-                        url = "%s/v2/salesreps/page_size=%s" % (end_point_url, gtr_page_limit)
+                        url = "%s/v2/salesreps?page_size=%s" % (end_point_url, gtr_page_limit)
                     headers = {
                         'Authorization': "Bearer %s" % client_secret,
                         'Content-Type': 'application/json'
