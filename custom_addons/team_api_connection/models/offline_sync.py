@@ -713,7 +713,7 @@ class ResUsers(models.Model):
             enable_user_qrcode = eval(str(self.env['ir.config_parameter'].sudo().get_param(
                 'team_sale_contract.enable_user_qrcode'))) or False
             qrcode_url = ''
-            if enable_user_qrcode:
+            if enable_user_qrcode and not user.gtr_not_existing:
                 res = user.get_user_qrcode_from_gtr()
                 _logger.info('Response of get_user_qrcode_from_gtr for user %s. Message: %s' % (user.name, res.get('message', '')))
                 if user.qrcode_attachment_id and user.qrcode_attachment_id.datas:
@@ -781,7 +781,7 @@ class ResUsers(models.Model):
 
                         #if the code reaches here, it means QR code is not fetched for the user,
                         # so removing any existing QR code for the user to avoid mismatch of QR code in case of any future successful fetch.
-                        user.write({'referral_qrcode': False})
+                        user.write({'referral_qrcode': False, 'gtr_not_existing': True})
                     except:
                         return {
                             'result': 'Failed',
@@ -798,7 +798,8 @@ class ResUsers(models.Model):
             'message': 'User does not have GTR User ID or QR code URL is missing.'
         }
 
-
+    # field for skip GTR search if the value is True
+    gtr_not_existing = fields.Boolean('Not Existing on GTR', default=False)
 
 
 class TeamQuoteQuestion(models.Model):
