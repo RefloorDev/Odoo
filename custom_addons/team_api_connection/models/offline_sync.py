@@ -542,9 +542,6 @@ class ResUsers(models.Model):
                                 [('name', '=', appointment.get('ProspectName','')), ('email', '=', appointment.get('ProspectEmail', ''))], limit=1)
                             applicant_name_split = self.split_name(appointment['ProspectName'])
                             appointment_timezone = appointment.get('TimeZone', '')
-                            if appointment_timezone:
-                                if not appointment_timezone in [tz[0] for tz in _tz_get(self)]:
-                                    appointment_timezone = ''
                             str1 = appointment.get('AppointmentTime', '0:00 AM')
                             if str1 is None:
                                 return {
@@ -561,7 +558,7 @@ class ResUsers(models.Model):
                                 hour = str(int(hour) + 12)
                             appointment_date = date_obj.replace(hour=int(hour), minute=int(minute))
                             user = self.env.user
-                            if appointment_timezone:
+                            if appointment_timezone and appointment_timezone in [tz[0] for tz in _tz_get(self)]:
                                 tz = pytz.timezone(appointment_timezone)
                             else:
                                 tz = user.tz and pytz.timezone(user.tz) or pytz.utc
@@ -1103,7 +1100,7 @@ class TeamCustomerAppointment(models.Model):
                     if data.improveit_appointment_id in improveit_appointment_ids:
                         continue
                     improveit_appointment_ids.append(data.improveit_appointment_id)
-                appointment_date = data.appointment_date and utc_2_local(data.appointment_date, data.appointment_timezone or tz) or False
+                appointment_date = data.appointment_date and utc_2_local(data.appointment_date, tz) or False
                 appointment_datetime = ''
                 if appointment_date:
                     appointment_datetime = appointment_date.strftime('%d %b %I:%M %p')
@@ -4592,6 +4589,8 @@ class SaleOrder(models.Model):
                     if payment_method == 'check':
                         values.update({'check': True, 'cards': False, 'cash': False})
             if payment_method == 'check':
+                check_account_number = ''
+                check_routing_number = ''
                 if data.get('check_number', ''):
                     check_number = data.get('check_number', "")
                 else:
@@ -4603,22 +4602,22 @@ class SaleOrder(models.Model):
                     return status
                 if data.get('check_account_number', ''):
                     check_account_number = data.get('check_account_number', "")
-                else:
-                    _logger.info("------check_account_number Empty------------")
-                    status = {
-                        'message': 'check_account_number  Empty',
-                        'result': 'Failed',
-                    }
-                    return status
+                # else:
+                #     _logger.info("------check_account_number Empty------------")
+                #     status = {
+                #         'message': 'check_account_number  Empty',
+                #         'result': 'Failed',
+                #     }
+                #     return status
                 if data.get('check_routing_number', ''):
                     check_routing_number = data.get('check_routing_number', "")
-                else:
-                    _logger.info("------check_routing_number Empty------------")
-                    status = {
-                        'message': 'check_routing_number  Empty',
-                        'result': 'Failed',
-                    }
-                    return status
+                # else:
+                #     _logger.info("------check_routing_number Empty------------")
+                #     status = {
+                #         'message': 'check_routing_number  Empty',
+                #         'result': 'Failed',
+                #     }
+                #     return status
                 values.update({
                     'check_number': check_number,
                     'check_account_number': check_account_number,
