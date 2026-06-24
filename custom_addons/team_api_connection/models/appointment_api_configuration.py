@@ -630,9 +630,6 @@ class TeamImproveitConfiguration(models.Model):
                                 applicant_name_split = self.split_name(appointment['ProspectName'])
                                 str1= appointment['AppointmentTime']
                                 appointment_timezone = appointment.get('TimeZone', '')
-                                if appointment_timezone:
-                                    if not appointment_timezone in [tz[0] for tz in _tz_get(self)]:
-                                        appointment_timezone = ''
 
                                 str1_list = str1.split(' ')
                                 time = str1_list[0]
@@ -644,7 +641,7 @@ class TeamImproveitConfiguration(models.Model):
                                     hour = str(int(hour) + 12)
                                 appointment_date = date_obj.replace(hour=int(hour), minute=int(minute))
                                 user = self.env.user
-                                if appointment_timezone:
+                                if appointment_timezone and appointment_timezone in [tz[0] for tz in _tz_get(self)]:
                                     tz = pytz.timezone(appointment_timezone)
                                 else:
                                     tz = user.tz and pytz.timezone(user.tz) or pytz.utc
@@ -708,6 +705,7 @@ class TeamImproveitConfiguration(models.Model):
                                         'applicant_last_name': applicant_name_split['last_name'] or False,
                                         'market_segment': market_segment,
                                         'office_location_id': office_location_id and office_location_id.id or False,
+                                        'appointment_timezone': appointment_timezone
 
                                     }
                                     appointments.write(appointment_values)
