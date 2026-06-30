@@ -4415,7 +4415,8 @@ class SaleOrder(models.Model):
 
 
             payment_transaction.write({'provider_reference': transaction_ref})
-            payment_transaction._set_done()
+            if payment_transaction.state != 'done':
+                payment_transaction._set_done()
             self.env['otl.card.transaction.log'].create({
                 'sale_order_id': order.id,
                 'name': transaction_ref,
@@ -4425,7 +4426,7 @@ class SaleOrder(models.Model):
                 'provider_id': acquirer.id
 
             })
-            self.env.cr.commit()
+            # self.env.cr.commit()
             return {
                 'result': 'Success',
                 'transaction_id': transaction_ref,
@@ -4534,7 +4535,8 @@ class SaleOrder(models.Model):
                 )
 
             payment_transaction.write({'provider_reference': transaction_ref})
-            payment_transaction._set_done()
+            if payment_transaction.state != 'done':
+                payment_transaction._set_done()
             self.env['otl.card.transaction.log'].create({
                 'sale_order_id': order.id,
                 'name': transaction_ref,
@@ -4543,7 +4545,7 @@ class SaleOrder(models.Model):
                 'type': 'authcapture',
                 'provider_id': acquirer.id
             })
-            self.env.cr.commit()
+            # self.env.cr.commit()
             return {
                 'result': 'Success',
                 'transaction_id': transaction_ref,
