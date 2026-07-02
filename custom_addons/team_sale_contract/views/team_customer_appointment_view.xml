@@ -81,6 +81,7 @@
                     <group string="Appointment Details">
                         <group>
                             <field name="appointment_date" required="1" readonly="state != 'draft'"/>
+                            <field name="appointment_timezone" readonly="state != 'draft'"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="what_happened_notes" readonly="1"/>
                             <field name="appointment_result" readonly="1"/>

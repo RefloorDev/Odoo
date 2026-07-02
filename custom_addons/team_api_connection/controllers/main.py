@@ -385,6 +385,7 @@ class API_Homes(http.Controller):
         device_name = values.get('device_name', '')
         device_os = values.get('device_os', '')
         app_version = values.get('app_version', '')
+        installer_user = values.get('installer_user', 0)
         _logger.info(f"Authentication - {username,device_name,device_os,app_version,registered_id} ")
         restrict_multi_login = int(values.get('restrict_multi_login', 0))
         if not username:
@@ -398,7 +399,7 @@ class API_Homes(http.Controller):
             return json.dumps({'result': 'Failed', 'message': 'Empty registered_id'})
         _logger.info(f"Authentication - Before i360 connection for user: {username}")
         data = models.execute_kw(DB, API_USER_ID, API_USER_PASSWORD, 'res.users', 'authenticate_salesperson_user',
-                                     [{'username': username, 'password': password}])
+                                     [{'username': username, 'password': password, 'installer_user': installer_user}])
         _logger.info(f"Authentication - After i360 connection for user: {username}")
         if data.get('result', '') == 'Success':
             user_vals = {

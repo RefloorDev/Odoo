@@ -217,6 +217,10 @@ class ResUsers(models.Model):
     def authenticate_salesperson_user(self, data):
         username = data.get('username', 0)
         password = data.get('password', 0)
+        try:
+            installer_user = int(data.get('installer_user', 0))
+        except (ValueError, TypeError):
+            installer_user = 0
         url = ''
         configurations = self.env['team.improveit.configuration'].search([('api_type', '=', 'boomi')], limit=1)
         if configurations:
@@ -247,6 +251,16 @@ class ResUsers(models.Model):
                     # restrict_geolocation = False
                     # if eval(content.get('RestrictGeolocationTracking', 'False')):
                     #     restrict_geolocation = True
+                    groups = [
+                        self.env.ref('sales_team.group_sale_salesman').id,
+                        self.env.ref('base.group_partner_manager').id,
+                        self.env.ref('account.group_account_invoice').id,
+                    ]
+
+                    if installer_user == 1:
+                        groups.append(
+                            self.env.ref('sales_team.group_sale_salesman_all_leads').id
+                        )
                     if not users:
                         users = self.env['res.users'].sudo().with_context(no_reset_password=True, create_mode=False,
                                                                           mail_create_nosubscribe=True,
@@ -257,9 +271,7 @@ class ResUsers(models.Model):
                             'password': password,
                             'can_view_phone_number': can_view_phone_number,
                             # 'restrict_geolocation': restrict_geolocation,
-                            'groups_id': [(6, 0, [self.env.ref('sales_team.group_sale_salesman').id,
-                                                  self.env.ref('base.group_partner_manager').id,
-                                                  self.env.ref('account.group_account_invoice').id])],
+                            'groups_id': [(6, 0, groups)],
                             'improveit_user_id': content.get('SalespersonID', '') or content.get('InstallerID',
                                                                                                  '') or ''
                         })
@@ -270,6 +282,7 @@ class ResUsers(models.Model):
                             vals = {
                                 'password': password,
                                 'can_view_phone_number': can_view_phone_number,
+                                'groups_id': [(6, 0, groups)],
                                 # 'restrict_geolocation': restrict_geolocation,
                             }
                             if content.get('SalespersonID', ''):
@@ -4732,18 +4745,20 @@ class SaleOrder(models.Model):
             message += '\n We are having issue with communicating our server . Please tap on Retry button to try again. If issue continues, please reach out to the support'
         return {'message': message, 'result': 'Failed'}
 
-    def confirm_order_and_create_invoice(self):
+    def confirm_order_and_create_invoice(self, transaction_amount= 0):
         for order in self:
             if order.state != 'sale':
                order.action_confirm()
-            if order.down_payment_amount:
+            if not transaction_amount:
+                transaction_amount = order.down_payment_amount
+            if transaction_amount:
                 adv_wiz = self.env['sale.advance.payment.inv'].with_context(active_ids=[order.id],
                                                                             open_invoices=True).create({
                     'advance_payment_method': 'fixed',
-                    'fixed_amount': float(order.down_payment_amount)
+                    'fixed_amount': float(transaction_amount)
                 })
                 invoice_created = adv_wiz.with_context(open_invoices=True).create_invoices()
-                order.invoice_ids.action_post()
+                order.invoice_ids.filtered(lambda x: x.state=='draft').action_post()
                 if order.payment_method in ['cash', 'check']:
                     domain = []
                     if order.payment_method == 'cash':
@@ -4759,7 +4774,7 @@ class SaleOrder(models.Model):
                         'journal_id': journal_id.id,
                         'payment_type': 'inbound',
                         'payment_method_id': payment_method_id,
-                        'amount': order.down_payment_amount,
+                        'amount': transaction_amount,
                         'partner_type': 'customer',
                         'partner_id': order.partner_id.id,
                         # 'communication': order.invoice_ids.name,

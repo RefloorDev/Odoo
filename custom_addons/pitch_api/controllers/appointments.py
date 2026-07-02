@@ -139,6 +139,7 @@ class AppointmentsController(
 
         Query Parameters:
             status: Filter by status (draft, scheduled, canceled, done)
+            progress_status: Filter by derived progress (not_started, in_progress, completed)
             date_from: Filter from date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
             date_to: Filter to date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
             page: Page number (default: 1)
@@ -167,6 +168,21 @@ class AppointmentsController(
         if err:
             return err
 
+        progress_status_filter, err = self._parse_progress_status_filter(kwargs, user_id)
+        if err:
+            return err
+
+        conflict_filters = {}
+        if status_filter:
+            conflict_filters['status'] = status_filter
+        if progress_status_filter:
+            conflict_filters['progress_status'] = progress_status_filter
+        err = self._validate_progress_status_conflicts(
+            conflict_filters, 'AppointmentsController.list', user_id
+        )
+        if err:
+            return err
+
         # Parse date filters (all dates treated as UTC)
         date_from_param = kwargs.get('date_from') or request.params.get('date_from')
         date_to_param = kwargs.get('date_to') or request.params.get('date_to')
@@ -190,6 +206,8 @@ class AppointmentsController(
             domain.append(('appointment_date', '>=', date_from_utc))
         if date_to_utc:
             domain.append(('appointment_date', '<=', date_to_utc))
+        if progress_status_filter:
+            domain.extend(self._build_progress_status_domain(progress_status_filter))
 
         # Execute query
         appointment_model = request.env['team.customer.appointment'].sudo()
@@ -233,6 +251,8 @@ class AppointmentsController(
             filters['date_from'] = date_from_param
         if date_to_param:
             filters['date_to'] = date_to_param
+        if progress_status_filter:
+            filters['progress_status'] = progress_status_filter
         if filters:
             response['filters'] = filters
 
@@ -252,6 +272,7 @@ class AppointmentsController(
 
         Query Parameters:
             status: Filter by status (draft, scheduled, canceled, done)
+            progress_status: Filter by derived progress (not_started, in_progress, completed)
             page: Page number (default: 1)
             per_page: Items per page (default: 200, max: 2000)
             order: Sort order (id_desc, id_asc, date_desc, date_asc)
@@ -278,6 +299,21 @@ class AppointmentsController(
         if err:
             return err
 
+        progress_status_filter, err = self._parse_progress_status_filter(kwargs, user_id)
+        if err:
+            return err
+
+        conflict_filters = {}
+        if status_filter:
+            conflict_filters['status'] = status_filter
+        if progress_status_filter:
+            conflict_filters['progress_status'] = progress_status_filter
+        err = self._validate_progress_status_conflicts(
+            conflict_filters, 'AppointmentsController.list_today', user_id
+        )
+        if err:
+            return err
+
         # Parse pagination
         page, per_page, err = self._parse_pagination(kwargs)
         if err:
@@ -299,6 +335,8 @@ class AppointmentsController(
 
         if status_filter:
             domain.append(('state', '=', status_filter))
+        if progress_status_filter:
+            domain.extend(self._build_progress_status_domain(progress_status_filter))
 
         # Execute query
         appointment_model = request.env['team.customer.appointment'].sudo()
@@ -336,8 +374,13 @@ class AppointmentsController(
         }
 
         # Add active filters
+        today_filters = {}
         if status_filter:
-            response['filters'] = {'status': status_filter}
+            today_filters['status'] = status_filter
+        if progress_status_filter:
+            today_filters['progress_status'] = progress_status_filter
+        if today_filters:
+            response['filters'] = today_filters
 
         response['appointments'] = appointments
         return (response, 200)

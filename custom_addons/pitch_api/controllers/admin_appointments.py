@@ -20,6 +20,7 @@ Filter Parameters (AND logic):
     user_id            - Filter by salesperson/user ID (Odoo user ID)
     improveit_user_id  - Filter by Salesforce user ID
     status             - Filter by status (draft, scheduled, canceled, done)
+    progress_status    - Filter by derived progress (not_started, in_progress, completed)
     date_from          - Filter from date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
     date_to            - Filter to date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
 
@@ -48,6 +49,7 @@ from .mixins import (
     PaginationMixin,
     FilterMixin,
     VALID_APPOINTMENT_STATUSES,
+    VALID_PROGRESS_STATUSES,
     VALID_ORDER_OPTIONS,
     DEFAULT_ORDER,
     DEFAULT_PER_PAGE,
@@ -158,6 +160,17 @@ class AdminAppointmentsController(
                     filters['status'] = status_lower
                 else:
                     filters['status_invalid'] = status_param
+
+        # Progress status filter (derived from state + live screen logs)
+        progress_param = kwargs.get('progress_status') or request.params.get('progress_status')
+        if progress_param is not None:
+            progress_param = progress_param.strip() if progress_param else ''
+            if progress_param:
+                progress_lower = progress_param.lower()
+                if progress_lower in VALID_PROGRESS_STATUSES:
+                    filters['progress_status'] = progress_lower
+                else:
+                    filters['progress_status_invalid'] = progress_param
 
         # Order filter
         order_param = kwargs.get('order') or request.params.get('order')
@@ -503,6 +516,9 @@ class AdminAppointmentsController(
                 )
             conditions.append(('appointment_date', '<=', date_to_str))
 
+        if filters.get('progress_status'):
+            conditions.extend(self._build_progress_status_domain(filters['progress_status']))
+
         if not conditions:
             return []
 
@@ -628,6 +644,8 @@ class AdminAppointmentsController(
             result['date_to'] = str(filters['date_to'])
         if filters.get('status'):
             result['status'] = filters['status']
+        if filters.get('progress_status'):
+            result['progress_status'] = filters['progress_status']
         if filters.get('order'):
             result['order'] = filters['order']
         # Search parameters
@@ -656,6 +674,20 @@ class AdminAppointmentsController(
                 "error_description": f"Invalid status value '{filters['status_invalid']}'. Allowed values: draft, scheduled, canceled, done"
             }, 400)
 
+        if filters.get('progress_status_invalid'):
+            allowed = ', '.join(VALID_PROGRESS_STATUSES)
+            _logger.warning(
+                "%s: Invalid progress_status '%s' from admin_user_id=%s",
+                endpoint_name, filters['progress_status_invalid'], admin_user_id
+            )
+            return ({
+                "error": "invalid_request",
+                "error_description": (
+                    f"Invalid progress_status value '{filters['progress_status_invalid']}'. "
+                    f"Allowed values: {allowed}"
+                ),
+            }, 400)
+
         if filters.get('order_invalid'):
             _logger.warning(
                 "%s: Invalid order '%s' from admin_user_id=%s",
@@ -665,6 +697,12 @@ class AdminAppointmentsController(
                 "error": "invalid_request",
                 "error_description": f"Invalid order value '{filters['order_invalid']}'. Allowed values: id_desc, id_asc, date_desc, date_asc"
             }, 400)
+
+        conflict_err = self._validate_progress_status_conflicts(
+            filters, endpoint_name, admin_user_id
+        )
+        if conflict_err:
+            return conflict_err
 
         # Resolve improveit_user_id to user_id
         if filters.get('improveit_user_id'):
@@ -718,6 +756,7 @@ class AdminAppointmentsController(
                 user_id: Filter by salesperson/user ID (Odoo user ID)
                 improveit_user_id: Filter by Salesforce user ID (used if user_id not provided)
                 status: Filter by status (draft, scheduled, canceled, done)
+                progress_status: Filter by derived progress (not_started, in_progress, completed)
                 date_from: Filter from date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
                 date_to: Filter to date in UTC (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
 
@@ -822,6 +861,7 @@ class AdminAppointmentsController(
                 user_id: Filter by salesperson/user ID (Odoo user ID)
                 improveit_user_id: Filter by Salesforce user ID (used if user_id not provided)
                 status: Filter by status (draft, scheduled, canceled, done)
+                progress_status: Filter by derived progress (not_started, in_progress, completed)
 
             Search (AND logic with filters):
                 customer: Search in customer name fields (partial match, priority-based)

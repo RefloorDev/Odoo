@@ -21,6 +21,7 @@ from datetime import datetime, date
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT
 from odoo.addons.team_api_connection.models.model import AuthorizeAPICustom
 from odoo.addons.resource.models.utils import float_to_time
+from odoo.addons.base.models.res_partner import _tz_get
 import threading
 import time
 
@@ -540,6 +541,7 @@ class ResUsers(models.Model):
                             partner = self.env['res.partner'].search(
                                 [('name', '=', appointment.get('ProspectName','')), ('email', '=', appointment.get('ProspectEmail', ''))], limit=1)
                             applicant_name_split = self.split_name(appointment['ProspectName'])
+                            appointment_timezone = appointment.get('TimeZone', '')
                             str1 = appointment.get('AppointmentTime', '0:00 AM')
                             if str1 is None:
                                 return {
@@ -556,7 +558,10 @@ class ResUsers(models.Model):
                                 hour = str(int(hour) + 12)
                             appointment_date = date_obj.replace(hour=int(hour), minute=int(minute))
                             user = self.env.user
-                            tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+                            if appointment_timezone and appointment_timezone in [tz[0] for tz in _tz_get(self)]:
+                                tz = pytz.timezone(appointment_timezone)
+                            else:
+                                tz = user.tz and pytz.timezone(user.tz) or pytz.utc
                             appointment_date = tz.localize(appointment_date).astimezone(pytz.utc).strftime(
                                 '%Y-%m-%d %H:%M:%S')
                             state = self.env['res.country.state'].search(
@@ -595,6 +600,7 @@ class ResUsers(models.Model):
                                     'applicant_last_name': applicant_name_split['last_name'] or False,
                                     'market_segment': market_segment,
                                     'office_location_id': office_location_id and office_location_id.id or False,
+                                    'appointment_timezone': appointment_timezone,
 
                                 }
                                 try:
@@ -635,6 +641,7 @@ class ResUsers(models.Model):
                                     'market_segment': market_segment,
                                     'office_location_id': office_location_id and office_location_id.id or False,
                                     # 'attachment_ids': [(6, 0, [])],
+                                    'appointment_timezone': appointment_timezone,
                                 }
                                 appointments.write(appointment_values)
                                 try:
@@ -1156,7 +1163,8 @@ class TeamCustomerAppointment(models.Model):
                     'partner_longitude': data.partner_longitude or 0,
                     'recision_date': self.env.user.company_id.recision_date and self.env.user.company_id.recision_date.strftime(
                         DEFAULT_SERVER_DATE_FORMAT) or '',
-                    'external_entity_keys': external_entity_keys
+                    'external_entity_keys': external_entity_keys,
+                    'appointment_timezone': data.appointment_timezone or '',
                 }
                 list.append(vals)
 
@@ -1193,8 +1201,10 @@ class TeamCustomerAppointment(models.Model):
             completed_date = data.get('completed_date', '')
             timezone = data.get('timezone', 'US/Eastern')
             completed_date_utc = False
-            if completed_date and timezone:
-                completed_date_utc = self.get_timezone_based_time(completed_date, timezone)
+            if completed_date:
+                completed_date_utc = completed_date
+                if timezone:
+                    completed_date_utc = self.get_timezone_based_time(completed_date, timezone)
             send_physical_document = False
             if data.get('send_physical_document', 0) == 1:
                 send_physical_document = True
@@ -1237,8 +1247,9 @@ class TeamCustomerAppointment(models.Model):
                 vals.update({'completed_date': completed_date_utc})
             manual_arrival_date = data.get('manual_arrival_date', False)
             manual_arrival_date_utc = manual_arrival_date
-            if manual_arrival_date and timezone:
-                manual_arrival_date_utc = self.get_timezone_based_time(manual_arrival_date, timezone)
+            if manual_arrival_date:
+                if timezone:
+                    manual_arrival_date_utc = self.get_timezone_based_time(manual_arrival_date, timezone)
             if manual_arrival_date_utc:
                 vals.update({'manual_arrival_date': manual_arrival_date_utc})
             applicant_first_name = ''
@@ -2468,6 +2479,7 @@ class TeamCustomerAppointment(models.Model):
         res_partner_obj = self.env['res.partner']
         sale_order_obj = self.env['sale.order']
         screen_logs = data.get('screen_logs', [])
+        appointment_result = data.get('appointment_result', '')
         if appointment_id:
             appointment = self.browse(appointment_id)
             if appointment.exists():
@@ -2479,19 +2491,23 @@ class TeamCustomerAppointment(models.Model):
                     }
                 else:
                     # try:
-                    appointment.write({
+                    vals = {
                         'start_sync_to_i360': True,
                         'state': 'done',
                         'sync_initiated_date': fields.Datetime.now()
-                    })
+                    }
+                    if appointment_result and appointment_result != appointment.appointment_result:
+                        vals.update({'appointment_result': data.get('appointment_result', '')})
+                    appointment.write(vals)
                     if appointment.app_screen_log_line:
                         appointment.app_screen_log_line.unlink()
                     timezone = appointment.timezone
                     for log in screen_logs:
                         completion_date = log.get('completion_time', '')
                         completion_date_utc = completion_date
-                        if completion_date and timezone:
-                            completion_date_utc = self.get_timezone_based_time(completion_date, timezone)
+                        if completion_date:
+                            if timezone:
+                                completion_date_utc = self.get_timezone_based_time(completion_date, timezone)
                         screen_log_obj.create({
                             'appointment_id': appointment.id,
                             'name': log.get('screen_name', ''),
@@ -2611,8 +2627,9 @@ class TeamCustomerAppointment(models.Model):
                     sync_date_utc = sync_date
                     timezone = appointment.timezone
                     completed_date_utc = False
-                    if sync_date and timezone:
-                        sync_date_utc = self.get_timezone_based_time(sync_date, timezone)
+                    if sync_date:
+                        if timezone:
+                            sync_date_utc = self.get_timezone_based_time(sync_date, timezone)
                     sync_log_obj.create({
                         'appointment_id': appointment_id,
                         'sync_date': sync_date_utc,
@@ -2733,6 +2750,15 @@ class TeamCustomerAppointment(models.Model):
                         payment_transaction_info_dict = data.get('payment_transaction_info', {})
                         rooms_list = data.get('rooms', [])
                         answer_list = data.get('answer', [])
+                        customer_dict = data.get('customer', {})
+                        if customer_dict.get('appointment_result', '') and appointment.appointment_result != customer_dict.get('appointment_result', ''):
+                            appointment_result = appointment.action_update_appointment(customer_dict, app_version)
+                            if appointment_result.get('result', False) == 'Failed':
+                                appointment_result.update({
+                                    'payment_status': payment_status,
+                                    'payment_message': payment_message,
+                                })
+                                return appointment_result
                         existing_auth_transaction_id = ''
                         if payment_transaction_info_dict:
                             existing_auth_transaction_id = payment_transaction_info_dict.get('authorize_transaction_id', 0)
@@ -3289,6 +3315,9 @@ class TeamCustomerAppointment(models.Model):
             if appointment_id:
                 appointment = self.browse(appointment_id)
                 if appointment.exists():
+                    user = self.env.user
+                    tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+                    timezone = user.tz or 'UTC'
                     sale_order = sale_order_obj.search([('appointment_id', '=', appointment_id)], limit=1)
                     if sale_order:
                         if not only_fetch_installation_dates:
@@ -3305,8 +3334,7 @@ class TeamCustomerAppointment(models.Model):
                                         'result': 'Failed'
                                     }
                                 start_date_list = []
-                                user = self.env.user
-                                tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+
                                 if sale_order.available_installation_line:
                                     sale_order.available_installation_line.unlink()
                                 for crew_data in crews_list:
@@ -3338,8 +3366,8 @@ class TeamCustomerAppointment(models.Model):
                                 return sale_sync_result
                         available_date_list = []
                         for installation_date in sale_order.available_installation_line:
-                            start_date = utc_2_local(installation_date.start_date, user.tz or 'UTC')
-                            end_date = utc_2_local(installation_date.end_date, user.tz or 'UTC')
+                            start_date = utc_2_local(installation_date.start_date, timezone)
+                            end_date = utc_2_local(installation_date.end_date, timezone)
                             available_date_list.append({
                                 'installation_id': installation_date.id,
                                 'start_date': start_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
@@ -3400,6 +3428,7 @@ class TeamCustomerAppointment(models.Model):
             }
         user = self.env.user
         tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+        timezone = user.tz or 'UTC'
         for crew_data in crews_list:
             time_slot = crew_data.get('slot', {})
             crew_i360_id = crew_data.get('id', '')
@@ -3724,11 +3753,11 @@ class TeamCustomerAppointment(models.Model):
                 if appointment.exists():
                     if arrival_date:
                         arrival_date_utc = arrival_date
-                        if arrival_date and timezone:
+                        if timezone:
                             arrival_date_utc = self.get_timezone_based_time(arrival_date, timezone)
                     if departure_date:
                         departure_date_utc = departure_date
-                        if departure_date and timezone:
+                        if timezone:
                             departure_date_utc = self.get_timezone_based_time(departure_date, timezone)
                     appointment.write({
                         'arrival_date': arrival_date_utc,
@@ -3823,7 +3852,7 @@ class TeamCustomerAppointment(models.Model):
                     else:
                         if manual_arrival_date:
                             manual_arrival_date_utc = manual_arrival_date
-                            if manual_arrival_date and timezone:
+                            if timezone:
                                 manual_arrival_date_utc = self.get_timezone_based_time(manual_arrival_date, timezone)
                         appointment.write({
                             'manual_arrival_date': manual_arrival_date_utc,
@@ -4022,10 +4051,10 @@ class TeamCustomerAppointment(models.Model):
             live_screen_log_obj = self.env['otl.app.live.screen.log']
             if appointment_id:
                 appointment = self.sudo().search([('id', '=', appointment_id)], limit=1)
+                screen_entry_date_utc = screen_entry_date
                 if appointment:
-                    timezone = data.get('timezone', 'EST')
-                    screen_entry_date_utc = screen_entry_date
-                    if screen_entry_date and timezone:
+                    timezone = data.get('timezone', 'US/Eastern')
+                    if timezone:
                         screen_entry_date_utc = self.get_timezone_based_time(screen_entry_date, timezone)
                     live_screen_log = live_screen_log_obj.search([
                         ('appointment_id', '=', appointment_id),
@@ -4063,6 +4092,116 @@ class TeamCustomerAppointment(models.Model):
                 'result': 'Failed'
             }
         _logger.info("------action_update_live_screen_log result: %s-------------" % (result))
+        return result
+
+    @api.model
+    def action_process_credit_card_payment(self, data):
+        result = {
+            'message': 'No Data found to update',
+            'result': 'Failed'
+        }
+        payment_status = 'Not Done'
+        payment_message = 'Payment is not Done'
+        success_msg = 'Order details updated successfully'
+        _logger.info("------action_process_credit_card_payment data: %s-------------" % (data))
+        sale_order_obj = self.env['sale.order']
+        # accepted values - online, offline
+        operation_mode = data.get('operation_mode', 'offline')
+        transaction_id = 'Invalid'
+        card_type = ''
+        down_payment_amount = 0
+        try:
+            appointment_id = data.get('appointment_id', '')
+            if appointment_id:
+                appointment = self.search([('improveit_appointment_id', '=', appointment_id)], limit=1, order='id desc')
+                if appointment.exists():
+                    order = self.env['sale.order'].search([('appointment_id', '=', appointment.id)], limit=1)
+                    if order:
+                        payment_method_dict = data.get('payment_method', {})
+                        payment_transaction_info_dict = data.get('payment_transaction_info', {})
+                        existing_auth_transaction_id = ''
+                        if payment_transaction_info_dict:
+                            existing_auth_transaction_id = payment_transaction_info_dict.get('authorize_transaction_id',
+                                                                                             0)
+                            card_type = payment_transaction_info_dict.get('card_type', '')
+                        if payment_method_dict and not existing_auth_transaction_id:
+                            payment_method = payment_method_dict.get('payment_method', '')
+                            down_payment_amount = float(payment_method_dict.get('down_payment_amount', 0))
+                            down_payment_lines = order.order_line.filtered(lambda x: x.is_downpayment)
+                            if down_payment_lines:
+                                invoiced_amount = 0
+                                for line in down_payment_lines:
+                                    invoiced_amount += line.price_unit or 0
+                                if round(invoiced_amount+down_payment_amount)> round(order.amount_total):
+                                    return {
+                                        'result': 'Failed',
+                                        'message': 'The payment amount exceeds the remaining balance on this order. Please enter an amount equal to or less than the outstanding balance.'
+                                    }
+
+                        if down_payment_amount and data.get('payment_method', {}):
+                            payment_result = order.action_update_payment_data(data.get('payment_method', {}),
+                                                                              existing_auth_transaction_id,
+                                                                              card_type, transaction_amount= down_payment_amount, allow_multiple_payment=True)
+                            payment_status = payment_result.get('result', '')
+                            if payment_result.get('result', '') != 'Success':
+                                payment_message = payment_result.get('message', '')
+                                if operation_mode == 'online':
+                                    payment_result.update({
+                                        'payment_status': payment_status,
+                                        'payment_message': payment_message,
+                                    })
+                                    return payment_result
+                            else:
+                                payment_message = 'Payment Processed Successfully'
+                                order_values = payment_result.get('values', {})
+                                if order_values:
+                                    transaction_id = order_values.get('authorize_transaction_id', '')
+                                    card_type = order_values.get('card_type', '')
+                                    order.confirm_order_and_create_invoice(transaction_amount= down_payment_amount)
+                                    # no need to write values to sale order since it is calling from installer app.
+                                    # order.write(order_values)
+                        else:
+                            return {
+                                'result': 'Failed',
+                                'message': 'Payment amount or Payment method is missing'
+                            }
+
+                        return {
+                            'message': 'Order details updated successfully.',
+                            'result': 'Success',
+                            'payment_status': payment_status,
+                            'payment_message': payment_message,
+                            'transaction_id': transaction_id,
+                            'card_type': card_type
+                        }
+                    else:
+                        _logger.info("------Empty Sale Order-------------")
+                        result = {
+                            'message': 'Sale order is not existing for the appointment.',
+                            'result': 'Failed'
+                        }
+                else:
+                    _logger.info("------Wrong Appointment id-------------")
+                    result = {
+                        'message': 'Wrong Appointment id',
+                        'result': 'Failed'
+                    }
+            else:
+                _logger.info("------Empty Appointment id-------------")
+                result = {
+                    'message': 'Empty Appointment id',
+                    'result': 'Failed'
+                }
+        except:
+            result = {
+                'message': 'Something went wrong',
+                'result': 'Failed',
+                'transaction_id': transaction_id,
+                'card_type': card_type,
+                'payment_status': payment_status,
+                'payment_message': payment_message,
+            }
+        _logger.info("------action_process_credit_card_payment result: %s-------------" % (result))
         return result
     
 
@@ -4131,7 +4270,7 @@ class SaleOrder(models.Model):
             year = year[-2:]
         return f"{month.zfill(2)}{year}"
 
-    def action_authcapture_payment(self, data):
+    def action_authcapture_payment(self, data, allow_multiple_payment=False):
         """
 
         :param data:
@@ -4155,6 +4294,7 @@ class SaleOrder(models.Model):
             currency = order.currency_id
             partner = order.partner_id
             transaction_ref = ''
+            transaction_response = ''
             payment_transaction = self.env['payment.transaction'].sudo().search([
                 ('sale_order_ids', 'in', order.ids),
                 ('state', 'in', ['draft'])
@@ -4183,7 +4323,7 @@ class SaleOrder(models.Model):
 
             if acquirer.code == 'authorize':
                 transaction = AuthorizeAPICustom(acquirer)
-                if order.authorize_transaction_id:
+                if order.authorize_transaction_id and not allow_multiple_payment:
                     transaction.void(order.authorize_transaction_id or '')
                 values = self.prepare_authcapture_payment_values(acquirer, order, data, transaction_type)
                 response = transaction._authorize_request_custom(values)
@@ -4209,7 +4349,7 @@ class SaleOrder(models.Model):
                 #order.write({'authorize_transaction_id': transaction_ref, 'card_type': card_type})
                 transc_ref = response.get('transactionResponse', {}) and response.get('transactionResponse', {}).get('transId', '') + ' ' + response.get('transactionResponse', {}).get('transId', '') + ' ' + fields.Datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT) or ''
             elif acquirer.code == 'cardpoint':
-                if order.authorize_transaction_id:
+                if order.authorize_transaction_id and not allow_multiple_payment:
                     acquirer._cardpoint_void_transaction(order.authorize_transaction_id)
                 tokenize_data = {
                     "account": data.get('cc_number', ''),
@@ -4275,7 +4415,8 @@ class SaleOrder(models.Model):
 
 
             payment_transaction.write({'provider_reference': transaction_ref})
-            payment_transaction._set_done()
+            if payment_transaction.state != 'done':
+                payment_transaction._set_done()
             self.env['otl.card.transaction.log'].create({
                 'sale_order_id': order.id,
                 'name': transaction_ref,
@@ -4285,7 +4426,7 @@ class SaleOrder(models.Model):
                 'provider_id': acquirer.id
 
             })
-            self.env.cr.commit()
+            # self.env.cr.commit()
             return {
                 'result': 'Success',
                 'transaction_id': transaction_ref,
@@ -4293,7 +4434,7 @@ class SaleOrder(models.Model):
                 'message': transaction_response,
             }
 
-    def action_authcapture_ach_payment(self, data):
+    def action_authcapture_ach_payment(self, data, allow_multiple_payment=False):
         """
 
         :param data:
@@ -4314,6 +4455,7 @@ class SaleOrder(models.Model):
             currency = order.currency_id
             partner = order.partner_id
             transaction_ref = ''
+            transaction_response = ''
             payment_transaction = self.env['payment.transaction'].sudo().search([
                 ('sale_order_ids', 'in', order.ids),
                 ('state', 'in', ['draft'])
@@ -4335,7 +4477,7 @@ class SaleOrder(models.Model):
                 }
                 payment_transaction = self.env['payment.transaction'].create([vals])
 
-            if order.authorize_transaction_id:
+            if order.authorize_transaction_id and not allow_multiple_payment:
                 acquirer._cardpoint_void_transaction(order.authorize_transaction_id)
 
             tokenize_data = {
@@ -4393,7 +4535,8 @@ class SaleOrder(models.Model):
                 )
 
             payment_transaction.write({'provider_reference': transaction_ref})
-            payment_transaction._set_done()
+            if payment_transaction.state != 'done':
+                payment_transaction._set_done()
             self.env['otl.card.transaction.log'].create({
                 'sale_order_id': order.id,
                 'name': transaction_ref,
@@ -4402,7 +4545,7 @@ class SaleOrder(models.Model):
                 'type': 'authcapture',
                 'provider_id': acquirer.id
             })
-            self.env.cr.commit()
+            # self.env.cr.commit()
             return {
                 'result': 'Success',
                 'transaction_id': transaction_ref,
@@ -4410,13 +4553,15 @@ class SaleOrder(models.Model):
                 'message': transaction_response,
             }
 
-    def action_update_payment_data(self, data={}, existing_auth_transaction_id='', existing_card_type=''):
+    def action_update_payment_data(self, data={}, existing_auth_transaction_id='', existing_card_type='', transaction_amount= 0, allow_multiple_payment=False):
         status = {
             'message': 'Sale order payment method update is failed due to some unknown reason',
             'result': 'Failed'
         }
         values = {}
         for order in self:
+            if not transaction_amount:
+                transaction_amount = order.down_payment_amount
             payment_method = data.get('payment_method', '')
             if payment_method not in ['credit_card', 'debit_card', 'cash', 'check', 'ach']:
                 _logger.info("------ Wrong Payment Method-------------")
@@ -4430,7 +4575,7 @@ class SaleOrder(models.Model):
                 'write_date': datetime.now().replace(tzinfo=pytz.utc),
                 'pay_later': data.get('pay_later', 0) == 1 and True or False,
             })
-            if order.invoice_ids:
+            if order.invoice_ids and not allow_multiple_payment:
                 _logger.info("------Payment Already Done------------")
                 status = {
                     'message': 'Payment Already Done',
@@ -4446,6 +4591,8 @@ class SaleOrder(models.Model):
                     if payment_method == 'check':
                         values.update({'check': True, 'cards': False, 'cash': False})
             if payment_method == 'check':
+                check_account_number = ''
+                check_routing_number = ''
                 if data.get('check_number', ''):
                     check_number = data.get('check_number', "")
                 else:
@@ -4457,22 +4604,22 @@ class SaleOrder(models.Model):
                     return status
                 if data.get('check_account_number', ''):
                     check_account_number = data.get('check_account_number', "")
-                else:
-                    _logger.info("------check_account_number Empty------------")
-                    status = {
-                        'message': 'check_account_number  Empty',
-                        'result': 'Failed',
-                    }
-                    return status
+                # else:
+                #     _logger.info("------check_account_number Empty------------")
+                #     status = {
+                #         'message': 'check_account_number  Empty',
+                #         'result': 'Failed',
+                #     }
+                #     return status
                 if data.get('check_routing_number', ''):
                     check_routing_number = data.get('check_routing_number', "")
-                else:
-                    _logger.info("------check_routing_number Empty------------")
-                    status = {
-                        'message': 'check_routing_number  Empty',
-                        'result': 'Failed',
-                    }
-                    return status
+                # else:
+                #     _logger.info("------check_routing_number Empty------------")
+                #     status = {
+                #         'message': 'check_routing_number  Empty',
+                #         'result': 'Failed',
+                #     }
+                #     return status
                 values.update({
                     'check_number': check_number,
                     'check_account_number': check_account_number,
@@ -4553,10 +4700,10 @@ class SaleOrder(models.Model):
                         'cc_expiry': card_expiry,
                         'cc_cvc': cardpin,
                         'cc_holder_name': card_holder_name,
-                        'amount': order.down_payment_amount,
+                        'amount': transaction_amount,
                         'pay_later': data.get('pay_later', 0),
                     }
-                    payment_status = order.action_authcapture_payment(payment_data)
+                    payment_status = order.action_authcapture_payment(payment_data, allow_multiple_payment)
                     if payment_status['result'] == 'Success':
                         if payment_status.get('transaction_id', ''):
                             values.update({
@@ -4574,63 +4721,85 @@ class SaleOrder(models.Model):
                         }
                         return status
             elif payment_method in ['ach']:
-                acct_type = ''
-                if data.get('acct_type', ''):
-                    acct_type = data.get('acct_type', '')
-                    if acct_type not in ['ECHK', 'ESAV']:
-                        return {
-                            'message': 'Wrong Value for Account Type',
-                            'result': 'Failed',
-                        }
-                else:
-                    _logger.info("------acct_type Empty------------")
-                    status = {
-                        'message': 'Account Type   Empty',
-                        'result': 'Failed',
-                    }
-                    return status
-                if data.get('bank_account_number', ''):
-                    bank_account_number = data.get('bank_account_number', '')
-                else:
-                    _logger.info("------bank_account_number Empty------------")
-                    status = {
-                        'message': 'bank_account_number  Empty',
-                        'result': 'Failed',
-                    }
-                    return status
-                if data.get('bank_routing_number', ''):
-                    bank_routing_number = data.get('bank_routing_number', '')
-                else:
-                    _logger.info("------bank_routing_number Empty------------")
-                    status = {
-                        'message': 'bank_routing_number  Empty',
-                        'result': 'Failed',
-                    }
-                    return status
-                values.update({
-                    'check_account_number': bank_account_number,
-                    'check_routing_number': bank_routing_number,
-                })
-                payment_data = {
-                    'sale_order_id': order.id,
-                    'bank_account_number': bank_account_number,
-                    'bank_routing_number': bank_routing_number,
-                    'amount': order.down_payment_amount,
-                    'acct_type': acct_type,
-                }
-                payment_status = order.action_authcapture_ach_payment(payment_data)
-                if payment_status['result'] == 'Success':
-                    if payment_status.get('transaction_id', ''):
-                        values.update({
-                            'authorize_transaction_id': payment_status.get('transaction_id', '')
+                if existing_auth_transaction_id:
+                    values.update({
+                        'authorize_transaction_id': existing_auth_transaction_id,
+                        'card_type': existing_card_type
+                    })
+                    acquirer = False
+                    payment_transaction = self.env['payment.transaction'].sudo().search([('provider_reference', '=', existing_auth_transaction_id)], limit=1)
+                    if payment_transaction:
+                        acquirer = payment_transaction.provider_id.id
+                    if not order.card_transaction_log_line.filtered(lambda x: x.name == existing_auth_transaction_id):
+                        transaction_type_to_log = "authcapture"
+                        if order.pay_later:
+                            transaction_type_to_log = "authorize"
+                        self.env['otl.card.transaction.log'].create({
+                            'sale_order_id': order.id,
+                            'name': existing_auth_transaction_id,
+                            'message': '',
+                            'state': 'success',
+                            'type': transaction_type_to_log,
+                            'provider_id': acquirer.id
                         })
                 else:
-                    _logger.info("------ Payment_Transaction Failed------------")
-                    status = {
-                        'result': 'Failed',
-                        'message': payment_status['message'],
+                    acct_type = ''
+                    if data.get('acct_type', ''):
+                        acct_type = data.get('acct_type', '')
+                        if acct_type not in ['ECHK', 'ESAV']:
+                            return {
+                                'message': 'Wrong Value for Account Type',
+                                'result': 'Failed',
+                            }
+                    else:
+                        _logger.info("------acct_type Empty------------")
+                        status = {
+                            'message': 'Account Type   Empty',
+                            'result': 'Failed',
+                        }
+                        return status
+                    if data.get('bank_account_number', ''):
+                        bank_account_number = data.get('bank_account_number', '')
+                    else:
+                        _logger.info("------bank_account_number Empty------------")
+                        status = {
+                            'message': 'bank_account_number  Empty',
+                            'result': 'Failed',
+                        }
+                        return status
+                    if data.get('bank_routing_number', ''):
+                        bank_routing_number = data.get('bank_routing_number', '')
+                    else:
+                        _logger.info("------bank_routing_number Empty------------")
+                        status = {
+                            'message': 'bank_routing_number  Empty',
+                            'result': 'Failed',
+                        }
+                        return status
+                    values.update({
+                        'check_account_number': bank_account_number,
+                        'check_routing_number': bank_routing_number,
+                    })
+                    payment_data = {
+                        'sale_order_id': order.id,
+                        'bank_account_number': bank_account_number,
+                        'bank_routing_number': bank_routing_number,
+                        'amount': transaction_amount,
+                        'acct_type': acct_type,
                     }
-                    return status
+                    payment_status = order.action_authcapture_ach_payment(payment_data, allow_multiple_payment)
+                    if payment_status['result'] == 'Success':
+                        if payment_status.get('transaction_id', ''):
+                            values.update({
+                                'authorize_transaction_id': payment_status.get('transaction_id', '')
+                            })
+                    else:
+                        _logger.info("------ Payment_Transaction Failed------------")
+                        status = {
+                            'result': 'Failed',
+                            'message': payment_status['message'],
+                        }
+                        return status
             #[FIX] Dtd: 07/07/2023 - to solve concurrent update error, passing 'state' & 'order date' in values instead of calling action_confirm() function.
             #order.action_confirm()
 
@@ -5606,7 +5775,6 @@ class VersatileCreditApplication(models.Model):
             "message": "Something went wrong"
         }
         user = self.env.user
-        tz = user.tz and pytz.timezone(user.tz) or pytz.utc
         data = versatile_payload.get("data", {})
         webhook_event_id = versatile_payload.get('id', "")
         event_type = versatile_payload.get('type', "")
@@ -5619,9 +5787,11 @@ class VersatileCreditApplication(models.Model):
         appointment = self.env['team.customer.appointment'].search([('improveit_appointment_id', '=', ext_customer_id)], limit=1)
         if not appointment:
             return {"result": "Failed", "message": "Appointment is not found related to the External Customer ID '%s'."%(ext_customer_id)}
+        credit_application = self.search([('appointment_id', '=', appointment.id)], limit=1)
+        tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+        timezone = user.tz or 'UTC'
         if event_date:
             event_date = self.convert_date_to_utc(event_date, tz)
-        credit_application = self.search([('appointment_id', '=', appointment.id)], limit=1)
 
         account_id = data.get("accountId", "")
         provider = data.get("providerId", "")

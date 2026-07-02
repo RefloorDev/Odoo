@@ -23,6 +23,7 @@ _logger = logging.getLogger(__name__)
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
+from odoo.addons.base.models.res_partner import _tz_get
 
 
 class TeamImproveitConfiguration(models.Model):
@@ -628,6 +629,8 @@ class TeamImproveitConfiguration(models.Model):
                                     [('name', '=', appointment.get('ProspectName','')), (('email', '=', appointment.get('ProspectEmail', '')))], limit=1)
                                 applicant_name_split = self.split_name(appointment['ProspectName'])
                                 str1= appointment['AppointmentTime']
+                                appointment_timezone = appointment.get('TimeZone', '')
+
                                 str1_list = str1.split(' ')
                                 time = str1_list[0]
                                 am_pm = str1_list[1]
@@ -638,7 +641,10 @@ class TeamImproveitConfiguration(models.Model):
                                     hour = str(int(hour) + 12)
                                 appointment_date = date_obj.replace(hour=int(hour), minute=int(minute))
                                 user = self.env.user
-                                tz = user.tz and pytz.timezone(user.tz) or pytz.utc
+                                if appointment_timezone and appointment_timezone in [tz[0] for tz in _tz_get(self)]:
+                                    tz = pytz.timezone(appointment_timezone)
+                                else:
+                                    tz = user.tz and pytz.timezone(user.tz) or pytz.utc
                                 appointment_date = tz.localize(appointment_date).astimezone(pytz.utc).strftime(
                                     '%Y-%m-%d %H:%M:%S')
                                 # else:
@@ -671,6 +677,7 @@ class TeamImproveitConfiguration(models.Model):
                                         'applicant_last_name': applicant_name_split['last_name'] or False,
                                         'market_segment': market_segment,
                                         'office_location_id': office_location_id and office_location_id.id or False,
+                                        'appointment_timezone': appointment_timezone
 
                                     }
                                     appointment_obj = self.env['team.customer.appointment'].create(appointment_values)
@@ -698,6 +705,7 @@ class TeamImproveitConfiguration(models.Model):
                                         'applicant_last_name': applicant_name_split['last_name'] or False,
                                         'market_segment': market_segment,
                                         'office_location_id': office_location_id and office_location_id.id or False,
+                                        'appointment_timezone': appointment_timezone
 
                                     }
                                     appointments.write(appointment_values)

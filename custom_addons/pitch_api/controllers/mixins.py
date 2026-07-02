@@ -47,6 +47,8 @@ _logger = logging.getLogger(__name__)
 
 VALID_APPOINTMENT_STATUSES = ('draft', 'scheduled', 'canceled', 'done')
 
+VALID_PROGRESS_STATUSES = ('not_started', 'in_progress', 'completed')
+
 VALID_ORDER_OPTIONS = {
     'id_desc': 'id desc',
     'id_asc': 'id asc',
@@ -287,6 +289,44 @@ class AuthenticationMixin:
 class AppointmentSerializerMixin:
     """Mixin providing appointment serialization methods."""
 
+    def _appointment_has_live_screen_logs(self, appointment):
+        """Return True if appointment has at least one otl.app.live.screen.log row."""
+        logs = getattr(appointment, 'app_live_screen_log_line', None) or []
+        return bool(logs)
+
+    def _derive_progress_status(self, appointment):
+        """Derive progress_status from Odoo state and live screen logs (sales app)."""
+        state = (getattr(appointment, 'state', None) or '')
+        if hasattr(state, 'lower'):
+            state = state.lower()
+        else:
+            state = str(state).lower()
+        if state == 'done':
+            return 'completed'
+        if self._appointment_has_live_screen_logs(appointment):
+            return 'in_progress'
+        return 'not_started'
+
+    def _latest_live_screen_entry(self, appointment):
+        """Latest screen_entry_date from live screen logs, or None."""
+        logs = getattr(appointment, 'app_live_screen_log_line', None) or []
+        latest = None
+        for log in logs:
+            entry_date = getattr(log, 'screen_entry_date', None)
+            if entry_date and (latest is None or entry_date > latest):
+                latest = entry_date
+        return self._format_datetime(latest) if latest else None
+
+    def _build_progress_status_domain(self, progress_status):
+        """Build Odoo search domain for progress_status filter."""
+        if progress_status == 'completed':
+            return [('state', '=', 'done')]
+        if progress_status == 'in_progress':
+            return [('state', '!=', 'done'), ('app_live_screen_log_line', '!=', False)]
+        if progress_status == 'not_started':
+            return [('state', '!=', 'done'), ('app_live_screen_log_line', '=', False)]
+        return []
+
     def _format_datetime(self, dt):
         """Format datetime to string.
 
@@ -348,6 +388,8 @@ class AppointmentSerializerMixin:
             'arrival_date': self._format_datetime(getattr(appt, 'arrival_date', None)),
             'departure_date': self._format_datetime(getattr(appt, 'departure_date', None)),
             'manual_arrival_date': self._format_datetime(getattr(appt, 'manual_arrival_date', None)),
+            'progress_status': self._derive_progress_status(appt),
+            'progress_status_updated_at': self._latest_live_screen_entry(appt),
         }
 
     def _serialize_applicant_data(self, appt):
@@ -585,6 +627,68 @@ class FilterMixin:
             "error": "invalid_request",
             "error_description": f"Invalid order value '{order_param}'. Allowed values: id_desc, id_asc, date_desc, date_asc"
         }, 400)
+
+    def _parse_progress_status_filter(self, kwargs, user_id=None):
+        """Parse and validate progress_status filter (not_started, in_progress, completed)."""
+        param = kwargs.get('progress_status') or request.params.get('progress_status')
+
+        if param is None:
+            return None, None
+
+        param = param.strip() if param else ''
+        if not param:
+            return None, None
+
+        value = param.lower()
+        if value in VALID_PROGRESS_STATUSES:
+            return value, None
+
+        _logger.warning(
+            "FilterMixin: Invalid progress_status '%s' from user_id=%s",
+            param, user_id
+        )
+        allowed = ', '.join(VALID_PROGRESS_STATUSES)
+        return None, ({
+            "error": "invalid_request",
+            "error_description": (
+                f"Invalid progress_status value '{param}'. "
+                f"Allowed values: {allowed}"
+            ),
+        }, 400)
+
+    def _validate_progress_status_conflicts(self, filters, endpoint_name, log_user_id=None):
+        """Validate progress_status against status filter. Returns error tuple or None."""
+        progress_status = filters.get('progress_status')
+        status = filters.get('status')
+
+        if not progress_status or not status:
+            return None
+
+        if progress_status == 'completed' and status != 'done':
+            _logger.warning(
+                "%s: progress_status=completed conflicts with status=%s user=%s",
+                endpoint_name, status, log_user_id
+            )
+            return ({
+                "error": "invalid_request",
+                "error_description": (
+                    "progress_status=completed requires status=done or no status filter"
+                ),
+            }, 400)
+
+        if progress_status in ('in_progress', 'not_started') and status == 'done':
+            _logger.warning(
+                "%s: progress_status=%s conflicts with status=done user=%s",
+                endpoint_name, progress_status, log_user_id
+            )
+            return ({
+                "error": "invalid_request",
+                "error_description": (
+                    f"progress_status={progress_status} cannot be combined with status=done"
+                ),
+            }, 400)
+
+        return None
 
     def _parse_timezone(self, kwargs, user_id=None):
         """Parse timezone parameter or get user's default.

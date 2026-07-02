@@ -5,6 +5,7 @@ from datetime import timedelta, datetime
 import pytz
 import requests
 import base64
+from odoo.addons.base.models.res_partner import _tz_get
 
 import logging
 
@@ -256,6 +257,7 @@ class TeamCustomerAppointment(models.Model):
     compressed_attachment_id = fields.Many2one('ir.attachment', string="Compressed Appointment Data")
     both_parties_present = fields.Boolean("All Homeowners Present", default=False, copy=False)
     destination_selection_id = fields.Many2one('otl.destination.selection', 'Destination Selection', copy=False)
+    appointment_timezone = fields.Char(string='Appointment Timezone')
 
     @api.onchange('country_id')
     def _onchange_country_id(self):
@@ -390,6 +392,13 @@ class APISyncLog(models.Model):
     @api.model
     def create_api_log(self, url, data, uid, result, network_strength='', api_create_date=None):
         appointment_id = data.get('appointment_id', False)
+        if appointment_id:
+            try:
+                appointment_id = int(data.get('appointment_id', 0))
+            except (ValueError, TypeError):
+                appointment = self.env['team.customer.appointment'].search([('improveit_appointment_id', '=', appointment_id)], limit=1, order='id desc')
+                if appointment:
+                    appointment_id = appointment.id
         # api_create_date may be passed explicitly as a separate param (preferred)
         # otherwise try to normalize from common keys in payload
         if not api_create_date:
