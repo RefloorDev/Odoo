@@ -118,6 +118,7 @@ class APIHomes(API_Homes):
                 'api_create_date': api_create_date or '',
             }
             lock = request.env['otl.api.lock'].sudo().create(vals)
+            request.env.cr.commit()
             return lock
         except Exception:
             return False
