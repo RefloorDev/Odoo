@@ -16,7 +16,7 @@ class APISyncLock(models.Model):
     create_date = fields.Datetime('Create Date', default=fields.Datetime.now)
 
     _sql_constraints = [
-        ('otl_api_lock_uniq', 'unique(appointment_id, name, api_create_date)', 'Lock already exists for this appointment + API + create_date')
+        ('otl_api_lock_uniq', 'unique(appointment_id, name)', 'Lock already exists for this appointment + API + create_date')
     ]
 
     @api.model
