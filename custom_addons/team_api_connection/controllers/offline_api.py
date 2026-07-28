@@ -106,6 +106,30 @@ class APIHomes(API_Homes):
             return True
         return False
 
+    def _claim_db_lock(self, api_name, appointment_id, api_create_date):
+        """Attempt to claim a DB lock row for (appointment_id, api_name, api_create_date).
+        Returns the lock record on success, or False if another worker already holds it.
+        """
+        try:
+            appointment_id_int = int(appointment_id) if appointment_id else 0
+            vals = {
+                'appointment_id': appointment_id_int,
+                'name': api_name,
+                'api_create_date': api_create_date or '',
+            }
+            lock = request.env['otl.api.lock'].sudo().create(vals)
+            request.env.cr.commit()
+            return lock
+        except Exception:
+            return False
+
+    def _release_db_lock(self, lock_rec):
+        try:
+            if lock_rec:
+                lock_rec.sudo().unlink()
+        except Exception:
+            _logger.exception('Failed to release api lock: %s', lock_rec)
+
     # def reverse(self, string):
     #     return "".join(reversed(string))
     #
@@ -1397,29 +1421,9 @@ class APIHomes(API_Homes):
             _logger.info("------------password missing in main get_appointments api-------------------")
             return json.dumps({'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token, token_mandatory=True)
-        # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
-        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         if status:
             models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
 
-            if enable_api_queue_system:
-                _logger.info('appointment_sync_api_queue Data - Starting--:%s - User ID: %s' % (
-                    self.appointment_sync_api_queue, uid))
-                time = datetime.now()
-                if uid in self.appointment_sync_api_queue:
-                    queue_time = self.appointment_sync_api_queue.get(uid, {})
-                    time_difference = (time - queue_time).total_seconds()
-                    if int(time_difference) < 20:
-                        _logger.info('appointment_sync_api_queue Data - Duplicate--:%s - User ID ID: %s' % (
-                            self.appointment_sync_api_queue, uid))
-                        result = {'override_json_result': 1, 'result': 'Failed',
-                                  'message': 'Execution is already in progress'}
-                        return json.dumps(result)
-                self.appointment_sync_api_queue.update({
-                    uid: time
-                })
-                _logger.info('appointment_sync_api_queue Data - Added--:%s' % (
-                    self.appointment_sync_api_queue))
             if app_version:
                 app_version_result = request.env['res.users'].sudo().check_sales_app_version(app_version)
                 if app_version_result.get('result') == 'Failed':
@@ -1439,10 +1443,6 @@ class APIHomes(API_Homes):
         else:
             result = message
         result.update({'override_json_result': 1})
-        if enable_api_queue_system and uid:
-            self.appointment_sync_api_queue.pop(uid, '')
-            _logger.info('appointment_sync_api_queue Data - Ending--:%s' % (
-                self.appointment_sync_api_queue))
         return json.dumps(result)
 
     @route('/api/update_customer_and_room_information', type='json', auth="none", methods=['POST'], csrf=False)
@@ -1541,41 +1541,27 @@ class APIHomes(API_Homes):
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+        lock = None
         if status:
-            if enable_api_queue_system:
-                _logger.info('image_sync_api_queue Data - Starting--:%s - Appointment ID: %s, Image: %s' % (
-                    self.image_sync_api_queue, appointment_id, image_name))
-                time = datetime.now()
-                if appointment_id not in self.image_sync_api_queue:
-                    self.image_sync_api_queue.update({
-                        appointment_id: {}
-                    })
-                image_dict = self.image_sync_api_queue.get(appointment_id, {})
-                if image_name in image_dict:
-                    queue_time = image_dict.get(image_name, {})
-                    time_difference = (time - queue_time).total_seconds()
-                    if int(time_difference) < 20:
-                        _logger.info('image_sync_api_queue Data - Duplicate--:%s - Appointment ID: %s, Image: %s' % (
-                            self.image_sync_api_queue, appointment_id, image_name))
-                        result = {'override_json_result': 1, 'result': 'Failed',
-                                  'message': 'Execution is already in progress'}
-                        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+            # Try to claim a DB-wide lock for this appointment+API to prevent cross-worker duplicates
+            try:
+                if enable_api_queue_system and appointment_id:
+                    lock = self._claim_db_lock('/api/upload_images'+image_name, appointment_id, api_create_date_val)
+                    if not lock:
+                        result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Execution is already in progress'}
                         try:
+                            api_create_date_val = self._extract_api_create_date(params)
                             if models:
-                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                  ['/api/upload_images', params, uid,
-                                                   result, network_strength, api_create_date_val])
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', ['/api/upload_images', params, uid, result, network_strength, api_create_date_val])
                             else:
-                                request.env['otl.api.sync.log'].sudo().create_api_log(
-                                    '/api/upload_images', params, uid,
-                                    result, network_strength, api_create_date_val)
+                                request.env['otl.api.sync.log'].sudo().create_api_log('/api/upload_images', params, uid, result, network_strength, api_create_date_val)
                         except Exception as e:
-                            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
+                            _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                        return json.dumps(result)
+            except Exception:
+                # if lock system fails, continue without blocking to avoid breaking API
+                lock = None
 
-                self.image_sync_api_queue[appointment_id].update({
-                    image_name: time
-                })
-                _logger.info('image_sync_api_queue Data - Added--:%s' % (self.image_sync_api_queue))
             if not file:
                 return json.dumps({'result': 'Failed', 'message': 'Empty attachment in values.'})
 
@@ -1595,10 +1581,6 @@ class APIHomes(API_Homes):
                                                                                   api_create_date_val)
                     except Exception as e:
                         _logger.exception('Failed to create_api_log (skip) via XML-RPC: %s', e)
-                    if enable_api_queue_system:
-                        self.image_sync_api_queue.pop(appointment_id, '')
-                        _logger.info('image_sync_api_queue Data - Ending--:%s' % (
-                            self.image_sync_api_queue))
                     return json.dumps(result)
             except Exception:
                 pass
@@ -1653,11 +1635,12 @@ class APIHomes(API_Homes):
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
 
         result.update({'override_json_result': 1})
-        if enable_api_queue_system and appointment_id and self.image_sync_api_queue.get(appointment_id, False):
-            self.image_sync_api_queue[appointment_id].pop(image_name, {})
-            if not self.image_sync_api_queue[appointment_id]:
-                self.image_sync_api_queue.pop(appointment_id, '')
-            _logger.info('image_sync_api_queue Data - Ending--:%s' % (self.image_sync_api_queue))
+        # release DB lock if held
+        try:
+            if lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         return json.dumps(result)
 
     @route('/api/generate_contract_document', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
@@ -1701,7 +1684,25 @@ class APIHomes(API_Homes):
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         data = {}
+        lock = None
         if status:
+            # claim DB lock to prevent cross-worker duplicate processing
+            try:
+                if enable_api_queue_system and appointment_id:
+                    lock = self._claim_db_lock('/api/generate_contract_document', appointment_id, data)
+                    if not lock:
+                        result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Execution is already in progress'}
+                        try:
+                            api_create_date_val = self._extract_api_create_date(data)
+                            if models:
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', ['/api/generate_contract_document', data, uid, result, network_strength, api_create_date_val])
+                            else:
+                                request.env['otl.api.sync.log'].sudo().create_api_log('/api/generate_contract_document', data, uid, result, network_strength, api_create_date_val)
+                        except Exception as e:
+                            _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                        return json.dumps(result)
+            except Exception:
+                lock = None
             data = {
                 'appointment_id': int(appointment_id),
                 'contract_plumbing_option_1': contract_plumbing_option_1,
@@ -1712,37 +1713,6 @@ class APIHomes(API_Homes):
                 'additional_comments': additional_comments,
                 'recision_date': recision_date
             }
-            if enable_api_queue_system:
-                _logger.info('generate_contract_document_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                        self.generate_contract_document_api_queue, appointment_id))
-                time = datetime.now()
-                if appointment_id in self.generate_contract_document_api_queue:
-                    queue_time = self.generate_contract_document_api_queue.get(appointment_id, {})
-                    time_difference = (time - queue_time).total_seconds()
-                    if int(time_difference) < 20:
-                        _logger.info('generate_contract_document_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                            self.generate_contract_document_api_queue, appointment_id))
-                        result = {'override_json_result': 1, 'result': 'Failed',
-                                  'message': 'Execution is already in progress'}
-                        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
-                        try:
-                            if models:
-                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                  ['/api/generate_contract_document', data, uid,
-                                                   result, network_strength, api_create_date_val])
-                            else:
-                                request.env['otl.api.sync.log'].sudo().create_api_log(
-                                    '/api/generate_contract_document', data, uid,
-                                    result, network_strength, api_create_date_val)
-                        except Exception as e:
-                            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
-                        return json.dumps(result)
-                self.generate_contract_document_api_queue.update({
-                    appointment_id: time
-                })
-                _logger.info('generate_contract_document_api_queue Data - Added--:%s' % (
-                    self.generate_contract_document_api_queue))
             # early skip if already logged
             try:
                 if self._skip_if_already_logged('/api/generate_contract_document', api_create_date_val, appointment_id=int(appointment_id)):
@@ -1780,10 +1750,12 @@ class APIHomes(API_Homes):
                 _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
 
         result.update({'override_json_result': 1})
-        if enable_api_queue_system:
-            self.generate_contract_document_api_queue.pop(appointment_id, '')
-            _logger.info('generate_contract_document_api_queue Data - Ending--:%s' % (
-                self.generate_contract_document_api_queue))
+        # release DB lock if held
+        try:
+            if lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         return json.dumps(result)
 
     @route('/api/initiate_sync_to_i360', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
@@ -1852,45 +1824,25 @@ class APIHomes(API_Homes):
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+        lock = None
         if status:
-            if enable_api_queue_system:
-                if data.get('appointment_id', 0):
-                    _logger.info('initiate_i360_sync_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                        self.initiate_i360_sync_api_queue, data.get('appointment_id', 0)))
-                    appointment_id = data.get('appointment_id', 0) and str(data.get('appointment_id', 0)) or '0'
-                    time = datetime.now()
-                    if appointment_id in self.initiate_i360_sync_api_queue:
-                        queue_time = self.initiate_i360_sync_api_queue.get(appointment_id, {})
-                        time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 20:
-                            _logger.info('initiate_i360_sync_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                self.initiate_i360_sync_api_queue, data.get('appointment_id', 0)))
-                            result = {'override_json_result': 1, 'result': 'Failed',
-                                      'message': 'Execution is already in progress'}
-                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
-                            try:
-                                if models:
-                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                      ['/api/initiate_sync_to_i360_json', data, uid,
-                                                       result, network_strength, api_create_date_val])
-                                else:
-                                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                                        '/api/initiate_sync_to_i360_json', data, uid,
-                                        result, network_strength, api_create_date_val)
-                            except Exception as e:
-                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
-                            return json.dumps(result)
-                    self.initiate_i360_sync_api_queue.update({
-                        appointment_id: time
-                    })
-                    _logger.info('initiate_i360_sync_api_queue Data - Added--:%s' % (
-                        self.initiate_i360_sync_api_queue))
-                else:
-                    _logger.info(
-                        "------------Appointment ID missing in action_initiate_sync_to_i360 api-------------------")
-                    return json.dumps(
-                        {'override_json_result': 1, 'result': 'Failed', 'message': 'Appointment ID is missing'})
+            # claim DB lock to prevent cross-worker duplicates
+            try:
+                if enable_api_queue_system and data.get('appointment_id', 0):
+                    lock = self._claim_db_lock('/api/initiate_sync_to_i360_json', data.get('appointment_id', 0), data)
+                    if not lock:
+                        result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Execution is already in progress'}
+                        try:
+                            api_create_date_val = self._extract_api_create_date(data)
+                            if models:
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', ['/api/initiate_sync_to_i360_json', data, uid, result, network_strength, api_create_date_val])
+                            else:
+                                request.env['otl.api.sync.log'].sudo().create_api_log('/api/initiate_sync_to_i360_json', data, uid, result, network_strength, api_create_date_val)
+                        except Exception as e:
+                            _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                        return json.dumps(result)
+            except Exception:
+                lock = None
             try:
                 if self._skip_if_already_logged('/api/action_initiate_sync_to_i360', api_create_date_val, appointment_id=int(appointment_id)):
                     result = {'override_json_result': 1, 'result': 'Success', 'message': 'API is already executed.'}
@@ -1901,10 +1853,12 @@ class APIHomes(API_Homes):
                             request.env['otl.api.sync.log'].sudo().create_api_log('/api/action_initiate_sync_to_i360', data, uid, result, network_strength, api_create_date_val)
                     except Exception as e:
                         _logger.exception('Failed to create_api_log (skip) via XML-RPC: %s', e)
-                    if enable_api_queue_system:
-                        self.initiate_i360_sync_api_queue.pop(appointment_id, '')
-                        _logger.info('initiate_i360_sync_api_queue Data - Ending--:%s' % (
-                            self.initiate_i360_sync_api_queue))
+                    # release DB lock if held
+                    try:
+                        if lock:
+                            self._release_db_lock(lock)
+                    except Exception:
+                        pass
                     return json.dumps(result)
             except Exception:
                 pass
@@ -1927,10 +1881,12 @@ class APIHomes(API_Homes):
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
 
         result.update({'override_json_result': 1})
-        if enable_api_queue_system and appointment_id:
-            self.initiate_i360_sync_api_queue.pop(appointment_id, '')
-            _logger.info('initiate_i360_sync_api_queue Data - Ending--:%s' % (
-                self.initiate_i360_sync_api_queue))
+        # release DB lock if held
+        try:
+            if lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         return json.dumps(result)
 
     @route('/api/update_sync_log', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True, )
@@ -2035,6 +1991,7 @@ class APIHomes(API_Homes):
             _logger.info("------------password missing in main create_order_and_update_measurements_encoded api-------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
+        lock = None
         if status:
             models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
             stair_width_data = models.execute_kw(db, int(uid), password, 'res.users', 'get_stair_width_id', [{}])
@@ -2063,66 +2020,29 @@ class APIHomes(API_Homes):
             request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.appointment_ids_to_ignore', '[]'))
 
         if status:
-            if enable_api_queue_system:
-                if data.get('appointment_id', 0):
-                    _logger.info('create_order_and_update_measurements_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                        self.create_order_and_update_measurements_api_queue, data.get('appointment_id', 0)))
-                    appointment_id = data.get('appointment_id', 0) and str(data.get('appointment_id', 0)) or '0'
-                    time = datetime.now()
-                    if int(appointment_id) in appointment_ids_to_ignore:
-                        _logger.info(
-                            'create_order_and_update_measurements_api_queue Data - Ignored--:%s - Appointment ID: %s' % (
-                                self.create_order_and_update_measurements_api_queue, appointment_id))
-                        result = {'override_json_result': 1, 'result': 'Success',
-                                  'message': 'Execution is ignored for this appointment'}
-                        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+            # try to claim DB lock using appointment id from decoded payload
+            try:
+                appt_id_for_lock = decoded_data.get('appointment_id') or data.get('appointment_id')
+                if enable_api_queue_system and appt_id_for_lock:
+                    lock = self._claim_db_lock('/api/create_order_and_update_measurements_encoded', appt_id_for_lock,
+                                               api_create_date_val)
+                    if not lock:
+                        result = {'override_json_result': 1, 'result': 'Failed',
+                                  'message': 'Execution is already in progress'}
                         try:
                             if models:
                                 models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                  ['/api/create_order_and_update_measurements_encoded', data, uid,
-                                                   result, network_strength])
+                                                  ['/api/create_order_and_update_measurements_encoded', decoded_data,
+                                                   uid, result, network_strength, api_create_date_val])
                             else:
                                 request.env['otl.api.sync.log'].sudo().create_api_log(
-                                    '/api/create_order_and_update_measurements_encoded', data, uid,
-                                    result, network_strength)
+                                    '/api/create_order_and_update_measurements_encoded', decoded_data, uid, result,
+                                    network_strength, api_create_date_val)
                         except Exception as e:
-                            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
+                            _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
                         return json.dumps(result)
-
-                    if appointment_id in self.create_order_and_update_measurements_api_queue:
-                        queue_time = self.create_order_and_update_measurements_api_queue.get(appointment_id, {})
-                        time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 20:
-                            _logger.info(
-                                'create_order_and_update_measurements_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                    self.create_order_and_update_measurements_api_queue, data.get('appointment_id', 0)))
-                            result = {'override_json_result': 1, 'result': 'Failed',
-                                      'message': 'Execution is already in progress'}
-                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
-                            try:
-                                if models:
-                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                      ['/api/create_order_and_update_measurements_encoded', data, uid,
-                                                       result, network_strength, api_create_date_val])
-                                else:
-                                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                                        '/api/create_order_and_update_measurements_encoded', data, uid,
-                                        result, network_strength, api_create_date_val)
-                            except Exception as e:
-                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
-                            return json.dumps(result)
-                    self.create_order_and_update_measurements_api_queue.update({
-                        appointment_id: time
-                    })
-                    _logger.info('create_order_and_update_measurements_api_queue Data - Added--:%s' % (
-                        self.create_order_and_update_measurements_api_queue))
-                else:
-                    _logger.info(
-                        "------------Appointment ID missing in create_order_and_update_measurements_encoded api-------------------")
-                    return json.dumps(
-                        {'override_json_result': 1, 'result': 'Failed', 'message': 'Appointment ID is missing'})
+            except Exception:
+                lock = None
             try:
                 if self._skip_if_already_logged('/api/create_order_and_update_measurements_encoded', api_create_date_val, appointment_id=int(appointment_id)):
                     result = {'override_json_result': 1, 'result': 'Success', 'message': 'API is already executed.'}
@@ -2133,10 +2053,11 @@ class APIHomes(API_Homes):
                             request.env['otl.api.sync.log'].sudo().create_api_log('/api/create_order_and_update_measurements_encoded', data, uid, result, network_strength, api_create_date_val)
                     except Exception as e:
                         _logger.exception('Failed to create_api_log (skip) via XML-RPC: %s', e)
-                    if enable_api_queue_system:
-                        self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
-                        _logger.info('create_order_and_update_measurements_api_queue Data - Ending--:%s' % (
-                            self.create_order_and_update_measurements_api_queue))
+                    try:
+                        if 'lock' in locals() and lock:
+                            self._release_db_lock(lock)
+                    except Exception:
+                        pass
                     return json.dumps(result)
             except Exception:
                 pass
@@ -2215,10 +2136,11 @@ class APIHomes(API_Homes):
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
 
         result.update({'override_json_result': 1})
-        if enable_api_queue_system:
-            if appointment_id:
-                self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
-            _logger.info('create_order_and_update_measurements_api_queue Data - Ending--:%s'%(self.create_order_and_update_measurements_api_queue))
+        try:
+            if 'lock' in locals() and lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         return json.dumps(result)
 
     @route('/api/create_order_and_update_measurements_encoded_v2', type='json', auth="none", methods=['POST'], csrf=False)
@@ -2364,41 +2286,24 @@ class APIHomes(API_Homes):
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+        lock = None
         if status:
-            if enable_api_queue_system:
-                _logger.info('available_installation_date_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                    self.available_installation_date_api_queue, appointment_id))
-                time = datetime.now()
-                if appointment_id in self.available_installation_date_api_queue:
-                    queue_time = self.available_installation_date_api_queue.get(appointment_id, {})
-                    time_difference = (time - queue_time).total_seconds()
-                    if int(time_difference) < 20:
-                        _logger.info(
-                            'available_installation_date_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                self.available_installation_date_api_queue, appointment_id))
-                        result = {'override_json_result': 1, 'result': 'Failed',
-                                  'message': 'Execution is already in progress'}
-                        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+            # claim DB lock
+            try:
+                if enable_api_queue_system and appointment_id:
+                    lock = self._claim_db_lock('/api/get_available_installation_date', appointment_id, api_create_date_val)
+                    if not lock:
+                        result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Execution is already in progress'}
                         try:
                             if models:
-                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                  ['/api/get_available_installation_date', params,
-                                                   uid,
-                                                   result, network_strength, api_create_date_val])
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', ['/api/get_available_installation_date', params, uid, result, network_strength, api_create_date_val])
                             else:
-                                request.env['otl.api.sync.log'].sudo().create_api_log(
-                                    '/api/get_available_installation_date', params,
-                                    uid,
-                                    result, network_strength, api_create_date_val)
+                                request.env['otl.api.sync.log'].sudo().create_api_log('/api/get_available_installation_date', params, uid, result, network_strength, api_create_date_val)
                         except Exception as e:
-                            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
+                            _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
                         return json.dumps(result)
-                self.available_installation_date_api_queue.update({
-                    appointment_id: time
-                })
-                _logger.info('available_installation_date_api_queue Data - Added--:%s' % (
-                    self.available_installation_date_api_queue))
+            except Exception:
+                lock = None
             only_fetch_installation_dates = False
             # early skip if already logged
             try:
@@ -2427,10 +2332,11 @@ class APIHomes(API_Homes):
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
 
         result.update({'override_json_result': 1})
-        if enable_api_queue_system:
-            self.available_installation_date_api_queue.pop(appointment_id, '')
-            _logger.info('------available_installation_date_api_queue Data - Ending--:%s' % (
-                self.available_installation_date_api_queue))
+        try:
+            if lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         return json.dumps(result)
 
     @route('/api/submit_selected_installation_date', type='http', auth="none", methods=['POST'], csrf=False,
@@ -2470,41 +2376,23 @@ class APIHomes(API_Homes):
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+        lock = None
         if status:
-            if enable_api_queue_system:
-                _logger.info('selected_installation_date_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                    self.selected_installation_date_api_queue, sale_order_id))
-                time = datetime.now()
-                if sale_order_id in self.selected_installation_date_api_queue:
-                    queue_time = self.selected_installation_date_api_queue.get(sale_order_id, {})
-                    time_difference = (time - queue_time).total_seconds()
-                    if int(time_difference) < 20:
-                        _logger.info(
-                            'selected_installation_date_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                self.selected_installation_date_api_queue, sale_order_id))
-                        result = {'override_json_result': 1, 'result': 'Failed',
-                                  'message': 'Execution is already in progress'}
-                        # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+            try:
+                if enable_api_queue_system and sale_order_id:
+                    lock = self._claim_db_lock('/api/submit_selected_installation_date', sale_order_id, api_create_date_val)
+                    if not lock:
+                        result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Execution is already in progress'}
                         try:
                             if models:
-                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                  ['/api/submit_selected_installation_date', params,
-                                                   uid,
-                                                   result, network_strength, api_create_date_val])
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', ['/api/submit_selected_installation_date', params, uid, result, network_strength, api_create_date_val])
                             else:
-                                request.env['otl.api.sync.log'].sudo().create_api_log(
-                                    '/api/submit_selected_installation_date', params,
-                                    uid,
-                                    result, network_strength, api_create_date_val)
+                                request.env['otl.api.sync.log'].sudo().create_api_log('/api/submit_selected_installation_date', params, uid, result, network_strength, api_create_date_val)
                         except Exception as e:
-                            _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
+                            _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
                         return json.dumps(result)
-                self.selected_installation_date_api_queue.update({
-                    sale_order_id: time
-                })
-                _logger.info('selected_installation_date_api_queue Data - Added--:%s' % (
-                    self.selected_installation_date_api_queue))
+            except Exception:
+                lock = None
             # early skip if already logged
             try:
                 if self._skip_if_already_logged('/api/submit_selected_installation_date', api_create_date_val, appointment_id=sale_order_id):
@@ -2516,10 +2404,11 @@ class APIHomes(API_Homes):
                             request.env['otl.api.sync.log'].sudo().create_api_log('/api/submit_selected_installation_date', params, uid, result, network_strength, api_create_date_val)
                     except Exception as e:
                         _logger.exception('Failed to create_api_log (skip) via XML-RPC: %s', e)
-                    if enable_api_queue_system:
-                        self.selected_installation_date_api_queue.pop(sale_order_id, '')
-                        _logger.info('------selected_installation_date_api_queue Data - Ending--:%s' % (
-                            self.selected_installation_date_api_queue))
+                    try:
+                        if lock:
+                            self._release_db_lock(lock)
+                    except Exception:
+                        pass
                     return json.dumps(result)
             except Exception:
                 pass
@@ -2546,10 +2435,11 @@ class APIHomes(API_Homes):
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
 
         result.update({'override_json_result': 1})
-        if enable_api_queue_system:
-            self.selected_installation_date_api_queue.pop(sale_order_id, '')
-            _logger.info('------selected_installation_date_api_queue Data - Ending--:%s' % (
-                self.selected_installation_date_api_queue))
+        try:
+            if lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         return json.dumps(result)
 
     @route('/api/<version>/create_versatile_credit_application', type='json', auth="none", methods=['POST'], csrf=False,
@@ -2641,40 +2531,26 @@ class APIHomes(API_Homes):
                     'recision_date': recision_date,
                     'destination_selection_id': int(destination_selection_id),
                 }
-                if enable_api_queue_system:
-                    _logger.info('update_additional_appointment_data_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                            self.update_additional_appointment_data_api_queue, appointment_id))
-                    time = datetime.now()
-                    if appointment_id in self.update_additional_appointment_data_api_queue:
-                        queue_time = self.update_additional_appointment_data_api_queue.get(appointment_id, {})
-                        time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 20:
-                            _logger.info('update_additional_appointment_data_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                self.update_additional_appointment_data_api_queue, appointment_id))
-                            result = {'override_json_result': 1, 'result': 'Failed',
-                                      'message': 'Execution is already in progress'}
-                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
-                            try:
-                                if models:
-                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                      ['/api/%s/update_additional_appointment_data' % (version), params,
-                                                       uid, result,
-                                                       network_strength, api_create_date_val])
-                                else:
-                                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                                        '/api/%s/update_additional_appointment_data' % (version), params, uid, result,
-                                        network_strength, api_create_date_val)
-                            except Exception as e:
-                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
-                            return json.dumps(result)
-                    self.update_additional_appointment_data_api_queue.update({
-                        appointment_id: time
-                    })
-                    _logger.info('update_additional_appointment_data_api_queue Data - Added--:%s' % (
-                        self.update_additional_appointment_data_api_queue))
-                # early skip if already logged
+                lock = None
                 api_name = '/api/%s/update_additional_appointment_data' % (version)
+                if enable_api_queue_system:
+                    # claim DB lock
+                    try:
+                        if appointment_id:
+                            lock = self._claim_db_lock(api_name, appointment_id, api_create_date_val)
+                            if not lock:
+                                result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Execution is already in progress'}
+                                try:
+                                    if models:
+                                        models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', [api_name, params, uid, result, network_strength, api_create_date_val])
+                                    else:
+                                        request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
+                                except Exception as e:
+                                    _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                                return json.dumps(result)
+                    except Exception:
+                        lock = None
+                # early skip if already logged
                 try:
                     if self._skip_if_already_logged(api_name, api_create_date_val, appointment_id=appointment_id):
                         result = {'override_json_result': 1, 'result': 'Success', 'message': 'API is already executed.'}
@@ -2685,10 +2561,11 @@ class APIHomes(API_Homes):
                                 request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (skip) via XML-RPC: %s', e)
-                        if enable_api_queue_system:
-                            self.update_additional_appointment_data_api_queue.pop(appointment_id, '')
-                            _logger.info('update_additional_appointment_data_api_queue Data - Ending--:%s' % (
-                                self.update_additional_appointment_data_api_queue))
+                        try:
+                            if 'lock' in locals() and lock:
+                                self._release_db_lock(lock)
+                        except Exception:
+                            pass
                         return json.dumps(result)
                 except Exception:
                     pass
@@ -2712,6 +2589,11 @@ class APIHomes(API_Homes):
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
 
         result.update({'override_json_result': 1})
+        try:
+            if 'lock' in locals() and lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         if enable_api_queue_system:
             self.update_additional_appointment_data_api_queue.pop(appointment_id, '')
             _logger.info('update_additional_appointment_data_api_queue Data - Ending--:%s' % (
@@ -2755,42 +2637,33 @@ class APIHomes(API_Homes):
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+        lock = None
+        api_name = '/api/%s/get_credit_application_status' % (version)
         if status:
             if version == 'v1':
-                if enable_api_queue_system:
-                    _logger.info('get_credit_application_status_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                            self.get_credit_application_status_api_queue, appointment_id))
-                    time = datetime.now()
-                    if appointment_id in self.get_credit_application_status_api_queue:
-                        queue_time = self.get_credit_application_status_api_queue.get(appointment_id, {})
-                        time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 20:
-                            _logger.info('get_credit_application_status_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                self.get_credit_application_status_api_queue, appointment_id))
+                # claim DB lock
+                try:
+                    if enable_api_queue_system and appointment_id:
+                        lock = self._claim_db_lock(api_name, appointment_id, params)
+                        if not lock:
                             result = {'override_json_result': 1, 'result': 'Failed',
                                       'message': 'Execution is already in progress'}
-                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
                             try:
+                                api_create_date_val = self._extract_api_create_date(params)
                                 if models:
                                     models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                      ['/api/%s/get_credit_application_status' % (version), params, uid,
-                                                       result,
-                                                       network_strength, api_create_date_val])
+                                                      [api_name, params, uid, result, network_strength,
+                                                       api_create_date_val])
                                 else:
-                                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                                        '/api/%s/get_credit_application_status' % (version), params, uid, result,
-                                        network_strength, api_create_date_val)
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result,
+                                                                                          network_strength,
+                                                                                          api_create_date_val)
                             except Exception as e:
-                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
-                        return json.dumps(result)
-                    self.get_credit_application_status_api_queue.update({
-                        appointment_id: time
-                    })
-                    _logger.info('get_credit_application_status_api_queue Data - Added--:%s' % (
-                        self.get_credit_application_status_api_queue))
+                                _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                            return json.dumps(result)
+                except Exception:
+                    lock = None
                 # early skip if already logged
-                api_name = '/api/%s/get_credit_application_status' % (version)
                 try:
                     if self._skip_if_already_logged(api_name, api_create_date_val, appointment_id=appointment_id):
                         result = {'override_json_result': 1, 'result': 'Success', 'message': 'API is already executed.'}
@@ -2829,6 +2702,11 @@ class APIHomes(API_Homes):
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
 
         result.update({'override_json_result': 1})
+        try:
+            if lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         if enable_api_queue_system:
             self.get_credit_application_status_api_queue.pop(appointment_id, '')
             _logger.info('get_credit_application_status_api_queue Data - Ending--:%s' % (
@@ -2864,6 +2742,7 @@ class APIHomes(API_Homes):
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+        lock = None
         if status:
             if version == 'v1':
                 data = {
@@ -2872,40 +2751,26 @@ class APIHomes(API_Homes):
                     'departure_date': departure_date,
                     'timezone': timezone
                 }
-                if enable_api_queue_system:
-                    _logger.info('update_arrival_departure_time_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                            self.update_arrival_departure_time_api_queue, appointment_id))
-                    time = datetime.now()
-                    if appointment_id in self.update_arrival_departure_time_api_queue:
-                        queue_time = self.update_arrival_departure_time_api_queue.get(appointment_id, {})
-                        time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 20:
-                            _logger.info('update_arrival_departure_time_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                self.update_arrival_departure_time_api_queue, appointment_id))
-                            result = {'override_json_result': 1, 'result': 'Failed',
-                                      'message': 'Execution is already in progress'}
-                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
-                            try:
-                                if models:
-                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                      ['/api/%s/update_arrival_departure_time' % (version), params, uid,
-                                                       result,
-                                                       network_strength, api_create_date_val])
-                                else:
-                                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                                        '/api/%s/update_arrival_departure_time' % (version), params, uid, result,
-                                        network_strength, api_create_date_val)
-                            except Exception as e:
-                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
-                            return json.dumps(result)
-                    self.update_arrival_departure_time_api_queue.update({
-                        appointment_id: time
-                    })
-                    _logger.info('update_arrival_departure_time_api_queue Data - Added--:%s' % (
-                        self.update_arrival_departure_time_api_queue))
-                # early skip if already logged
                 api_name = '/api/%s/update_arrival_departure_time' % (version)
+                # claim DB lock
+                try:
+                    if enable_api_queue_system and appointment_id:
+                        lock = self._claim_db_lock(api_name, appointment_id, params)
+                        if not lock:
+                            result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Execution is already in progress'}
+                            try:
+                                api_create_date_val = self._extract_api_create_date(params)
+                                if models:
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', [api_name, params, uid, result, network_strength, api_create_date_val])
+                                else:
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
+                            except Exception as e:
+                                _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                            return json.dumps(result)
+                except Exception:
+                    lock = None
+                # early skip if already logged
+
                 try:
                     if self._skip_if_already_logged(api_name, api_create_date_val, appointment_id=appointment_id):
                         result = {'override_json_result': 1, 'result': 'Success', 'message': 'API is already executed.'}
@@ -2917,9 +2782,11 @@ class APIHomes(API_Homes):
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (skip) via XML-RPC: %s', e)
                         if enable_api_queue_system:
-                            self.update_arrival_departure_time_api_queue.pop(appointment_id, '')
-                            _logger.info('update_arrival_departure_time_api_queue Data - Ending--:%s' % (
-                                self.update_arrival_departure_time_api_queue))
+                            try:
+                                if 'lock' in locals() and lock:
+                                    self._release_db_lock(lock)
+                            except Exception:
+                                pass
                         return json.dumps(result)
                 except Exception:
                     pass
@@ -2943,10 +2810,11 @@ class APIHomes(API_Homes):
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
 
         result.update({'override_json_result': 1})
-        if enable_api_queue_system:
-            self.update_arrival_departure_time_api_queue.pop(appointment_id, '')
-            _logger.info('update_arrival_departure_time_api_queue Data - Ending--:%s' % (
-                self.update_arrival_departure_time_api_queue))
+        try:
+            if 'lock' in locals() and lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         return json.dumps(result)
 
     @route('/api/<version>/get_appointment_sync_status', type='http', auth="none", methods=['GET'], csrf=False,
@@ -3070,47 +2938,32 @@ class APIHomes(API_Homes):
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
+            api_name = '/api/%s/update_manual_arrival_date' % (version)
             if version == 'v1':
                 data = {
                     'appointment_id': int(appointment_id),
                     'manual_arrival_date': manual_arrival_date,
                     'timezone': timezone
                 }
-                if enable_api_queue_system:
-                    _logger.info('update_manual_arrival_date_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                        self.update_manual_arrival_date_api_queue, appointment_id))
-                    time = datetime.now()
-                    if appointment_id in self.update_manual_arrival_date_api_queue:
-                        queue_time = self.update_manual_arrival_date_api_queue.get(appointment_id, {})
-                        time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 20:
-                            _logger.info(
-                                'update_manual_arrival_date_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                    self.update_manual_arrival_date_api_queue, appointment_id))
-                            result = {'override_json_result': 1, 'result': 'Failed',
-                                      'message': 'Execution is already in progress'}
-                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                # claim DB lock
+                lock = None
+                try:
+                    if enable_api_queue_system and appointment_id:
+                        lock = self._claim_db_lock(api_name, appointment_id, api_create_date_val)
+                        if not lock:
+                            result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Execution is already in progress'}
                             try:
                                 if models:
-                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                      ['/api/%s/update_manual_arrival_date' % (version), params, uid,
-                                                       result,
-                                                       network_strength, api_create_date_val])
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', [api_name, params, uid, result, network_strength, api_create_date_val])
                                 else:
-                                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                                        '/api/%s/update_manual_arrival_date' % (version), params, uid, result,
-                                        network_strength, api_create_date_val)
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
                             except Exception as e:
-                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
-                        return json.dumps(result)
-                    self.update_manual_arrival_date_api_queue.update({
-                        appointment_id: time
-                    })
-                    _logger.info('update_manual_arrival_date_api_queue Data - Added--:%s' % (
-                        self.update_manual_arrival_date_api_queue))
+                                _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                            return json.dumps(result)
+                except Exception:
+                    lock = None
                 # early skip if already logged
-                api_name = '/api/%s/update_manual_arrival_date' % (version)
+
                 try:
                     if self._skip_if_already_logged(api_name, api_create_date_val, appointment_id=appointment_id):
                         result = {'override_json_result': 1, 'result': 'Success', 'message': 'API is already executed.'}
@@ -3122,9 +2975,11 @@ class APIHomes(API_Homes):
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (skip) via XML-RPC: %s', e)
                         if enable_api_queue_system:
-                            self.update_manual_arrival_date_api_queue.pop(appointment_id, '')
-                            _logger.info('update_manual_arrival_date_api_queue Data - Ending--:%s' % (
-                                self.update_manual_arrival_date_api_queue))
+                            try:
+                                if 'lock' in locals() and lock:
+                                    self._release_db_lock(lock)
+                            except Exception:
+                                pass
                         return json.dumps(result)
                 except Exception:
                     pass
@@ -3149,10 +3004,11 @@ class APIHomes(API_Homes):
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
 
         result.update({'override_json_result': 1})
-        if enable_api_queue_system:
-            self.update_manual_arrival_date_api_queue.pop(appointment_id, '')
-            _logger.info('update_manual_arrival_date_api_queue Data - Ending--:%s' % (
-                self.update_manual_arrival_date_api_queue))
+        try:
+            if 'lock' in locals() and lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         return json.dumps(result)
 
     @route('/api/<version>/send_review_link', type='http', auth="none", methods=['POST'], csrf=False,
@@ -3189,46 +3045,32 @@ class APIHomes(API_Homes):
         # enable_api_queue_system = eval(
         #     str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
         if status:
-            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+            lock = None
+            api_name = '/api/%s/send_review_link' % (version)
             if version == 'v1':
                 data = {
                     'appointment_id': int(appointment_id),
                     'phone': phone,
                 }
-                if enable_api_queue_system:
-                    _logger.info('send_review_link_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                        self.send_review_link_api_queue, appointment_id))
-                    time = datetime.now()
-                    if appointment_id in self.send_review_link_api_queue:
-                        queue_time = self.send_review_link_api_queue.get(appointment_id, {})
-                        time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 20:
-                            _logger.info(
-                                'send_review_link_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                    self.send_review_link_api_queue, appointment_id))
-                            result = {'override_json_result': 1, 'result': 'Failed',
-                                      'message': 'Execution is already in progress'}
-                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                # claim DB lock
+                try:
+                    if enable_api_queue_system and appointment_id:
+                        lock = self._claim_db_lock(api_name, appointment_id, api_create_date_val)
+                        if not lock:
+                            result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Execution is already in progress'}
                             try:
                                 if models:
-                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                      ['/api/%s/send_review_link' % (version), params, uid, result,
-                                                       network_strength, api_create_date_val])
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', [api_name, params, uid, result, network_strength, api_create_date_val])
                                 else:
-                                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                                        '/api/%s/send_review_link' % (version), params, uid, result, network_strength, api_create_date_val)
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
                             except Exception as e:
-                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
-                        return json.dumps(result)
-                    self.send_review_link_api_queue.update({
-                        appointment_id: time
-                    })
-                    _logger.info('send_review_link_api_queue Data - Added--:%s' % (
-                        self.send_review_link_api_queue))
+                                _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                            return json.dumps(result)
+                except Exception:
+                    lock = None
                 # early skip if already logged
-                api_name = '/api/%s/send_review_link' % (version)
                 try:
                     if self._skip_if_already_logged(api_name, api_create_date_val, appointment_id=appointment_id):
                         result = {'override_json_result': 1, 'result': 'Success', 'message': 'API is already executed.'}
@@ -3240,9 +3082,11 @@ class APIHomes(API_Homes):
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (skip) via XML-RPC: %s', e)
                         if enable_api_queue_system:
-                            self.send_review_link_api_queue.pop(appointment_id, '')
-                            _logger.info('send_review_link_api_queue Data - Ending--:%s' % (
-                                self.send_review_link_api_queue))
+                            try:
+                                if 'lock' in locals() and lock:
+                                    self._release_db_lock(lock)
+                            except Exception:
+                                pass
                         return json.dumps(result)
                 except Exception:
                     pass
@@ -3267,10 +3111,11 @@ class APIHomes(API_Homes):
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
 
         result.update({'override_json_result': 1})
-        if enable_api_queue_system:
-            self.send_review_link_api_queue.pop(appointment_id, '')
-            _logger.info('send_review_link_api_queue Data - Ending--:%s' % (
-                self.send_review_link_api_queue))
+        try:
+            if 'lock' in locals() and lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         return json.dumps(result)
 
     @route('/api/<version>/get_appointment_current_status', type='http', auth="none", methods=['POST'], csrf=False,
@@ -3307,46 +3152,33 @@ class APIHomes(API_Homes):
         #     str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
         enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+        lock = None
+        api_name = '/api/%s/get_appointment_current_status' % (version)
         if status:
             if version == 'v1':
                 data = {
                     'appointment_id': int(appointment_id),
                     'user_id': int(uid)
                 }
-                if enable_api_queue_system:
-                    _logger.info('get_appointment_current_status_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                        self.get_appointment_current_status_api_queue, appointment_id))
-                    time = datetime.now()
-                    if appointment_id in self.get_appointment_current_status_api_queue:
-                        queue_time = self.get_appointment_current_status_api_queue.get(appointment_id, {})
-                        time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 20:
-                            _logger.info(
-                                'get_appointment_current_status_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                    self.get_appointment_current_status_api_queue, appointment_id))
-                            result = {'override_json_result': 1, 'result': 'Failed',
-                                      'message': 'Execution is already in progress'}
-                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
+                # claim DB lock
+                try:
+                    if enable_api_queue_system and appointment_id:
+                        lock = self._claim_db_lock(api_name, appointment_id, params)
+                        if not lock:
+                            result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Execution is already in progress'}
                             try:
+                                api_create_date_val = self._extract_api_create_date(params)
                                 if models:
-                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                      ['/api/%s/get_appointment_current_status' % (version), params,
-                                                       uid, result, network_strength, api_create_date_val])
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', [api_name, params, uid, result, network_strength, api_create_date_val])
                                 else:
-                                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                                        '/api/%s/get_appointment_current_status' % (version), params, uid, result,
-                                        network_strength, api_create_date_val)
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
                             except Exception as e:
-                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
-                        return json.dumps(result)
-                    self.get_appointment_current_status_api_queue.update({
-                        appointment_id: time
-                    })
-                    _logger.info('get_appointment_current_status_api_queue Data - Added--:%s' % (
-                        self.get_appointment_current_status_api_queue))
+                                _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                            return json.dumps(result)
+                except Exception:
+                    lock = None
                 # early skip if already logged
-                api_name = '/api/%s/get_appointment_current_status' % (version)
+
                 try:
                     if self._skip_if_already_logged(api_name, api_create_date_val, appointment_id=appointment_id):
                         result = {'override_json_result': 1, 'result': 'Success', 'message': 'API is already executed.'}
@@ -3358,10 +3190,11 @@ class APIHomes(API_Homes):
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (skip) via XML-RPC: %s', e)
                         if enable_api_queue_system:
-                            self.get_appointment_current_status_api_queue.pop(appointment_id, '')
-                            _logger.info('get_appointment_current_status_api_queue Data - Ending--:%s' % (
-                                self.get_appointment_current_status_api_queue))
-                        return json.dumps(result)
+                            try:
+                                if 'lock' in locals() and lock:
+                                    self._release_db_lock(lock)
+                            except Exception:
+                                pass
                 except Exception:
                     pass
 
@@ -3375,16 +3208,17 @@ class APIHomes(API_Homes):
         # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
         try:
             if models:
-                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', ['/api/%s/get_appointment_current_status' % (version), params, uid, result, network_strength, api_create_date_val])
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', [api_name, params, uid, result, network_strength, api_create_date_val])
             else:
-                request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/get_appointment_current_status' % (version), params, uid, result, network_strength, api_create_date_val)
+                request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
         except Exception as e:
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
         result.update({'override_json_result': 1})
-        if enable_api_queue_system:
-            self.get_appointment_current_status_api_queue.pop(appointment_id, '')
-            _logger.info('get_appointment_current_status_api_queue Data - Ending--:%s' % (
-                self.get_appointment_current_status_api_queue))
+        try:
+            if 'lock' in locals() and lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         return json.dumps(result)
 
 
@@ -3431,8 +3265,11 @@ class APIHomes(API_Homes):
         status, message = self.action_verify_token(uid, token)
         # enable_api_queue_system = eval(
         #     str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
-        enable_api_queue_system = str2bool(request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
+        enable_api_queue_system = str2bool(
+            request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+        lock = None
+        api_name = '/api/%s/update_live_screen_log' % (version)
         if status:
             if version == 'v1':
                 data = {
@@ -3442,57 +3279,57 @@ class APIHomes(API_Homes):
                     'screen_name': screen_name,
                     'timezone': timezone,
                 }
-                if enable_api_queue_system:
-                    _logger.info('update_live_screen_log_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                        self.update_live_screen_log_api_queue, appointment_id))
-                    time = datetime.now()
-                    if appointment_id in self.update_live_screen_log_api_queue:
-                        queue_time = self.update_live_screen_log_api_queue.get(appointment_id, {})
-                        time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 20:
-                            _logger.info(
-                                'update_live_screen_log_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                    self.update_live_screen_log_api_queue, appointment_id))
+                # claim DB lock
+                try:
+                    if enable_api_queue_system and appointment_id:
+                        lock = self._claim_db_lock('/api/%s/update_live_screen_log' % (version), appointment_id, data)
+                        if not lock:
                             result = {'override_json_result': 1, 'result': 'Failed',
                                       'message': 'Execution is already in progress'}
-                            # log via XML-RPC execute_kw; fall back to internal env logging if it fails
                             try:
+                                api_create_date_val = self._extract_api_create_date(params)
                                 if models:
-                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log',
-                                                       'create_api_log', ['/api/%s/update_live_screen_log' % (version), data, uid, result, network_strength, api_create_date_val])
+                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                      ['/api/%s/update_live_screen_log' % (version), data, uid, result,
+                                                       network_strength, api_create_date_val])
                                 else:
-                                    request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_live_screen_log' % (version), data, uid, result, network_strength, api_create_date_val)
+                                    request.env['otl.api.sync.log'].sudo().create_api_log(
+                                        '/api/%s/update_live_screen_log' % (version), data, uid, result, network_strength,
+                                        api_create_date_val)
                             except Exception as e:
                                 _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
                             return json.dumps(result)
-                    self.update_live_screen_log_api_queue.update({
-                        appointment_id: time
-                    })
-                    _logger.info('update_live_screen_log_api_queue Data - Added--:%s' % (
-                        self.update_live_screen_log_api_queue))
+                except Exception:
+                    lock = None
                 # early skip if already logged
-                api_name = '/api/%s/update_live_screen_log' % (version)
+
                 try:
                     if self._skip_if_already_logged(api_name, data or api_create_date_val, appointment_id=appointment_id):
                         result = {'override_json_result': 1, 'result': 'Success', 'message': 'API is already executed.'}
                         try:
                             if models:
-                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', [api_name, data or params, uid, result, network_strength, api_create_date_val])
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                  [api_name, data or params, uid, result, network_strength,
+                                                   api_create_date_val])
                             else:
-                                request.env['otl.api.sync.log'].sudo().create_api_log(api_name, data or params, uid, result, network_strength, api_create_date_val)
+                                request.env['otl.api.sync.log'].sudo().create_api_log(api_name, data or params, uid, result,
+                                                                                      network_strength, api_create_date_val)
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (skip) via XML-RPC: %s', e)
                         if enable_api_queue_system:
-                            self.update_live_screen_log_api_queue.pop(appointment_id, '')
-                            _logger.info('update_live_screen_log_api_queue Data - Ending--:%s' % (
-                                self.update_live_screen_log_api_queue))
+                            # release DB lock if held
+                            try:
+                                if lock:
+                                    self._release_db_lock(lock)
+                            except Exception:
+                                pass
                         return json.dumps(result)
                 except Exception:
                     pass
 
                 result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                            'action_update_live_screen_log',
-                                            [data])
+                                           [data])
             else:
                 result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Invalid Version'}
         else:
@@ -3500,16 +3337,21 @@ class APIHomes(API_Homes):
         # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
         try:
             if models:
-                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', ['/api/%s/update_live_screen_log' % (version), params, uid, result, network_strength, api_create_date_val])
+                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                  ['/api/%s/update_live_screen_log' % (version), params, uid, result, network_strength,
+                                   api_create_date_val])
             else:
-                request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_live_screen_log' % (version), params, uid, result, network_strength, api_create_date_val)
+                request.env['otl.api.sync.log'].sudo().create_api_log('/api/%s/update_live_screen_log' % (version), params,
+                                                                      uid, result, network_strength, api_create_date_val)
         except Exception as e:
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
         result.update({'override_json_result': 1})
-        if enable_api_queue_system:
-            self.update_live_screen_log_api_queue.pop(appointment_id, '')
-            _logger.info('update_live_screen_log_api_queue Data - Ending--:%s' % (
-                self.update_live_screen_log_api_queue))
+        # release DB lock if held
+        try:
+            if lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         return json.dumps(result)
 
     @route('/api/process_credit_card_payment', type='json', auth="none", methods=['POST'], csrf=False)
@@ -3548,47 +3390,30 @@ class APIHomes(API_Homes):
         enable_api_queue_system = str2bool(
             request.env['ir.config_parameter'].sudo().get_param('team_sale_contract.enable_api_queue_system'))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+        lock = None
         if status:
-            if enable_api_queue_system:
-                if data.get('appointment_id', 0):
-                    _logger.info(
-                        'process_credit_card_payment_api_queue Data - Starting--:%s - Appointment ID: %s' % (
-                            self.process_credit_card_payment_api_queue, data.get('appointment_id', 0)))
-                    appointment_id = data.get('appointment_id', 0) and str(data.get('appointment_id', 0)) or '0'
-                    time = datetime.now()
-                    if appointment_id in self.process_credit_card_payment_api_queue:
-                        queue_time = self.process_credit_card_payment_api_queue.get(appointment_id, {})
-                        time_difference = (time - queue_time).total_seconds()
-                        if int(time_difference) < 20:
-                            _logger.info(
-                                'process_credit_card_payment_api_queue Data - Duplicate--:%s - Appointment ID: %s' % (
-                                    self.process_credit_card_payment_api_queue, data.get('appointment_id', 0)))
-                            result = {'override_json_result': 1, 'result': 'Failed',
-                                      'message': 'Execution is already in progress'}
-                            # use XML-RPC execute_kw to create api log; if models is None or call fails, fall back to request.env
-                            try:
-                                if models:
-                                    models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                                      ['/api/process_credit_card_payment', data, uid,
-                                                       result, network_strength, api_create_date_val])
-                                else:
-                                    request.env['otl.api.sync.log'].sudo().create_api_log(
-                                        '/api/process_credit_card_payment', data, uid,
-                                        result, network_strength, api_create_date_val)
-                            except Exception as e:
-                                _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
-
-                            return json.dumps(result)
-                    self.process_credit_card_payment_api_queue.update({
-                        appointment_id: time
-                    })
-                    _logger.info('process_credit_card_payment_api_queue Data - Added--:%s' % (
-                        self.process_credit_card_payment_api_queue))
-                else:
-                    _logger.info(
-                        "------------Appointment ID missing in process_credit_card_payment api-------------------")
-                    return json.dumps(
-                        {'override_json_result': 1, 'result': 'Failed', 'message': 'Appointment ID is missing'})
+            # claim DB lock
+            try:
+                if enable_api_queue_system and appointment_id:
+                    lock = self._claim_db_lock('/api/process_credit_card_payment', appointment_id, data)
+                    if not lock:
+                        result = {'override_json_result': 1, 'result': 'Failed',
+                                  'message': 'Execution is already in progress'}
+                        try:
+                            api_create_date_val = self._extract_api_create_date(params)
+                            if models:
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
+                                                  ['/api/process_credit_card_payment', data, uid, result,
+                                                   network_strength, api_create_date_val])
+                            else:
+                                request.env['otl.api.sync.log'].sudo().create_api_log(
+                                    '/api/process_credit_card_payment', data, uid, result, network_strength,
+                                    api_create_date_val)
+                        except Exception as e:
+                            _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                        return json.dumps(result)
+            except Exception:
+                lock = None
             try:
                 if self._skip_if_already_logged('/api/process_credit_card_payment',
                                                 api_create_date_val, appointment_id=int(appointment_id)):
@@ -3662,11 +3487,10 @@ class APIHomes(API_Homes):
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
 
         result.update({'override_json_result': 1})
-        if enable_api_queue_system:
-            if appointment_id:
-                self.process_credit_card_payment_api_queue.pop(appointment_id, '')
-            _logger.info('process_credit_card_payment_api_queue Data - Ending--:%s' % (
-                self.process_credit_card_payment_api_queue))
+        # release DB lock if held
+        try:
+            if lock:
+                self._release_db_lock(lock)
+        except Exception:
+            pass
         return json.dumps(result)
-
-

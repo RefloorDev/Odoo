@@ -33,5 +33,16 @@
             <field name="state">code</field>
             <field name="code">model.cron_send_daily_sync_status_report()</field>
         </record>
+
+        <record id="cron_cleanup_otl_api_lock" forcecreate='True' model="ir.cron">
+            <field name="name">Cleanup stale otl.api.lock</field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">5</field>
+            <field name="interval_type">minutes</field>
+            <field name="model_id" ref="team_sale_contract.model_otl_api_lock"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_cleanup_stale_locks()</field>
+        </record>
     </data>
 </odoo>

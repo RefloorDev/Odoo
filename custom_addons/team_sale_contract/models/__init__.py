@@ -7,3 +7,4 @@ from . import team_customer_appointment
 from . import team_sale_contract
 from . import contract_sale_order
 from . import res_config_settings
+from . import otl_api_lock
