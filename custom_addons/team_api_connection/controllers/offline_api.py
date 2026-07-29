@@ -1525,6 +1525,7 @@ class APIHomes(API_Homes):
         file_data = {}
         image_id = 0
         image_already_existing = True
+        api_name = '/api/upload_images/%s' % image_name
         if not token:
             _logger.info("------------Token Missing in add_screenshots------------------")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
@@ -1546,15 +1547,15 @@ class APIHomes(API_Homes):
             # Try to claim a DB-wide lock for this appointment+API to prevent cross-worker duplicates
             try:
                 if enable_api_queue_system and appointment_id:
-                    lock = self._claim_db_lock('/api/upload_images'+image_name, appointment_id, api_create_date_val)
+                    lock = self._claim_db_lock(api_name, appointment_id, api_create_date_val)
                     if not lock:
                         result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Execution is already in progress'}
                         try:
                             api_create_date_val = self._extract_api_create_date(params)
                             if models:
-                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', ['/api/upload_images', params, uid, result, network_strength, api_create_date_val])
+                                models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log', [api_name, params, uid, result, network_strength, api_create_date_val])
                             else:
-                                request.env['otl.api.sync.log'].sudo().create_api_log('/api/upload_images', params, uid, result, network_strength, api_create_date_val)
+                                request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
                         return json.dumps(result)
@@ -1567,20 +1568,26 @@ class APIHomes(API_Homes):
 
             # early skip if already logged
             try:
-                if self._skip_if_already_logged('/api/upload_images', api_create_date_val, appointment_id=int(appointment_id)):
+                if self._skip_if_already_logged(api_name, api_create_date_val, appointment_id=int(appointment_id)):
                     result = {'override_json_result': 1, 'result': 'Success', 'message': 'API is already executed.'}
                     try:
                         if models:
                             models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                              ['/api/upload_images', params, uid, result,
+                                              [api_name, params, uid, result,
                                                network_strength, api_create_date_val])
                         else:
-                            request.env['otl.api.sync.log'].sudo().create_api_log('/api/upload_images',
+                            request.env['otl.api.sync.log'].sudo().create_api_log(api_name,
                                                                                   params, uid, result,
                                                                                   network_strength,
                                                                                   api_create_date_val)
                     except Exception as e:
                         _logger.exception('Failed to create_api_log (skip) via XML-RPC: %s', e)
+                    # release DB lock if held
+                    try:
+                        if lock:
+                            self._release_db_lock(lock)
+                    except Exception:
+                        pass
                     return json.dumps(result)
             except Exception:
                 pass
@@ -1625,11 +1632,11 @@ class APIHomes(API_Homes):
         try:
             if models:
                 models.execute_kw(db, int(uid), password, 'otl.api.sync.log', 'create_api_log',
-                                  ['/api/upload_images', params, uid,
+                                  [api_name, params, uid,
                                    result, network_strength, api_create_date_val])
             else:
                 request.env['otl.api.sync.log'].sudo().create_api_log(
-                    '/api/upload_images', params, uid,
+                    api_name, params, uid,
                     result, network_strength, api_create_date_val)
         except Exception as e:
             _logger.exception('Failed to create_api_log (final) via XML-RPC: %s', e)
