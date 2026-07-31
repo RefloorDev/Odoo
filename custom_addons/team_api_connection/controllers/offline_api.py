@@ -83,7 +83,7 @@ class APIHomes(API_Homes):
                     return v
         return False
 
-    def _skip_if_already_logged(self, api_name, api_create_date, appointment_id=None):
+    def _skip_if_already_logged(self, api_name, api_create_date, appointment_id=None, sale_order_id=None):
         """Return True if a sync log already exists for (appointment_id, api_name, api_create_date).
         Only checks when payload contains a create date. Otherwise returns False.
         """
@@ -94,7 +94,14 @@ class APIHomes(API_Homes):
         except Exception:
             return False
         if not appointment_id:
-            return False
+            if sale_order_id:
+                sale_order = request.env['sale.order'].browse(int(sale_order_id))
+                if sale_order.exists() and sale_order.appointment_id:
+                    appointment_id = sale_order.appointment_id.id
+                else:
+                    return False
+            else:
+                return False
         existing = request.env['otl.api.sync.log'].sudo().search([
             ('appointment_id', '=', appointment_id),
             ('name', '=', api_name),
@@ -106,12 +113,16 @@ class APIHomes(API_Homes):
             return True
         return False
 
-    def _claim_db_lock(self, api_name, appointment_id, api_create_date):
+    def _claim_db_lock(self, api_name, appointment_id, api_create_date, sale_order_id=None):
         """Attempt to claim a DB lock row for (appointment_id, api_name, api_create_date).
         Returns the lock record on success, or False if another worker already holds it.
         """
         try:
             appointment_id_int = int(appointment_id) if appointment_id else 0
+            if sale_order_id:
+                sale_order = request.env['sale.order'].browse(int(sale_order_id))
+                if sale_order.exists() and sale_order.appointment_id:
+                    appointment_id_int = sale_order.appointment_id.id
             vals = {
                 'appointment_id': appointment_id_int,
                 'name': api_name,
@@ -2387,7 +2398,7 @@ class APIHomes(API_Homes):
         if status:
             try:
                 if enable_api_queue_system and sale_order_id:
-                    lock = self._claim_db_lock('/api/submit_selected_installation_date', sale_order_id, api_create_date_val)
+                    lock = self._claim_db_lock('/api/submit_selected_installation_date', 0, api_create_date_val, sale_order_id=sale_order_id)
                     if not lock:
                         result = {'override_json_result': 1, 'result': 'Failed', 'message': 'Execution is already in progress'}
                         try:
@@ -2402,7 +2413,7 @@ class APIHomes(API_Homes):
                 lock = None
             # early skip if already logged
             try:
-                if self._skip_if_already_logged('/api/submit_selected_installation_date', api_create_date_val, appointment_id=sale_order_id):
+                if self._skip_if_already_logged('/api/submit_selected_installation_date', api_create_date_val, appointment_id=0, sale_order_id=sale_order_id):
                     result = {'override_json_result': 1, 'result': 'Success', 'message': 'Execution is already completed.'}
                     try:
                         if models:
