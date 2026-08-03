@@ -335,7 +335,7 @@ class ResUsers(models.Model):
             #only fetching users having i360 ID.
             logged_in_users = self.search([('token_name', '!=', ''), ('company_id', '=', company.id), ('improveit_user_id', '!=', '')])
             users_with_pending_sync = []
-            for user in logged_in_users:
+            for user in logged_in_users.filtered(lambda x: not x.has_group('sales_team.group_sale_salesman_all_leads')):
                 pending_appointments = self.env['team.customer.appointment'].search(
                     [('state', '=', 'scheduled'), ('user_id', '=', user.id)])
                 if pending_appointments:
