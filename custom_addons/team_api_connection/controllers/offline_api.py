@@ -3246,6 +3246,7 @@ class APIHomes(API_Homes):
         params = request.params.copy()
         token = ''
         access_token = request.httprequest.headers.get('Authorization')
+        _logger.info(request.httprequest.headers)
         if not access_token:
             _logger.error("update_live_screen_log - Empty access_token")
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'})
