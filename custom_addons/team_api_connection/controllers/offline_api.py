@@ -1530,7 +1530,9 @@ class APIHomes(API_Homes):
         network_strength = params.get('network_strength', '')
         api_create_date_val = self._extract_api_create_date(params)
         file = params.get('file', False)
-        _logger.info("------------add_screenshots params: %s------------------" % (params))
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
+        _logger.info("------------add_screenshots params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         data = []
         result = {}
         file_data = {}
@@ -1538,15 +1540,18 @@ class APIHomes(API_Homes):
         image_already_existing = True
         api_name = '/api/upload_images/%s' % image_name
         if not token:
-            _logger.info("------------Token Missing in add_screenshots------------------")
+            _logger.info("------------Token Missing in add_screenshots - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in add_screenshots-------------------")
+            _logger.info("------------uid missing in add_screenshots - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
-            _logger.info("------------password missing in add_screenshots-------------------")
+            _logger.info("------------password missing in add_screenshots - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
@@ -1569,12 +1574,16 @@ class APIHomes(API_Homes):
                                 request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                        _logger.info("[upload_images] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
             except Exception:
                 # if lock system fails, continue without blocking to avoid breaking API
                 lock = None
 
             if not file:
+                _logger.info("[upload_images] Empty attachment - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'result': 'Failed', 'message': 'Empty attachment in values.'}, x_request_id, x_device_id)
+
                 return json.dumps({'result': 'Failed', 'message': 'Empty attachment in values.'})
 
             # early skip if already logged
@@ -1599,6 +1608,8 @@ class APIHomes(API_Homes):
                             self._release_db_lock(lock)
                     except Exception:
                         pass
+                    _logger.info("[upload_images] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                     return json.dumps(result)
             except Exception:
                 pass
@@ -1659,6 +1670,7 @@ class APIHomes(API_Homes):
                 self._release_db_lock(lock)
         except Exception:
             pass
+        _logger.info("------------upload_images response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
     @route('/api/generate_contract_document', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
@@ -1682,19 +1694,23 @@ class APIHomes(API_Homes):
         #         'message': 'Plumbing option should select either one option'
         #     })
         appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
-
-        _logger.info("------------generate_contract_document params: %s------------------" % (params))
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
+        _logger.info("------------generate_contract_document params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         result = {}
         if not token:
-            _logger.info("------------Token Missing in generate_contract_document------------------")
+            _logger.info("------------Token Missing in generate_contract_document - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in generate_contract_document-------------------")
+            _logger.info("------------uid missing in generate_contract_document - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
-            _logger.info("------------password missing in generate_contract_document-------------------")
+            _logger.info("------------password missing in generate_contract_document - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
@@ -1718,6 +1734,8 @@ class APIHomes(API_Homes):
                                 request.env['otl.api.sync.log'].sudo().create_api_log('/api/generate_contract_document', data, uid, result, network_strength, api_create_date_val)
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                        _logger.info("[generate_contract_document] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
             except Exception:
                 lock = None
@@ -1746,6 +1764,8 @@ class APIHomes(API_Homes):
                         self.generate_contract_document_api_queue.pop(appointment_id, '')
                         _logger.info('generate_contract_document_api_queue Data - Ending--:%s' % (
                             self.generate_contract_document_api_queue))
+                    _logger.info("[generate_contract_document] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                     return json.dumps(result)
             except Exception:
                 pass
@@ -1774,6 +1794,7 @@ class APIHomes(API_Homes):
                 self._release_db_lock(lock)
         except Exception:
             pass
+        _logger.info("------------generate_contract_document response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
     @route('/api/initiate_sync_to_i360', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
@@ -1825,17 +1846,23 @@ class APIHomes(API_Homes):
         appointment_id = False
         network_strength = params.get('network_strength', '')
         api_create_date_val = self._extract_api_create_date(params)
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
+        _logger.info("------------initiate_sync_to_i360_json params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         result = {}
         if not token:
-            _logger.info("------------Token Missing in initiate_sync_to_i360_json------------------")
+            _logger.info("------------Token Missing in initiate_sync_to_i360_json - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in initiate_sync_to_i360_json-------------------")
+            _logger.info("------------uid missing in initiate_sync_to_i360_json - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
-            _logger.info("------------password missing in initiate_sync_to_i360_json-------------------")
+            _logger.info("------------password missing in initiate_sync_to_i360_json - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
@@ -1858,6 +1885,8 @@ class APIHomes(API_Homes):
                                 request.env['otl.api.sync.log'].sudo().create_api_log('/api/initiate_sync_to_i360_json', data, uid, result, network_strength, api_create_date_val)
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                        _logger.info("[initiate_sync_to_i360_json] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
             except Exception:
                 lock = None
@@ -1877,6 +1906,8 @@ class APIHomes(API_Homes):
                             self._release_db_lock(lock)
                     except Exception:
                         pass
+                    _logger.info("[initiate_sync_to_i360_json] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                     return json.dumps(result)
             except Exception:
                 pass
@@ -1905,6 +1936,7 @@ class APIHomes(API_Homes):
                 self._release_db_lock(lock)
         except Exception:
             pass
+        _logger.info("------------initiate_sync_to_i360_json response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
     @route('/api/update_sync_log', type='json', auth="none", methods=['POST'], csrf=False, allow_none=True, )
@@ -1993,20 +2025,25 @@ class APIHomes(API_Homes):
         network_strength = params.get('network_strength', '')
         api_create_date_val = self._extract_api_create_date(params)
         appointment_id = False
-        _logger.info("------------create_order_and_update_measurements_encoded params - 1st: %s------------------" % (params))
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
+        _logger.info("------------create_order_and_update_measurements_encoded params - 1st: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         while 'data' in data:
             data = data.get('data', {})
-        _logger.info("------------create_order_and_update_measurements_encoded params- 2nd: %s------------------" % (params))
+        _logger.info("------------create_order_and_update_measurements_encoded params- 2nd: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         decode_options = ast.literal_eval(str(params.get('decode_options', {'verify_signature': True})))
         if not token:
-            _logger.info("------------Token Missing in main create_order_and_update_measurements_encoded api------------------")
+            _logger.info("------------Token Missing in main create_order_and_update_measurements_encoded api - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in main create_order_and_update_measurements_encoded api-------------------")
+            _logger.info("------------uid missing in main create_order_and_update_measurements_encoded api - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
-            _logger.info("------------password missing in main create_order_and_update_measurements_encoded api-------------------")
+            _logger.info("------------password missing in main create_order_and_update_measurements_encoded api - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         lock = None
@@ -2058,6 +2095,8 @@ class APIHomes(API_Homes):
                                     network_strength, api_create_date_val)
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                        _logger.info("[create_order_and_update_measurements_encoded] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
             except Exception:
                 lock = None
@@ -2076,6 +2115,8 @@ class APIHomes(API_Homes):
                             self._release_db_lock(lock)
                     except Exception:
                         pass
+                    _logger.info("[create_order_and_update_measurements_encoded] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                     return json.dumps(result)
             except Exception:
                 pass
@@ -2095,6 +2136,8 @@ class APIHomes(API_Homes):
                     result, network_strength, api_create_date_val)
                 if enable_api_queue_system:
                     self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
+                _logger.info("[create_order_and_update_measurements_encoded] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                 return json.dumps(result)
             try:
                 if credit_application_secret:
@@ -2120,6 +2163,8 @@ class APIHomes(API_Homes):
 
                 if enable_api_queue_system:
                     self.create_order_and_update_measurements_api_queue.pop(appointment_id, '')
+                _logger.info("[create_order_and_update_measurements_encoded] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                 return json.dumps(result)
             if decoded_data:
                 def remove_none_values(data):
@@ -2134,6 +2179,9 @@ class APIHomes(API_Homes):
                 payment_data_result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                                      'action_create_order_and_update_measurements', [decoded_data])
             else:
+                _logger.info("[create_order_and_update_measurements_encoded] Empty decoded data - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed',
+                                   'message': 'Empty values in decoded data'}, x_request_id, x_device_id)
+
                 return json.dumps({'override_json_result': 1, 'result': 'Failed',
                                    'message': 'Empty values in decoded data'})
 
@@ -2159,12 +2207,16 @@ class APIHomes(API_Homes):
                 self._release_db_lock(lock)
         except Exception:
             pass
+        _logger.info("------------create_order_and_update_measurements_encoded response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
     @route('/api/create_order_and_update_measurements_encoded_v2', type='json', auth="none", methods=['POST'], csrf=False)
     def create_order_and_update_measurements_encoded_v2(self, **kwargs):
         # params = request.jsonrequest.copy()
         params = request.httprequest.get_json()
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
+        _logger.info("------------create_order_and_update_measurements_encoded_v2 params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------" % (params, x_request_id, x_device_id))
         token = params.get('token', False)
         data = params.get('data', False)
         native_data = params.get('native_data', False)
@@ -2285,20 +2337,26 @@ class APIHomes(API_Homes):
         appointment_id = params.get('appointment_id', '')
         network_strength = params.get('network_strength', '')
         api_create_date_val = self._extract_api_create_date(params)
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
         _logger.info(
-            "------------action_get_available_installation_date params: %s------------------" % (params))
+            "------------action_get_available_installation_date params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         if not token:
-            _logger.info("------------Token Missing in main action_get_available_installation_date api------------------")
+            _logger.info("------------Token Missing in main action_get_available_installation_date api - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         if not appointment_id:
-            _logger.info("------------Appointment ID Missing in main action_get_available_installation_date api------------------")
+            _logger.info("------------Appointment ID Missing in main action_get_available_installation_date api - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty Appointment ID.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty Appointment ID.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in main action_get_available_installation_date api-------------------")
+            _logger.info("------------uid missing in main action_get_available_installation_date api - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
-            _logger.info("------------password missing in main action_get_available_installation_date api-------------------")
+            _logger.info("------------password missing in main action_get_available_installation_date api - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
         # enable_api_queue_system = eval(str(request.env['ir.config_parameter'].sudo().get_param('enable_api_queue_system')))
@@ -2319,6 +2377,8 @@ class APIHomes(API_Homes):
                                 request.env['otl.api.sync.log'].sudo().create_api_log('/api/get_available_installation_date', params, uid, result, network_strength, api_create_date_val)
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                        _logger.info("[action_get_available_installation_date] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
             except Exception:
                 lock = None
@@ -2355,6 +2415,7 @@ class APIHomes(API_Homes):
                 self._release_db_lock(lock)
         except Exception:
             pass
+        _logger.info("------------action_get_available_installation_date response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
     @route('/api/submit_selected_installation_date', type='http', auth="none", methods=['POST'], csrf=False,
@@ -2366,28 +2427,38 @@ class APIHomes(API_Homes):
         installation_id = params.get('installation_id', '')
         network_strength = params.get('network_strength', '')
         api_create_date_val = self._extract_api_create_date(params)
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
         _logger.info(
-            "------------submit_selected_installation_date params: %s------------------" % (params))
+            "------------submit_selected_installation_date params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         if not token:
-            _logger.info("------------Token Missing in main submit_selected_installation_date api------------------")
+            _logger.info("------------Token Missing in main submit_selected_installation_date api - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         if not sale_order_id:
             _logger.info(
                 "------------Sale Order ID Missing in main submit_selected_installation_date api------------------")
+            _logger.info("[action_submit_selected_installation_date] Empty Sale Order ID - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty Sale Order ID.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty Sale Order ID.'})
         if not installation_id:
             _logger.info(
                 "------------Selected Installation Date ID Missing in main submit_selected_installation_date api------------------")
+            _logger.info("[action_submit_selected_installation_date] Empty Installation Date ID - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty Selected Installation Date ID.'}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty Selected Installation Date ID.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in main submit_selected_installation_date api-------------------")
+            _logger.info("------------uid missing in main submit_selected_installation_date api - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
             _logger.info(
                 "------------password missing in main submit_selected_installation_date api-------------------")
+            _logger.info("[action_submit_selected_installation_date] Token validation failed - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
@@ -2408,6 +2479,8 @@ class APIHomes(API_Homes):
                                 request.env['otl.api.sync.log'].sudo().create_api_log('/api/submit_selected_installation_date', params, uid, result, network_strength, api_create_date_val)
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                        _logger.info("[action_submit_selected_installation_date] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
             except Exception:
                 lock = None
@@ -2427,6 +2500,8 @@ class APIHomes(API_Homes):
                             self._release_db_lock(lock)
                     except Exception:
                         pass
+                    _logger.info("[action_submit_selected_installation_date] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                     return json.dumps(result)
             except Exception:
                 pass
@@ -2458,6 +2533,7 @@ class APIHomes(API_Homes):
                 self._release_db_lock(lock)
         except Exception:
             pass
+        _logger.info("------------action_submit_selected_installation_date response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
     @route('/api/<version>/create_versatile_credit_application', type='json', auth="none", methods=['POST'], csrf=False,
@@ -2519,19 +2595,23 @@ class APIHomes(API_Homes):
         network_strength = params.get('network_strength', '')
         api_create_date_val = self._extract_api_create_date(params)
         destination_selection_id = params.get('destination_selection_id', 0) and str(params.get('destination_selection_id', 0)) or '0'
-
-        _logger.info("------------update_additional_appointment_data params: %s------------------" % (params))
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
+        _logger.info("------------update_additional_appointment_data params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         result = {}
         if not token:
-            _logger.info("------------Token Missing in update_additional_appointment_data------------------")
+            _logger.info("------------Token Missing in update_additional_appointment_data - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in update_additional_appointment_data-------------------")
+            _logger.info("------------uid missing in update_additional_appointment_data - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
-            _logger.info("------------password missing in update_additional_appointment_data-------------------")
+            _logger.info("------------password missing in update_additional_appointment_data - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
@@ -2565,6 +2645,8 @@ class APIHomes(API_Homes):
                                         request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
                                 except Exception as e:
                                     _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                                _logger.info("[action_update_additional_appointment_data] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                                 return json.dumps(result)
                     except Exception:
                         lock = None
@@ -2584,6 +2666,8 @@ class APIHomes(API_Homes):
                                 self._release_db_lock(lock)
                         except Exception:
                             pass
+                        _logger.info("[action_update_additional_appointment_data] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
                 except Exception:
                     pass
@@ -2616,6 +2700,7 @@ class APIHomes(API_Homes):
             self.update_additional_appointment_data_api_queue.pop(appointment_id, '')
             _logger.info('update_additional_appointment_data_api_queue Data - Ending--:%s' % (
                 self.update_additional_appointment_data_api_queue))
+        _logger.info("------------action_update_additional_appointment_data response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
     @route('/api/<version>/get_credit_application_status', type='json', auth="none", methods=['POST'], csrf=False,
@@ -2623,9 +2708,15 @@ class APIHomes(API_Homes):
     def action_get_credit_application_status(self, version='v1', **kwargs):
         # params = request.jsonrequest.copy()
         params = request.httprequest.get_json()
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
+
         token = ''
         access_token = request.httprequest.headers.get('Authorization')
         if not access_token:
+            _logger.info("[action_get_credit_application_status] Access Token missing - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'})
         if access_token.startswith('Bearer '):
             token = access_token[7:]
@@ -2633,22 +2724,29 @@ class APIHomes(API_Homes):
         appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
         network_strength = params.get('network_strength', '')
         api_create_date_val = self._extract_api_create_date(params)
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
         _logger.info(
-            "------------get_credit_application_status params: %s------------------" % (params))
+            "------------get_credit_application_status params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         if not token:
-            _logger.info("------------Token Missing in get_credit_application_status api------------------")
+            _logger.info("------------Token Missing in get_credit_application_status api - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token is not existing'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Token is not existing'})
         if not data:
-            _logger.info("------------Data Missing in get_credit_application_status api------------------")
+            _logger.info("------------Data Missing in get_credit_application_status api - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Data is not existing'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Data is not existing'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in get_credit_application_status api-------------------")
+            _logger.info("------------uid missing in get_credit_application_status api - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
             _logger.info(
                 "------------password missing in get_credit_application_status api-------------------")
+            _logger.info("[action_get_credit_application_status] Token validation failed - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
@@ -2678,6 +2776,8 @@ class APIHomes(API_Homes):
                                                                                           api_create_date_val)
                             except Exception as e:
                                 _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                            _logger.info("[action_get_credit_application_status] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                             return json.dumps(result)
                 except Exception:
                     lock = None
@@ -2696,6 +2796,8 @@ class APIHomes(API_Homes):
                             self.get_credit_application_status_api_queue.pop(appointment_id, '')
                             _logger.info('get_credit_application_status_api_queue Data - Ending--:%s' % (
                                 self.get_credit_application_status_api_queue))
+                        _logger.info("[action_get_credit_application_status] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
                 except Exception:
                     pass
@@ -2729,6 +2831,7 @@ class APIHomes(API_Homes):
             self.get_credit_application_status_api_queue.pop(appointment_id, '')
             _logger.info('get_credit_application_status_api_queue Data - Ending--:%s' % (
                 self.get_credit_application_status_api_queue))
+        _logger.info("------------action_get_credit_application_status response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
     @route('/api/<version>/update_arrival_departure_time', type='http', auth="none", methods=['POST'], csrf=False, allow_none=True, )
@@ -2741,19 +2844,23 @@ class APIHomes(API_Homes):
         timezone = params.get('timezone', False)
         network_strength = params.get('network_strength', '')
         api_create_date_val = self._extract_api_create_date(params)
-
-        _logger.info("------------update_arrival_departure_time params: %s------------------" % (params))
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
+        _logger.info("------------update_arrival_departure_time params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         result = {}
         if not token:
-            _logger.info("------------Token Missing in update_arrival_departure_time------------------")
+            _logger.info("------------Token Missing in update_arrival_departure_time - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in update_arrival_departure_time-------------------")
+            _logger.info("------------uid missing in update_arrival_departure_time - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
-            _logger.info("------------password missing in update_arrival_departure_time-------------------")
+            _logger.info("------------password missing in update_arrival_departure_time - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
@@ -2784,6 +2891,8 @@ class APIHomes(API_Homes):
                                     request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
                             except Exception as e:
                                 _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                            _logger.info("[action_update_arrival_departure_time] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                             return json.dumps(result)
                 except Exception:
                     lock = None
@@ -2805,6 +2914,8 @@ class APIHomes(API_Homes):
                                     self._release_db_lock(lock)
                             except Exception:
                                 pass
+                        _logger.info("[action_update_arrival_departure_time] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
                 except Exception:
                     pass
@@ -2833,6 +2944,7 @@ class APIHomes(API_Homes):
                 self._release_db_lock(lock)
         except Exception:
             pass
+        _logger.info("------------action_update_arrival_departure_time response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
     @route('/api/<version>/get_appointment_sync_status', type='http', auth="none", methods=['GET'], csrf=False,
@@ -2935,19 +3047,23 @@ class APIHomes(API_Homes):
         timezone = params.get('timezone', False)
         network_strength = params.get('network_strength', '')
         api_create_date_val = self._extract_api_create_date(params)
-
-        _logger.info("------------update_manual_arrival_date params: %s------------------" % params)
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
+        _logger.info("------------update_manual_arrival_date params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         result = {}
         if not token:
-            _logger.info("------------Token Missing in update_manual_arrival_date------------------")
+            _logger.info("------------Token Missing in update_manual_arrival_date - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in update_manual_arrival_date-------------------")
+            _logger.info("------------uid missing in update_manual_arrival_date - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
-            _logger.info("------------password missing in update_manual_arrival_date-------------------")
+            _logger.info("------------password missing in update_manual_arrival_date - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
@@ -2977,6 +3093,8 @@ class APIHomes(API_Homes):
                                     request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
                             except Exception as e:
                                 _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                            _logger.info("[action_update_manual_arrival_date] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                             return json.dumps(result)
                 except Exception:
                     lock = None
@@ -2998,6 +3116,8 @@ class APIHomes(API_Homes):
                                     self._release_db_lock(lock)
                             except Exception:
                                 pass
+                        _logger.info("[action_update_manual_arrival_date] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
                 except Exception:
                     pass
@@ -3027,6 +3147,7 @@ class APIHomes(API_Homes):
                 self._release_db_lock(lock)
         except Exception:
             pass
+        _logger.info("------------action_update_manual_arrival_date response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
     @route('/api/<version>/send_review_link', type='http', auth="none", methods=['POST'], csrf=False,
@@ -3037,6 +3158,8 @@ class APIHomes(API_Homes):
         access_token = request.httprequest.headers.get('Authorization')
         if not access_token:
             _logger.error("send_review_link - Empty access_token")
+            _logger.info("[action_send_review_link] Access Token missing - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'})
         if access_token.startswith('Bearer '):
             token = access_token[7:]
@@ -3044,19 +3167,23 @@ class APIHomes(API_Homes):
         phone = params.get('phone', False)
         network_strength = params.get('network_strength', '')
         api_create_date_val = self._extract_api_create_date(params)
-
-        _logger.info("------------send_review_link params: %s------------------" % params)
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
+        _logger.info("------------send_review_link params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         result = {}
         if not token:
-            _logger.info("------------Token Missing in send_review_link------------------")
+            _logger.info("------------Token Missing in send_review_link - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in send_review_link-------------------")
+            _logger.info("------------uid missing in send_review_link - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
-            _logger.info("------------password missing in send_review_link-------------------")
+            _logger.info("------------password missing in send_review_link - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
@@ -3085,6 +3212,8 @@ class APIHomes(API_Homes):
                                     request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
                             except Exception as e:
                                 _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                            _logger.info("[action_send_review_link] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                             return json.dumps(result)
                 except Exception:
                     lock = None
@@ -3105,6 +3234,8 @@ class APIHomes(API_Homes):
                                     self._release_db_lock(lock)
                             except Exception:
                                 pass
+                        _logger.info("[action_send_review_link] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
                 except Exception:
                     pass
@@ -3134,6 +3265,7 @@ class APIHomes(API_Homes):
                 self._release_db_lock(lock)
         except Exception:
             pass
+        _logger.info("------------action_send_review_link response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
     @route('/api/<version>/get_appointment_current_status', type='http', auth="none", methods=['POST'], csrf=False,
@@ -3144,25 +3276,31 @@ class APIHomes(API_Homes):
         access_token = request.httprequest.headers.get('Authorization')
         if not access_token:
             _logger.error("get_appointment_current_status - Empty access_token")
+            _logger.info("[action_get_appointment_current_status] Access Token missing - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'})
         if access_token.startswith('Bearer '):
             token = access_token[7:]
         appointment_id = params.get('appointment_id', 0) and str(params.get('appointment_id', 0)) or '0'
         network_strength = params.get('network_strength', '')
         api_create_date_val = self._extract_api_create_date(params)
-
-        _logger.info("------------get_appointment_current_status params: %s------------------" % params)
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
+        _logger.info("------------get_appointment_current_status params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         result = {}
         if not token:
-            _logger.info("------------Token Missing in get_appointment_current_status------------------")
+            _logger.info("------------Token Missing in get_appointment_current_status - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in get_appointment_current_status-------------------")
+            _logger.info("------------uid missing in get_appointment_current_status - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
-            _logger.info("------------password missing in get_appointment_current_status-------------------")
+            _logger.info("------------password missing in get_appointment_current_status - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
@@ -3192,6 +3330,8 @@ class APIHomes(API_Homes):
                                     request.env['otl.api.sync.log'].sudo().create_api_log(api_name, params, uid, result, network_strength, api_create_date_val)
                             except Exception as e:
                                 _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                            _logger.info("[action_get_appointment_current_status] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                             return json.dumps(result)
                 except Exception:
                     lock = None
@@ -3237,6 +3377,7 @@ class APIHomes(API_Homes):
                 self._release_db_lock(lock)
         except Exception:
             pass
+        _logger.info("------------action_get_appointment_current_status response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
 
@@ -3249,6 +3390,8 @@ class APIHomes(API_Homes):
         _logger.info(request.httprequest.headers)
         if not access_token:
             _logger.error("update_live_screen_log - Empty access_token")
+            _logger.info("[action_update_live_screen_log] Access Token missing - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Access Token is missing'})
         if access_token.startswith('Bearer '):
             token = access_token[7:]
@@ -3258,26 +3401,33 @@ class APIHomes(API_Homes):
         screen_entry_date = params.get('screen_entry_date', '')
         screen_name = params.get('screen_name', '')
         timezone = params.get('timezone', 'EST')
-        _logger.info("------------update_live_screen_log params: %s------------------" % params)
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
+        _logger.info("------------update_live_screen_log params: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         result = {}
         if not token:
-            _logger.info("------------Token Missing in update_live_screen_log------------------")
+            _logger.info("------------Token Missing in update_live_screen_log - response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
-            _logger.info("------------uid missing in update_live_screen_log-------------------")
+            _logger.info("------------uid missing in update_live_screen_log - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
-            _logger.info("------------password missing in update_live_screen_log-------------------")
+            _logger.info("------------password missing in update_live_screen_log - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not screen_entry_date:
-            _logger.info("------------screen_entry_date missing in update_live_screen_log-------------------")
+            _logger.info("------------screen_entry_date missing in update_live_screen_log - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Screen Entry Date is missing'}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Screen Entry Date is missing'})
         if not screen_name:
-            _logger.info("------------screen_name missing in update_live_screen_log-------------------")
+            _logger.info("------------screen_name missing in update_live_screen_log - response: %s [X-Request-ID: %s | X-Device-ID: %s]-------------------", {'override_json_result': 1, 'result': 'Failed', 'message': 'Screen Name is missing'}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Screen Name is missing'})
 
@@ -3317,6 +3467,8 @@ class APIHomes(API_Homes):
                                         api_create_date_val)
                             except Exception as e:
                                 _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                            _logger.info("[action_update_live_screen_log] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                             return json.dumps(result)
                 except Exception:
                     lock = None
@@ -3342,6 +3494,8 @@ class APIHomes(API_Homes):
                                     self._release_db_lock(lock)
                             except Exception:
                                 pass
+                        _logger.info("[action_update_live_screen_log] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
                 except Exception:
                     pass
@@ -3371,6 +3525,7 @@ class APIHomes(API_Homes):
                 self._release_db_lock(lock)
         except Exception:
             pass
+        _logger.info("------------action_update_live_screen_log response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
 
     @route('/api/process_credit_card_payment', type='json', auth="none", methods=['POST'], csrf=False)
@@ -3381,26 +3536,34 @@ class APIHomes(API_Homes):
         network_strength = params.get('network_strength', '')
         api_create_date_val = self._extract_api_create_date(params)
         appointment_id = False
+        x_request_id = request.httprequest.headers.get('X-Request-ID', '')
+        x_device_id = request.httprequest.headers.get('X-Device-ID', '')
         _logger.info(
-            "------------process_credit_card_payment params - 1st: %s------------------" % (params))
+            "------------process_credit_card_payment params - 1st: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         while 'data' in data:
             data = data.get('data', {})
         _logger.info(
-            "------------process_credit_card_payment params- 2nd: %s------------------" % (params))
+            "------------process_credit_card_payment params- 2nd: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", params, x_request_id, x_device_id)
         decode_options = ast.literal_eval(str(params.get('decode_options', {'verify_signature': True})))
         if not token:
             _logger.info(
                 "------------Token Missing in main process_credit_card_payment api------------------")
+            _logger.info("[process_credit_card_payment] Empty token - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'}, x_request_id, x_device_id)
+
             return json.dumps({'override_json_result': 1, 'result': 'Failed', 'message': 'Empty token.'})
         uid, password, url, db = self.get_credentials(token)
         if not uid:
             _logger.info(
                 "------------uid missing in main process_credit_card_payment api-------------------")
+            _logger.info("[process_credit_card_payment] Token validation failed - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         if not password:
             _logger.info(
                 "------------password missing in main process_credit_card_payment api-------------------")
+            _logger.info("[process_credit_card_payment] Token validation failed - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1}, x_request_id, x_device_id)
+
             return json.dumps(
                 {'override_json_result': 1, 'result': 'Failed', 'message': 'Token validation Failed', 'token': 1})
         status, message = self.action_verify_token(uid, token)
@@ -3430,6 +3593,8 @@ class APIHomes(API_Homes):
                                     api_create_date_val)
                         except Exception as e:
                             _logger.exception('Failed to create_api_log (duplicate) via XML-RPC: %s', e)
+                        _logger.info("[process_credit_card_payment] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                         return json.dumps(result)
             except Exception:
                 lock = None
@@ -3452,6 +3617,8 @@ class APIHomes(API_Homes):
                         self.process_credit_card_payment_api_queue.pop(appointment_id, '')
                         _logger.info('process_credit_card_payment_api_queue Data - Ending--:%s' % (
                             self.process_credit_card_payment_api_queue))
+                    _logger.info("[process_credit_card_payment] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                     return json.dumps(result)
             except Exception:
                 pass
@@ -3471,6 +3638,8 @@ class APIHomes(API_Homes):
                     result, network_strength, api_create_date_val)
                 if enable_api_queue_system:
                     self.process_credit_card_payment_api_queue.pop(appointment_id, '')
+                _logger.info("[process_credit_card_payment] Early return - response: %s [X-Request-ID: %s | X-Device-ID: %s]", result, x_request_id, x_device_id)
+
                 return json.dumps(result)
             if decoded_data:
                 def remove_none_values(data):
@@ -3486,6 +3655,9 @@ class APIHomes(API_Homes):
                 payment_data_result = models.execute_kw(db, int(uid), password, 'team.customer.appointment',
                                                         'action_process_credit_card_payment', [decoded_data])
             else:
+                _logger.info("[process_credit_card_payment] Empty decoded data - response: %s [X-Request-ID: %s | X-Device-ID: %s]", {'override_json_result': 1, 'result': 'Failed',
+                                   'message': 'Empty values in decoded data'}, x_request_id, x_device_id)
+
                 return json.dumps({'override_json_result': 1, 'result': 'Failed',
                                    'message': 'Empty values in decoded data'})
 
@@ -3512,4 +3684,5 @@ class APIHomes(API_Homes):
                 self._release_db_lock(lock)
         except Exception:
             pass
+        _logger.info("------------process_credit_card_payment response: %s [X-Request-ID: %s | X-Device-ID: %s]------------------", result, x_request_id, x_device_id)
         return json.dumps(result)
