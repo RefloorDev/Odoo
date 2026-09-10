@@ -2747,10 +2747,18 @@ class SaleOrder(models.Model):
                             'team_sale_contract.payment_plan_id') or False
                         if payment_plan_id:
                             old_floor_type = self.env['product.template'].browse(int(payment_plan_id))
-                            if old_floor_type and old_floor_type.exists() and not old_floor_type.active:
-                                floor_type = self.env['product.template'].search([('name', '=', old_floor_type.name)], limit=1)
-                            else:
-                                floor_type = old_floor_type
+                            appointment = sale_order.appointment_id
+                            if appointment.office_location_id:
+                                floor_type = self.env['product.template'].search([
+                                    ('grade', '=', old_floor_type.grade),
+                                    ('office_location_ids', 'in', appointment.office_location_id.ids),
+                                    ('categ_id', '=', old_floor_type.categ_id.id)
+                                ], limit=1)
+                            if not floor_type:
+                                if old_floor_type and old_floor_type.exists() and not old_floor_type.active:
+                                    floor_type = self.env['product.template'].search([('grade', '=', old_floor_type.name)], limit=1)
+                                else:
+                                    floor_type = old_floor_type
 
                     product_name = floor_type and floor_type.name or ''
                     improveit_product_id = floor_type and floor_type.improveit_product_id or ''
