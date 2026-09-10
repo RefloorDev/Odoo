@@ -1460,6 +1460,26 @@ class TeamCustomerAppointment(models.Model):
                                     'appointment_id': self.id,
                                     'order_id': sale_order and sale_order.id or False
                                 })
+                    if data.get('wall_molding_types', []):
+                        for molding_data in data.get('wall_molding_types', []):
+                            if molding_data.get('molding_type_id', 0) and molding_data.get('wall_name', '') and molding_data.get('wall_size', 0):
+                                molding_type = self.env['team.floor.molding'].browse(int(molding_data.get('molding_type_id', 0)))
+                                if not molding_type.exists():
+                                    _logger.info('--------------Molding is not existing------------')
+                                    return {
+                                        'result': 'Failed',
+                                        'message': 'Selected Molding is not existing in the system'
+                                    }
+                                self.env['team.contract.molding.type.line'].create({
+                                    'room_measurement_id': room_measure.id,
+                                    'room_id': room_id,
+                                    'appointment_id': self.id,
+                                    'order_id': sale_order and sale_order.id or False,
+                                    'molding_type_id': molding_type.id,
+                                    'name': molding_data.get('wall_name', ''),
+                                    'wall_size': molding_data.get('wall_size', 0),
+                                    'molding_unit_price': molding_type.unit_price or 0,
+                                })
                     result = {
                         'message': 'Room data updated successfully',
                         'result': 'Success'
