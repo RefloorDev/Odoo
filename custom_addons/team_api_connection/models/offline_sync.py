@@ -455,6 +455,7 @@ class ResUsers(models.Model):
             'min_down_payment_amount': float(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.min_down_payment_amount')) or 0.0,
             'destination_selection_consent_message': str(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.destination_selection_consent_message')) or '',
             'address_visible_time_limit': int(self.env['ir.config_parameter'].sudo().get_param('team_sale_contract.address_visible_time_limit')) or 0,
+            'google_map_api_key': str(self.env['ir.config_parameter'].sudo().get_param('base_geolocalize.google_map_api_key')) or '',
         })
         # except:
         #     result = {
