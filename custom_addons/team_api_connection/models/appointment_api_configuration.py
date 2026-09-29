@@ -1385,9 +1385,12 @@ class TeamImproveitConfiguration(models.Model):
                     for question in content:
                         room_list = []
                         answer_list = []
-                        rooms = self.env['team.room.room'].search([])
-                        for room in rooms:
-                            room_list.append(room.id)
+                        room_name_list = question.get('Applicable_Rooms', '').split(';')
+                        room_domain = []
+                        if room_name_list:
+                            room_domain = [('name', 'in', room_name_list)]
+                        applicable_rooms_list = self.env['team.room.room'].search(room_domain).ids
+                        room_list = self.env['team.room.room'].search([]).ids
                         vals = {'active': True}
                         check_quote_question = self.env['team.quote.question'].with_context(active_test=False).search(
                             [('code', '=', question.get('ItemMapFieldName',''))], limit=1)
@@ -1429,6 +1432,7 @@ class TeamImproveitConfiguration(models.Model):
                         else:
                             vals.update({'constr_mandatory': False})
                         vals.update({'room_ids': [(6, 0, room_list)]})
+                        vals.update({'applicable_rooms': [(6, 0, applicable_rooms_list)]})
                         if question.get('ProductCategories', False):
                             vals.update({
                                 'product_category_ids': product_category_dict.get(question.get('ProductCategories', False), [])

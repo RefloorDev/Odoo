@@ -22,8 +22,19 @@
                             </group>
                             <group>
                                 <field name="sequence"/>
+                                <field name="default_delivery"/>
                                 <field name="active"/>
                             </group>
+                        </group>
+                        <group string="Delivery Options">
+                            <field name="delivery_option_line" nolabel="1">
+                                <list editable="bottom" string="Delivery Options">
+                                    <field name="name"/>
+                                </list>
+                                <form string="Delivery Options">
+                                    <field name="name"/>
+                                </form>
+                            </field>
                         </group>
                     </sheet>
                 </form>

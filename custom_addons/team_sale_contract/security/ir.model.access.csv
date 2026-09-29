@@ -16,6 +16,7 @@ access_contract_room_measurement_user,team.contract.room.measurement.line.user,m
 access_questionnaire_calc_logic_user,otl.questionnaire.calc.logic.user,model_otl_questionnaire_calc_logic,base.group_user,1,0,0,0
 access_questionnaire_calc_logic_line_user,otl.questionnaire.calc.logic.line.user,model_otl_questionnaire_calc_logic_line,base.group_user,1,0,0,0
 access_destination_selection_user,otl.destination.selection.user,model_otl_destination_selection,base.group_user,1,0,0,0
+contract_molding_type_line_user,team.contract.molding.type.line.user,model_team_contract_molding_type_line,base.group_user,1,0,0,0
 
 access_team_customer_appointment_user,team.customer.appointment.user,model_team_customer_appointment,base.group_user,1,0,0,0
 access_team_customer_appointment_manager,team.customer.appointment.user,model_team_customer_appointment,sales_team.group_sale_salesman,1,1,1,1
@@ -39,6 +40,7 @@ access_finance_checklist_items_manager,otl.finance.checklist.items.manager,model
 access_questionnaire_calc_logic_manager,otl.questionnaire.calc.logic.manager,model_otl_questionnaire_calc_logic,sales_team.group_sale_manager,1,1,1,1
 access_questionnaire_calc_logic_line_manager,otl.questionnaire.calc.logic.line.manager,model_otl_questionnaire_calc_logic_line,sales_team.group_sale_manager,1,1,1,1
 access_destination_selection_manager,otl.destination.selection.manager,model_otl_destination_selection,sales_team.group_sale_manager,1,1,1,1
+contract_molding_type_line_manager,team.contract.molding.type.line.manager,model_team_contract_molding_type_line,sales_team.group_sale_manager,1,1,1,1
 
 access_contract_transition_line_manager,contract.transition.line.manager,model_team_contract_transition_line,sales_team.group_sale_salesman,1,1,1,1
 access_contract_question_line_manager,team.contract.question.line.manager,model_team_contract_question_line,sales_team.group_sale_salesman,1,1,1,1

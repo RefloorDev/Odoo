@@ -79,7 +79,7 @@
                                     </group>
                                 </form>
                             </field>
-                            <field name="applicable_rooms" widget="many2many_tags" options="{'no_create_edit': True}" invisible="set_default_answer != True" required="set_default_answer == True"/>
+                            <field name="applicable_rooms" widget="many2many_tags" options="{'no_create_edit': True}"/>
                             <field name="applicable_current_surface" invisible="set_default_answer != True" required="set_default_answer == True"/>
                         </group>
                     </group>

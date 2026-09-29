@@ -53,6 +53,27 @@
                                 </form>
                             </field>
                         </group>
+                        <group string="Wall Molding Types">
+                            <field name="molding_type_line_id" readonly="1">
+                                <list editable="bottom">
+                                    <field name="molding_type_id" options="{'no_open':True,'no_create': True}"/>
+                                    <field name="name"/>
+                                    <field name="wall_size"/>
+                                </list>
+                                <form>
+                                    <group>
+                                        <group>
+                                            <field name="molding_type_id" options="{'no_open':True,'no_create': True}"/>
+                                            <field name="name"/>
+                                        </group>
+                                        <group>
+                                            <field name="wall_size"/>
+                                            <field name="molding_unit_price"/>
+                                        </group>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
                         <group string="Room Images" invisible="attachment_ids == False">
                             <field nolabel="1" name="attachment_ids">
                                 <kanban>

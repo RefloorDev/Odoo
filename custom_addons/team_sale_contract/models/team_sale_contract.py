@@ -24,6 +24,22 @@ FIELDS_TO_ENCRYPT = ['drivers_license',
                      ]
 
 
+class TeamMoldingTypeLine(models.Model):
+    _name = "team.contract.molding.type.line"
+    _description = "Team Contract Molding Type Line"
+
+    molding_type_id = fields.Many2one('team.floor.molding', string="Molding Type", ondelete='restrict')
+    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
+    order_id = fields.Many2one('sale.order', string="Sale Order")
+    room_id = fields.Many2one('team.room.room', string='Room', required=True, ondelete='restrict')
+    appointment_id = fields.Many2one('team.customer.appointment', 'Appointment')
+    room_measurement_id = fields.Many2one('team.contract.room.measurement.line', 'Room Measurement Line Id')
+    name = fields.Char('Wall Name', required=True)
+    wall_size = fields.Float('Wall Size', required=True)
+    molding_unit_price = fields.Float('Molding Unit Price')
+
+
+
 class TeamTransitionLine(models.Model):
     _name = 'team.contract.transition.line'
     _description = "Contract Transition Line"
@@ -237,7 +253,11 @@ class TeamContractRoomMeasurement(models.Model):
     def _compute_molding_total_price(self):
         for record in self:
             molding_total_price = 0
-            if record.room_perimeter and record.molding_unit_price:
+            if record.molding_type_line_id:
+                for line in record.molding_type_line_id:
+                    if line.molding_unit_price and line.wall_size:
+                        molding_total_price += line.molding_unit_price * line.wall_size
+            elif record.room_perimeter and record.molding_unit_price:
                 molding_total_price = record.room_perimeter * record.molding_unit_price
             record.molding_total_price = molding_total_price
 
@@ -281,6 +301,7 @@ class TeamContractRoomMeasurement(models.Model):
     misc_charge_comments = fields.Char('Miscellaneous Charge Comments')
     delivery_option = fields.Char("Selected Delivery Option")
     special_order_material = fields.Boolean('Is Special Order Material', compute='_compute_special_order_material', store=True)
+    molding_type_line_id = fields.One2many('team.contract.molding.type.line', 'room_measurement_id', 'Wall Molding Types')
 
     def write(self, vals):
         _logger.info('ContractRoomMeasurement ID: %s, vals: %s'%(self.ids, vals))
