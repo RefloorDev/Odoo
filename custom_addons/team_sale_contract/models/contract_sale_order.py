@@ -3138,6 +3138,8 @@ class SaleOrder(models.Model):
                         for transition in transitions:
                             transitions_key1 = 'Transition' + str(count)
                             transitions_value_1 = transition.name
+                            if ' to' in transitions_value_1:
+                                transitions_value_1 = transitions_value_1.split(' to')[0]
                             transitions_key2 = 'TransitionLength' + str(count)
                             transitions_value_2 = transition.transition_width
                             transitions_key3 = 'TransitionHeight' + str(count)
