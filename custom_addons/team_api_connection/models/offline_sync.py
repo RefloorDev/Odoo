@@ -1669,11 +1669,33 @@ class TeamCustomerAppointment(models.Model):
             res_partner_obj = self.env['res.partner']
             if not selected_package_id:
                 _logger.info("------selected_package_id Empty------------")
-                status = {
-                    'message': 'selected_package_id Empty',
-                    'result': 'Failed',
-                }
-                return status
+                if appointment.appointment_result != 'Sold':
+                    selected_package = False
+                    default_package_id = self.env['ir.config_parameter'].sudo().get_param(
+                        'team_sale_contract.payment_plan_id') or False
+                    if default_package_id:
+                        default_package = self.env['product.template'].browse(int(default_package_id))
+                        if appointment.office_location_id:
+                            selected_package = self.env['product.template'].search([
+                                ('grade', '=', default_package.grade),
+                                ('office_location_ids', 'in', appointment.office_location_id.ids),
+                                ('categ_id', '=', default_package.categ_id.id)
+                            ], limit=1)
+                        if not selected_package:
+                            if default_package_id and default_package_id.exists() and not default_package_id.active:
+                                selected_package = self.env['product.template'].search([
+                                    ('grade', '=', default_package_id.grade),
+                                    ('categ_id', '=', default_package_id.categ_id.id)
+                                ], limit=1)
+                            else:
+                                selected_package = default_package
+                        selected_package_id = selected_package.id if selected_package else False
+                else:
+                    status = {
+                        'message': 'selected_package_id Empty',
+                        'result': 'Failed',
+                    }
+                    return status
             if finance_amount and not finance_option_id:
                 _logger.info("------Finance Option ID Empty------------")
                 status = {

@@ -2758,7 +2758,7 @@ class SaleOrder(models.Model):
                                 ], limit=1)
                             if not floor_type:
                                 if old_floor_type and old_floor_type.exists() and not old_floor_type.active:
-                                    floor_type = self.env['product.template'].search([('grade', '=', old_floor_type.name)], limit=1)
+                                    floor_type = self.env['product.template'].search([('name', '=', old_floor_type.name)], limit=1)
                                 else:
                                     floor_type = old_floor_type
 
