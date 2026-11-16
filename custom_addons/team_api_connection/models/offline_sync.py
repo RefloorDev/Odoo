@@ -1418,18 +1418,10 @@ class TeamCustomerAppointment(models.Model):
                     }
                     if self.appointment_result == 'Sold' and not material_id and not exclude_from_calculation:
                         _logger.info('--------------Material is not selected------------')
-                        material_ids = list(dict.fromkeys(
-                            item.get('material_id')
-                            for item in room_list
-                            if item.get('material_id')
-                        ))
-                        if material_ids:
-                            material_id = material_ids[0]
-                        if not material_id:
-                            default_material_id = self.env['ir.config_parameter'].sudo().get_param(
+                        default_material_id = self.env['ir.config_parameter'].sudo().get_param(
                         'team_sale_contract.material_color_id') or False
-                            if default_material_id:
-                                material_id = int(default_material_id)
+                        if default_material_id:
+                            material_id = int(default_material_id)
                     if material_id and self.env['product.product'].browse(material_id).exists():
                         vals.update({
                             'material_id': material_id,
