@@ -55,6 +55,9 @@
                     <setting id="payment_plan_id" string="Default Payment Plan" help="if no payment plan selected, this plan will send to i360.">
                         <field name="payment_plan_id" options="{'no_create': True}"/>
                     </setting>
+                    <setting id="material_color_id" string="Default Material Color" help="Default material color to use when no material is selected.">
+                        <field name="material_color_id" options="{'no_create': True}"/>
+                    </setting>
                 </block>
                 <block title="API Configuration" id="sale_other_data_id_setting">
                     <setting id="enable_api_queue_system" string="Enable API Queueing System" help="Enable queueing system to prevent concurrent API requests.">
