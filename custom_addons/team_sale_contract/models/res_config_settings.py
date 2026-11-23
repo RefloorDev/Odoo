@@ -35,4 +35,5 @@ class ResConfigSettings(models.TransientModel):
     special_order_delay_limit = fields.Integer("Special Order Delay Limit", default=14, config_parameter='team_sale_contract.special_order_delay_limit')
     enable_user_qrcode = fields.Boolean("Enable User QR Code", default=False, config_parameter="team_sale_contract.enable_user_qrcode")
     gtr_page_limit = fields.Integer("GTR Page Limit", default=50, config_parameter="team_sale_contract.gtr_page_limit")
+    material_color_id = fields.Many2one('product.product', string='Default Material Color', config_parameter='team_sale_contract.material_color_id')
 

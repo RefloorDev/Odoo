@@ -1416,6 +1416,12 @@ class TeamCustomerAppointment(models.Model):
                         'misc_charge_comments': data.get('misc_charge_comments', ''),
                         'delivery_option': data.get('delivery_option', ''),
                     }
+                    if self.appointment_result == 'Sold' and not material_id and not exclude_from_calculation:
+                        _logger.info('--------------Material is not selected------------')
+                        default_material_id = self.env['ir.config_parameter'].sudo().get_param(
+                        'team_sale_contract.material_color_id') or False
+                        if default_material_id:
+                            material_id = int(default_material_id)
                     if material_id and self.env['product.product'].browse(material_id).exists():
                         vals.update({
                             'material_id': material_id,
